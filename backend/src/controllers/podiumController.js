@@ -2,6 +2,13 @@ import { auctionEngine } from '../services/auctionEngine.js';
 import { Player } from '../models/Player.js';
 import { Team } from '../models/Team.js';
 import { AuctionLedger } from '../models/AuctionLedger.js';
+import { AuditLog } from '../models/AuditLog.js';
+
+const logPodiumAction = async (action, performedBy, details) => {
+  try {
+    await AuditLog.create({ action, performedBy, details });
+  } catch (_) { /* silent */ }
+};
 
 export const launchPlayer = async (req, res, next) => {
   try {
@@ -26,7 +33,76 @@ export const launchPlayer = async (req, res, next) => {
     }
 
     const state = auctionEngine.launchPlayer(player, duration || 60, mode || 'NORMAL');
+    await logPodiumAction('LAUNCH_PLAYER', req.user?.email || 'podium', { playerId, mode, duration });
     res.json({ success: true, message: 'Player launched to live podium', data: state });
+  } catch (e) { next(e); }
+};
+
+export const selectUnsoldPlayer = async (req, res, next) => {
+  try {
+    const { playerId, duration, mode } = req.body;
+
+    let player = await Player.findOne({ _id: playerId, status: { $in: ['UNSOLD', 'REGISTERED'] } });
+    if (!player) {
+      return res.status(404).json({ success: false, message: 'Player not found or not available for selection' });
+    }
+
+    player.status = 'ON_PODIUM';
+    await player.save();
+
+    const state = auctionEngine.launchPlayer(player, duration || 60, mode || 'NORMAL');
+    await logPodiumAction('SELECT_UNSOLD_PLAYER', req.user?.email || 'podium', { playerId, mode });
+    res.json({ success: true, message: 'Unsold player selected and launched', data: state });
+  } catch (e) { next(e); }
+};
+
+export const moveNextPlayer = async (req, res, next) => {
+  try {
+    // Mark current player as unsold, reset state, ready for next selection
+    if (auctionEngine.podiumPlayer?._id) {
+      await Player.findByIdAndUpdate(auctionEngine.podiumPlayer._id, { status: 'UNSOLD' });
+    }
+    auctionEngine.cancel();
+
+    await logPodiumAction('MOVE_NEXT_PLAYER', req.user?.email || 'podium', {
+      previousPlayer: auctionEngine.podiumPlayer?.name
+    });
+
+    res.json({ success: true, message: 'Moved to next player. Podium is ready.' });
+  } catch (e) { next(e); }
+};
+
+export const declareWinner = async (req, res, next) => {
+  try {
+    const result = auctionEngine.hammerSell();
+
+    if (result.player && result.winner) {
+      await AuctionLedger.create({
+        playerId: result.player._id || result.player.id,
+        playerName: result.player.name,
+        soldPrice: result.soldPrice,
+        teamId: result.winner._id || result.winner.id,
+        teamName: result.winner.name
+      });
+
+      await Player.findByIdAndUpdate(result.player._id || result.player.id, {
+        status: 'SOLD',
+        finalPrice: result.soldPrice,
+        soldToTeam: result.winner._id || result.winner.id
+      });
+
+      await Team.findByIdAndUpdate(result.winner._id || result.winner.id, {
+        $inc: { remainingBudget: -result.soldPrice, currentRosterCount: 1 }
+      });
+
+      await logPodiumAction('DECLARE_WINNER', req.user?.email || 'podium', {
+        player: result.player.name,
+        team: result.winner.name,
+        price: result.soldPrice
+      });
+    }
+
+    res.json({ success: true, message: 'Winner declared!', data: result });
   } catch (e) { next(e); }
 };
 
@@ -51,6 +127,7 @@ export const cancelAuction = async (req, res, next) => {
       await Player.findByIdAndUpdate(auctionEngine.podiumPlayer._id, { status: 'UNSOLD' });
     }
     auctionEngine.cancel();
+    await logPodiumAction('CANCEL_AUCTION', req.user?.email || 'podium', {});
     res.json({ success: true, message: 'Auction cancelled and player returned to unsold pool' });
   } catch (e) { next(e); }
 };
@@ -59,7 +136,6 @@ export const forceSellAuction = async (req, res, next) => {
   try {
     const result = auctionEngine.hammerSell();
     if (result.player && result.winner) {
-      // Save ledger entry
       await AuctionLedger.create({
         playerId: result.player._id || result.player.id,
         playerName: result.player.name,
@@ -68,16 +144,19 @@ export const forceSellAuction = async (req, res, next) => {
         teamName: result.winner.name
       });
 
-      // Update Player status
       await Player.findByIdAndUpdate(result.player._id || result.player.id, {
         status: 'SOLD',
         finalPrice: result.soldPrice,
         soldToTeam: result.winner._id || result.winner.id
       });
 
-      // Deduct budget & increment roster count
       await Team.findByIdAndUpdate(result.winner._id || result.winner.id, {
         $inc: { remainingBudget: -result.soldPrice, currentRosterCount: 1 }
+      });
+
+      await logPodiumAction('FORCE_SELL', req.user?.email || 'podium', {
+        player: result.player.name,
+        price: result.soldPrice
       });
     }
 
@@ -87,4 +166,13 @@ export const forceSellAuction = async (req, res, next) => {
 
 export const getAuctionState = (req, res) => {
   res.json({ success: true, data: auctionEngine.getState() });
+};
+
+// GET available players for Podium to select
+export const getAvailablePlayers = async (req, res, next) => {
+  try {
+    const players = await Player.find({ status: { $in: ['REGISTERED', 'UNSOLD'] } })
+      .sort({ category: 1, name: 1 });
+    res.json({ success: true, count: players.length, data: players });
+  } catch (e) { next(e); }
 };

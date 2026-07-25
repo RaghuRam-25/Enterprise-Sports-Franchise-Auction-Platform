@@ -8,6 +8,7 @@ import PublicLiveView from './pages/spectator/PublicLiveView';
 import PublicTeamsView from './pages/spectator/PublicTeamsView';
 
 // ── Player Portal ─────────────────────────────────────────────────────────────
+import PlayerLogin from './pages/player/PlayerLogin';
 import PlayerRegister from './pages/player/PlayerRegister';
 import PlayerDashboard from './pages/player/PlayerDashboard';
 import PlayerSettings from './pages/player/PlayerSettings';
@@ -30,45 +31,75 @@ import AdminTeams from './pages/admin/AdminTeams';
 import AdminManagers from './pages/admin/AdminManagers';
 import AdminPlayers from './pages/admin/AdminPlayers';
 
+// ── Error Pages ───────────────────────────────────────────────────────────────
+import AccessDenied from './pages/AccessDenied';
+
 function App() {
   return (
     <Router>
       <Routes>
-        {/* ── Public (No Auth Required) ── */}
+        {/* ── Public (No Auth Required) ──────────────────────────────────── */}
         <Route path="/" element={<LandingPage />} />
         <Route path="/live" element={<PublicLiveView />} />
         <Route path="/teams" element={<PublicTeamsView />} />
 
-        {/* ── Player Portal ── */}
+        {/* ── Auth / Recovery ────────────────────────────────────────────── */}
+        {/* Player login portal */}
+        <Route path="/player/login" element={<PlayerLogin />} />
+        {/* Player self-registration (public) */}
         <Route path="/player/register" element={<PlayerRegister />} />
+        {/* Manager / Podium Admin / Super Admin login */}
+        <Route path="/manager/login" element={<ManagerLogin />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+
+        {/* ── Player Portal ──────────────────────────────────────────────── */}
+        {/*
+          RBAC Spec: /player/dashboard → PLAYER only (+ SUPER_ADMIN override)
+          Removed: TEAM_MANAGER (uses /manager/dashboard), PODIUM_ADMIN (not in spec)
+        */}
         <Route
           path="/player/dashboard"
           element={
-            <ProtectedRoute allowedRoles={['PLAYER', 'SUPER_ADMIN']}>
+            <ProtectedRoute
+              allowedRoles={['PLAYER', 'SUPER_ADMIN']}
+              redirectTo="/player/login"
+            >
               <PlayerDashboard />
             </ProtectedRoute>
           }
         />
+        {/*
+          RBAC Spec: /player/settings → PLAYER only (+ SUPER_ADMIN override)
+          Removed: PODIUM_ADMIN (cannot edit player profile per spec)
+        */}
         <Route
           path="/player/settings"
           element={
-            <ProtectedRoute allowedRoles={['PLAYER', 'SUPER_ADMIN']}>
+            <ProtectedRoute
+              allowedRoles={['PLAYER', 'SUPER_ADMIN']}
+              redirectTo="/player/login"
+            >
               <PlayerSettings />
             </ProtectedRoute>
           }
         />
+        {/*
+          RBAC Spec: /player/results → PLAYER + TEAM_MANAGER + PODIUM_ADMIN + SUPER_ADMIN
+        */}
         <Route
           path="/player/results"
           element={
-            <ProtectedRoute allowedRoles={['PLAYER', 'SUPER_ADMIN']}>
+            <ProtectedRoute allowedRoles={['PLAYER', 'TEAM_MANAGER', 'PODIUM_ADMIN', 'SUPER_ADMIN']}>
               <PlayerResults />
             </ProtectedRoute>
           }
         />
 
-        {/* ── Auth / Recovery ── */}
-        <Route path="/manager/login" element={<ManagerLogin />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
+        {/* ── Manager War Room ───────────────────────────────────────────── */}
+        {/*
+          RBAC Spec: /manager/dashboard → TEAM_MANAGER only (+ SUPER_ADMIN override)
+          Removed: PODIUM_ADMIN (cannot access manager dashboard per spec)
+        */}
         <Route
           path="/manager/dashboard"
           element={
@@ -77,6 +108,10 @@ function App() {
             </ProtectedRoute>
           }
         />
+        {/*
+          RBAC Spec: /manager/roster → TEAM_MANAGER only (+ SUPER_ADMIN override)
+          Removed: PODIUM_ADMIN (cannot access manager roster per spec)
+        */}
         <Route
           path="/manager/roster"
           element={
@@ -86,7 +121,10 @@ function App() {
           }
         />
 
-        {/* ── Podium Admin ── */}
+        {/* ── Podium Admin Control Room ──────────────────────────────────── */}
+        {/*
+          RBAC Spec: /podium/dashboard → PODIUM_ADMIN + SUPER_ADMIN ✓ (unchanged)
+        */}
         <Route
           path="/podium/dashboard"
           element={
@@ -96,7 +134,10 @@ function App() {
           }
         />
 
-        {/* ── Super Admin Panel (nested layout) ── */}
+        {/* ── Super Admin Panel (nested layout) ─────────────────────────── */}
+        {/*
+          RBAC Spec: /admin/* → SUPER_ADMIN only ✓ (unchanged)
+        */}
         <Route
           path="/admin"
           element={
@@ -114,7 +155,10 @@ function App() {
           <Route path="players" element={<AdminPlayers />} />
         </Route>
 
-        {/* ── Catch-all ── */}
+        {/* ── Error Pages ────────────────────────────────────────────────── */}
+        <Route path="/access-denied" element={<AccessDenied />} />
+
+        {/* ── Catch-all ──────────────────────────────────────────────────── */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>

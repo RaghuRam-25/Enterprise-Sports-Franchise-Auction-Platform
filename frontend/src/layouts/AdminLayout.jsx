@@ -8,7 +8,7 @@ export default function AdminLayout() {
     { path: '/admin/dashboard', label: 'System Overview', icon: LayoutDashboard },
     { path: '/admin/configurations/sessions', label: 'Dynamic Enums', icon: Sliders },
     { path: '/admin/teams', label: 'Franchise Teams', icon: ShieldCheck },
-    { path: '/admin/managers', label: 'Manager Credentials', icon: Users },
+    { path: '/admin/managers', label: 'Podium & Manager Creds', icon: Users },
     { path: '/admin/players', label: 'Player Management', icon: UserCheck },
   ];
 

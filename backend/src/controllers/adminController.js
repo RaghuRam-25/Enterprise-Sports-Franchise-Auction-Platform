@@ -14,6 +14,26 @@ const positionSchema = z.object({ code: z.string().min(1), name: z.string().min(
 const categorySchema = z.object({ name: z.string().min(2), priorityLevel: z.number().min(1), basePrice: z.number().min(0) });
 const biddingTierSchema = z.object({ minPercent: z.number().min(0), maxPercent: z.number().min(0), raisePercent: z.number().min(0) });
 const teamSchema = z.object({ name: z.string().min(2), shortCode: z.string().min(2), totalBudget: z.number().min(0), minRoster: z.number().min(1) });
+const editTeamSchema = z.object({
+  name: z.string().min(2).optional(),
+  shortCode: z.string().min(2).optional(),
+  totalBudget: z.number().min(0).optional(),
+  remainingBudget: z.number().min(0).optional(),
+  minRoster: z.number().min(1).optional(),
+  maxRoster: z.number().min(1).optional(),
+}).partial();
+const editPlayerSchema = z.object({
+  name: z.string().min(2).optional(),
+  jerseyName: z.string().max(15).optional(),
+  positions: z.array(z.string()).optional(),
+  primaryPosition: z.string().optional(),
+  category: z.string().optional(),
+  session: z.string().optional(),
+  tShirtSize: z.enum(['S', 'M', 'L', 'XL', 'XXL']).optional(),
+  status: z.string().optional(),
+  basePrice: z.number().min(0).optional(),
+  imageUrl: z.string().url().optional(),
+}).partial();
 
 // Audit log helper
 const logAdminAction = async (action, performedBy, details) => {
@@ -149,10 +169,36 @@ export const createTeam = async (req, res, next) => {
   } catch (e) { next(e); }
 };
 
-// --- MANAGERS ---
+export const editTeam = async (req, res, next) => {
+  try {
+    const parsed = editTeamSchema.parse(req.body);
+    if (parsed.shortCode) parsed.shortCode = parsed.shortCode.toUpperCase();
+
+    const team = await Team.findByIdAndUpdate(req.params.id, parsed, { new: true });
+    if (!team) return res.status(404).json({ success: false, message: 'Team not found' });
+
+    await logAdminAction('EDIT_TEAM', req.user?.email || 'admin', { id: req.params.id, changes: parsed });
+    res.json({ success: true, data: team });
+  } catch (e) { next(e); }
+};
+
+export const deleteTeam = async (req, res, next) => {
+  try {
+    const team = await Team.findByIdAndDelete(req.params.id);
+    if (!team) return res.status(404).json({ success: false, message: 'Team not found' });
+
+    await logAdminAction('DELETE_TEAM', req.user?.email || 'admin', { id: req.params.id, name: team.name });
+    res.json({ success: true, message: `Team '${team.name}' deleted` });
+  } catch (e) { next(e); }
+};
+
+// --- MANAGERS & PODIUM ADMINS ---
 export const getManagers = async (req, res, next) => {
   try {
-    const managers = await User.find({ role: 'TEAM_MANAGER' }).populate('teamId').select('-passwordHash');
+    const managers = await User.find({ role: { $in: ['TEAM_MANAGER', 'PODIUM_ADMIN'] } })
+      .populate('teamId')
+      .select('-passwordHash')
+      .sort({ role: 1, createdAt: -1 });
     res.json({ success: true, count: managers.length, data: managers });
   } catch (e) { next(e); }
 };
@@ -160,22 +206,209 @@ export const getManagers = async (req, res, next) => {
 export const createManager = async (req, res, next) => {
   try {
     const { name, email, password, teamId } = req.body;
-    const exists = await User.findOne({ email });
+    if (!name || !email) return res.status(400).json({ success: false, message: 'Name and email are required' });
+
+    const exists = await User.findOne({ email: email.toLowerCase() });
     if (exists) return res.status(400).json({ success: false, message: 'Manager email already exists' });
 
     const salt = await bcrypt.genSalt(10);
-    const passwordHash = await bcrypt.hash(password || 'password123', salt);
+    const passwordHash = await bcrypt.hash(password || 'manager123', salt);
 
     const manager = await User.create({
       name,
-      email,
+      email: email.toLowerCase(),
       passwordHash,
       role: 'TEAM_MANAGER',
-      teamId,
+      teamId: teamId || null,
       mustResetPassword: true
     });
 
     await logAdminAction('CREATE_MANAGER', req.user?.email || 'admin', { email, name });
-    res.status(201).json({ success: true, data: { id: manager._id, name: manager.name, email: manager.email } });
+    res.status(201).json({ success: true, data: { id: manager._id, name: manager.name, email: manager.email, role: manager.role } });
+  } catch (e) { next(e); }
+};
+
+export const deleteManager = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+    if (!['TEAM_MANAGER', 'PODIUM_ADMIN'].includes(user.role)) {
+      return res.status(400).json({ success: false, message: 'Can only delete managers or podium admins via this endpoint' });
+    }
+
+    await User.findByIdAndDelete(req.params.id);
+    await logAdminAction('DELETE_MANAGER', req.user?.email || 'admin', { id: req.params.id, email: user.email });
+    res.json({ success: true, message: `${user.role === 'PODIUM_ADMIN' ? 'Podium Admin' : 'Manager'} '${user.name}' deleted` });
+  } catch (e) { next(e); }
+};
+
+export const resetManagerPassword = async (req, res, next) => {
+  try {
+    const { newPassword } = req.body;
+    if (!newPassword || newPassword.length < 6) {
+      return res.status(400).json({ success: false, message: 'New password must be at least 6 characters' });
+    }
+
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+
+    user.passwordHash = await bcrypt.hash(newPassword, 10);
+    user.mustResetPassword = true; // Force them to change on next login
+    await user.save();
+
+    await logAdminAction('RESET_PASSWORD', req.user?.email || 'admin', { id: req.params.id, email: user.email });
+    res.json({ success: true, message: `Password reset for ${user.name}. They must change it on next login.` });
+  } catch (e) { next(e); }
+};
+
+export const createPodiumAdmin = async (req, res, next) => {
+  try {
+    const { name, email, password } = req.body;
+    if (!name || !email) return res.status(400).json({ success: false, message: 'Name and email are required' });
+
+    const exists = await User.findOne({ email: email.toLowerCase() });
+    if (exists) return res.status(400).json({ success: false, message: 'Email already registered' });
+
+    const salt = await bcrypt.genSalt(10);
+    const passwordHash = await bcrypt.hash(password || 'podium123', salt);
+
+    const podiumAdmin = await User.create({
+      name,
+      email: email.toLowerCase(),
+      passwordHash,
+      role: 'PODIUM_ADMIN',
+      mustResetPassword: true
+    });
+
+    await logAdminAction('CREATE_PODIUM_ADMIN', req.user?.email || 'admin', { email, name });
+    res.status(201).json({ success: true, data: { id: podiumAdmin._id, name: podiumAdmin.name, email: podiumAdmin.email, role: podiumAdmin.role } });
+  } catch (e) { next(e); }
+};
+
+// --- PLAYER MANAGEMENT ---
+export const getAdminPlayers = async (req, res, next) => {
+  try {
+    const { Player } = await import('../models/Player.js');
+    const { status, category, search } = req.query;
+    let query = {};
+    if (status) query.status = status;
+    if (category) query.category = category;
+    if (search) {
+      query.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { studentId: { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } }
+      ];
+    }
+    const players = await Player.find(query).sort({ createdAt: -1 });
+    res.json({ success: true, count: players.length, data: players });
+  } catch (e) { next(e); }
+};
+
+export const editPlayer = async (req, res, next) => {
+  try {
+    const { Player } = await import('../models/Player.js');
+    const parsed = editPlayerSchema.parse(req.body);
+
+    if (parsed.jerseyName) parsed.jerseyName = parsed.jerseyName.toUpperCase();
+
+    const player = await Player.findByIdAndUpdate(req.params.id, parsed, { new: true });
+    if (!player) return res.status(404).json({ success: false, message: 'Player not found' });
+
+    await logAdminAction('EDIT_PLAYER', req.user?.email || 'admin', { id: req.params.id, changes: parsed });
+    res.json({ success: true, data: player });
+  } catch (e) { next(e); }
+};
+
+export const approvePlayer = async (req, res, next) => {
+  try {
+    const { Player } = await import('../models/Player.js');
+    const player = await Player.findByIdAndUpdate(
+      req.params.id,
+      { status: 'APPROVED' },
+      { new: true }
+    );
+    if (!player) return res.status(404).json({ success: false, message: 'Player not found' });
+
+    await logAdminAction('APPROVE_PLAYER', req.user?.email || 'admin', { playerId: req.params.id, name: player.name });
+    res.json({ success: true, message: `Player '${player.name}' approved`, data: player });
+  } catch (e) { next(e); }
+};
+
+export const banPlayer = async (req, res, next) => {
+  try {
+    const { Player } = await import('../models/Player.js');
+    const player = await Player.findById(req.params.id);
+    if (!player) return res.status(404).json({ success: false, message: 'Player not found' });
+
+    const newStatus = player.status === 'BANNED' ? 'REGISTERED' : 'BANNED';
+    player.status = newStatus;
+    await player.save();
+
+    await logAdminAction('TOGGLE_BAN_PLAYER', req.user?.email || 'admin', { playerId: req.params.id, newStatus });
+    res.json({ success: true, data: player, message: `Player ${newStatus === 'BANNED' ? 'banned' : 'unbanned'} successfully` });
+  } catch (e) { next(e); }
+};
+
+// --- REPORTS ---
+export const getReports = async (req, res, next) => {
+  try {
+    const { Player } = await import('../models/Player.js');
+    const { AuctionLedger } = await import('../models/AuctionLedger.js');
+
+    const [
+      totalPlayers,
+      soldPlayers,
+      unsoldPlayers,
+      teams,
+      ledger,
+      auditLogs
+    ] = await Promise.all([
+      Player.countDocuments(),
+      Player.countDocuments({ status: 'SOLD' }),
+      Player.countDocuments({ status: 'UNSOLD' }),
+      Team.find().select('name totalBudget remainingBudget currentRosterCount'),
+      AuctionLedger.find().sort({ createdAt: -1 }).limit(200),
+      AuditLog.find().sort({ createdAt: -1 }).limit(100)
+    ]);
+
+    const totalSpent = ledger.reduce((sum, entry) => sum + (entry.soldPrice || 0), 0);
+
+    res.json({
+      success: true,
+      data: {
+        summary: {
+          totalPlayers,
+          soldPlayers,
+          unsoldPlayers,
+          registeredPlayers: await Player.countDocuments({ status: 'REGISTERED' }),
+          totalTeams: teams.length,
+          totalSpent
+        },
+        teams,
+        recentTransactions: ledger,
+        recentAuditLogs: auditLogs
+      }
+    });
+  } catch (e) { next(e); }
+};
+
+export const exportReports = async (req, res, next) => {
+  try {
+    const { Player } = await import('../models/Player.js');
+    const { AuctionLedger } = await import('../models/AuctionLedger.js');
+
+    const [players, teams, ledger] = await Promise.all([
+      Player.find().sort({ createdAt: -1 }),
+      Team.find().sort({ name: 1 }),
+      AuctionLedger.find().sort({ createdAt: -1 })
+    ]);
+
+    // Return CSV-friendly JSON for export
+    res.json({
+      success: true,
+      exportedAt: new Date().toISOString(),
+      data: { players, teams, ledger }
+    });
   } catch (e) { next(e); }
 };

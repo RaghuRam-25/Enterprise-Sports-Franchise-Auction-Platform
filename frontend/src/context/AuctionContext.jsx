@@ -4,79 +4,33 @@ import api from '../services/api';
 
 const AuctionContext = createContext();
 
-const initialSessions = [
-  { id: 'sess-1', name: '22-23 Academic Session', isDefault: true },
-  { id: 'sess-2', name: '23-24 Academic Session', isDefault: false },
-];
-
-const initialPositions = [
-  { id: 'pos-1', code: 'ST', name: 'Striker' },
-  { id: 'pos-2', code: 'GK', name: 'Goalkeeper' },
-  { id: 'pos-3', code: 'RW', name: 'Right Winger' },
-  { id: 'pos-4', code: 'LW', name: 'Left Winger' },
-  { id: 'pos-5', code: 'CM', name: 'Central Midfielder' },
-  { id: 'pos-6', code: 'CB', name: 'Center Back' },
-  { id: 'pos-7', code: 'ALL', name: 'All-Rounder' },
-];
-
-const initialCategories = [
-  { id: 'cat-1', name: 'Icon Category', priority: 1, basePrice: 5000000 },
-  { id: 'cat-2', name: 'A Grade', priority: 2, basePrice: 3000000 },
-  { id: 'cat-3', name: 'B Grade', priority: 3, basePrice: 1500000 },
-];
-
-const initialBiddingTiers = [
-  { id: 'tier-1', minPursePercent: 0, maxPursePercent: 3, raisePercent: 0.15 },
-  { id: 'tier-2', minPursePercent: 3, maxPursePercent: 5, raisePercent: 0.25 },
-  { id: 'tier-3', minPursePercent: 5, maxPursePercent: 10, raisePercent: 0.50 },
-  { id: 'tier-4', minPursePercent: 10, maxPursePercent: 100, raisePercent: 1.00 },
-];
-
-const initialTeams = [
-  { id: 'team-1', name: 'Dhaka Dynamites', code: 'DHD', logo: '⚡', totalBudget: 100000000, remainingBudget: 78500000, minRoster: 11, currentRoster: [] },
-  { id: 'team-2', name: 'Chittagong Kings', code: 'CTG', logo: '👑', totalBudget: 100000000, remainingBudget: 82000000, minRoster: 11, currentRoster: [] },
-  { id: 'team-3', name: 'Sylhet Strikers', code: 'SYL', logo: '🗡️', totalBudget: 100000000, remainingBudget: 85000000, minRoster: 11, currentRoster: [] },
-  { id: 'team-4', name: 'Fortune Barishal', code: 'FBR', logo: '⚓', totalBudget: 100000000, remainingBudget: 88000000, minRoster: 11, currentRoster: [] },
-  { id: 'team-5', name: 'Comilla Victorians', code: 'COM', logo: '🛡️', totalBudget: 100000000, remainingBudget: 90000000, minRoster: 11, currentRoster: [] },
-  { id: 'team-6', name: 'Rangpur Riders', code: 'RNG', logo: '🏹', totalBudget: 100000000, remainingBudget: 92000000, minRoster: 11, currentRoster: [] }
-];
-
-const initialPlayers = [
-  { id: 'p-1', name: 'Shakib Al Hasan', studentId: 'STU-2023-089', session: '22-23 Academic Session', jerseyName: 'SHAKIB 75', positions: ['pos-7'], primaryPosition: 'pos-7', category: 'Icon Category', basePrice: 5000000, status: 'podium', picture: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80' },
-  { id: 'p-2', name: 'Mehidy Hasan Miraz', studentId: 'STU-2023-102', session: '23-24 Academic Session', jerseyName: 'MIRAZ 53', positions: ['pos-7'], primaryPosition: 'pos-7', category: 'A Grade', basePrice: 3000000, status: 'unsold', picture: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=500&auto=format&fit=crop&q=80' },
-  { id: 'p-3', name: 'Shoriful Islam', studentId: 'STU-2024-044', session: '23-24 Academic Session', jerseyName: 'SHORIFUL 47', positions: ['pos-6'], primaryPosition: 'pos-6', category: 'B Grade', basePrice: 1500000, status: 'unsold', picture: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=500&auto=format&fit=crop&q=80' }
-];
+// All initial states start empty — data loaded from real API on mount
 
 export const AuctionProvider = ({ children }) => {
   const { socket, isConnected } = useSocket();
 
-  // Config States
-  const [sessions, setSessions] = useState(initialSessions);
-  const [positions, setPositions] = useState(initialPositions);
-  const [categories, setCategories] = useState(initialCategories);
-  const [biddingTiers, setBiddingTiers] = useState(initialBiddingTiers);
+  // Config States — loaded from real API
+  const [sessions, setSessions] = useState([]);
+  const [positions, setPositions] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [biddingTiers, setBiddingTiers] = useState([]);
   const [isRegistrationFrozen, setIsRegistrationFrozen] = useState(false);
 
-  // Teams & Players States
-  const [teams, setTeams] = useState(initialTeams);
-  const [players, setPlayers] = useState(initialPlayers);
-  const [managers, setManagers] = useState([
-    { id: 'mgr-1', teamId: 'team-1', username: 'dhaka_mgr', name: 'Dhaka Manager', mustChangePass: false },
-    { id: 'mgr-2', teamId: 'team-2', username: 'ctg_mgr', name: 'Chittagong Manager', mustChangePass: true }
-  ]);
+  // Teams & Players States — loaded from real API
+  const [teams, setTeams] = useState([]);
+  const [players, setPlayers] = useState([]);
+  const [managers, setManagers] = useState([]);
+  const [isDataLoading, setIsDataLoading] = useState(true);
 
-  // Live Podium Engine State
-  const [podiumPlayer, setPodiumPlayer] = useState(initialPlayers[0]);
-  const [currentBid, setCurrentBid] = useState(21500000);
-  const [highestBidder, setHighestBidder] = useState(initialTeams[0]);
+  // Live Podium Engine State — starts clean (no mock data)
+  const [podiumPlayer, setPodiumPlayer] = useState(null);
+  const [currentBid, setCurrentBid] = useState(0);
+  const [highestBidder, setHighestBidder] = useState(null);
   const [biddingMode, setBiddingMode] = useState('normal');
   const [timerDuration, setTimerDuration] = useState(60);
-  const [timerRemaining, setTimerRemaining] = useState(42);
-  const [timerStatus, setTimerStatus] = useState('running');
-  const [bidHistory, setBidHistory] = useState([
-    { id: 'b-1', amount: 15000000, bidder: 'Fortune Barishal', time: '12:40:10 AM', type: 'Normal' },
-    { id: 'b-2', amount: 21500000, bidder: 'Dhaka Dynamites', time: '12:41:20 AM', type: 'Normal' }
-  ]);
+  const [timerRemaining, setTimerRemaining] = useState(0);
+  const [timerStatus, setTimerStatus] = useState('idle');
+  const [bidHistory, setBidHistory] = useState([]);
 
   const [lastActionToast, setLastActionToast] = useState(null);
 
@@ -84,6 +38,66 @@ export const AuctionProvider = ({ children }) => {
     setLastActionToast({ id: Date.now(), msg, type });
     setTimeout(() => setLastActionToast(null), 4000);
   };
+
+  // --- LOAD ALL REAL DATA FROM BACKEND ON MOUNT ---
+  useEffect(() => {
+    const loadAllData = async () => {
+      try {
+        setIsDataLoading(true);
+        const [sessRes, posRes, catRes, tierRes, teamRes, playerRes, regRes] = await Promise.allSettled([
+          api.get('/admin/sessions'),
+          api.get('/admin/positions'),
+          api.get('/admin/categories'),
+          api.get('/admin/bidding-tiers'),
+          api.get('/admin/teams'),
+          api.get('/players'),
+          api.get('/players/status')
+        ]);
+
+        if (sessRes.status === 'fulfilled' && sessRes.value.data?.data)
+          setSessions(sessRes.value.data.data.map(s => ({ ...s, id: s._id })));
+        if (posRes.status === 'fulfilled' && posRes.value.data?.data)
+          setPositions(posRes.value.data.data.map(p => ({ ...p, id: p._id })));
+        if (catRes.status === 'fulfilled' && catRes.value.data?.data)
+          setCategories(catRes.value.data.data.map(c => ({ ...c, id: c._id })));
+        if (tierRes.status === 'fulfilled' && tierRes.value.data?.data)
+          setBiddingTiers(tierRes.value.data.data.map(t => ({ ...t, id: t._id })));
+        if (teamRes.status === 'fulfilled' && teamRes.value.data?.data)
+          setTeams(teamRes.value.data.data.map(t => ({
+            ...t,
+            id: t._id,
+            currentRoster: t.currentRoster || [],
+            currentRosterCount: t.currentRosterCount || 0
+          })));
+        if (playerRes.status === 'fulfilled' && playerRes.value.data?.data)
+          setPlayers(playerRes.value.data.data.map(p => ({ ...p, id: p._id })));
+        if (regRes.status === 'fulfilled' && regRes.value.data)
+          setIsRegistrationFrozen(regRes.value.data.isRegistrationFrozen || false);
+      } catch (err) {
+        console.error('Failed to load data from backend:', err);
+      } finally {
+        setIsDataLoading(false);
+      }
+    };
+    loadAllData();
+  }, []);
+
+  // Load managers separately (requires auth — only called when user is SUPER_ADMIN)
+  const loadManagers = useCallback(async () => {
+    try {
+      const res = await api.get('/admin/managers');
+      if (res.data?.data) {
+        setManagers(res.data.data.map(m => ({
+          ...m,
+          id: m._id,
+          username: m.email,
+          mustChangePass: m.mustResetPassword
+        })));
+      }
+    } catch (err) {
+      // Silently ignore if not admin
+    }
+  }, []);
 
   const formatCurrency = useCallback((val) => {
     if (val === undefined || val === null || isNaN(val)) return '0 BDT';
@@ -99,8 +113,10 @@ export const AuctionProvider = ({ children }) => {
     const currentBidNum = currentBidVal || 0;
     const bidPercentOfPurse = (currentBidNum / totalPurse) * 100;
 
+    // Gap 4 Fix: Backend uses minPercent/maxPercent, not minPursePercent/maxPursePercent
     let matchingTier = biddingTiers.find(
-      t => bidPercentOfPurse >= t.minPursePercent && bidPercentOfPurse < t.maxPursePercent
+      t => bidPercentOfPurse >= (t.minPercent ?? t.minPursePercent ?? 0) &&
+           bidPercentOfPurse < (t.maxPercent ?? t.maxPursePercent ?? 100)
     );
 
     if (!matchingTier && biddingTiers.length > 0) {
@@ -111,6 +127,34 @@ export const AuctionProvider = ({ children }) => {
     const monetaryRaise = Math.round((totalPurse * raisePercent) / 100);
     return currentBidNum + monetaryRaise;
   }, [biddingTiers]);
+
+  // Fetch real database records on initial load
+  useEffect(() => {
+    const fetchInitialData = async () => {
+      try {
+        const [playersRes, sessionsRes, positionsRes, categoriesRes, tiersRes, teamsRes, managersRes] = await Promise.allSettled([
+          api.get('/players'),
+          api.get('/admin/sessions'),
+          api.get('/admin/positions'),
+          api.get('/admin/categories'),
+          api.get('/admin/bidding-tiers'),
+          api.get('/admin/teams'),
+          api.get('/admin/managers')
+        ]);
+
+        if (playersRes.status === 'fulfilled' && playersRes.value?.data) setPlayers(playersRes.value.data);
+        if (sessionsRes.status === 'fulfilled' && sessionsRes.value?.data) setSessions(sessionsRes.value.data);
+        if (positionsRes.status === 'fulfilled' && positionsRes.value?.data) setPositions(positionsRes.value.data);
+        if (categoriesRes.status === 'fulfilled' && categoriesRes.value?.data) setCategories(categoriesRes.value.data);
+        if (tiersRes.status === 'fulfilled' && tiersRes.value?.data) setBiddingTiers(tiersRes.value.data);
+        if (teamsRes.status === 'fulfilled' && teamsRes.value?.data) setTeams(teamsRes.value.data);
+        if (managersRes.status === 'fulfilled' && managersRes.value?.data) setManagers(managersRes.value.data);
+      } catch (err) {
+        console.warn('Real DB fetch fallback to local defaults:', err.message);
+      }
+    };
+    fetchInitialData();
+  }, []);
 
   // Sync Socket events from backend server
   useEffect(() => {
@@ -295,20 +339,56 @@ export const AuctionProvider = ({ children }) => {
     return { success: true };
   };
 
-  const addSession = (session) => setSessions(prev => [...prev, { ...session, id: `sess-${Date.now()}` }]);
-  const deleteSession = (id) => setSessions(prev => prev.filter(s => s.id !== id));
-  const addPosition = (pos) => setPositions(prev => [...prev, { ...pos, id: `pos-${Date.now()}` }]);
-  const deletePosition = (id) => setPositions(prev => prev.filter(p => p.id !== id));
-  const addCategory = (cat) => setCategories(prev => [...prev, { ...cat, id: `cat-${Date.now()}` }]);
-  const deleteCategory = (id) => setCategories(prev => prev.filter(c => c.id !== id));
-  const updateBiddingTier = (id, updated) => setBiddingTiers(prev => prev.map(t => t.id === id ? { ...t, ...updated } : t));
+  // --- CONFIG CRUD WITH REAL API CALLS (Gap 3 Fix) ---
+  const addSession = async (session) => {
+    try {
+      const res = await api.post('/admin/sessions', { name: session.name });
+      if (res.data?.data) setSessions(prev => [...prev, { ...res.data.data, id: res.data.data._id }]);
+    } catch (err) { triggerToast(err.response?.data?.message || 'Failed to add session', 'error'); }
+  };
+  const deleteSession = async (id) => {
+    try {
+      await api.delete(`/admin/sessions/${id}`);
+      setSessions(prev => prev.filter(s => s.id !== id));
+    } catch (err) { triggerToast(err.response?.data?.message || 'Failed to delete session', 'error'); }
+  };
+  const addPosition = async (pos) => {
+    try {
+      const res = await api.post('/admin/positions', { code: pos.code, name: pos.name });
+      if (res.data?.data) setPositions(prev => [...prev, { ...res.data.data, id: res.data.data._id }]);
+    } catch (err) { triggerToast(err.response?.data?.message || 'Failed to add position', 'error'); }
+  };
+  const deletePosition = async (id) => {
+    try {
+      await api.delete(`/admin/positions/${id}`);
+      setPositions(prev => prev.filter(p => p.id !== id));
+    } catch (err) { triggerToast(err.response?.data?.message || 'Failed to delete position', 'error'); }
+  };
+  const addCategory = async (cat) => {
+    try {
+      const res = await api.post('/admin/categories', { name: cat.name, priorityLevel: cat.priority || 1, basePrice: cat.basePrice });
+      if (res.data?.data) setCategories(prev => [...prev, { ...res.data.data, id: res.data.data._id }]);
+    } catch (err) { triggerToast(err.response?.data?.message || 'Failed to add category', 'error'); }
+  };
+  const deleteCategory = async (id) => {
+    try {
+      await api.delete(`/admin/categories/${id}`);
+      setCategories(prev => prev.filter(c => c.id !== id));
+    } catch (err) { triggerToast(err.response?.data?.message || 'Failed to delete category', 'error'); }
+  };
+  const updateBiddingTier = async (id, updated) => {
+    try {
+      const res = await api.put(`/admin/bidding-tiers/${id}`, updated);
+      if (res.data?.data) setBiddingTiers(prev => prev.map(t => t.id === id ? { ...t, ...res.data.data } : t));
+    } catch (err) { triggerToast(err.response?.data?.message || 'Failed to update bidding tier', 'error'); }
+  };
 
   return (
     <AuctionContext.Provider
       value={{
         sessions, positions, categories, biddingTiers, isRegistrationFrozen, setIsRegistrationFrozen,
         addSession, deleteSession, addPosition, deletePosition, addCategory, deleteCategory, updateBiddingTier,
-        teams, setTeams, players, setPlayers, managers,
+        teams, setTeams, players, setPlayers, managers, setManagers, isDataLoading, loadManagers,
         podiumPlayer, currentBid, highestBidder, biddingMode, timerDuration, timerRemaining, timerStatus, bidHistory, lastActionToast,
         formatCurrency, calculateNextBidAmount, getLowestCategoryBasePrice,
         pushToPodium, pauseTimer, resumeTimer, rollbackBid, hammerSell, cancelAuction, placeNormalBid, placeBlindBid, triggerToast

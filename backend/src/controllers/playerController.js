@@ -1,10 +1,12 @@
 import { Player } from '../models/Player.js';
 import { Session } from '../models/Session.js';
 import { Position } from '../models/Position.js';
+import { User } from '../models/User.js';
 import { processAndUploadImage } from '../services/imageService.js';
+import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 
-// Registration Freeze Global Flag
+// ── Registration Freeze Global Flag ─────────────────────────────────────────
 let isRegistrationFrozen = false;
 
 export const getRegistrationStatus = (req, res) => {
@@ -20,9 +22,7 @@ export const toggleRegistrationFreeze = (req, res) => {
   });
 };
 
-import { User } from '../models/User.js';
-import bcrypt from 'bcryptjs';
-
+// ── Validation Schemas ────────────────────────────────────────────────────────
 const registerPlayerSchema = z.object({
   name: z.string().min(2),
   email: z.string().email(),
@@ -36,19 +36,32 @@ const registerPlayerSchema = z.object({
   category: z.string().optional()
 });
 
+const updateProfileSchema = z.object({
+  jerseyName: z.string().max(15).optional(),
+  positions: z.array(z.string()).optional(),
+  primaryPosition: z.string().optional(),
+  tShirtSize: z.enum(['S', 'M', 'L', 'XL', 'XXL']).optional(),
+}).partial();
+
+// ── Public player fields (visible to Spectators / unauthenticated) ────────────
+const PUBLIC_PLAYER_FIELDS = 'name jerseyName positions primaryPosition category session imageUrl status';
+
+// ── REGISTER PLAYER ───────────────────────────────────────────────────────────
 export const registerPlayer = async (req, res, next) => {
   try {
-    if (isRegistrationFrozen) {
+    // Only bypass freeze check for SUPER_ADMIN
+    if (isRegistrationFrozen && req.user?.role !== 'SUPER_ADMIN') {
       return res.status(403).json({ success: false, message: 'Registration is currently frozen by Super Admin' });
     }
 
     const body = req.body;
-    let positionsArr = Array.isArray(body.positions) ? body.positions : typeof body.positions === 'string' ? JSON.parse(body.positions) : [body.positions];
+    let positionsArr = Array.isArray(body.positions)
+      ? body.positions
+      : typeof body.positions === 'string'
+        ? JSON.parse(body.positions)
+        : [body.positions];
 
-    const parsed = registerPlayerSchema.parse({
-      ...body,
-      positions: positionsArr
-    });
+    const parsed = registerPlayerSchema.parse({ ...body, positions: positionsArr });
 
     // 1. Check unique studentId and email
     const existingPlayer = await Player.findOne({ studentId: parsed.studentId });
@@ -61,7 +74,7 @@ export const registerPlayer = async (req, res, next) => {
       return res.status(400).json({ success: false, message: `Email ${parsed.email} is already registered.` });
     }
 
-    // 2. Validate positions: must have at least 1 and primary position must be included
+    // 2. Validate positions
     if (!positionsArr || positionsArr.length === 0) {
       return res.status(400).json({ success: false, message: 'Must select at least one position' });
     }
@@ -109,6 +122,7 @@ export const registerPlayer = async (req, res, next) => {
   } catch (e) { next(e); }
 };
 
+// ── GET ALL PLAYERS (role-tiered response) ────────────────────────────────────
 export const getPlayers = async (req, res, next) => {
   try {
     const { status, category, search } = req.query;
@@ -123,15 +137,33 @@ export const getPlayers = async (req, res, next) => {
       ];
     }
 
-    const players = await Player.find(query).sort({ createdAt: -1 });
+    // Determine caller's privilege level
+    const role = req.user?.role;
+    const isPrivileged = ['TEAM_MANAGER', 'PODIUM_ADMIN', 'SUPER_ADMIN'].includes(role);
+
+    // Privileged users get full documents; public gets only safe fields
+    const players = isPrivileged
+      ? await Player.find(query).sort({ createdAt: -1 })
+      : await Player.find(query).select(PUBLIC_PLAYER_FIELDS).sort({ createdAt: -1 });
+
     res.json({ success: true, count: players.length, data: players });
   } catch (e) { next(e); }
 };
 
+// ── WITHDRAW PLAYER (own-resource guard enforced in route layer) ──────────────
 export const withdrawPlayer = async (req, res, next) => {
   try {
-    if (isRegistrationFrozen) {
+    if (isRegistrationFrozen && req.user?.role !== 'SUPER_ADMIN') {
       return res.status(403).json({ success: false, message: 'Cannot withdraw: Registration freeze is active.' });
+    }
+
+    // For PLAYER role: verify they own this player record
+    if (req.user?.role === 'PLAYER') {
+      const player = await Player.findById(req.params.id);
+      if (!player) return res.status(404).json({ success: false, message: 'Player not found' });
+      if (player.userId?.toString() !== req.user._id?.toString()) {
+        return res.status(403).json({ success: false, message: 'You can only withdraw your own registration' });
+      }
     }
 
     const player = await Player.findByIdAndUpdate(
@@ -141,5 +173,53 @@ export const withdrawPlayer = async (req, res, next) => {
     );
 
     res.json({ success: true, message: 'Participation withdrawn successfully', data: player });
+  } catch (e) { next(e); }
+};
+
+// ── UPDATE OWN PLAYER PROFILE (Player: own only; Super Admin: any) ────────────
+export const updatePlayerProfile = async (req, res, next) => {
+  try {
+    // Freeze check: players cannot update profile when registration is frozen
+    // Super Admin is exempt
+    if (isRegistrationFrozen && req.user?.role === 'PLAYER') {
+      return res.status(403).json({ success: false, message: 'Profile updates are locked during registration freeze' });
+    }
+
+    const player = await Player.findById(req.params.id);
+    if (!player) return res.status(404).json({ success: false, message: 'Player not found' });
+
+    // Ownership check for PLAYER role
+    if (req.user?.role === 'PLAYER') {
+      if (player.userId?.toString() !== req.user._id?.toString()) {
+        return res.status(403).json({ success: false, message: 'You can only update your own profile' });
+      }
+    }
+
+    const parsed = updateProfileSchema.parse(req.body);
+
+    // Handle photo upload if provided
+    if (req.file) {
+      // Super Admin can replace any image; Player can upload own
+      parsed.imageUrl = await processAndUploadImage(req.file.buffer, player.studentId);
+    }
+
+    // For Player role: restrict which fields are editable
+    const allowedFields = req.user?.role === 'PLAYER'
+      ? ['jerseyName', 'positions', 'primaryPosition', 'tShirtSize', 'imageUrl']
+      : Object.keys(parsed); // Super Admin can edit anything passed
+
+    const update = {};
+    for (const key of allowedFields) {
+      if (parsed[key] !== undefined) update[key] = parsed[key];
+    }
+
+    if (update.jerseyName) update.jerseyName = update.jerseyName.toUpperCase();
+
+    if (update.positions && update.primaryPosition && !update.positions.includes(update.primaryPosition)) {
+      return res.status(400).json({ success: false, message: 'Primary position must be one of the selected positions' });
+    }
+
+    const updatedPlayer = await Player.findByIdAndUpdate(req.params.id, update, { new: true });
+    res.json({ success: true, message: 'Profile updated successfully', data: updatedPlayer });
   } catch (e) { next(e); }
 };

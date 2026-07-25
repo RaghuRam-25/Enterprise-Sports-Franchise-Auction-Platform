@@ -106,16 +106,28 @@ const seedData = async () => {
       'Afif Hossain', 'Nurul Hasan Sohan', 'Soumya Sarkar', 'Mahedi Hasan', 'Taijul Islam'
     ];
 
+    const sizes = ['S', 'M', 'L', 'XL', 'XXL'];
     const players = [];
     for (let i = 0; i < playerNames.length; i++) {
+      const email = `player_${i + 1}@auction.com`;
+      const playerUser = await User.create({
+        name: playerNames[i],
+        email,
+        passwordHash: defaultPassword,
+        role: 'PLAYER'
+      });
+
       const p = await Player.create({
         name: playerNames[i],
+        email,
+        userId: playerUser._id,
         studentId: `STU-2024-${100 + i}`,
         session: i % 2 === 0 ? '22-23 Academic Session' : '23-24 Academic Session',
         jerseyName: `${playerNames[i].split(' ')[0].toUpperCase()} ${10 + i}`,
+        tShirtSize: sizes[i % sizes.length],
         positions: [positions[i % positions.length].code],
         primaryPosition: positions[i % positions.length].code,
-        imageUrl: `https://images.unsplash.com/photo-${1500000000000 + i}?w=500&auto=format&fit=crop&q=80`,
+        imageUrl: `https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80`,
         category: i < 4 ? 'Icon Category' : i < 10 ? 'A Grade' : 'B Grade',
         basePrice: i < 4 ? 5000000 : i < 10 ? 3000000 : 1500000,
         status: i === 0 ? 'ON_PODIUM' : 'UNSOLD'
