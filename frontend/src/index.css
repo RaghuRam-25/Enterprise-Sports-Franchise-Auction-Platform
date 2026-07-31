@@ -9,10 +9,15 @@
   color-scheme: dark;
 }
 
+html.light {
+  color-scheme: light;
+}
+
 h1, h2, h3, h4, h5, h6, .font-heading {
   font-family: 'Outfit', system-ui, sans-serif;
 }
 
+/* Dark Mode Default */
 body {
   background-color: #0b0f19;
   color: #f1f5f9;
@@ -23,15 +28,36 @@ body {
     radial-gradient(at 100% 0%, rgba(16, 185, 129, 0.1) 0px, transparent 50%),
     radial-gradient(at 50% 100%, rgba(139, 92, 246, 0.08) 0px, transparent 50%);
   background-attachment: fixed;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-/* Glassmorphism Classes */
+/* Light Mode Overrides */
+html.light body {
+  background-color: #f8fafc;
+  color: #0f172a;
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.08) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(16, 185, 129, 0.06) 0px, transparent 50%),
+    radial-gradient(at 50% 100%, rgba(139, 92, 246, 0.05) 0px, transparent 50%);
+}
+
+/* Glassmorphism Classes - Dark */
 .glass-card {
   background: rgba(19, 28, 46, 0.75);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Glassmorphism Classes - Light */
+html.light .glass-card {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  box-shadow: 0 8px 30px 0 rgba(0, 0, 0, 0.06);
 }
 
 .glass-card-hover {
@@ -44,16 +70,57 @@ body {
   box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.45);
 }
 
+html.light .glass-card-hover:hover {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(59, 130, 246, 0.4);
+  box-shadow: 0 12px 30px 0 rgba(59, 130, 246, 0.12);
+}
+
 .glass-input {
   background: rgba(11, 15, 25, 0.8);
   border: 1px solid rgba(255, 255, 255, 0.12);
   color: #ffffff;
   transition: all 0.2s ease;
 }
+
+html.light .glass-input {
+  background: rgba(241, 245, 249, 0.9);
+  border: 1px solid rgba(203, 213, 225, 0.9);
+  color: #0f172a;
+}
+
 .glass-input:focus {
   outline: none;
   border-color: #3b82f6;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+}
+
+/* Light mode text adjustments */
+html.light .text-white {
+  color: #0f172a !important;
+}
+html.light .text-slate-100 {
+  color: #1e293b !important;
+}
+html.light .text-slate-200 {
+  color: #334155 !important;
+}
+html.light .text-slate-300 {
+  color: #475569 !important;
+}
+html.light .text-slate-400 {
+  color: #64748b !important;
+}
+html.light .bg-slate-900,
+html.light .bg-slate-950 {
+  background-color: #f1f5f9 !important;
+}
+html.light .bg-darkBg {
+  background-color: #f8fafc !important;
+}
+html.light .border-slate-800,
+html.light .border-slate-900 {
+  border-color: #e2e8f0 !important;
 }
 
 /* Custom Glows */
@@ -78,9 +145,15 @@ body {
 ::-webkit-scrollbar-track {
   background: rgba(11, 15, 25, 0.5);
 }
+html.light ::-webkit-scrollbar-track {
+  background: rgba(241, 245, 249, 0.8);
+}
 ::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.15);
   border-radius: 9999px;
+}
+html.light ::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.4);
 }
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(59, 130, 246, 0.5);

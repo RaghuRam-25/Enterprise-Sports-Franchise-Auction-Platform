@@ -1,12 +1,14 @@
 import React from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Trophy, Shield, Gavel, Users, User, Radio, LogOut, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { Trophy, Shield, Gavel, Users, User, Radio, LogOut, CheckCircle2, AlertTriangle, Sun, Moon } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useAuction } from '../context/AuctionContext';
+import { useTheme } from '../context/ThemeContext';
 
 export default function Navbar() {
   const { user, logout } = useAuth();
   const { lastActionToast, timerStatus, podiumPlayer, currentBid, formatCurrency, isRegistrationFrozen } = useAuction();
+  const { isDark, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -141,6 +143,15 @@ export default function Navbar() {
               )}
 
             </div>
+
+            {/* Theme Toggle Button (Light/Dark Mode) */}
+            <button
+              onClick={toggleTheme}
+              title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+              className="p-2 text-slate-400 hover:text-amber-400 hover:bg-slate-800/80 rounded-xl transition border border-slate-800"
+            >
+              {isDark ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-500" />}
+            </button>
 
             {/* Single Login / Logout Button */}
             {user ? (
