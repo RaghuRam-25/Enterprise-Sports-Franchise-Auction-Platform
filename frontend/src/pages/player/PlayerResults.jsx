@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Trophy, ArrowLeft, Loader2, Clock, ShieldOff } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
-import Navbar from '../../components/Navbar';
+
 
 const formatCurrency = (val) => {
   if (!val && val !== 0) return '— BDT';
@@ -51,11 +51,8 @@ export default function PlayerResults() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col bg-darkBg text-slate-100">
-        <Navbar />
-        <div className="flex-1 flex items-center justify-center">
-          <Loader2 className="w-8 h-8 animate-spin text-purple-400" />
-        </div>
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="w-8 h-8 animate-spin text-purple-400" />
       </div>
     );
   }
@@ -63,10 +60,7 @@ export default function PlayerResults() {
   const isSold = myPlayer?.status === 'SOLD' || !!ledgerEntry;
 
   return (
-    <div className="min-h-screen flex flex-col bg-darkBg text-slate-100">
-      <Navbar />
-
-      <main className="flex-1 max-w-3xl w-full mx-auto px-4 py-8 space-y-6">
+    <div className="max-w-3xl w-full mx-auto px-4 py-8 space-y-6">
 
         <Link to="/player/profile" className="flex items-center gap-2 text-xs font-bold text-slate-400 hover:text-white transition">
           <ArrowLeft className="w-4 h-4" /> Back to Dashboard
@@ -143,7 +137,6 @@ export default function PlayerResults() {
 
         </div>
 
-      </main>
     </div>
   );
 }

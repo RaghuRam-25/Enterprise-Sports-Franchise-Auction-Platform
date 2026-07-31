@@ -40,6 +40,7 @@ router.get('/teams', optionalAuth, async (req, res, next) => {
   try {
     const teams = await Team.find()
       .populate('currentRoster', 'name jerseyName primaryPosition category finalPrice imageUrl')
+      .populate('managerId', 'name email')
       .sort({ name: 1 });
     res.json({ success: true, count: teams.length, data: teams });
   } catch (e) { next(e); }

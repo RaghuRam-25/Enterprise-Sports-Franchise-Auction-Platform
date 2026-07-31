@@ -1,390 +1,373 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { User, Award, Settings, Trophy, CheckCircle2, Edit3, X, Save, Loader2, Camera } from 'lucide-react';
-import { useAuth } from '../../context/AuthContext';
-import { useAuction } from '../../context/AuctionContext';
-import { playerAPI } from '../../services/api';
-import api from '../../services/api';
-import Navbar from '../../components/Navbar';
+import React, { useState, useEffect, useRef } from "react";
+import { Link } from "react-router-dom";
+import {
+  User, Settings, Trophy, CheckCircle2, Edit3, X, Save, Loader2,
+  Camera, Shield, Hash, Shirt, List, Star, Mail, GraduationCap, BadgeCheck,
+  Lock, Upload, Trash2, Image as ImageIcon, Phone, MapPin, FileText
+} from "lucide-react";
+import { useAuth } from "../../context/AuthContext";
+import { useAuction } from "../../context/AuctionContext";
+import { playerAPI } from "../../services/api";
+import api from "../../services/api";
 
-const DEFAULT_AVATAR = 'https://ui-avatars.com/api/?background=7c3aed&color=fff&size=256&bold=true&name=';
+const DEFAULT_AVATAR = "https://ui-avatars.com/api/?background=7c3aed&color=fff&size=256&bold=true&name=";
+const POSITIONS = ["Goalkeeper", "Center Back", "Left Back", "Right Back", "Defensive Midfielder", "Central Midfielder", "Attacking Midfielder", "Left Winger", "Right Winger", "Striker", "Second Striker"];
+const TSHIRT_SIZES = ["S", "M", "L", "XL", "XXL"];
 
 export default function PlayerDashboard() {
-  const { user } = useAuth();
+  const { user, setUser } = useAuth();
   const { formatCurrency, triggerToast, isRegistrationFrozen } = useAuction();
-
   const [myPlayer, setMyPlayer] = useState(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [editForm, setEditForm] = useState({ jerseyName: '', tShirtSize: 'M', tShirtNumber: '' });
+  const [editForm, setEditForm] = useState({ name: "", phone: "", jerseyName: "", tShirtSize: "M", tShirtNumber: "", positions: [], primaryPosition: "", session: "", bio: "", address: "" });
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [filePreview, setFilePreview] = useState(null);
+  const [removeImage, setRemoveImage] = useState(false);
+  const [activeTab, setActiveTab] = useState("personal");
+  const fileInputRef = useRef(null);
 
-  // Load logged-in player's own profile by userId match
   useEffect(() => {
-    const loadMyProfile = async () => {
+    const loadProfile = async () => {
       try {
         setLoading(true);
-        // axios interceptor returns response.data already: { success, data: [...] }
-        const res = await api.get('/players');
-        const allPlayers = Array.isArray(res?.data) ? res.data : Array.isArray(res) ? res : [];
-        const mine = allPlayers.find(p =>
-          p.userId === user?._id || p.userId === user?.id || p.email === user?.email
-        );
-        setMyPlayer(mine || null);
+        const res = await playerAPI.getMyProfile();
+        const profileData = res?.data?.data || res?.data || null;
+        if (profileData && (profileData._id || profileData.id)) {
+          setMyPlayer(profileData);
+          return;
+        }
+        throw new Error("No direct profile shape returned");
       } catch (err) {
-        console.error('Failed to load player profile:', err);
+        console.warn("Direct /me profile lookup fallback:", err);
+        try {
+          const res2 = await api.get('/players');
+          const all = Array.isArray(res2?.data) ? res2.data : Array.isArray(res2) ? res2 : [];
+          const mine = all.find(p =>
+            p.userId === user?._id || p.userId === user?.id || p.email === user?.email || p.name === user?.name
+          );
+          setMyPlayer(mine || null);
+        } catch (err2) {
+          setMyPlayer(null);
+        }
       } finally {
         setLoading(false);
       }
     };
-    if (user) loadMyProfile();
+    if (user) loadProfile();
   }, [user]);
-
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [filePreview, setFilePreview] = useState(null);
-  const [removeImage, setRemoveImage] = useState(false);
 
   const openEdit = () => {
     setEditForm({
-      jerseyName: myPlayer?.jerseyName || '',
-      tShirtSize: myPlayer?.tShirtSize || 'M',
-      tShirtNumber: myPlayer?.tShirtNumber || ''
+      name: myPlayer?.name || "",
+      phone: myPlayer?.phone || "",
+      jerseyName: myPlayer?.jerseyName || "",
+      tShirtSize: myPlayer?.tShirtSize || "M",
+      tShirtNumber: myPlayer?.tShirtNumber || "",
+      positions: myPlayer?.positions || [],
+      primaryPosition: myPlayer?.primaryPosition || "",
+      session: myPlayer?.session || "",
+      bio: myPlayer?.bio || "",
+      address: myPlayer?.address || ""
     });
-    setSelectedFile(null);
-    setFilePreview(null);
-    setRemoveImage(false);
-    setEditing(true);
+    setSelectedFile(null); setFilePreview(null); setRemoveImage(false); setActiveTab("personal"); setEditing(true);
   };
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        triggerToast('Image file size must be less than 5MB', 'error');
-        return;
-      }
-      setSelectedFile(file);
-      setFilePreview(URL.createObjectURL(file));
-      setRemoveImage(false);
-    }
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { triggerToast("Max 5MB allowed", "error"); return; }
+    setSelectedFile(file); setFilePreview(URL.createObjectURL(file)); setRemoveImage(false);
   };
 
-  const handleRemovePicture = () => {
-    setSelectedFile(null);
-    setFilePreview(null);
-    setRemoveImage(true);
+  const togglePosition = (pos) => {
+    if (isRegistrationFrozen) return;
+    setEditForm(prev => {
+      const has = prev.positions.includes(pos);
+      const newPos = has ? prev.positions.filter(p => p !== pos) : [...prev.positions, pos];
+      const newPrimary = has && prev.primaryPosition === pos ? "" : prev.primaryPosition;
+      return { ...prev, positions: newPos, primaryPosition: newPrimary };
+    });
   };
 
-  const handleSaveProfile = async () => {
+  const handleSave = async () => {
     if (!myPlayer) return;
+    if (editForm.positions.length === 0) { triggerToast("Select at least one position", "error"); return; }
+    if (!editForm.primaryPosition) { triggerToast("Select a primary position", "error"); return; }
     setSaving(true);
     try {
-      const formData = new FormData();
-      if (editForm.jerseyName) formData.append('jerseyName', editForm.jerseyName);
-      if (editForm.tShirtSize) formData.append('tShirtSize', editForm.tShirtSize);
-      formData.append('tShirtNumber', editForm.tShirtNumber || '');
+      const fd = new FormData();
+      if (editForm.name) fd.append("name", editForm.name);
+      if (editForm.phone !== undefined) fd.append("phone", editForm.phone);
+      if (editForm.jerseyName) fd.append("jerseyName", editForm.jerseyName);
+      if (editForm.tShirtSize) fd.append("tShirtSize", editForm.tShirtSize);
+      fd.append("tShirtNumber", editForm.tShirtNumber || "");
+      if (editForm.bio !== undefined) fd.append("bio", editForm.bio);
+      if (editForm.address !== undefined) fd.append("address", editForm.address);
 
-      if (selectedFile) {
-        formData.append('picture', selectedFile);
-      } else if (removeImage) {
-        formData.append('imageUrl', '');
+      if (!isRegistrationFrozen) {
+        if (editForm.session) fd.append("session", editForm.session);
+        editForm.positions.forEach(p => fd.append("positions[]", p));
+        if (editForm.primaryPosition) fd.append("primaryPosition", editForm.primaryPosition);
       }
 
-      const res = await playerAPI.updateProfile(myPlayer._id || myPlayer.id, formData);
-      const updatedData = res?.data || res;
-      if (updatedData) {
+      if (selectedFile) fd.append("picture", selectedFile);
+      else if (removeImage) fd.append("imageUrl", "");
+
+      const res = await playerAPI.updateProfile(myPlayer._id || myPlayer.id, fd);
+      const updated = res?.data?.data || res?.data || res;
+      if (updated) {
         setMyPlayer(prev => ({
           ...prev,
           ...editForm,
-          imageUrl: removeImage ? '' : (updatedData.data?.imageUrl ?? updatedData.imageUrl ?? prev.imageUrl)
+          imageUrl: removeImage ? "" : (updated.imageUrl ?? prev.imageUrl)
         }));
-        triggerToast('Profile updated successfully!', 'success');
+
+        // Real-time AuthContext user sync (Navbar & Sidebar avatars update immediately)
+        if (setUser) {
+          setUser(prev => {
+            if (!prev) return prev;
+            const updatedUser = { ...prev, name: editForm.name || prev.name };
+            localStorage.setItem("user", JSON.stringify(updatedUser));
+            return updatedUser;
+          });
+        }
+
+        triggerToast("Profile updated successfully!", "success");
       }
       setEditing(false);
     } catch (err) {
-      console.error('Profile update failed:', err);
-      triggerToast(err?.response?.data?.message || 'Failed to update profile', 'error');
-    } finally {
-      setSaving(false);
-    }
+      triggerToast(err?.response?.data?.message || "Failed to update profile", "error");
+    } finally { setSaving(false); }
   };
 
+  if (loading) return <div className="flex items-center justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-purple-400" /></div>;
 
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex flex-col bg-darkBg text-slate-100">
-        <Navbar />
-        <div className="flex-1 flex items-center justify-center">
-          <Loader2 className="w-8 h-8 animate-spin text-purple-400" />
-        </div>
+  if (!myPlayer) return (
+    <div className="max-w-5xl w-full mx-auto px-4 py-8">
+      <div className="glass-card rounded-2xl p-10 border border-slate-800 text-center text-slate-400 space-y-2">
+        <User className="w-12 h-12 mx-auto text-slate-600" />
+        <p className="font-bold">No player profile found.</p>
+        <Link to="/player/register" className="inline-block mt-2 px-4 py-2 bg-purple-600 text-white text-xs font-bold rounded-xl">Register Now</Link>
       </div>
-    );
-  }
+    </div>
+  );
 
-  if (!myPlayer) {
-    return (
-      <div className="min-h-screen flex flex-col bg-darkBg text-slate-100">
-        <Navbar />
-        <main className="flex-1 max-w-5xl w-full mx-auto px-4 py-8">
-          <div className="glass-card rounded-2xl p-10 border border-slate-800 text-center text-slate-400 space-y-2">
-            <User className="w-12 h-12 mx-auto text-slate-600" />
-            <p className="font-bold">No player profile found for your account.</p>
-            <p className="text-xs">Please register as a player first.</p>
-            <Link to="/player/register" className="inline-block mt-2 px-4 py-2 bg-purple-600 text-white text-xs font-bold rounded-xl">
-              Register Now
-            </Link>
-          </div>
-        </main>
-      </div>
-    );
-  }
+  const currentAvatar = removeImage ? `${DEFAULT_AVATAR}${encodeURIComponent(myPlayer.name)}` : (filePreview || myPlayer.imageUrl || `${DEFAULT_AVATAR}${encodeURIComponent(myPlayer.name)}`);
 
   return (
-    <div className="min-h-screen flex flex-col bg-darkBg text-slate-100">
-      <Navbar />
-
-      <main className="flex-1 max-w-5xl w-full mx-auto px-4 py-8 space-y-6">
-
-        {/* Profile Header Card */}
-        <div className="glass-card rounded-2xl p-6 border border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            {/* GAP 1 & 10 FIX: imageUrl not picture */}
-            <img
-              src={myPlayer.imageUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80'}
-              alt={myPlayer.name}
-              className="w-20 h-20 rounded-2xl object-cover border-2 border-purple-500/40 shadow-xl"
-            />
-            <div>
-              <span className="text-[10px] font-bold text-purple-400 uppercase tracking-widest">Self-Serve Player Portal</span>
-              <h1 className="text-2xl font-black font-heading text-white">{myPlayer.name}</h1>
-              <p className="text-xs text-slate-300">
-                {myPlayer.jerseyName} &bull; <span className="font-mono text-slate-400">{myPlayer.studentId}</span>
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            {isRegistrationFrozen ? (
-              <span className="px-3 py-2 bg-amber-500/10 text-amber-400 border border-amber-500/20 text-xs font-bold rounded-xl flex items-center gap-1.5">
-                <Lock className="w-3.5 h-3.5" /> Read-Only (Registration Frozen)
-              </span>
-            ) : (
-              <button
-                onClick={openEdit}
-                className="px-4 py-2 bg-purple-600/20 hover:bg-purple-600 text-purple-300 hover:text-white border border-purple-500/30 text-xs font-bold rounded-xl transition flex items-center gap-1.5"
-              >
-                <Edit3 className="w-3.5 h-3.5" /> Edit Profile
-              </button>
-            )}
-
-            <Link
-              to="/player/settings"
-              className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 text-xs font-bold rounded-xl transition flex items-center gap-1.5"
-            >
-              <Settings className="w-4 h-4" /> Settings
-            </Link>
-
-            <Link
-              to="/player/results"
-              className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold rounded-xl transition flex items-center gap-1.5 shadow"
-            >
-              <Trophy className="w-4 h-4" /> Auction Results
-            </Link>
+    <div className="max-w-5xl w-full mx-auto px-4 py-8 space-y-6">
+      <div className="glass-card rounded-2xl p-6 border border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4 bg-gradient-to-r from-slate-900 via-purple-950/10 to-slate-900">
+        <div className="flex items-center gap-4">
+          <img src={myPlayer.imageUrl || `${DEFAULT_AVATAR}${encodeURIComponent(myPlayer.name)}`} alt={myPlayer.name} className="w-20 h-20 rounded-2xl object-cover border-2 border-purple-500/40 shadow-xl" />
+          <div>
+            <span className="text-[10px] font-bold text-purple-400 uppercase tracking-widest">Player Portal</span>
+            <h1 className="text-2xl font-black font-heading text-white">{myPlayer.name}</h1>
+            <p className="text-xs text-slate-300">{myPlayer.jerseyName} &bull; <span className="font-mono text-slate-400">{myPlayer.studentId}</span></p>
+            <p className="text-[11px] text-slate-500 mt-0.5">{myPlayer.email}</p>
           </div>
         </div>
-
-        {/* Status Card Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="glass-card rounded-2xl p-5 border border-slate-800 space-y-2">
-            <span className="text-[10px] font-bold text-slate-400 uppercase">Assigned Category</span>
-            <p className="text-xl font-black font-heading text-amber-400">{myPlayer.category}</p>
-            <p className="text-[11px] text-slate-400">
-              Base Price: <strong className="font-mono text-emerald-400">{formatCurrency(myPlayer.basePrice)}</strong>
-            </p>
-          </div>
-
-          <div className="glass-card rounded-2xl p-5 border border-slate-800 space-y-2">
-            <span className="text-[10px] font-bold text-slate-400 uppercase">Academic Session</span>
-            <p className="text-base font-extrabold text-white">{myPlayer.session}</p>
-            <p className="text-[11px] text-emerald-400 font-semibold flex items-center gap-1">
-              <CheckCircle2 className="w-3.5 h-3.5" /> Verified Participant
-            </p>
-          </div>
-
-          <div className="glass-card rounded-2xl p-5 border border-slate-800 space-y-2">
-            <span className="text-[10px] font-bold text-slate-400 uppercase">Live Auction Status</span>
-            <p className="text-xl font-black font-heading capitalize text-blue-400">{myPlayer.status}</p>
-            <p className="text-[11px] text-slate-400">
-              {myPlayer.status === 'SOLD' ? 'Successfully sold at auction' : 'Waiting for live podium call'}
-            </p>
-          </div>
-        </div>
-
-        {/* Positions & Jersey */}
-        <div className="glass-card rounded-2xl p-5 border border-slate-800">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">Positions & Jersey</h3>
-          <div className="flex flex-wrap gap-2">
-            {(myPlayer.positions || []).map(pos => (
-              <span
-                key={pos}
-                className={`px-3 py-1 rounded-lg text-xs font-bold border ${pos === myPlayer.primaryPosition
-                  ? 'bg-purple-500/20 text-purple-300 border-purple-500/40'
-                  : 'bg-slate-800 text-slate-400 border-slate-700'}`}
-              >
-                {pos} {pos === myPlayer.primaryPosition && '(Primary)'}
-              </span>
-            ))}
-            <span className="px-3 py-1 rounded-lg text-xs font-bold border bg-slate-900 text-slate-300 border-slate-700">
-              Jersey: {myPlayer.jerseyName}
-            </span>
-            <span className="px-3 py-1 rounded-lg text-xs font-bold border bg-slate-900 text-slate-300 border-slate-700">
-              T-Shirt Size: {myPlayer.tShirtSize}
-            </span>
-            <span className="px-3 py-1 rounded-lg text-xs font-bold border bg-slate-900 text-slate-300 border-slate-700">
-              T-Shirt No: {myPlayer.tShirtNumber || '—'}
-            </span>
-          </div>
-        </div>
-
-        {/* Become a Team Manager Access Request Section */}
-        <div className="glass-card rounded-2xl p-6 border border-slate-800 space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-sm font-bold text-white uppercase tracking-wider">Franchise Management</h3>
-              <p className="text-xs text-slate-400">Request permission to become a Team Manager and manage a franchise team.</p>
-            </div>
-            {user?.managerRequestStatus === 'PENDING' && (
-              <span className="px-3 py-1 bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-lg text-xs font-bold animate-pulse">
-                Request Pending Review
-              </span>
-            )}
-            {user?.managerRequestStatus === 'APPROVED' && (
-              <span className="px-3 py-1 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-lg text-xs font-bold">
-                Approved — Team Manager
-              </span>
-            )}
-            {user?.managerRequestStatus === 'REJECTED' && (
-              <span className="px-3 py-1 bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded-lg text-xs font-bold">
-                Request Declined
-              </span>
-            )}
-          </div>
-
-          {(!user?.managerRequestStatus || user?.managerRequestStatus === 'NONE' || user?.managerRequestStatus === 'REJECTED') && (
-            <div className="flex gap-3">
-              <button
-                onClick={async () => {
-                  try {
-                    const res = await api.post('/players/request-manager', { note: 'Interested in leading a team roster.' });
-                    if (res?.data?.success || res?.success) {
-                      alert('Team Manager request submitted to Super Admin for approval!');
-                      window.location.reload();
-                    }
-                  } catch (err) {
-                    alert(err?.response?.data?.message || 'Failed to submit request');
-                  }
-                }}
-                className="px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl transition shadow-lg"
-              >
-                Request Team Manager Role
-              </button>
-            </div>
+        <div className="flex flex-wrap items-center gap-2">
+          {isRegistrationFrozen ? (
+            <span className="px-3 py-2 bg-amber-500/10 text-amber-400 border border-amber-500/20 text-xs font-bold rounded-xl flex items-center gap-1.5"><Lock className="w-3.5 h-3.5" /> Read-Only</span>
+          ) : (
+            <button onClick={openEdit} className="px-4 py-2 bg-purple-600/20 hover:bg-purple-600 text-purple-300 hover:text-white border border-purple-500/30 text-xs font-bold rounded-xl transition flex items-center gap-1.5">
+              <Edit3 className="w-3.5 h-3.5" /> Edit Profile
+            </button>
           )}
+          <Link to="/player/settings" className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 text-xs font-bold rounded-xl transition flex items-center gap-1.5"><Settings className="w-4 h-4" /> Settings</Link>
+          <Link to="/player/results" className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold rounded-xl transition flex items-center gap-1.5 shadow"><Trophy className="w-4 h-4" /> Auction Results</Link>
         </div>
-
-      </main>
-
-      {/* Edit Profile Modal — GAP 6 FIX */}
-      {editing && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="glass-card w-full max-w-sm rounded-2xl p-6 border border-slate-700 space-y-5 shadow-2xl">
-            <div className="flex justify-between items-center">
-              <h2 className="text-lg font-black text-white">Edit Profile</h2>
-              <button onClick={() => setEditing(false)} className="p-2 text-slate-400 hover:text-white rounded-lg">
-                <X className="w-4 h-4" />
-              </button>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="glass-card rounded-2xl p-5 border border-slate-800 space-y-1">
+          <span className="text-[10px] font-bold text-slate-400 uppercase">Category</span>
+          <p className="text-xl font-black text-amber-400">{myPlayer.category}</p>
+          <p className="text-[11px] text-slate-400">Base: <strong className="font-mono text-emerald-400">{formatCurrency(myPlayer.basePrice)}</strong></p>
+        </div>
+        <div className="glass-card rounded-2xl p-5 border border-slate-800 space-y-1">
+          <span className="text-[10px] font-bold text-slate-400 uppercase">Session</span>
+          <p className="text-base font-extrabold text-white">{myPlayer.session}</p>
+          <p className="text-[11px] text-emerald-400 font-semibold flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5" /> Verified</p>
+        </div>
+        <div className="glass-card rounded-2xl p-5 border border-slate-800 space-y-1">
+          <span className="text-[10px] font-bold text-slate-400 uppercase">Auction Status</span>
+          <p className="text-xl font-black capitalize text-blue-400">{myPlayer.status}</p>
+          <p className="text-[11px] text-slate-400">{myPlayer.status === "SOLD" ? "Sold at auction" : "Awaiting podium"}</p>
+        </div>
+      </div>
+      <div className="glass-card rounded-2xl p-6 border border-slate-800 space-y-4">
+        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2"><User className="w-3.5 h-3.5 text-purple-400" /> Player Information</h3>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
+          {[{ label: "Full Name", value: myPlayer.name, cls: "text-white" }, { label: "Student ID", value: myPlayer.studentId, cls: "text-white font-mono" }, { label: "Session", value: myPlayer.session, cls: "text-white" }, { label: "Email", value: myPlayer.email, cls: "text-blue-300 truncate" }, { label: "Jersey Name", value: myPlayer.jerseyName, cls: "text-white font-mono font-bold" }, { label: "Kit", value: `${myPlayer.tShirtSize} / #${myPlayer.tShirtNumber || "--"}`, cls: "text-white" }].map(({ label, value, cls }) => (
+            <div key={label} className="bg-slate-950/60 rounded-xl p-3 border border-slate-800">
+              <span className="text-slate-500 uppercase text-[10px] font-bold">{label}</span>
+              <p className={`${cls} font-semibold mt-0.5`}>{value}</p>
             </div>
-
-            <div className="space-y-4 text-xs">
+          ))}
+        </div>
+      </div>
+      <div className="glass-card rounded-2xl p-5 border border-slate-800">
+        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 flex items-center gap-2"><Shield className="w-3.5 h-3.5 text-purple-400" /> Positions</h3>
+        <div className="flex flex-wrap gap-2">
+          {(myPlayer.positions || []).map(pos => (
+            <span key={pos} className={`px-3 py-1 rounded-lg text-xs font-bold border ${pos === myPlayer.primaryPosition ? "bg-purple-500/20 text-purple-300 border-purple-500/40" : "bg-slate-800 text-slate-400 border-slate-700"}`}>
+              {pos === myPlayer.primaryPosition && <Star className="w-3 h-3 inline mr-1 text-yellow-400" />}{pos}{pos === myPlayer.primaryPosition && " (Primary)"}
+            </span>
+          ))}
+        </div>
+      </div>
+      <div className="glass-card rounded-2xl p-6 border border-slate-800 space-y-4">
+        <div className="flex items-center justify-between">
+          <div><h3 className="text-sm font-bold text-white uppercase tracking-wider">Franchise Management</h3><p className="text-xs text-slate-400">Request permission to become a Team Manager.</p></div>
+          {user?.managerRequestStatus === "PENDING" && <span className="px-3 py-1 bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-lg text-xs font-bold animate-pulse">Pending</span>}
+          {user?.managerRequestStatus === "APPROVED" && <span className="px-3 py-1 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-lg text-xs font-bold">Approved</span>}
+          {user?.managerRequestStatus === "REJECTED" && <span className="px-3 py-1 bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded-lg text-xs font-bold">Declined</span>}
+        </div>
+        {(!user?.managerRequestStatus || user?.managerRequestStatus === "NONE" || user?.managerRequestStatus === "REJECTED") && (
+          <button onClick={async () => { try { const r = await api.post("/players/request-manager", { note: "Interested." }); if (r?.data?.success || r?.success) { alert("Request submitted!"); window.location.reload(); } } catch (e) { alert(e?.response?.data?.message || "Failed"); } }} className="px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl transition shadow-lg">
+            Request Team Manager Role
+          </button>
+        )}
+      </div>
+      {editing && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-start justify-center p-4 overflow-y-auto">
+          <div className="glass-card w-full max-w-2xl rounded-2xl border border-slate-700 shadow-2xl my-6">
+            <div className="flex justify-between items-center px-6 py-4 border-b border-slate-800">
               <div>
-                <label className="block font-semibold text-slate-400 mb-1">Profile Picture</label>
-                <div className="flex items-center gap-3">
-                  <div className="relative">
-                    <img
-                      src={removeImage ? `${DEFAULT_AVATAR}${encodeURIComponent(myPlayer.name)}` : (filePreview || myPlayer.imageUrl || `${DEFAULT_AVATAR}${encodeURIComponent(myPlayer.name)}`)}
-                      alt="Avatar Preview"
-                      className="w-12 h-12 rounded-xl object-cover border border-slate-700"
-                    />
+                <h2 className="text-lg font-black text-white flex items-center gap-2"><Edit3 className="w-5 h-5 text-purple-400" /> Edit My Profile</h2>
+                <p className="text-[11px] text-slate-400 mt-0.5">Update your player information</p>
+              </div>
+              <button onClick={() => setEditing(false)} className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl transition"><X className="w-5 h-5" /></button>
+            </div>
+            <div className="flex border-b border-slate-800 px-6 overflow-x-auto">
+              {[{ id: "personal", label: "Personal", icon: User }, { id: "photo", label: "Photo", icon: Camera }, { id: "sports", label: "Positions", icon: Shield }, { id: "kit", label: "Kit & Jersey", icon: Shirt }].map(tab => (
+                <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex items-center gap-1.5 px-4 py-3 text-xs font-bold border-b-2 whitespace-nowrap transition ${activeTab === tab.id ? "border-purple-500 text-purple-400" : "border-transparent text-slate-500 hover:text-slate-300"}`}>
+                  <tab.icon className="w-3.5 h-3.5" />{tab.label}
+                </button>
+              ))}
+            </div>
+            <div className="p-6 space-y-5">
+              {activeTab === "personal" && (
+                <div className="space-y-4 text-xs">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block font-semibold text-slate-400 mb-1.5 flex items-center gap-1.5"><User className="w-3.5 h-3.5 text-blue-400" /> Full Name</label>
+                      <input type="text" value={editForm.name} onChange={e => setEditForm(prev => ({ ...prev, name: e.target.value }))} className="glass-input w-full px-3 py-2.5 rounded-xl text-white" placeholder="Your full name" />
+                    </div>
+                    <div>
+                      <label className="block font-semibold text-slate-400 mb-1.5 flex items-center gap-1.5"><Hash className="w-3.5 h-3.5 text-amber-400" /> Student ID</label>
+                      <input type="text" value={editForm.studentId} onChange={e => setEditForm(prev => ({ ...prev, studentId: e.target.value }))} className="glass-input w-full px-3 py-2.5 rounded-xl text-white font-mono" placeholder="e.g. 20-41500-1" />
+                    </div>
                   </div>
-                  <div className="flex-1 space-y-1">
-                    <label className="cursor-pointer px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg font-semibold text-xs inline-flex items-center gap-1.5 border border-slate-700">
-                      <Camera className="w-3.5 h-3.5 text-purple-400" />
-                      <span>{myPlayer.imageUrl || filePreview ? 'Change Photo' : 'Upload Photo'}</span>
-                      <input type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
-                    </label>
-                    {(myPlayer.imageUrl || filePreview) && !removeImage && (
-                      <button
-                        type="button"
-                        onClick={handleRemovePicture}
-                        className="block text-[11px] text-rose-400 hover:text-rose-300 font-semibold"
-                      >
-                        Remove Photo
-                      </button>
-                    )}
+                  <div>
+                    <label className="block font-semibold text-slate-400 mb-1.5 flex items-center gap-1.5"><GraduationCap className="w-3.5 h-3.5 text-emerald-400" /> Academic Session</label>
+                    <input type="text" value={editForm.session} onChange={e => setEditForm(prev => ({ ...prev, session: e.target.value }))} className="glass-input w-full px-3 py-2.5 rounded-xl text-white" placeholder="e.g. 2020-2021" />
+                  </div>
+                  <div className="p-3 bg-slate-950/60 rounded-xl border border-slate-800 flex items-start gap-2">
+                    <Mail className="w-3.5 h-3.5 text-slate-500 mt-0.5 flex-shrink-0" />
+                    <div><span className="text-slate-500 font-semibold">Email (read-only)</span><p className="text-blue-300 font-mono mt-0.5">{myPlayer.email}</p></div>
                   </div>
                 </div>
-              </div>
-
-              <div>
-                <label className="block font-semibold text-slate-400 mb-1">Jersey Name (max 15 chars)</label>
-                <input
-                  type="text"
-                  maxLength={15}
-                  value={editForm.jerseyName}
-                  onChange={e => setEditForm(prev => ({ ...prev, jerseyName: e.target.value.toUpperCase() }))}
-                  className="glass-input w-full px-3 py-2 rounded-xl text-white font-mono uppercase"
-                />
-              </div>
-              <div>
-                <label className="block font-semibold text-slate-400 mb-1">T-Shirt Size</label>
-                <select
-                  value={editForm.tShirtSize}
-                  onChange={e => setEditForm(prev => ({ ...prev, tShirtSize: e.target.value }))}
-                  className="glass-input w-full px-3 py-2 rounded-xl text-white bg-slate-900"
-                >
-                  {['S', 'M', 'L', 'XL', 'XXL'].map(s => (
-                    <option key={s} value={s}>{s}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block font-semibold text-slate-400 mb-1">T-Shirt Number</label>
-                <input
-                  type="text"
-                  pattern="[0-9]*"
-                  value={editForm.tShirtNumber}
-                  onChange={e => setEditForm(prev => ({ ...prev, tShirtNumber: e.target.value.replace(/\D/g, '') }))}
-                  className="glass-input w-full px-3 py-2 rounded-xl text-white font-mono"
-                  placeholder="e.g. 7 or 10"
-                />
-              </div>
+              )}
+              {activeTab === "photo" && (
+                <div className="space-y-5 text-xs">
+                  <div className="flex flex-col items-center gap-3">
+                    <div className="relative">
+                      <img src={currentAvatar} alt="Preview" className="w-28 h-28 rounded-2xl object-cover border-2 border-purple-500/40 shadow-2xl" />
+                      {filePreview && !removeImage && <span className="absolute -top-2 -right-2 px-1.5 py-0.5 bg-emerald-600 text-white text-[9px] font-bold rounded-full">NEW</span>}
+                    </div>
+                    <p className="text-slate-500">Profile photo preview</p>
+                  </div>
+                  <div className="border-2 border-dashed border-slate-700 hover:border-purple-500/50 rounded-2xl p-8 text-center cursor-pointer transition group" onClick={() => fileInputRef.current?.click()} onDragOver={e => e.preventDefault()} onDrop={e => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f && f.type.startsWith("image/")) { if (f.size > 5 * 1024 * 1024) { triggerToast("Max 5MB", "error"); return; } setSelectedFile(f); setFilePreview(URL.createObjectURL(f)); setRemoveImage(false); } }}>
+                    <Upload className="w-10 h-10 mx-auto text-slate-600 group-hover:text-purple-400 transition mb-2" />
+                    <p className="font-semibold text-slate-400 group-hover:text-slate-200 transition">Click or drag and drop to upload</p>
+                    <p className="text-slate-600 mt-1">PNG, JPG, WEBP up to 5MB</p>
+                    <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
+                  </div>
+                  {selectedFile && !removeImage && (
+                    <div className="flex items-center justify-between p-3 bg-purple-500/10 border border-purple-500/30 rounded-xl">
+                      <span className="text-purple-300 font-semibold truncate max-w-[200px]">{selectedFile.name} ({(selectedFile.size / 1024).toFixed(0)} KB)</span>
+                      <button onClick={() => { setSelectedFile(null); setFilePreview(null); }} className="text-rose-400 hover:text-rose-300"><X className="w-4 h-4" /></button>
+                    </div>
+                  )}
+                  {myPlayer.imageUrl && !removeImage && (
+                    <button onClick={() => { setSelectedFile(null); setFilePreview(null); setRemoveImage(true); }} className="w-full py-2.5 border border-rose-800/50 text-rose-400 hover:bg-rose-950/30 rounded-xl font-bold transition flex items-center justify-center gap-2">
+                      <Trash2 className="w-3.5 h-3.5" /> Remove Current Photo
+                    </button>
+                  )}
+                  {removeImage && <div className="p-3 bg-rose-950/20 border border-rose-800/40 rounded-xl text-center text-rose-400 text-xs font-semibold">Photo will be removed on save. <button onClick={() => setRemoveImage(false)} className="underline ml-1 hover:text-rose-300">Undo</button></div>}
+                </div>
+              )}
+              {activeTab === "sports" && (
+                <div className="space-y-5 text-xs">
+                  <div>
+                    <label className="block font-semibold text-slate-400 mb-2 flex items-center gap-1.5"><List className="w-3.5 h-3.5 text-purple-400" /> Select Positions</label>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                      {POSITIONS.map(pos => (
+                        <button key={pos} type="button" onClick={() => togglePosition(pos)} className={`py-2 px-3 rounded-xl border text-left font-semibold transition ${editForm.positions.includes(pos) ? "bg-purple-600/20 border-purple-500/50 text-purple-300" : "bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-600 hover:text-slate-200"}`}>
+                          {editForm.positions.includes(pos) && <CheckCircle2 className="w-3 h-3 inline mr-1 text-purple-400" />}{pos}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  {editForm.positions.length > 0 && (
+                    <div>
+                      <label className="block font-semibold text-slate-400 mb-2 flex items-center gap-1.5"><Star className="w-3.5 h-3.5 text-yellow-400" /> Choose Primary Position</label>
+                      <div className="flex flex-wrap gap-2">
+                        {editForm.positions.map(pos => (
+                          <button key={pos} type="button" onClick={() => setEditForm(prev => ({ ...prev, primaryPosition: pos }))} className={`py-1.5 px-3 rounded-xl border font-bold transition ${editForm.primaryPosition === pos ? "bg-yellow-500/20 border-yellow-500/50 text-yellow-300" : "bg-slate-900 border-slate-700 text-slate-400 hover:border-yellow-500/30"}`}>
+                            {editForm.primaryPosition === pos && <Star className="w-3 h-3 inline mr-1 text-yellow-400" />}{pos}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {editForm.positions.length === 0 && <p className="text-amber-400 text-xs font-semibold text-center p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl">Select at least one position above.</p>}
+                </div>
+              )}
+              {activeTab === "kit" && (
+                <div className="space-y-4 text-xs">
+                  <div>
+                    <label className="block font-semibold text-slate-400 mb-1.5 flex items-center gap-1.5"><BadgeCheck className="w-3.5 h-3.5 text-purple-400" /> Jersey Name <span className="text-slate-600 font-normal ml-1">(max 15 chars)</span></label>
+                    <input type="text" maxLength={15} value={editForm.jerseyName} onChange={e => setEditForm(prev => ({ ...prev, jerseyName: e.target.value.toUpperCase() }))} className="glass-input w-full px-3 py-2.5 rounded-xl text-white font-mono uppercase tracking-wider" placeholder="E.G. RONALDO" />
+                    <p className="text-slate-600 mt-1">{editForm.jerseyName.length}/15</p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block font-semibold text-slate-400 mb-1.5 flex items-center gap-1.5"><Shirt className="w-3.5 h-3.5 text-blue-400" /> T-Shirt Size</label>
+                      <div className="flex gap-1.5">
+                        {TSHIRT_SIZES.map(s => (
+                          <button key={s} type="button" onClick={() => setEditForm(prev => ({ ...prev, tShirtSize: s }))} className={`flex-1 py-2 rounded-xl border font-bold transition text-xs ${editForm.tShirtSize === s ? "bg-blue-600/20 border-blue-500/50 text-blue-300" : "bg-slate-900 border-slate-800 text-slate-500 hover:border-slate-600 hover:text-slate-300"}`}>{s}</button>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block font-semibold text-slate-400 mb-1.5 flex items-center gap-1.5"><Hash className="w-3.5 h-3.5 text-amber-400" /> T-Shirt Number</label>
+                      <input type="text" value={editForm.tShirtNumber} onChange={e => setEditForm(prev => ({ ...prev, tShirtNumber: e.target.value.replace(/\D/g, "") }))} className="glass-input w-full px-3 py-2.5 rounded-xl text-white font-mono text-lg text-center" placeholder="7" maxLength={3} />
+                    </div>
+                  </div>
+                  <div className="p-4 bg-slate-950/60 rounded-2xl border border-slate-800">
+                    <span className="text-[10px] font-bold text-slate-500 uppercase">Kit Preview</span>
+                    <div className="flex items-center gap-4 mt-2">
+                      <div className="w-14 h-14 rounded-xl bg-purple-500/10 border-2 border-purple-500/30 flex items-center justify-center">
+                        <span className="text-2xl font-black text-purple-300 font-mono">{editForm.tShirtNumber || "#"}</span>
+                      </div>
+                      <div>
+                        <p className="font-black font-mono text-white text-base uppercase tracking-wider">{editForm.jerseyName || "JERSEY NAME"}</p>
+                        <p className="text-slate-500 text-[11px]">Size: <strong className="text-slate-300">{editForm.tShirtSize}</strong></p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
-
-            <div className="flex gap-3 pt-1">
-              <button
-                onClick={() => setEditing(false)}
-                className="flex-1 py-2.5 border border-slate-700 text-slate-300 hover:bg-slate-800 rounded-xl text-xs font-semibold transition"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSaveProfile}
-                disabled={saving}
-                className="flex-1 py-2.5 bg-purple-600 hover:bg-purple-500 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition disabled:opacity-60"
-              >
+            <div className="flex gap-3 px-6 py-4 border-t border-slate-800 bg-slate-950/40 rounded-b-2xl">
+              <button onClick={() => setEditing(false)} className="flex-1 py-2.5 border border-slate-700 text-slate-300 hover:bg-slate-800 rounded-xl text-xs font-semibold transition">Cancel</button>
+              <button onClick={handleSave} disabled={saving} className="flex-1 py-2.5 bg-purple-600 hover:bg-purple-500 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition disabled:opacity-60 shadow-lg">
                 {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
-                Save Changes
+                {saving ? "Saving..." : "Save All Changes"}
               </button>
             </div>
           </div>

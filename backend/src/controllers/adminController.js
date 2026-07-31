@@ -169,6 +169,7 @@ export const getTeams = async (req, res, next) => {
   try {
     const teams = await Team.find()
       .populate('currentRoster', 'name jerseyName primaryPosition category finalPrice imageUrl')
+      .populate('managerId', 'name email')
       .sort({ name: 1 });
     res.json({ success: true, count: teams.length, data: teams });
   } catch (e) { next(e); }
@@ -199,6 +200,11 @@ export const editTeam = async (req, res, next) => {
     if (!team) return res.status(404).json({ success: false, message: 'Team not found' });
 
     await logAdminAction('EDIT_TEAM', req.user?.email || 'admin', { id: req.params.id, changes: parsed });
+
+    // Broadcast real-time update to all clients
+    const io = req.app?.get('io');
+    if (io) io.emit('teams:updated', team);
+
     res.json({ success: true, data: team });
   } catch (e) { next(e); }
 };
@@ -278,16 +284,87 @@ export const handleManagerRequest = async (req, res, next) => {
     const user = await User.findById(req.params.id);
     if (!user) return res.status(404).json({ success: false, message: 'User not found' });
 
+    const io = req.app?.get('io');
+
     if (action === 'APPROVE') {
+      // 1. Promote user to TEAM_MANAGER
       user.role = 'TEAM_MANAGER';
       user.managerRequestStatus = 'APPROVED';
+
+      // 2. Find an unassigned team (managerId is null)
+      let assignedTeam = null;
+      const unassignedTeam = await Team.findOne({ managerId: null });
+
+      if (unassignedTeam) {
+        // 3a. Assign the unassigned team to this new manager
+        unassignedTeam.managerId = user._id;
+        await unassignedTeam.save();
+        user.teamId = unassignedTeam._id;
+        assignedTeam = unassignedTeam;
+
+        await logAdminAction('AUTO_ASSIGN_TEAM', req.user?.email || 'admin', {
+          managerId: user._id,
+          managerName: user.name,
+          teamId: unassignedTeam._id,
+          teamName: unassignedTeam.name
+        });
+
+        // 4. Broadcast real-time team update to all clients
+        if (io) {
+          const populatedTeam = await Team.findById(unassignedTeam._id)
+            .populate('managerId', 'name email')
+            .populate('currentRoster', 'name jerseyName primaryPosition');
+          io.emit('teams:updated', populatedTeam);
+        }
+      } else {
+        // 3b. No unassigned team available — notify admin via console
+        console.warn(`[handleManagerRequest] APPROVED user '${user.name}' but no unassigned teams are available.`);
+      }
+
       await user.save();
-      await logAdminAction('APPROVE_MANAGER_REQUEST', req.user?.email || 'admin', { id: user._id, email: user.email });
-      return res.json({ success: true, message: `Manager request APPROVED for '${user.name}'. User is now TEAM_MANAGER.`, data: user });
+      await logAdminAction('APPROVE_MANAGER_REQUEST', req.user?.email || 'admin', {
+        id: user._id,
+        email: user.email,
+        teamAssigned: assignedTeam ? assignedTeam.name : 'None (no available teams)'
+      });
+
+      // 5. Emit role update so the user's browser updates without refresh
+      if (io) {
+        io.emit('user:role_updated', {
+          userId: user._id.toString(),
+          newRole: 'TEAM_MANAGER',
+          teamId: user.teamId ? user.teamId.toString() : null,
+          teamName: assignedTeam ? assignedTeam.name : null
+        });
+      }
+
+      const message = assignedTeam
+        ? `Manager request APPROVED for '${user.name}'. Assigned to team: ${assignedTeam.name}`
+        : `Manager request APPROVED for '${user.name}'. No unassigned teams available — please create or assign a team manually.`;
+
+      return res.json({
+        success: true,
+        message,
+        data: user,
+        teamAssigned: assignedTeam || null,
+        noTeamAvailable: !assignedTeam
+      });
+
     } else if (action === 'REJECT') {
       user.managerRequestStatus = 'REJECTED';
+      // Keep role as PLAYER — do not promote
       await user.save();
       await logAdminAction('REJECT_MANAGER_REQUEST', req.user?.email || 'admin', { id: user._id, email: user.email });
+
+      // Notify the user's browser about rejection
+      if (io) {
+        io.emit('user:role_updated', {
+          userId: user._id.toString(),
+          newRole: user.role, // stays PLAYER
+          managerRequestStatus: 'REJECTED'
+        });
+      }
+
       return res.json({ success: true, message: `Manager request REJECTED for '${user.name}'.`, data: user });
     } else {
       return res.status(400).json({ success: false, message: "Invalid action. Must be 'APPROVE' or 'REJECT'." });

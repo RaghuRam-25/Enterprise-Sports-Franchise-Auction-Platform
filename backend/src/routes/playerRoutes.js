@@ -3,6 +3,7 @@ import { uploadMiddleware } from '../services/imageService.js';
 import {
   registerPlayer,
   getPlayers,
+  getMyProfile,
   withdrawPlayer,
   updatePlayerProfile,
   getRegistrationStatus,
@@ -17,6 +18,9 @@ const router = express.Router();
 
 // GET /api/players/status — public
 router.get('/status', getRegistrationStatus);
+
+// GET /api/players/me — logged-in player profile
+router.get('/me', protect, getMyProfile);
 
 // POST /api/players/register — public (freeze bypass for SUPER_ADMIN handled in controller)
 router.post('/register', optionalAuth, uploadMiddleware.single('picture'), registerPlayer);

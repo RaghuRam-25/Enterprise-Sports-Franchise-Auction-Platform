@@ -2,8 +2,6 @@ import React, { useState } from 'react';
 import { Play, Pause, RotateCcw, XCircle, Gavel, Search, Settings2, ShieldAlert, CheckCircle2, Clock, Eye, AlertCircle, Shuffle, SkipForward } from 'lucide-react';
 import { useAuction } from '../../context/AuctionContext';
 import api from '../../services/api';
-import Navbar from '../../components/Navbar';
-
 export const PodiumDashboard = () => {
   const {
     players,
@@ -60,7 +58,7 @@ export const PodiumDashboard = () => {
     const randomIdx = Math.floor(Math.random() * filteredUnsold.length);
     const randomPlayer = filteredUnsold[randomIdx];
     pushToPodium(randomPlayer, Number(customDuration), targetMode);
-    api.post('/podium/select-unsold', { playerId: randomPlayer.id || randomPlayer._id }).catch(() => {});
+    api.post('/podium/select-unsold', { playerId: randomPlayer.id || randomPlayer._id }).catch(() => { });
   };
 
   const handleMoveNext = () => {
@@ -70,16 +68,11 @@ export const PodiumDashboard = () => {
     }
     const nextPlayer = unsoldPlayers[0];
     pushToPodium(nextPlayer, Number(customDuration), targetMode);
-    api.post('/podium/move-next').catch(() => {});
+    api.post('/podium/move-next').catch(() => { });
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-darkBg text-slate-100">
-      <Navbar />
-
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-        
-        {/* Top Title Banner */}
+    <div className="space-y-6">
         <div className="glass-card rounded-2xl p-6 border border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-gradient-to-r from-slate-900 via-rose-950/20 to-slate-900">
           <div className="flex items-center space-x-3">
             <div className="bg-rose-600/20 p-3 rounded-2xl text-rose-400 border border-rose-500/30">
@@ -107,7 +100,7 @@ export const PodiumDashboard = () => {
 
         {/* Main Grid: Unsold Pool vs Control Deck */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          
+
           {/* Left Column: Unsold Player Pool */}
           <div className="glass-card rounded-2xl p-6 border border-slate-800 flex flex-col h-[650px] space-y-4">
             <div>
@@ -190,7 +183,7 @@ export const PodiumDashboard = () => {
 
           {/* Center & Right Column: Launchpad & Live Podium Control Deck */}
           <div className="lg:col-span-2 space-y-6">
-            
+
             {/* Launchpad Configuration Box */}
             <div className="glass-card rounded-2xl p-6 border border-slate-800 space-y-4">
               <h3 className="text-sm font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
@@ -206,11 +199,10 @@ export const PodiumDashboard = () => {
                         key={dur}
                         type="button"
                         onClick={() => setCustomDuration(dur)}
-                        className={`px-3 py-1.5 text-xs font-bold rounded-lg border transition ${
-                          customDuration === dur
+                        className={`px-3 py-1.5 text-xs font-bold rounded-lg border transition ${customDuration === dur
                             ? 'bg-blue-600 text-white border-blue-500'
                             : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white'
-                        }`}
+                          }`}
                       >
                         {dur}s
                       </button>
@@ -230,22 +222,20 @@ export const PodiumDashboard = () => {
                     <button
                       type="button"
                       onClick={() => setTargetMode('normal')}
-                      className={`px-3 py-1.5 text-xs font-bold rounded-lg border transition ${
-                        targetMode === 'normal'
+                      className={`px-3 py-1.5 text-xs font-bold rounded-lg border transition ${targetMode === 'normal'
                           ? 'bg-emerald-600 text-white border-emerald-500'
                           : 'bg-slate-900 text-slate-400 border-slate-800'
-                      }`}
+                        }`}
                     >
                       Normal Mode
                     </button>
                     <button
                       type="button"
                       onClick={() => setTargetMode('blind')}
-                      className={`px-3 py-1.5 text-xs font-bold rounded-lg border transition ${
-                        targetMode === 'blind'
+                      className={`px-3 py-1.5 text-xs font-bold rounded-lg border transition ${targetMode === 'blind'
                           ? 'bg-purple-600 text-white border-purple-500'
                           : 'bg-slate-900 text-slate-400 border-slate-800'
-                      }`}
+                        }`}
                     >
                       Blind Mode
                     </button>
@@ -276,7 +266,7 @@ export const PodiumDashboard = () => {
             {podiumPlayer ? (
               <div className="glass-card rounded-2xl p-6 border border-slate-800 space-y-6 bg-gradient-to-b from-slate-900 via-slate-900/90 to-blue-950/20">
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
-                  
+
                   {/* Player Info & Photo */}
                   <div className="flex items-center gap-4">
                     <div className="relative">
@@ -302,9 +292,8 @@ export const PodiumDashboard = () => {
 
                   {/* Countdown Timer Display */}
                   <div className="flex flex-col items-center">
-                    <div className={`relative w-24 h-24 rounded-full flex items-center justify-center border-4 shadow-xl ${
-                      timerRemaining <= 10 ? 'border-rose-500 text-rose-400 animate-pulse' : 'border-emerald-500 text-emerald-400'
-                    }`}>
+                    <div className={`relative w-24 h-24 rounded-full flex items-center justify-center border-4 shadow-xl ${timerRemaining <= 10 ? 'border-rose-500 text-rose-400 animate-pulse' : 'border-emerald-500 text-emerald-400'
+                      }`}>
                       <span className="text-3xl font-black font-mono">{timerRemaining}s</span>
                     </div>
                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
@@ -418,7 +407,6 @@ export const PodiumDashboard = () => {
 
         </div>
 
-      </main>
     </div>
   );
 };

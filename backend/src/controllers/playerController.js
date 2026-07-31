@@ -7,6 +7,25 @@ import { processAndUploadImage } from '../services/imageService.js';
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 
+// ── GET OWN PLAYER PROFILE ───────────────────────────────────────────────────
+export const getMyPlayerProfile = async (req, res, next) => {
+  try {
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ success: false, message: 'Not authenticated' });
+    }
+
+    const player = await Player.findOne({ userId: req.user.id });
+
+    if (!player) {
+      return res.status(404).json({ success: false, message: 'Player profile not found for this user account.' });
+    }
+
+    res.json({ success: true, data: player });
+  } catch (e) {
+    next(e);
+  }
+};
+
 // ── Registration Freeze — GAP 5 FIX: persistent via MongoDB ──────────────────
 export const getRegistrationStatus = async (req, res) => {
   try {
@@ -49,10 +68,12 @@ const registerPlayerSchema = z.object({
 
 const updateProfileSchema = z.object({
   name: z.string().min(2).optional(),
-  studentId: z.string().min(2).optional(),
+  phone: z.string().optional(),
+  bio: z.string().optional(),
+  address: z.string().optional(),
   session: z.string().min(2).optional(),
   jerseyName: z.string().max(15).optional(),
-  positions: z.array(z.string()).optional(),
+  positions: z.union([z.array(z.string()), z.string()]).optional(),
   primaryPosition: z.string().optional(),
   tShirtSize: z.enum(['S', 'M', 'L', 'XL', 'XXL']).optional(),
   tShirtNumber: z.string().optional(),
@@ -211,15 +232,25 @@ export const withdrawPlayer = async (req, res, next) => {
   } catch (e) { next(e); }
 };
 
+// ── GET OWN PLAYER PROFILE (/api/players/me) ─────────────────────────────────
+export const getMyProfile = async (req, res, next) => {
+  try {
+    const userId = req.user._id;
+    let player = await Player.findOne({ userId }).populate('soldToTeam', 'name logo logoUrl code');
+    if (!player && req.user.email) {
+      player = await Player.findOne({ email: req.user.email }).populate('soldToTeam', 'name logo logoUrl code');
+    }
+    if (!player) {
+      return res.status(404).json({ success: false, message: 'No player profile found for this account' });
+    }
+    res.json({ success: true, data: player });
+  } catch (e) { next(e); }
+};
+
 // ── UPDATE OWN PLAYER PROFILE ────────────────────────────────────────────────
 export const updatePlayerProfile = async (req, res, next) => {
   try {
-    // GAP 5 FIX: check persistent freeze status
     const isRegistrationFrozen = await getConfig('isRegistrationFrozen', false);
-
-    if (isRegistrationFrozen && req.user?.role === 'PLAYER') {
-      return res.status(403).json({ success: false, message: 'Profile updates are locked during registration freeze' });
-    }
 
     const player = await Player.findById(req.params.id);
     if (!player) return res.status(404).json({ success: false, message: 'Player not found' });
@@ -238,9 +269,28 @@ export const updatePlayerProfile = async (req, res, next) => {
       parsed.imageUrl = await processAndUploadImage(req.file.buffer, player.studentId);
     }
 
-    // For Player role: allow updating all personal profile fields
+    // Positions parser helper
+    if (parsed.positions && typeof parsed.positions === 'string') {
+      try { parsed.positions = JSON.parse(parsed.positions); }
+      catch (_) { parsed.positions = [parsed.positions]; }
+    }
+
+    // Freeze enforcement check
+    if (isRegistrationFrozen && req.user?.role === 'PLAYER') {
+      if (parsed.session !== undefined && parsed.session !== player.session) {
+        return res.status(403).json({ success: false, message: 'Academic session cannot be modified during Registration Freeze' });
+      }
+      if (parsed.primaryPosition !== undefined && parsed.primaryPosition !== player.primaryPosition) {
+        return res.status(403).json({ success: false, message: 'Primary position cannot be modified during Registration Freeze' });
+      }
+    }
+
+    // For Player role: studentId and email are NEVER editable
+    delete parsed.studentId;
+    delete parsed.email;
+
     const allowedFields = req.user?.role === 'PLAYER'
-      ? ['name', 'studentId', 'session', 'jerseyName', 'positions', 'primaryPosition', 'tShirtSize', 'tShirtNumber', 'imageUrl']
+      ? ['name', 'phone', 'bio', 'address', 'session', 'jerseyName', 'positions', 'primaryPosition', 'tShirtSize', 'tShirtNumber', 'imageUrl']
       : Object.keys(parsed);
 
     const update = {};
@@ -255,6 +305,12 @@ export const updatePlayerProfile = async (req, res, next) => {
     }
 
     const updatedPlayer = await Player.findByIdAndUpdate(req.params.id, update, { new: true });
+
+    // Synchronize User collection name if player name was updated
+    if (update.name && player.userId) {
+      await User.findByIdAndUpdate(player.userId, { name: update.name });
+    }
+
     res.json({ success: true, message: 'Profile updated successfully', data: updatedPlayer });
   } catch (e) { next(e); }
 };

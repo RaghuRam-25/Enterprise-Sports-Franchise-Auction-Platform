@@ -16,6 +16,9 @@ const playerSchema = new mongoose.Schema({
   positions: [{ type: String, required: true }],
   primaryPosition: { type: String, required: true },
   imageUrl: { type: String, default: '' },
+  phone: { type: String, default: '' },
+  bio: { type: String, default: '' },
+  address: { type: String, default: '' },
   category: { type: String, required: true, default: 'B Grade' },
   basePrice: { type: Number, default: 1000000 },
   status: {

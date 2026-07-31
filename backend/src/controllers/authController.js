@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { User } from '../models/User.js';
+import { Team } from '../models/Team.js';
 import { ENV } from '../config/env.js';
 
 const generateTokens = (user) => {
@@ -65,6 +66,28 @@ export const login = async (req, res, next) => {
     const isMatch = await bcrypt.compare(password, user.passwordHash);
     if (!isMatch) {
       return res.status(401).json({ success: false, message: 'Invalid email, username, or password' });
+    }
+
+    // ── TEAM MANAGER: Verify existing team assignment (NO auto-creation) ────────
+    // Teams are pre-created by Super Admin and assigned during manager approval.
+    // We only sync teamId if the assigned team still exists (cleanup guard).
+    if (user.role === 'TEAM_MANAGER') {
+      // If teamId points to a deleted team, clear it
+      if (user.teamId) {
+        const team = await Team.findById(user.teamId);
+        if (!team) {
+          user.teamId = null;
+          await user.save();
+        }
+      }
+      // Try to find team by managerId if teamId is still missing
+      if (!user.teamId) {
+        const team = await Team.findOne({ managerId: user._id });
+        if (team) {
+          user.teamId = team._id;
+          await user.save();
+        }
+      }
     }
 
     const tokens = generateTokens(user);
@@ -156,3 +179,26 @@ export const resetPassword = async (req, res, next) => {
   } catch (e) { next(e); }
 };
 
+// ── CHANGE PASSWORD (all authenticated roles) ────────────────────────────────
+export const changePassword = async (req, res, next) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    if (!currentPassword || !newPassword || newPassword.length < 6) {
+      return res.status(400).json({ success: false, message: 'Current password and new password (min 6 chars) are required' });
+    }
+
+    const user = await User.findById(req.user._id || req.user.id);
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+
+    const isMatch = await bcrypt.compare(currentPassword, user.passwordHash);
+    if (!isMatch) {
+      return res.status(401).json({ success: false, message: 'Current password is incorrect' });
+    }
+
+    user.passwordHash = await bcrypt.hash(newPassword, 10);
+    user.mustResetPassword = false;
+    await user.save();
+
+    res.json({ success: true, message: 'Password changed successfully' });
+  } catch (e) { next(e); }
+};

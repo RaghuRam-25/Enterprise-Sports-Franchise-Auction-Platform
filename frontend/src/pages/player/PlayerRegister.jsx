@@ -12,7 +12,7 @@ export default function PlayerRegister() {
 
   React.useEffect(() => {
     if (user) {
-      if (user.role === 'PLAYER') navigate('/player/dashboard', { replace: true });
+      if (user.role === 'PLAYER') navigate('/player/profile', { replace: true });
       else navigate('/', { replace: true });
     }
   }, [user, navigate]);

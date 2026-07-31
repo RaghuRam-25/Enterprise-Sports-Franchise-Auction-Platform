@@ -38,21 +38,38 @@ export const updateOwnTeam = async (req, res, next) => {
     const team = await Team.findById(teamId);
     if (!team) return res.status(404).json({ success: false, message: 'Team not found' });
 
-    const { name, shortCode, description } = req.body;
+    // Ownership guard: only the assigned manager or Super Admin can edit
+    const isOwner = String(team.managerId) === String(req.user._id || req.user.id);
+    const isSuperAdmin = req.user.role === 'SUPER_ADMIN';
+    if (!isOwner && !isSuperAdmin) {
+      return res.status(403).json({ success: false, message: 'You can only edit your own team' });
+    }
+
+    const { name, shortCode, description, motto } = req.body;
     const updateData = {};
 
     if (name) updateData.name = name;
     if (shortCode) updateData.shortCode = shortCode.toUpperCase();
     if (description !== undefined) updateData.description = description;
+    if (motto !== undefined) updateData.motto = motto;
 
     if (req.file) {
       const { processAndUploadImage } = await import('../services/imageService.js');
       updateData.logoUrl = await processAndUploadImage(req.file.buffer, `team_${team._id}`);
     } else if (req.body.removeLogo === 'true') {
-      updateData.logoUrl = '';
+      // Restore to default generated avatar
+      const teamName = updateData.name || team.name;
+      updateData.logoUrl = `https://ui-avatars.com/api/?background=059669&color=fff&size=256&bold=true&name=${encodeURIComponent(teamName)}`;
     }
 
     const updatedTeam = await Team.findByIdAndUpdate(teamId, updateData, { new: true });
+
+    // Emit real-time update so all connected clients refresh instantly
+    const io = req.app.get('io');
+    if (io) {
+      io.emit('teams:updated', updatedTeam);
+    }
+
     res.json({ success: true, message: 'Team profile updated successfully', data: updatedTeam });
   } catch (e) { next(e); }
 };
@@ -87,18 +104,59 @@ export const getOwnBudget = async (req, res, next) => {
   } catch (e) { next(e); }
 };
 
-// ── GET OWN ROSTER — GAP 8 FIX ────────────────────────────────────────────────
+// ── GET OWN ROSTER ─────────────────────────────────────────────────────────────
 export const getOwnRoster = async (req, res, next) => {
   try {
-    const teamId = req.user.teamId;
+    let teamId = req.user.teamId;
+
+    // If teamId missing from JWT/user, try to find team by managerId from DB
     if (!teamId) {
-      return res.status(404).json({ success: false, message: 'No team assigned to this manager' });
+      const foundTeam = await Team.findOne({ managerId: req.user._id || req.user.id });
+      if (foundTeam) {
+        teamId = foundTeam._id;
+        // Sync teamId back to user record
+        await User.findByIdAndUpdate(req.user._id || req.user.id, { teamId: foundTeam._id });
+      }
+    }
+
+    // No team assigned — return empty state (do NOT fall back to any random team)
+    if (!teamId) {
+      return res.json({
+        success: true,
+        data: {
+          team: {
+            name: 'No Team Assigned',
+            totalBudget: 0,
+            remainingBudget: 0,
+            spentBudget: 0,
+            currentRosterCount: 0,
+            minRoster: 11
+          },
+          players: []
+        }
+      });
     }
 
     const { Player } = await import('../models/Player.js');
     const team = await Team.findById(teamId)
-      .select('name totalBudget remainingBudget currentRosterCount minRoster');
-    if (!team) return res.status(404).json({ success: false, message: 'Team not found' });
+      .select('name totalBudget remainingBudget currentRosterCount minRoster managerId');
+
+    if (!team) {
+      return res.json({
+        success: true,
+        data: {
+          team: {
+            name: 'Team Not Found',
+            totalBudget: 0,
+            remainingBudget: 0,
+            spentBudget: 0,
+            currentRosterCount: 0,
+            minRoster: 11
+          },
+          players: []
+        }
+      });
+    }
 
     const players = await Player.find({ soldToTeam: teamId, status: 'SOLD' })
       .select('name jerseyName primaryPosition positions category finalPrice imageUrl studentId')
@@ -109,17 +167,18 @@ export const getOwnRoster = async (req, res, next) => {
       data: {
         team: {
           name: team.name,
-          totalBudget: team.totalBudget,
-          remainingBudget: team.remainingBudget,
-          spentBudget: team.totalBudget - team.remainingBudget,
-          currentRosterCount: team.currentRosterCount,
-          minRoster: team.minRoster
+          totalBudget: team.totalBudget || 0,
+          remainingBudget: team.remainingBudget || 0,
+          spentBudget: (team.totalBudget || 0) - (team.remainingBudget || 0),
+          currentRosterCount: team.currentRosterCount || players.length,
+          minRoster: team.minRoster || 11
         },
-        players
+        players: players || []
       }
     });
   } catch (e) { next(e); }
 };
+
 
 // ── PLACE NORMAL BID — GAP 3 & 12 FIX ────────────────────────────────────────
 export const placeBid = async (req, res, next) => {

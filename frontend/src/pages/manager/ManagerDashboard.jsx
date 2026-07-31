@@ -4,7 +4,6 @@ import { Shield, Zap, DollarSign, AlertCircle, Users, Gavel, Clock, Lock, CheckC
 import { useAuction } from '../../context/AuctionContext';
 import { useAuth } from '../../context/AuthContext';
 import api, { managerAPI } from '../../services/api';
-import Navbar from '../../components/Navbar';
 
 export const ManagerDashboard = () => {
   const { user } = useAuth();
@@ -52,7 +51,7 @@ export const ManagerDashboard = () => {
 
   // Team Edit Modal state
   const [showEditTeamModal, setShowEditTeamModal] = useState(false);
-  const [teamForm, setTeamForm] = useState({ name: '', shortCode: '', description: '' });
+  const [teamForm, setTeamForm] = useState({ name: '', shortCode: '', description: '', motto: '' });
   const [teamLogoFile, setTeamLogoFile] = useState(null);
   const [teamLogoPreview, setTeamLogoPreview] = useState(null);
   const [removeTeamLogo, setRemoveTeamLogo] = useState(false);
@@ -62,7 +61,8 @@ export const ManagerDashboard = () => {
     setTeamForm({
       name: activeTeam?.name || '',
       shortCode: activeTeam?.shortCode || activeTeam?.code || '',
-      description: activeTeam?.description || ''
+      description: activeTeam?.description || '',
+      motto: activeTeam?.motto || ''
     });
     setTeamLogoFile(null);
     setTeamLogoPreview(null);
@@ -78,6 +78,7 @@ export const ManagerDashboard = () => {
       if (teamForm.name) formData.append('name', teamForm.name);
       if (teamForm.shortCode) formData.append('shortCode', teamForm.shortCode.toUpperCase());
       formData.append('description', teamForm.description || '');
+      formData.append('motto', teamForm.motto || '');
 
       if (teamLogoFile) {
         formData.append('logo', teamLogoFile);
@@ -183,17 +184,22 @@ export const ManagerDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-darkBg text-slate-100">
-      <Navbar />
-
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+    <div className="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
         
         {/* Top Team Header */}
         <div className="glass-card rounded-2xl p-6 border border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-gradient-to-r from-slate-900 via-slate-900/90 to-emerald-950/20">
           <div className="flex items-center space-x-4">
-            <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-3xl shadow-lg">
-              {activeTeam.logo || '🏆'}
-            </div>
+            {activeTeam.logoUrl ? (
+              <img
+                src={activeTeam.logoUrl}
+                alt={activeTeam.name}
+                className="w-14 h-14 rounded-2xl object-cover border border-emerald-500/30 shadow-lg"
+              />
+            ) : (
+              <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-3xl shadow-lg">
+                {activeTeam.logo || '🏆'}
+              </div>
+            )}
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-2xl font-black font-heading text-white">{activeTeam.name}</h1>
@@ -201,7 +207,14 @@ export const ManagerDashboard = () => {
                   {activeTeam.shortCode || activeTeam.code}
                 </span>
               </div>
-              <p className="text-xs text-slate-400">Authenticated Manager: {user?.name || 'Franchise Manager'}</p>
+              {activeTeam.motto ? (
+                <p className="text-xs text-emerald-400/80 italic mt-0.5">{activeTeam.motto}</p>
+              ) : (
+                <p className="text-xs text-slate-400">Franchise Manager: {user?.name || 'Manager'}</p>
+              )}
+              {activeTeam.description && (
+                <p className="text-[11px] text-slate-500 mt-0.5">{activeTeam.description}</p>
+              )}
             </div>
           </div>
 
@@ -432,8 +445,6 @@ export const ManagerDashboard = () => {
 
         </div>
 
-      </main>
-
       {/* Change Password Modal */}
       {showPasswordModal && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -592,7 +603,19 @@ export const ManagerDashboard = () => {
                   value={teamForm.description}
                   onChange={e => setTeamForm(prev => ({ ...prev, description: e.target.value }))}
                   className="glass-input w-full px-3 py-2 rounded-xl text-white"
-                  placeholder="Team slogan or details..."
+                  placeholder="Team details or about section..."
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-400 mb-1">Team Motto (Optional)</label>
+                <input
+                  type="text"
+                  maxLength={80}
+                  value={teamForm.motto}
+                  onChange={e => setTeamForm(prev => ({ ...prev, motto: e.target.value }))}
+                  className="glass-input w-full px-3 py-2 rounded-xl text-white italic"
+                  placeholder='e.g. "Play hard. Win harder."'
                 />
               </div>
 

@@ -34,23 +34,41 @@ export default function PublicTeamsView() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     {team.logoUrl ? (
-                      <img src={team.logoUrl} alt={team.name} className="w-12 h-12 rounded-xl object-cover border border-slate-700" />
+                      <img src={team.logoUrl} alt={team.name} className="w-14 h-14 rounded-xl object-cover border border-slate-700 shadow-lg" />
                     ) : (
-                      <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center text-white font-black text-lg">
+                      <div className="w-14 h-14 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center text-white font-black text-xl shadow-lg">
                         {(team.shortCode || team.name || 'T')[0]}
                       </div>
                     )}
                     <div>
                       <h2 className="text-xl font-black text-white">{team.name}</h2>
-                      <span className="font-mono text-xs text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
-                        {team.shortCode}
-                      </span>
+                      <div className="flex items-center gap-2 flex-wrap mt-0.5">
+                        <span className="font-mono text-xs text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                          {team.shortCode}
+                        </span>
+                        {team.managerId?.name && (
+                          <span className="text-xs text-slate-400 font-medium">
+                            GM: <span className="text-slate-300 font-semibold">{team.managerId.name}</span>
+                          </span>
+                        )}
+                      </div>
+                      {(team.motto || team.description) && (
+                        <p className="text-[11px] text-slate-500 mt-1 italic">
+                          {team.motto || team.description}
+                        </p>
+                      )}
                     </div>
                   </div>
 
-                  <div className="text-right">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase">Remaining Purse</span>
-                    <p className="font-mono font-bold text-emerald-400 text-sm">{formatCurrency(team.remainingBudget)}</p>
+                  <div className="text-right space-y-1">
+                    <div>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase">Remaining Purse</span>
+                      <p className="font-mono font-bold text-emerald-400 text-sm">{formatCurrency(team.remainingBudget)}</p>
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase">Squad</span>
+                      <p className="font-mono font-bold text-blue-400 text-sm">{roster.length} Players</p>
+                    </div>
                   </div>
                 </div>
 

@@ -17,6 +17,7 @@ import playerRoutes from './routes/playerRoutes.js';
 import podiumRoutes from './routes/podiumRoutes.js';
 import managerRoutes from './routes/managerRoutes.js';
 import configRoutes from './routes/configRoutes.js';
+import matchRoutes from './routes/matchRoutes.js';
 
 const app = express();
 const httpServer = createServer(app);
@@ -31,6 +32,9 @@ const io = new Server(httpServer, {
 
 // Connect Database
 connectDB();
+
+// Attach Socket.IO instance to app so controllers can emit events via req.app.get('io')
+app.set('io', io);
 
 // Security Middlewares
 app.use(helmet({ crossOriginResourcePolicy: false }));
@@ -61,6 +65,7 @@ app.use('/api/players', playerRoutes);
 app.use('/api/podium', podiumRoutes);
 app.use('/api/manager', managerRoutes);
 app.use('/api/config', configRoutes);
+app.use('/api/matches', matchRoutes);
 
 // Socket Handler Initialization
 handleSocketConnections(io);

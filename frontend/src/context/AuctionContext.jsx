@@ -241,6 +241,22 @@ export const AuctionProvider = ({ children }) => {
       refetchTeams();
     };
 
+    // teams:updated — emitted by auto-creation & updateOwnTeam with the full updated team document
+    const handleSingleTeamUpdate = (updatedTeam) => {
+      if (!updatedTeam) { refetchTeams(); return; }
+      setTeams(prev => {
+        const withId = { ...updatedTeam, id: updatedTeam._id || updatedTeam.id };
+        const exists = prev.some(t => String(t._id || t.id) === String(withId._id || withId.id));
+        if (exists) {
+          return prev.map(t =>
+            String(t._id || t.id) === String(withId._id || withId.id) ? { ...t, ...withId } : t
+          );
+        }
+        // New team — prepend
+        return [withId, ...prev];
+      });
+    };
+
     const handleFreezeToggle = (data) => {
       if (typeof data?.isRegistrationFrozen === 'boolean') {
         setIsRegistrationFrozen(data.isRegistrationFrozen);
@@ -258,6 +274,7 @@ export const AuctionProvider = ({ children }) => {
     socket.on('auction:timer-update', handleTimerUpdate);
     socket.on('player:updated', handlePlayerUpdate);
     socket.on('team:updated', handleTeamUpdate);
+    socket.on('teams:updated', handleSingleTeamUpdate);
     socket.on('registration:freeze-toggled', handleFreezeToggle);
 
     socket.on('bid:error', (data) => {
@@ -280,6 +297,7 @@ export const AuctionProvider = ({ children }) => {
       socket.off('auction:timer-update', handleTimerUpdate);
       socket.off('player:updated', handlePlayerUpdate);
       socket.off('team:updated', handleTeamUpdate);
+    socket.off('teams:updated', handleSingleTeamUpdate);
       socket.off('registration:freeze-toggled', handleFreezeToggle);
       socket.off('bid:error');
       socket.off('bid:blind-success');
