@@ -12,6 +12,7 @@ const playerSchema = new mongoose.Schema({
     enum: ['S', 'M', 'L', 'XL', 'XXL'],
     required: true
   },
+  tShirtNumber: { type: String, default: '' },
   positions: [{ type: String, required: true }],
   primaryPosition: { type: String, required: true },
   imageUrl: { type: String, default: '' },
@@ -19,7 +20,7 @@ const playerSchema = new mongoose.Schema({
   basePrice: { type: Number, default: 1000000 },
   status: {
     type: String,
-    enum: ['REGISTERED', 'APPROVED', 'ON_PODIUM', 'SOLD', 'UNSOLD', 'WITHDRAWN'],
+    enum: ['REGISTERED', 'APPROVED', 'ON_PODIUM', 'SOLD', 'UNSOLD', 'WITHDRAWN', 'BANNED'],
     default: 'REGISTERED'
   },
   finalPrice: { type: Number, default: 0 },

@@ -327,7 +327,7 @@ export default function AdminConfigurations() {
                     <div className="flex justify-between items-center">
                       <span className="text-xs font-bold text-purple-400 uppercase">Tier #{idx + 1}</span>
                       <span className="text-[11px] text-slate-400">
-                        {tier.minPursePercent}% to {tier.maxPursePercent}% of Total Purse
+                        {tier.minPercent}% to {tier.maxPercent}% of Total Purse
                       </span>
                     </div>
 

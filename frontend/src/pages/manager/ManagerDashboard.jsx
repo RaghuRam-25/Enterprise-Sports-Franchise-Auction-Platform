@@ -1,52 +1,90 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Shield, Zap, DollarSign, AlertCircle, Users, Gavel, Clock, Lock, CheckCircle2, TrendingUp } from 'lucide-react';
+import { Shield, Zap, DollarSign, AlertCircle, Users, Gavel, Clock, Lock, CheckCircle2, TrendingUp, Search, Key, X } from 'lucide-react';
 import { useAuction } from '../../context/AuctionContext';
 import { useAuth } from '../../context/AuthContext';
+import api from '../../services/api';
 import Navbar from '../../components/Navbar';
 
 export const ManagerDashboard = () => {
   const { user } = useAuth();
   const {
-    teams,
+    teams = [],
     podiumPlayer,
-    currentBid,
+    currentBid = 0,
     highestBidder,
-    biddingMode,
-    timerRemaining,
-    timerStatus,
+    biddingMode = 'normal',
+    timerRemaining = 0,
+    timerStatus = 'idle',
+    bidHistory = [],
     calculateNextBidAmount,
     placeNormalBid,
     placeBlindBid,
     getLowestCategoryBasePrice,
-    formatCurrency,
-    triggerToast
+    formatCurrency = (v) => `${v} BDT`,
+    triggerToast = () => {}
   } = useAuction();
 
-  // Find active team manager's franchise
-  const activeTeam = teams.find(t => t.id === user?.teamId) || teams[0];
+  // Fallback default team object so page never crashes if teams list is initializing
+  const defaultTeam = {
+    id: 'team-default',
+    name: 'Franchise Team',
+    code: 'TEAM',
+    logo: '🏆',
+    totalBudget: 100000000,
+    remainingBudget: 100000000,
+    minRoster: 11,
+    currentRoster: []
+  };
+
+  const safeTeams = Array.isArray(teams) ? teams : [];
+  const activeTeam = safeTeams.find(t => (t.id || t._id) === user?.teamId) || safeTeams[0] || defaultTeam;
 
   const [blindBidAmount, setBlindBidAmount] = useState('');
   const [blindBidError, setBlindBidError] = useState('');
   const [isBidding, setIsBidding] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [currentPass, setCurrentPass] = useState('');
+  const [newPass, setNewPass] = useState('');
+  const [confirmPass, setConfirmPass] = useState('');
+  const [changingPass, setChangingPass] = useState(false);
 
-  const nextExactBid = calculateNextBidAmount(currentBid, activeTeam.totalBudget);
-  const isCurrentlyHighestBidder = highestBidder?.id === activeTeam.id;
-
-  // Calculate Budget Guardrail Metrics for Manager Dashboard
-  const lowestBasePrice = getLowestCategoryBasePrice();
-  const currentRosterCount = activeTeam.currentRoster.length;
-  const remainingSlotsNeeded = Math.max(0, activeTeam.minRoster - currentRosterCount);
+  const activeRoster = Array.isArray(activeTeam?.currentRoster) ? activeTeam.currentRoster : [];
+  const safeBidHistory = Array.isArray(bidHistory) ? bidHistory : [];
+  const lowestBasePrice = typeof getLowestCategoryBasePrice === 'function' ? getLowestCategoryBasePrice() : 1500000;
+  const currentRosterCount = activeRoster.length;
+  const remainingSlotsNeeded = Math.max(0, (activeTeam?.minRoster || 11) - currentRosterCount);
   const requiredReserve = remainingSlotsNeeded * lowestBasePrice;
-  const maxAllowableBidPurse = activeTeam.remainingBudget - requiredReserve;
+  const maxAllowableBidPurse = Math.max(0, (activeTeam?.remainingBudget || 0) - requiredReserve);
+
+  const safeCurrentBid = currentBid || 0;
+  const nextExactBid = typeof calculateNextBidAmount === 'function'
+    ? calculateNextBidAmount(safeCurrentBid, activeTeam?.totalBudget || 100000000)
+    : safeCurrentBid + 150000;
+
+  const isCurrentlyHighestBidder = Boolean(
+    highestBidder &&
+    ((highestBidder.id && highestBidder.id === activeTeam.id) ||
+     (highestBidder._id && highestBidder._id === activeTeam._id) ||
+     (highestBidder.id && highestBidder.id === activeTeam._id) ||
+     (highestBidder._id && highestBidder._id === activeTeam.id))
+  );
 
   const handleNormalBidSubmit = () => {
     if (isBidding) return;
     setIsBidding(true);
 
-    const res = placeNormalBid(activeTeam.id);
+    const targetTeamId = activeTeam.id || activeTeam._id;
+    if (!targetTeamId) {
+      triggerToast('Cannot place bid: Franchise team profile not loaded.', 'error');
+      setIsBidding(false);
+      return;
+    }
+
+    const res = placeNormalBid ? placeNormalBid(targetTeamId) : { success: false, error: 'Bidding service unavailable' };
+
     if (!res.success) {
-      triggerToast(res.error, 'error');
+      triggerToast(res.error || 'Bid placement failed', 'error');
     } else {
       triggerToast(`Bid of ${formatCurrency(res.nextAmount)} placed successfully!`, 'success');
     }
@@ -58,13 +96,40 @@ export const ManagerDashboard = () => {
     e.preventDefault();
     setBlindBidError('');
 
-    const res = placeBlindBid(activeTeam.id, blindBidAmount);
+    const targetTeamId = activeTeam.id || activeTeam._id;
+    const res = placeBlindBid ? placeBlindBid(targetTeamId, blindBidAmount) : { success: false, error: 'Blind bid service unavailable' };
+
     if (!res.success) {
-      setBlindBidError(res.error);
+      setBlindBidError(res.error || 'Validation failed');
       triggerToast('Blind Bid Failed validation check!', 'error');
     } else {
       triggerToast(`Sealed blind bid of ${formatCurrency(blindBidAmount)} submitted.`, 'success');
       setBlindBidAmount('');
+    }
+  };
+
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    if (newPass !== confirmPass) {
+      triggerToast('New passwords do not match.', 'error');
+      return;
+    }
+    if (newPass.length < 6) {
+      triggerToast('Password must be at least 6 characters.', 'error');
+      return;
+    }
+    setChangingPass(true);
+    try {
+      await api.put('/manager/password', { currentPassword: currentPass, newPassword: newPass });
+      triggerToast('Password changed successfully!', 'success');
+      setShowPasswordModal(false);
+      setCurrentPass('');
+      setNewPass('');
+      setConfirmPass('');
+    } catch (err) {
+      triggerToast(err?.response?.data?.message || 'Failed to change password.', 'error');
+    } finally {
+      setChangingPass(false);
     }
   };
 
@@ -78,20 +143,20 @@ export const ManagerDashboard = () => {
         <div className="glass-card rounded-2xl p-6 border border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-gradient-to-r from-slate-900 via-slate-900/90 to-emerald-950/20">
           <div className="flex items-center space-x-4">
             <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-3xl shadow-lg">
-              {activeTeam.logo}
+              {activeTeam.logo || '🏆'}
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-2xl font-black font-heading text-white">{activeTeam.name}</h1>
                 <span className="font-mono text-xs font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
-                  {activeTeam.code}
+                  {activeTeam.shortCode || activeTeam.code}
                 </span>
               </div>
               <p className="text-xs text-slate-400">Authenticated Manager: {user?.name || 'Franchise Manager'}</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <div className="text-right">
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Available Purse</span>
               <h3 className="text-xl font-black font-mono text-emerald-400">{formatCurrency(activeTeam.remainingBudget)}</h3>
@@ -99,10 +164,24 @@ export const ManagerDashboard = () => {
 
             <Link
               to="/manager/roster"
-              className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 text-xs font-bold rounded-xl transition shadow"
+              className="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 text-xs font-bold rounded-xl transition shadow flex items-center gap-1.5"
             >
-              View Roster ({currentRosterCount}/{activeTeam.minRoster})
+              <Users className="w-3.5 h-3.5 text-emerald-400" /> View Roster ({currentRosterCount}/{activeTeam.minRoster || 11})
             </Link>
+
+            <Link
+              to="/admin/players"
+              className="px-3.5 py-2 bg-blue-600/20 hover:bg-blue-600 text-blue-300 hover:text-white border border-blue-500/30 text-xs font-bold rounded-xl transition shadow flex items-center gap-1.5"
+            >
+              <Search className="w-3.5 h-3.5" /> Player Pool (Read-Only)
+            </Link>
+
+            <button
+              onClick={() => setShowPasswordModal(true)}
+              className="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 text-xs font-bold rounded-xl transition shadow flex items-center gap-1.5"
+            >
+              <Key className="w-3.5 h-3.5 text-amber-400" /> Change Password
+            </button>
           </div>
         </div>
 
@@ -111,7 +190,7 @@ export const ManagerDashboard = () => {
           <div className="flex items-center gap-2.5 text-slate-300">
             <AlertCircle className="w-4 h-4 text-amber-400 flex-shrink-0" />
             <div>
-              <strong className="text-amber-400">PRD Reserve Guardrail Status:</strong> Required Reserve = ({activeTeam.minRoster} min - {currentRosterCount} current) &times; {formatCurrency(lowestBasePrice)} = <span className="font-mono font-bold text-white">{formatCurrency(requiredReserve)}</span>
+              <strong className="text-amber-400">PRD Reserve Guardrail Status:</strong> Required Reserve = ({activeTeam.minRoster || 11} min - {currentRosterCount} current) &times; {formatCurrency(lowestBasePrice)} = <span className="font-mono font-bold text-white">{formatCurrency(requiredReserve)}</span>
             </div>
           </div>
           <div className="font-mono font-bold text-slate-200 bg-slate-900 px-3 py-1 rounded-lg border border-slate-800">
@@ -125,161 +204,171 @@ export const ManagerDashboard = () => {
           {/* Live Podium Viewer Component */}
           <div className="lg:col-span-2 glass-card rounded-2xl p-6 border border-slate-800 space-y-6">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
-                <Gavel className="w-4 h-4 text-emerald-400" /> Live Podium Viewer
-              </h3>
-
-              <span className={`px-2.5 py-1 rounded-full text-xs font-bold uppercase border ${
-                biddingMode === 'blind' ? 'bg-purple-500/20 text-purple-400 border-purple-500/30' : 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
-              }`}>
-                Mode: {biddingMode}
-              </span>
+              <div>
+                <span className="text-xs font-bold uppercase tracking-widest text-emerald-400">Live Stage</span>
+                <h2 className="text-xl font-black font-heading text-white">Podium Display</h2>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
+                  biddingMode === 'blind'
+                    ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40'
+                    : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                }`}>
+                  {biddingMode || 'normal'} Bidding Mode
+                </span>
+              </div>
             </div>
 
             {podiumPlayer ? (
-              <div className="space-y-6">
-                
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-6 bg-slate-950/80 p-6 rounded-2xl border border-slate-800">
-                  <div className="flex items-center gap-4">
-                    <img src={podiumPlayer.picture} alt="" className="w-24 h-24 rounded-2xl object-cover border-2 border-emerald-500/40 shadow-xl" />
-                    <div>
-                      <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">{podiumPlayer.category}</span>
-                      <h2 className="text-2xl font-black font-heading text-white">{podiumPlayer.name}</h2>
-                      <p className="text-xs text-slate-300">{podiumPlayer.jerseyName}</p>
-                      <p className="text-xs text-slate-400 font-mono mt-1">Base Price: {formatCurrency(podiumPlayer.basePrice)}</p>
-                    </div>
-                  </div>
-
-                  {/* Countdown Timer */}
-                  <div className="flex flex-col items-center">
-                    <div className={`w-20 h-20 rounded-full flex items-center justify-center border-4 font-mono text-2xl font-black shadow-xl ${
-                      timerRemaining <= 10 ? 'border-rose-500 text-rose-400 animate-pulse' : 'border-emerald-500 text-emerald-400'
-                    }`}>
-                      {timerRemaining}s
-                    </div>
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Timer</span>
-                  </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center bg-slate-950/80 p-6 rounded-2xl border border-slate-800">
+                <div className="relative mx-auto md:mx-0">
+                  <img
+                    src={podiumPlayer.imageUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80'}
+                    alt={podiumPlayer.name}
+                    className="w-36 h-36 rounded-2xl object-cover border-2 border-emerald-500/40 shadow-2xl"
+                  />
+                  <span className="absolute -bottom-2 -right-2 px-2 py-0.5 bg-emerald-500 text-slate-950 font-black text-[10px] rounded uppercase tracking-wider">
+                    {podiumPlayer.category}
+                  </span>
                 </div>
 
-                {/* Current Bid & Leading Bidder */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="bg-slate-900/80 p-4 rounded-xl border border-slate-800">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase">Current Leading Bid</span>
-                    <p className="text-2xl font-black font-mono text-emerald-400 mt-1">{formatCurrency(currentBid)}</p>
-                  </div>
-
-                  <div className="bg-slate-900/80 p-4 rounded-xl border border-slate-800">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase">Highest Bidder Franchise</span>
-                    <p className="text-base font-extrabold text-white mt-1 flex items-center gap-2">
-                      <span>{highestBidder ? highestBidder.logo : '—'}</span>
-                      <span>{highestBidder ? highestBidder.name : 'Opening Base Price'}</span>
+                <div className="md:col-span-2 space-y-3 text-center md:text-left">
+                  <div>
+                    <h3 className="text-2xl font-black text-white">{podiumPlayer.name}</h3>
+                    <p className="text-xs text-slate-400">
+                      Jersey: <strong className="text-slate-200">{podiumPlayer.jerseyName}</strong> &bull; Student ID: <span className="font-mono">{podiumPlayer.studentId}</span>
                     </p>
                   </div>
-                </div>
 
+                  <div className="flex flex-wrap gap-1.5 justify-center md:justify-start text-[11px]">
+                    <span className="px-2.5 py-0.5 bg-slate-800 text-slate-300 rounded font-semibold">
+                      Primary: {podiumPlayer.primaryPosition}
+                    </span>
+                    <span className="px-2.5 py-0.5 bg-slate-800 text-slate-300 rounded font-semibold">
+                      Session: {podiumPlayer.session}
+                    </span>
+                  </div>
+
+                  <div className="pt-2 border-t border-slate-800/80 grid grid-cols-2 gap-4 text-xs">
+                    <div>
+                      <span className="text-[10px] text-slate-500 uppercase">Base Price</span>
+                      <p className="font-mono font-bold text-slate-300">{formatCurrency(podiumPlayer.basePrice)}</p>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-slate-500 uppercase">Current High Bid</span>
+                      <p className="font-mono font-bold text-xl text-emerald-400">{formatCurrency(safeCurrentBid)}</p>
+                    </div>
+                  </div>
+                </div>
               </div>
             ) : (
-              <div className="text-center py-16 text-slate-500 space-y-2">
-                <Gavel className="w-10 h-10 mx-auto text-slate-600" />
-                <p className="font-bold text-sm">No player currently on podium.</p>
-                <p className="text-xs text-slate-400">Waiting for Podium Admin to launch the next player.</p>
+              <div className="py-16 text-center text-slate-500 glass-card rounded-2xl border border-slate-800 space-y-2">
+                <Gavel className="w-12 h-12 mx-auto text-slate-700 animate-pulse" />
+                <p className="font-bold text-slate-400">Podium is currently empty</p>
+                <p className="text-xs text-slate-600">Waiting for Podium Admin to launch the next player.</p>
               </div>
             )}
-          </div>
 
-          {/* Action Deck (The Bidding Controls) */}
-          <div className="glass-card rounded-2xl p-6 border border-slate-800 space-y-6 flex flex-col justify-between">
-            <div>
-              <h3 className="text-sm font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2 mb-4">
-                <Zap className="w-4 h-4 text-emerald-400" /> Franchise Action Deck
+            {/* Bid History Table */}
+            <div className="space-y-3 pt-2">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center justify-between">
+                <span>Live Bid Stream ({safeBidHistory.length})</span>
+                {highestBidder && (
+                  <span className="text-emerald-400 flex items-center gap-1 font-mono text-[11px]">
+                    <TrendingUp className="w-3.5 h-3.5" /> Leader: {highestBidder.name}
+                  </span>
+                )}
               </h3>
 
-              {!podiumPlayer ? (
-                <div className="p-4 bg-slate-900/60 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">
-                  Bidding controls will activate when a player is pushed to the live podium.
-                </div>
-              ) : biddingMode === 'normal' ? (
-                
-                /* NORMAL BIDDING MODE */
-                <div className="space-y-4">
-                  <div className="bg-slate-950/80 p-4 rounded-xl border border-slate-800 space-y-2 text-center">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Next Exact Dynamic Raise</span>
-                    <p className="text-2xl font-black font-mono text-emerald-400">{formatCurrency(nextExactBid)}</p>
-                    <p className="text-[10px] text-slate-500">Calculated based on percentage tier of franchise purse</p>
-                  </div>
-
-                  {isCurrentlyHighestBidder && (
-                    <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-bold rounded-xl text-center flex items-center justify-center gap-1.5">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-400" /> Your team currently holds the highest bid!
+              <div className="bg-slate-950/70 rounded-xl border border-slate-800 p-3 max-h-40 overflow-y-auto space-y-1.5">
+                {safeBidHistory.length === 0 ? (
+                  <p className="text-xs text-slate-600 text-center py-4">No bids placed on current player yet.</p>
+                ) : (
+                  [...safeBidHistory].reverse().map((bid, idx) => (
+                    <div key={bid.id || idx} className="flex justify-between items-center text-xs px-3 py-1.5 rounded-lg bg-slate-900/60 border border-slate-800/50">
+                      <span className="font-bold text-white">{bid.bidder}</span>
+                      <span className="font-mono font-bold text-emerald-400">{formatCurrency(bid.amount)}</span>
                     </div>
-                  )}
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
 
-                  <button
-                    onClick={handleNormalBidSubmit}
-                    disabled={isBidding || isCurrentlyHighestBidder || timerStatus !== 'running'}
-                    className={`w-full py-4 rounded-xl font-black text-sm uppercase tracking-wider transition shadow-2xl flex items-center justify-center gap-2 ${
-                      isCurrentlyHighestBidder
-                        ? 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700'
-                        : timerStatus !== 'running'
-                        ? 'bg-slate-800 text-slate-500 cursor-not-allowed'
-                        : 'bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white shadow-emerald-900/50'
-                    }`}
-                  >
-                    <Zap className="w-5 h-5" />
-                    <span>BID {formatCurrency(nextExactBid)}</span>
-                  </button>
-                </div>
-              ) : (
-                
-                /* BLIND BIDDING MODE */
-                <form onSubmit={handleBlindBidSubmit} className="space-y-4">
-                  <div className="bg-slate-950/80 p-4 rounded-xl border border-slate-800 space-y-2">
-                    <span className="text-[10px] font-bold text-purple-400 uppercase tracking-widest">Sealed Blind Bid Payload</span>
-                    <p className="text-[11px] text-slate-400">
-                      Submit one hidden monetary value. Backend aggregates payloads and resolves the highest bidder at T=0.
-                    </p>
-                  </div>
-
-                  {blindBidError && (
-                    <div className="p-3 bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs font-semibold rounded-xl space-y-1">
-                      <p className="font-bold flex items-center gap-1"><AlertCircle className="w-4 h-4 text-rose-400" /> Guardrail Violation:</p>
-                      <p className="text-[11px]">{blindBidError}</p>
-                    </div>
-                  )}
-
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-400 mb-1">Enter Sealed Monetary Bid (BDT):</label>
-                    <input
-                      type="number"
-                      value={blindBidAmount}
-                      onChange={e => setBlindBidAmount(e.target.value)}
-                      placeholder="e.g. 2500000"
-                      className="glass-input w-full px-4 py-3 rounded-xl font-mono text-sm text-white"
-                      required
-                    />
-                  </div>
-
-                  <button
-                    type="submit"
-                    className="w-full py-3.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-extrabold text-xs rounded-xl shadow-xl transition"
-                  >
-                    SUBMIT SEALED BLIND BID
-                  </button>
-                </form>
-              )}
+          {/* Right Column: Bid Execution Controls */}
+          <div className="glass-card rounded-2xl p-6 border border-slate-800 space-y-6 flex flex-col justify-between">
+            <div>
+              <span className="text-xs font-bold uppercase tracking-widest text-emerald-400">Execution Panel</span>
+              <h2 className="text-xl font-black font-heading text-white mt-0.5">War Room Bidding</h2>
             </div>
 
-            {/* Roster & Purse Quick Summary */}
-            <div className="bg-slate-950/80 p-4 rounded-xl border border-slate-800 text-xs space-y-2">
-              <div className="flex justify-between items-center text-slate-400">
-                <span>Roster Slots Acquired:</span>
-                <span className="font-bold text-white">{currentRosterCount} / {activeTeam.minRoster} min</span>
+            {biddingMode === 'normal' ? (
+              <div className="space-y-5 bg-slate-950/80 p-5 rounded-2xl border border-slate-800">
+                <div className="text-center space-y-1">
+                  <span className="text-[10px] text-slate-400 uppercase tracking-widest">Next Minimum Bid Required</span>
+                  <p className="text-3xl font-black font-mono text-emerald-400">{formatCurrency(nextExactBid)}</p>
+                </div>
+
+                <button
+                  onClick={handleNormalBidSubmit}
+                  disabled={!podiumPlayer || timerStatus !== 'running' || isCurrentlyHighestBidder || nextExactBid > activeTeam.remainingBudget}
+                  className={`w-full py-4 rounded-xl font-black text-sm uppercase tracking-wider transition shadow-xl flex items-center justify-center gap-2 ${
+                    isCurrentlyHighestBidder
+                      ? 'bg-emerald-950/90 text-emerald-400 border border-emerald-500/40 cursor-default'
+                      : !podiumPlayer || timerStatus !== 'running'
+                      ? 'bg-slate-800 text-slate-500 border border-slate-700 cursor-not-allowed'
+                      : nextExactBid > activeTeam.remainingBudget
+                      ? 'bg-rose-950 text-rose-400 border border-rose-800 cursor-not-allowed'
+                      : 'bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-slate-950 font-black shadow-emerald-950/50'
+                  }`}
+                >
+                  <Zap className="w-5 h-5 fill-current" />
+                  {isCurrentlyHighestBidder
+                    ? 'You Are Highest Bidder'
+                    : !podiumPlayer
+                    ? 'Podium Empty'
+                    : timerStatus !== 'running'
+                    ? 'Auction Clock Paused'
+                    : nextExactBid > activeTeam.remainingBudget
+                    ? 'Exceeds Purse'
+                    : `Place Bid: ${formatCurrency(nextExactBid)}`}
+                </button>
               </div>
-              <div className="w-full bg-slate-900 h-2 rounded-full overflow-hidden">
-                <div
-                  className="bg-emerald-500 h-full transition-all"
-                  style={{ width: `${Math.min(100, (currentRosterCount / activeTeam.minRoster) * 100)}%` }}
-                />
+            ) : (
+              <form onSubmit={handleBlindBidSubmit} className="space-y-4 bg-slate-950/80 p-5 rounded-2xl border border-slate-800">
+                <div>
+                  <label className="block text-xs font-bold text-purple-300 uppercase mb-1">Sealed Blind Bid Amount (BDT)</label>
+                  <input
+                    type="number"
+                    value={blindBidAmount}
+                    onChange={e => setBlindBidAmount(e.target.value)}
+                    placeholder="Enter sealed bid..."
+                    className="glass-input w-full px-3 py-2.5 rounded-xl font-mono text-sm text-white"
+                    required
+                  />
+                  {blindBidError && (
+                    <p className="text-[11px] text-rose-400 font-semibold mt-1">{blindBidError}</p>
+                  )}
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={!podiumPlayer || timerStatus !== 'running' || !blindBidAmount}
+                  className="w-full py-3 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition shadow-lg flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  <Lock className="w-4 h-4" /> Submit Sealed Blind Bid
+                </button>
+              </form>
+            )}
+
+            <div className="pt-4 border-t border-slate-800 text-xs text-slate-400 space-y-2">
+              <div className="flex justify-between items-center">
+                <span>Franchise Team:</span>
+                <strong className="text-white">{activeTeam.name}</strong>
+              </div>
+              <div className="flex justify-between items-center">
+                <span>Total Roster Slots:</span>
+                <span className="font-mono text-emerald-400 font-bold">{currentRosterCount} / {activeTeam.minRoster || 11} min</span>
               </div>
             </div>
 
@@ -288,6 +377,73 @@ export const ManagerDashboard = () => {
         </div>
 
       </main>
+
+      {/* Change Password Modal */}
+      {showPasswordModal && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="glass-card w-full max-w-sm rounded-2xl p-6 border border-slate-700 space-y-5 shadow-2xl">
+            <div className="flex justify-between items-center">
+              <h2 className="text-lg font-black text-white flex items-center gap-2">
+                <Key className="w-5 h-5 text-amber-400" /> Change Password
+              </h2>
+              <button onClick={() => setShowPasswordModal(false)} className="p-2 text-slate-400 hover:text-white rounded-lg">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleChangePassword} className="space-y-4 text-xs">
+              <div>
+                <label className="block font-semibold text-slate-400 mb-1">Current Password</label>
+                <input
+                  type="password"
+                  value={currentPass}
+                  onChange={e => setCurrentPass(e.target.value)}
+                  className="glass-input w-full px-3 py-2 rounded-xl text-white"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block font-semibold text-slate-400 mb-1">New Password</label>
+                <input
+                  type="password"
+                  value={newPass}
+                  onChange={e => setNewPass(e.target.value)}
+                  placeholder="At least 6 characters"
+                  className="glass-input w-full px-3 py-2 rounded-xl text-white"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block font-semibold text-slate-400 mb-1">Confirm New Password</label>
+                <input
+                  type="password"
+                  value={confirmPass}
+                  onChange={e => setConfirmPass(e.target.value)}
+                  className="glass-input w-full px-3 py-2 rounded-xl text-white"
+                  required
+                />
+              </div>
+              <div className="flex gap-3 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setShowPasswordModal(false)}
+                  className="flex-1 py-2.5 border border-slate-700 text-slate-300 hover:bg-slate-800 rounded-xl text-xs font-semibold transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={changingPass}
+                  className="flex-1 py-2.5 bg-amber-600 hover:bg-amber-500 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition disabled:opacity-60"
+                >
+                  {changingPass ? <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Key className="w-3.5 h-3.5" />}
+                  Update Password
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

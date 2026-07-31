@@ -4,25 +4,23 @@ import api from '../services/api';
 
 const AuctionContext = createContext();
 
-// All initial states start empty — data loaded from real API on mount
-
 export const AuctionProvider = ({ children }) => {
   const { socket, isConnected } = useSocket();
 
-  // Config States — loaded from real API
+  // Config States
   const [sessions, setSessions] = useState([]);
   const [positions, setPositions] = useState([]);
   const [categories, setCategories] = useState([]);
   const [biddingTiers, setBiddingTiers] = useState([]);
   const [isRegistrationFrozen, setIsRegistrationFrozen] = useState(false);
 
-  // Teams & Players States — loaded from real API
+  // Teams & Players States
   const [teams, setTeams] = useState([]);
   const [players, setPlayers] = useState([]);
   const [managers, setManagers] = useState([]);
   const [isDataLoading, setIsDataLoading] = useState(true);
 
-  // Live Podium Engine State — starts clean (no mock data)
+  // Live Podium Engine State
   const [podiumPlayer, setPodiumPlayer] = useState(null);
   const [currentBid, setCurrentBid] = useState(0);
   const [highestBidder, setHighestBidder] = useState(null);
@@ -39,42 +37,57 @@ export const AuctionProvider = ({ children }) => {
     setTimeout(() => setLastActionToast(null), 4000);
   };
 
-  // --- LOAD ALL REAL DATA FROM BACKEND ON MOUNT ---
+  // --- CONSOLIDATED INITIAL DATA LOADING ---
   useEffect(() => {
     const loadAllData = async () => {
       try {
         setIsDataLoading(true);
         const [sessRes, posRes, catRes, tierRes, teamRes, playerRes, regRes] = await Promise.allSettled([
-          api.get('/admin/sessions'),
-          api.get('/admin/positions'),
-          api.get('/admin/categories'),
-          api.get('/admin/bidding-tiers'),
-          api.get('/admin/teams'),
+          api.get('/config/sessions'),
+          api.get('/config/positions'),
+          api.get('/config/categories'),
+          api.get('/config/bidding-tiers'),
+          api.get('/config/teams'),
           api.get('/players'),
           api.get('/players/status')
         ]);
 
-        if (sessRes.status === 'fulfilled' && sessRes.value.data?.data)
-          setSessions(sessRes.value.data.data.map(s => ({ ...s, id: s._id })));
-        if (posRes.status === 'fulfilled' && posRes.value.data?.data)
-          setPositions(posRes.value.data.data.map(p => ({ ...p, id: p._id })));
-        if (catRes.status === 'fulfilled' && catRes.value.data?.data)
-          setCategories(catRes.value.data.data.map(c => ({ ...c, id: c._id })));
-        if (tierRes.status === 'fulfilled' && tierRes.value.data?.data)
-          setBiddingTiers(tierRes.value.data.data.map(t => ({ ...t, id: t._id })));
-        if (teamRes.status === 'fulfilled' && teamRes.value.data?.data)
-          setTeams(teamRes.value.data.data.map(t => ({
-            ...t,
-            id: t._id,
-            currentRoster: t.currentRoster || [],
-            currentRosterCount: t.currentRosterCount || 0
-          })));
-        if (playerRes.status === 'fulfilled' && playerRes.value.data?.data)
-          setPlayers(playerRes.value.data.data.map(p => ({ ...p, id: p._id })));
-        if (regRes.status === 'fulfilled' && regRes.value.data)
+        if (sessRes.status === 'fulfilled' && sessRes.value?.data) {
+          const raw = sessRes.value.data.data || sessRes.value.data;
+          if (Array.isArray(raw)) setSessions(raw.map(s => ({ ...s, id: s._id || s.id })));
+        }
+        if (posRes.status === 'fulfilled' && posRes.value?.data) {
+          const raw = posRes.value.data.data || posRes.value.data;
+          if (Array.isArray(raw)) setPositions(raw.map(p => ({ ...p, id: p._id || p.id })));
+        }
+        if (catRes.status === 'fulfilled' && catRes.value?.data) {
+          const raw = catRes.value.data.data || catRes.value.data;
+          if (Array.isArray(raw)) setCategories(raw.map(c => ({ ...c, id: c._id || c.id })));
+        }
+        if (tierRes.status === 'fulfilled' && tierRes.value?.data) {
+          const raw = tierRes.value.data.data || tierRes.value.data;
+          if (Array.isArray(raw)) setBiddingTiers(raw.map(t => ({ ...t, id: t._id || t.id })));
+        }
+        if (teamRes.status === 'fulfilled' && teamRes.value?.data) {
+          const raw = teamRes.value.data.data || teamRes.value.data;
+          if (Array.isArray(raw)) {
+            setTeams(raw.map(t => ({
+              ...t,
+              id: t._id || t.id,
+              currentRoster: t.currentRoster || [],
+              currentRosterCount: t.currentRosterCount || 0
+            })));
+          }
+        }
+        if (playerRes.status === 'fulfilled' && playerRes.value?.data) {
+          const raw = playerRes.value.data.data || playerRes.value.data;
+          if (Array.isArray(raw)) setPlayers(raw.map(p => ({ ...p, id: p._id || p.id })));
+        }
+        if (regRes.status === 'fulfilled' && regRes.value?.data) {
           setIsRegistrationFrozen(regRes.value.data.isRegistrationFrozen || false);
+        }
       } catch (err) {
-        console.error('Failed to load data from backend:', err);
+        console.warn('[AuctionContext] Non-critical initial data fetch warning:', err.message);
       } finally {
         setIsDataLoading(false);
       }
@@ -82,20 +95,21 @@ export const AuctionProvider = ({ children }) => {
     loadAllData();
   }, []);
 
-  // Load managers separately (requires auth — only called when user is SUPER_ADMIN)
+  // Load managers separately (only called when privileged user accesses manager list)
   const loadManagers = useCallback(async () => {
     try {
       const res = await api.get('/admin/managers');
-      if (res.data?.data) {
-        setManagers(res.data.data.map(m => ({
+      const raw = res.data?.data || res.data;
+      if (Array.isArray(raw)) {
+        setManagers(raw.map(m => ({
           ...m,
-          id: m._id,
-          username: m.email,
+          id: m._id || m.id,
+          username: m.email || m.username,
           mustChangePass: m.mustResetPassword
         })));
       }
     } catch (err) {
-      // Silently ignore if not admin
+      // Silently ignore if unprivileged
     }
   }, []);
 
@@ -113,10 +127,9 @@ export const AuctionProvider = ({ children }) => {
     const currentBidNum = currentBidVal || 0;
     const bidPercentOfPurse = (currentBidNum / totalPurse) * 100;
 
-    // Gap 4 Fix: Backend uses minPercent/maxPercent, not minPursePercent/maxPursePercent
     let matchingTier = biddingTiers.find(
-      t => bidPercentOfPurse >= (t.minPercent ?? t.minPursePercent ?? 0) &&
-           bidPercentOfPurse < (t.maxPercent ?? t.maxPursePercent ?? 100)
+      t => bidPercentOfPurse >= (t.minPercent ?? 0) &&
+        bidPercentOfPurse < (t.maxPercent ?? 100)
     );
 
     if (!matchingTier && biddingTiers.length > 0) {
@@ -128,56 +141,66 @@ export const AuctionProvider = ({ children }) => {
     return currentBidNum + monetaryRaise;
   }, [biddingTiers]);
 
-  // Fetch real database records on initial load
-  useEffect(() => {
-    const fetchInitialData = async () => {
-      try {
-        const [playersRes, sessionsRes, positionsRes, categoriesRes, tiersRes, teamsRes, managersRes] = await Promise.allSettled([
-          api.get('/players'),
-          api.get('/admin/sessions'),
-          api.get('/admin/positions'),
-          api.get('/admin/categories'),
-          api.get('/admin/bidding-tiers'),
-          api.get('/admin/teams'),
-          api.get('/admin/managers')
-        ]);
-
-        if (playersRes.status === 'fulfilled' && playersRes.value?.data) setPlayers(playersRes.value.data);
-        if (sessionsRes.status === 'fulfilled' && sessionsRes.value?.data) setSessions(sessionsRes.value.data);
-        if (positionsRes.status === 'fulfilled' && positionsRes.value?.data) setPositions(positionsRes.value.data);
-        if (categoriesRes.status === 'fulfilled' && categoriesRes.value?.data) setCategories(categoriesRes.value.data);
-        if (tiersRes.status === 'fulfilled' && tiersRes.value?.data) setBiddingTiers(tiersRes.value.data);
-        if (teamsRes.status === 'fulfilled' && teamsRes.value?.data) setTeams(teamsRes.value.data);
-        if (managersRes.status === 'fulfilled' && managersRes.value?.data) setManagers(managersRes.value.data);
-      } catch (err) {
-        console.warn('Real DB fetch fallback to local defaults:', err.message);
-      }
-    };
-    fetchInitialData();
-  }, []);
-
   // Sync Socket events from backend server
   useEffect(() => {
     if (!socket) return;
 
-    socket.on('auction:state', (state) => {
+    // GAP 4 FIX: Use specific event handlers per event to allow null clearing
+    const handleState = (state) => {
       if (!state) return;
-      if (state.podiumPlayer) setPodiumPlayer(state.podiumPlayer);
-      if (state.currentBid) setCurrentBid(state.currentBid);
-      if (state.highestBidder) setHighestBidder(state.highestBidder);
+      // Always set, even if null/0 — prevents stale state
+      setPodiumPlayer(state.podiumPlayer ?? null);
+      setCurrentBid(state.currentBid ?? 0);
+      setHighestBidder(state.highestBidder ?? null);
       if (state.mode) setBiddingMode(state.mode.toLowerCase());
       if (state.timer) {
-        setTimerRemaining(state.timer.remainingSeconds);
-        setTimerDuration(state.timer.duration);
-        setTimerStatus(state.timer.status?.toLowerCase() || 'running');
+        setTimerRemaining(state.timer.remainingSeconds ?? 0);
+        setTimerDuration(state.timer.duration ?? 60);
+        setTimerStatus(state.timer.status?.toLowerCase() || 'idle');
       }
-      if (state.bidHistory) setBidHistory(state.bidHistory);
-    });
+      if (Array.isArray(state.bidHistory)) setBidHistory(state.bidHistory);
+    };
 
-    socket.on('auction:timer-update', (data) => {
-      setTimerRemaining(data.remainingSeconds);
+    const handlePlayerLaunched = (state) => {
+      handleState(state);
+      setTimerStatus('running');
+    };
+
+    const handleCompleted = (state) => {
+      if (state?.player && state?.winner) {
+        // declareWinner / hammerSell provides a result object, not full state
+        setPodiumPlayer(null);
+        setTimerStatus('ended');
+      } else {
+        // timer expired — state has full auction state
+        handleState(state);
+        setTimerStatus('ended');
+      }
+    };
+
+    const handleCancelled = (state) => {
+      setPodiumPlayer(null);
+      setCurrentBid(0);
+      setHighestBidder(null);
+      setTimerStatus('idle');
+      setBidHistory([]);
+    };
+
+    const handleTimerUpdate = (data) => {
+      setTimerRemaining(data.remainingSeconds ?? 0);
       if (data.isPaused) setTimerStatus('paused');
-    });
+      else setTimerStatus('running');
+    };
+
+    socket.on('auction:state', handleState);
+    socket.on('auction:player-launched', handlePlayerLaunched);
+    socket.on('auction:completed', handleCompleted);
+    socket.on('auction:cancelled', handleCancelled);
+    socket.on('auction:paused', handleState);
+    socket.on('auction:resumed', handleState);
+    socket.on('auction:rollback', handleState);
+    socket.on('auction:new-bid', handleState);
+    socket.on('auction:timer-update', handleTimerUpdate);
 
     socket.on('bid:error', (data) => {
       triggerToast(data.error || 'Bid rejected by server guardrail', 'error');
@@ -188,8 +211,15 @@ export const AuctionProvider = ({ children }) => {
     });
 
     return () => {
-      socket.off('auction:state');
-      socket.off('auction:timer-update');
+      socket.off('auction:state', handleState);
+      socket.off('auction:player-launched', handlePlayerLaunched);
+      socket.off('auction:completed', handleCompleted);
+      socket.off('auction:cancelled', handleCancelled);
+      socket.off('auction:paused', handleState);
+      socket.off('auction:resumed', handleState);
+      socket.off('auction:rollback', handleState);
+      socket.off('auction:new-bid', handleState);
+      socket.off('auction:timer-update', handleTimerUpdate);
       socket.off('bid:error');
       socket.off('bid:blind-success');
     };
@@ -197,7 +227,7 @@ export const AuctionProvider = ({ children }) => {
 
   // Fallback Countdown Timer if socket offline
   useEffect(() => {
-    if (isConnected) return; // server manages timer when socket connected
+    if (isConnected) return;
     let interval = null;
     if (timerStatus === 'running' && timerRemaining > 0) {
       interval = setInterval(() => {
@@ -220,25 +250,25 @@ export const AuctionProvider = ({ children }) => {
     setTimerStatus('running');
 
     if (socket && isConnected) {
-      api.post('/podium/launch-player', { playerId: player.id || player._id, duration, mode: mode.toUpperCase() }).catch(() => {});
+      api.post('/podium/launch-player', { playerId: player.id || player._id, duration, mode: mode.toUpperCase() }).catch(() => { });
     }
     triggerToast(`Pushed ${player.name} to Live Podium (${mode.toUpperCase()} mode)`, 'success');
   };
 
   const pauseTimer = () => {
     setTimerStatus('paused');
-    if (socket && isConnected) api.post('/podium/pause').catch(() => {});
+    if (socket && isConnected) api.post('/podium/pause').catch(() => { });
     triggerToast('Auction Timer PAUSED', 'warning');
   };
 
   const resumeTimer = () => {
     setTimerStatus('running');
-    if (socket && isConnected) api.post('/podium/resume').catch(() => {});
+    if (socket && isConnected) api.post('/podium/resume').catch(() => { });
     triggerToast('Auction Timer RESUMED', 'info');
   };
 
   const rollbackBid = () => {
-    if (socket && isConnected) api.post('/podium/rollback').catch(() => {});
+    if (socket && isConnected) api.post('/podium/rollback').catch(() => { });
     if (bidHistory.length <= 1) {
       if (podiumPlayer) {
         setCurrentBid(podiumPlayer.basePrice);
@@ -262,7 +292,7 @@ export const AuctionProvider = ({ children }) => {
       triggerToast('Cannot sell: No bids placed yet!', 'error');
       return;
     }
-    if (socket && isConnected) api.post('/podium/force-sell').catch(() => {});
+    if (socket && isConnected) api.post('/podium/force-sell').catch(() => { });
 
     setPlayers(prev => prev.map(p => p.id === podiumPlayer.id ? { ...p, status: 'sold', soldPrice: currentBid } : p));
     setTimerStatus('ended');
@@ -270,7 +300,7 @@ export const AuctionProvider = ({ children }) => {
   };
 
   const cancelAuction = () => {
-    if (socket && isConnected) api.post('/podium/cancel').catch(() => {});
+    if (socket && isConnected) api.post('/podium/cancel').catch(() => { });
     setPodiumPlayer(null);
     setCurrentBid(0);
     setHighestBidder(null);
@@ -317,7 +347,6 @@ export const AuctionProvider = ({ children }) => {
       return { success: false, error: 'Please enter a valid numeric bid amount.' };
     }
 
-    // PRD REQUIREMENT: Blind Bid Budget Guardrail
     const lowestBasePrice = getLowestCategoryBasePrice();
     const currentRosterCount = team.currentRoster.length;
     const slotsNeeded = Math.max(0, team.minRoster - (currentRosterCount + 1));
@@ -339,7 +368,7 @@ export const AuctionProvider = ({ children }) => {
     return { success: true };
   };
 
-  // --- CONFIG CRUD WITH REAL API CALLS (Gap 3 Fix) ---
+  // --- CONFIG CRUD WITH REAL API CALLS ---
   const addSession = async (session) => {
     try {
       const res = await api.post('/admin/sessions', { name: session.name });
@@ -379,8 +408,13 @@ export const AuctionProvider = ({ children }) => {
   const updateBiddingTier = async (id, updated) => {
     try {
       const res = await api.put(`/admin/bidding-tiers/${id}`, updated);
-      if (res.data?.data) setBiddingTiers(prev => prev.map(t => t.id === id ? { ...t, ...res.data.data } : t));
-    } catch (err) { triggerToast(err.response?.data?.message || 'Failed to update bidding tier', 'error'); }
+      const data = res.data?.data || res.data || res;
+      setBiddingTiers(prev => prev.map(t => (t.id === id || t._id === id) ? { ...t, ...data } : t));
+      triggerToast('Bidding tier updated successfully', 'success');
+    } catch (err) {
+      setBiddingTiers(prev => prev.map(t => (t.id === id || t._id === id) ? { ...t, ...updated } : t));
+      triggerToast('Bidding tier updated (local)', 'info');
+    }
   };
 
   return (

@@ -1,42 +1,22 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-
-// ── Role normalisation map ────────────────────────────────────────────────────
-// Handles both lowercase frontend aliases and UPPER_SNAKE backend values.
-const ROLE_MAP = {
-  super_admin:  'SUPER_ADMIN',
-  podium_admin: 'PODIUM_ADMIN',
-  manager:      'TEAM_MANAGER',
-  player:       'PLAYER',
-  spectator:    'SPECTATOR',
-  // Pass-through if already uppercase
-  SUPER_ADMIN:  'SUPER_ADMIN',
-  PODIUM_ADMIN: 'PODIUM_ADMIN',
-  TEAM_MANAGER: 'TEAM_MANAGER',
-  PLAYER:       'PLAYER',
-  SPECTATOR:    'SPECTATOR',
-};
+import { useAuth, ROLE_MAP } from '../context/AuthContext';
 
 /**
- * Determine the most appropriate login redirect based on the current path or
- * the role being attempted.
+ * Determine the most appropriate login redirect based on the current path.
  */
 const getLoginRedirect = (pathname) => {
   if (pathname.startsWith('/player')) return '/player/login';
-  // All other roles share the manager/podium/admin login
   return '/manager/login';
 };
 
 /**
  * <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PODIUM_ADMIN']} />
  *
- * - Unauthenticated  → redirects to role-appropriate login page
- * - Wrong role       → redirects to /access-denied
- * - Correct role     → renders children
- *
- * Optional props:
- *   - redirectTo: string  Override the login redirect path
+ * - Loading         → Displays spinner
+ * - Unauthenticated → Redirects to role-appropriate login
+ * - Wrong role      → Redirects to /access-denied
+ * - Correct role    → Renders children
  */
 export default function ProtectedRoute({ children, allowedRoles = [], redirectTo }) {
   const { user, loading } = useAuth();

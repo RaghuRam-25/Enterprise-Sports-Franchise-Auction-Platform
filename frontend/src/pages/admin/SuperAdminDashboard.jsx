@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Users, ShieldCheck, Trophy, Lock, Unlock, DollarSign, Activity, Settings, Plus, Layers } from 'lucide-react';
 import { useAuction } from '../../context/AuctionContext';
 import { Link } from 'react-router-dom';
+import api from '../../services/api';
 
 export default function SuperAdminDashboard() {
   const {
@@ -18,16 +19,26 @@ export default function SuperAdminDashboard() {
   } = useAuction();
 
   const totalRegistered = players.length;
-  const soldPlayers = players.filter(p => p.status === 'sold').length;
-  const unsoldPlayers = players.filter(p => p.status === 'unsold').length;
-  const totalPurse = teams.reduce((acc, t) => acc + t.totalBudget, 0);
+  // GAP-15 FIX: status values are uppercase in DB
+  const soldPlayers     = players.filter(p => (p.status || '').toUpperCase() === 'SOLD').length;
+  const approvedPlayers = players.filter(p => (p.status || '').toUpperCase() === 'APPROVED').length;
+  const unsoldPlayers   = players.filter(p => (p.status || '').toUpperCase() === 'UNSOLD').length;
+  const totalPurse      = teams.reduce((acc, t) => acc + (t.totalBudget || 0), 0);
+  const totalSpent      = teams.reduce((acc, t) => acc + ((t.totalBudget || 0) - (t.remainingBudget || 0)), 0);
 
-  const toggleFreeze = () => {
-    setIsRegistrationFrozen(!isRegistrationFrozen);
-    triggerToast(
-      !isRegistrationFrozen ? 'Player registration FREEZE enabled.' : 'Player registration UNFROZEN.',
-      !isRegistrationFrozen ? 'warning' : 'info'
-    );
+  const toggleFreeze = async () => {
+    try {
+      await api.post('/players/toggle-freeze');
+      setIsRegistrationFrozen(prev => !prev);
+      triggerToast(
+        !isRegistrationFrozen ? 'Player registration FREEZE enabled.' : 'Player registration UNFROZEN.',
+        !isRegistrationFrozen ? 'warning' : 'info'
+      );
+    } catch (err) {
+      // Optimistic fallback if backend not seeded
+      setIsRegistrationFrozen(prev => !prev);
+      triggerToast(!isRegistrationFrozen ? 'Registration FROZEN (local).' : 'Registration UNFROZEN (local).', 'warning');
+    }
   };
 
   return (

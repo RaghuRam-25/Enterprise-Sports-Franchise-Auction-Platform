@@ -2,12 +2,20 @@ import jwt from 'jsonwebtoken';
 import { ENV } from '../config/env.js';
 import { User } from '../models/User.js';
 
-// ── Role hierarchy (lowest → highest) ────────────────────────────────────────
+// ── Role hierarchy ────────────────────────────────────────────────────────────
 export const ROLES = ['SPECTATOR', 'PLAYER', 'TEAM_MANAGER', 'PODIUM_ADMIN', 'SUPER_ADMIN'];
 
 /**
+ * Helper: checks if a string is a valid 24-char hex MongoDB ObjectId
+ */
+const isValidObjectId = (id) => typeof id === 'string' && /^[0-9a-fA-F]{24}$/.test(id);
+
+/**
  * Middleware: Authenticates the request via JWT.
- * Sets req.user and calls next(). Blocks with 401 if no valid token.
+ * Sets req.user and calls next(). Blocks with 401 if no valid token or user.
+ *
+ * SECURITY: No mock fallback. If the user cannot be found in the DB,
+ * the request is rejected — always.
  */
 export const protect = async (req, res, next) => {
   let token;
@@ -21,25 +29,36 @@ export const protect = async (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, ENV.JWT_SECRET);
-    const user = await User.findById(decoded.id).select('-passwordHash');
+
+    // Only look up real DB users — no mock user construction ever
+    if (!decoded.id || !isValidObjectId(decoded.id)) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid token: user ID is not a valid database reference'
+      });
+    }
+
+    let user;
+    try {
+      user = await User.findById(decoded.id).select('-passwordHash');
+    } catch (_) {
+      user = null;
+    }
 
     if (!user) {
-      // Fallback mock user if database is unseeded
-      req.user = {
-        _id: decoded.id,
-        role: decoded.role || 'SUPER_ADMIN',
-        teamId: decoded.teamId
-      };
-      return next();
+      return res.status(401).json({ success: false, message: 'User account no longer exists' });
     }
 
     if (!user.isActive) {
-      return res.status(403).json({ success: false, message: 'Account disabled' });
+      return res.status(403).json({ success: false, message: 'Account disabled. Contact system administrator.' });
     }
 
     req.user = user;
     next();
   } catch (error) {
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({ success: false, message: 'Session expired. Please log in again.' });
+    }
     return res.status(401).json({ success: false, message: 'Token verification failed' });
   }
 };
@@ -47,7 +66,8 @@ export const protect = async (req, res, next) => {
 /**
  * Middleware: Optionally attaches user if a valid token is present.
  * Does NOT block requests without a token — public routes still work.
- * Use this for routes that behave differently for authenticated vs. anonymous users.
+ *
+ * SECURITY: No mock fallback. Either the DB user exists or req.user = null.
  */
 export const optionalAuth = async (req, res, next) => {
   let token;
@@ -62,12 +82,17 @@ export const optionalAuth = async (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, ENV.JWT_SECRET);
-    const user = await User.findById(decoded.id).select('-passwordHash');
-    req.user = user || {
-      _id: decoded.id,
-      role: decoded.role || 'SUPER_ADMIN',
-      teamId: decoded.teamId
-    };
+
+    if (decoded.id && isValidObjectId(decoded.id)) {
+      try {
+        const user = await User.findById(decoded.id).select('-passwordHash');
+        req.user = (user && user.isActive) ? user : null;
+      } catch (_) {
+        req.user = null;
+      }
+    } else {
+      req.user = null;
+    }
   } catch (_) {
     req.user = null;
   }
@@ -76,15 +101,17 @@ export const optionalAuth = async (req, res, next) => {
 };
 
 /**
- * Middleware factory: Role-based authorization gate.
+ * Middleware factory: Role-based authorization gate (strict allow-list).
  * Usage: authorize('SUPER_ADMIN', 'PODIUM_ADMIN')
+ *
+ * Returns 403 if the authenticated user's role is not in the allow-list.
  */
 export const authorize = (...roles) => {
   return (req, res, next) => {
     if (!req.user || !roles.includes(req.user.role)) {
       return res.status(403).json({
         success: false,
-        message: `User role '${req.user?.role}' is not authorized for this route`
+        message: `Access denied: role '${req.user?.role || 'unauthenticated'}' is not permitted for this endpoint`
       });
     }
     next();
@@ -94,11 +121,6 @@ export const authorize = (...roles) => {
 /**
  * Middleware factory: Own-resource enforcement.
  * Allows SUPER_ADMIN to bypass, and only lets the owning user through.
- *
- * @param {string} paramField  - The req.params key that holds the resource ID (e.g., 'id')
- * @param {string} userField   - The field on req.user to compare against (e.g., '_id' or 'playerId')
- *
- * Usage: authorizeOwn('id', '_id')
  */
 export const authorizeOwn = (paramField = 'id', userField = '_id') => {
   return (req, res, next) => {

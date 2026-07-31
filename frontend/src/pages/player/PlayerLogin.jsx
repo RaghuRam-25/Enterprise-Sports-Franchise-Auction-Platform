@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { User, Key, ArrowRight, UserPlus } from 'lucide-react';
-import { useAuth } from '../../context/AuthContext';
+import { User, ArrowRight, UserPlus } from 'lucide-react';
+import { useAuth, getDashboardForRole } from '../../context/AuthContext';
 import Navbar from '../../components/Navbar';
 
 export default function PlayerLogin() {
@@ -10,8 +10,16 @@ export default function PlayerLogin() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const { login } = useAuth();
+  const { login, user } = useAuth();
   const navigate = useNavigate();
+
+  // Auto redirect if already logged in
+  useEffect(() => {
+    if (user) {
+      const target = getDashboardForRole(user.role);
+      navigate(target, { replace: true });
+    }
+  }, [user, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -20,15 +28,11 @@ export default function PlayerLogin() {
 
     try {
       const res = await login({ username: identifier, password, role: 'player' });
-      if (res.success) {
-        if (res.user?.role !== 'PLAYER' && res.user?.role !== 'SUPER_ADMIN') {
-          setError('This login portal is for Players only. Please use the correct login page.');
-          setLoading(false);
-          return;
-        }
-        navigate('/player/dashboard');
+      if (res.success && res.user) {
+        const targetDashboard = getDashboardForRole(res.user.role);
+        navigate(targetDashboard, { replace: true });
       } else {
-        setError(res.message || 'Authentication failed. Check your credentials.');
+        setError(res?.message || 'Authentication failed. Check your credentials.');
       }
     } catch (err) {
       setError('Login failed. Please try again.');
@@ -141,9 +145,9 @@ export default function PlayerLogin() {
 
           {/* Manager login redirect */}
           <p className="text-center text-[11px] text-slate-600">
-            Team Manager?{' '}
+            Team Manager or Official?{' '}
             <Link to="/manager/login" className="text-emerald-500 hover:text-emerald-400 transition font-medium">
-              Go to Manager Login
+              Go to Manager / Official Login
             </Link>
           </p>
 

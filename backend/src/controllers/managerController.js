@@ -1,5 +1,4 @@
 import { Team } from '../models/Team.js';
-import { Bid } from '../models/Bid.js';
 import { User } from '../models/User.js';
 import { auctionEngine } from '../services/auctionEngine.js';
 import { AuditLog } from '../models/AuditLog.js';
@@ -36,7 +35,8 @@ export const getOwnBudget = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'No team assigned to this manager' });
     }
 
-    const team = await Team.findById(teamId).select('name totalBudget remainingBudget currentRosterCount minRoster maxRoster');
+    const team = await Team.findById(teamId)
+      .select('name totalBudget remainingBudget currentRosterCount minRoster maxRoster');
     if (!team) return res.status(404).json({ success: false, message: 'Team not found' });
 
     res.json({
@@ -57,16 +57,44 @@ export const getOwnBudget = async (req, res, next) => {
   } catch (e) { next(e); }
 };
 
-// ── PLACE NORMAL BID ──────────────────────────────────────────────────────────
-const bidSchema = z.object({
-  amount: z.number().positive('Bid amount must be positive')
-});
+// ── GET OWN ROSTER — GAP 8 FIX ────────────────────────────────────────────────
+export const getOwnRoster = async (req, res, next) => {
+  try {
+    const teamId = req.user.teamId;
+    if (!teamId) {
+      return res.status(404).json({ success: false, message: 'No team assigned to this manager' });
+    }
 
+    const { Player } = await import('../models/Player.js');
+    const team = await Team.findById(teamId)
+      .select('name totalBudget remainingBudget currentRosterCount minRoster');
+    if (!team) return res.status(404).json({ success: false, message: 'Team not found' });
+
+    const players = await Player.find({ soldToTeam: teamId, status: 'SOLD' })
+      .select('name jerseyName primaryPosition positions category finalPrice imageUrl studentId')
+      .sort({ finalPrice: -1 });
+
+    res.json({
+      success: true,
+      data: {
+        team: {
+          name: team.name,
+          totalBudget: team.totalBudget,
+          remainingBudget: team.remainingBudget,
+          spentBudget: team.totalBudget - team.remainingBudget,
+          currentRosterCount: team.currentRosterCount,
+          minRoster: team.minRoster
+        },
+        players
+      }
+    });
+  } catch (e) { next(e); }
+};
+
+// ── PLACE NORMAL BID — GAP 3 & 12 FIX ────────────────────────────────────────
 export const placeBid = async (req, res, next) => {
   try {
-    const parsed = bidSchema.parse(req.body);
     const teamId = req.user.teamId;
-
     if (!teamId) {
       return res.status(400).json({ success: false, message: 'No team assigned to this manager' });
     }
@@ -77,35 +105,33 @@ export const placeBid = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'No player is currently on the podium' });
     }
 
-    if (state.timerStatus !== 'running') {
+    // GAP 12 FIX: timer state is nested under state.timer.status (not state.timerStatus)
+    if (state.timer?.status !== 'RUNNING' || state.timer?.isPaused) {
       return res.status(400).json({ success: false, message: 'Auction clock is not running' });
     }
 
-    // Check budget
     const team = await Team.findById(teamId);
     if (!team) return res.status(404).json({ success: false, message: 'Team not found' });
 
-    if (parsed.amount > team.remainingBudget) {
-      return res.status(400).json({
-        success: false,
-        message: `Insufficient budget. Remaining: ${team.remainingBudget.toLocaleString()}`
-      });
-    }
+    // GAP 3 FIX: use placeNormalBid (placeBid method did not exist on engine)
+    const result = await auctionEngine.placeNormalBid({
+      id: team._id.toString(),
+      _id: team._id,
+      name: team.name,
+      totalBudget: team.totalBudget,
+      remainingBudget: team.remainingBudget,
+      minRoster: team.minRoster,
+      currentRosterCount: team.currentRosterCount || 0
+    });
 
-    if (parsed.amount <= (state.currentBid || 0)) {
-      return res.status(400).json({
-        success: false,
-        message: `Bid must be higher than current bid of ${state.currentBid?.toLocaleString()}`
-      });
+    if (!result?.success) {
+      return res.status(400).json({ success: false, message: result?.error || 'Bid rejected by engine' });
     }
-
-    // Submit bid to auction engine
-    const result = auctionEngine.placeBid(team, parsed.amount);
 
     await logAction('PLACE_BID', req.user.email || req.user.name, {
       teamId,
       teamName: team.name,
-      amount: parsed.amount,
+      amount: result.nextAmount,
       playerId: state.podiumPlayer._id
     });
 
@@ -123,7 +149,6 @@ export const placeBlindBid = async (req, res, next) => {
   try {
     const parsed = blindBidSchema.parse(req.body);
     const teamId = req.user.teamId;
-
     if (!teamId) {
       return res.status(400).json({ success: false, message: 'No team assigned to this manager' });
     }
@@ -131,21 +156,27 @@ export const placeBlindBid = async (req, res, next) => {
     const team = await Team.findById(teamId);
     if (!team) return res.status(404).json({ success: false, message: 'Team not found' });
 
-    if (parsed.amount > team.remainingBudget) {
-      return res.status(400).json({
-        success: false,
-        message: `Insufficient budget. Remaining: ${team.remainingBudget.toLocaleString()}`
-      });
-    }
+    const { PlayerCategory } = await import('../models/PlayerCategory.js');
+    const cheapestCategory = await PlayerCategory.findOne().sort({ basePrice: 1 });
+    const lowestBasePrice = cheapestCategory?.basePrice || 1000000;
 
-    // Record the blind bid
-    const bid = await Bid.create({
-      teamId,
-      playerId: parsed.playerId,
-      amount: parsed.amount,
-      type: 'BLIND',
-      status: 'PENDING'
-    });
+    const result = auctionEngine.placeBlindBid(
+      {
+        id: team._id.toString(),
+        _id: team._id,
+        name: team.name,
+        totalBudget: team.totalBudget,
+        remainingBudget: team.remainingBudget,
+        minRoster: team.minRoster,
+        currentRosterCount: team.currentRosterCount || 0
+      },
+      parsed.amount,
+      lowestBasePrice
+    );
+
+    if (!result?.success) {
+      return res.status(400).json({ success: false, message: result?.error || 'Blind bid rejected by guardrail' });
+    }
 
     await logAction('PLACE_BLIND_BID', req.user.email || req.user.name, {
       teamId,
@@ -154,7 +185,7 @@ export const placeBlindBid = async (req, res, next) => {
       playerId: parsed.playerId
     });
 
-    res.status(201).json({ success: true, message: 'Blind bid submitted successfully', data: bid });
+    res.status(201).json({ success: true, message: 'Blind bid submitted successfully' });
   } catch (e) { next(e); }
 };
 

@@ -50,6 +50,15 @@ api.interceptors.response.use(
 
 export default api;
 
+// ─── Public Config (no auth required) ─────────────────────────────────────────
+export const configAPI = {
+  getSessions:    () => api.get('/config/sessions'),
+  getPositions:   () => api.get('/config/positions'),
+  getCategories:  () => api.get('/config/categories'),
+  getBiddingTiers:() => api.get('/config/bidding-tiers'),
+  getTeams:       () => api.get('/config/teams'),
+};
+
 // ─── Auth ─────────────────────────────────────────────────────────────────────
 export const authAPI = {
   login:          (credentials) => api.post('/auth/login', credentials),
@@ -78,7 +87,9 @@ export const adminAPI = {
 
   // Bidding Tiers
   getBiddingTiers:   () => api.get('/admin/bidding-tiers'),
+  createBiddingTier: (data) => api.post('/admin/bidding-tiers', data),
   updateBiddingTier: (id, data) => api.put(`/admin/bidding-tiers/${id}`, data),
+  deleteBiddingTier: (id) => api.delete(`/admin/bidding-tiers/${id}`),
 
   // Teams — CRUD
   getTeams:    () => api.get('/admin/teams'),
@@ -89,6 +100,7 @@ export const adminAPI = {
   // Managers & Podium Admins
   getManagers:          () => api.get('/admin/managers'),
   createManager:        (data) => api.post('/admin/managers', data),
+  editManager:          (id, data) => api.put(`/admin/managers/${id}`, data),
   deleteManager:        (id) => api.delete(`/admin/managers/${id}`),
   resetManagerPassword: (id, data) => api.put(`/admin/managers/${id}/reset-password`, data),
   createPodiumAdmin:    (data) => api.post('/admin/podium-admins', data),
@@ -106,22 +118,24 @@ export const adminAPI = {
 
 // ─── Players (Public + Player self-service) ────────────────────────────────────
 export const playerAPI = {
-  register:            (formData) => api.post('/players/register', formData, {
+  register:              (formData) => api.post('/players/register', formData, {
     headers: { 'Content-Type': 'multipart/form-data' }
   }),
-  getAll:              (params) => api.get('/players', { params }),
+  getAll:                (params) => api.get('/players', { params }),
   getRegistrationStatus: () => api.get('/players/status'),
-  withdraw:            (id) => api.put(`/players/${id}/withdraw`),
-  updateProfile:       (id, formData) => api.put(`/players/${id}/profile`, formData, {
+  withdraw:              (id) => api.put(`/players/${id}/withdraw`),
+  updateProfile:         (id, formData) => api.put(`/players/${id}/profile`, formData, {
     headers: { 'Content-Type': 'multipart/form-data' }
   }),
-  toggleFreeze:        () => api.post('/players/toggle-freeze'),
+  toggleFreeze:          () => api.post('/players/toggle-freeze'),
 };
 
 // ─── Manager (TEAM_MANAGER + SUPER_ADMIN) ─────────────────────────────────────
 export const managerAPI = {
   getTeam:          () => api.get('/manager/team'),
   getBudget:        () => api.get('/manager/budget'),
+  // GAP 8 FIX: roster endpoint added
+  getRoster:        () => api.get('/manager/roster'),
   getHistory:       () => api.get('/manager/history'),
   placeBid:         (data) => api.post('/manager/bid', data),
   placeBlindBid:    (data) => api.post('/manager/blind-bid', data),
@@ -130,15 +144,15 @@ export const managerAPI = {
 
 // ─── Podium (Auction Control — PODIUM_ADMIN + SUPER_ADMIN) ────────────────────
 export const podiumAPI = {
-  getState:          () => api.get('/podium/state'),
+  getState:            () => api.get('/podium/state'),
   getAvailablePlayers: () => api.get('/podium/players'),
-  launchPlayer:      (data) => api.post('/podium/launch-player', data),
-  selectUnsold:      (data) => api.post('/podium/select-unsold', data),
-  moveNext:          () => api.post('/podium/move-next'),
-  declareWinner:     () => api.post('/podium/declare-winner'),
-  pause:             () => api.post('/podium/pause'),
-  resume:            () => api.post('/podium/resume'),
-  rollback:          () => api.post('/podium/rollback'),
-  cancel:            () => api.post('/podium/cancel'),
-  forceSell:         () => api.post('/podium/force-sell'),
+  launchPlayer:        (data) => api.post('/podium/launch-player', data),
+  selectUnsold:        (data) => api.post('/podium/select-unsold', data),
+  moveNext:            () => api.post('/podium/move-next'),
+  declareWinner:       () => api.post('/podium/declare-winner'),
+  pause:               () => api.post('/podium/pause'),
+  resume:              () => api.post('/podium/resume'),
+  rollback:            () => api.post('/podium/rollback'),
+  cancel:              () => api.post('/podium/cancel'),
+  forceSell:           () => api.post('/podium/force-sell'),
 };

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Play, Pause, RotateCcw, XCircle, Gavel, Search, Settings2, ShieldAlert, CheckCircle2, Clock, Eye, AlertCircle } from 'lucide-react';
+import { Play, Pause, RotateCcw, XCircle, Gavel, Search, Settings2, ShieldAlert, CheckCircle2, Clock, Eye, AlertCircle, Shuffle, SkipForward } from 'lucide-react';
 import { useAuction } from '../../context/AuctionContext';
+import api from '../../services/api';
 import Navbar from '../../components/Navbar';
 
 export const PodiumDashboard = () => {
@@ -32,10 +33,16 @@ export const PodiumDashboard = () => {
   const [customDuration, setCustomDuration] = useState(60);
   const [targetMode, setTargetMode] = useState('normal');
 
-  const unsoldPlayers = players.filter(p => p.status === 'unsold');
+  const safePlayers = Array.isArray(players) ? players : [];
+  const unsoldPlayers = safePlayers.filter(p => {
+    const st = (p.status || '').toLowerCase();
+    return st === 'approved' || st === 'unsold';
+  });
 
   const filteredUnsold = unsoldPlayers.filter(p => {
-    const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) || p.studentId.toLowerCase().includes(searchQuery.toLowerCase());
+    const pName = p.name || '';
+    const pStudentId = p.studentId || '';
+    const matchesSearch = pName.toLowerCase().includes(searchQuery.toLowerCase()) || pStudentId.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCat = selectedCategoryFilter === 'ALL' || p.category === selectedCategoryFilter;
     const matchesPos = selectedPositionFilter === 'ALL' || p.primaryPosition === selectedPositionFilter || p.positions?.includes(selectedPositionFilter);
     return matchesSearch && matchesCat && matchesPos;
@@ -43,6 +50,27 @@ export const PodiumDashboard = () => {
 
   const handlePushPlayer = (player) => {
     pushToPodium(player, Number(customDuration), targetMode);
+  };
+
+  const handleSelectRandom = () => {
+    if (filteredUnsold.length === 0) {
+      triggerToast('No unsold players available for random selection.', 'warning');
+      return;
+    }
+    const randomIdx = Math.floor(Math.random() * filteredUnsold.length);
+    const randomPlayer = filteredUnsold[randomIdx];
+    pushToPodium(randomPlayer, Number(customDuration), targetMode);
+    api.post('/podium/select-unsold', { playerId: randomPlayer.id || randomPlayer._id }).catch(() => {});
+  };
+
+  const handleMoveNext = () => {
+    if (unsoldPlayers.length === 0) {
+      triggerToast('No more unsold players remaining.', 'warning');
+      return;
+    }
+    const nextPlayer = unsoldPlayers[0];
+    pushToPodium(nextPlayer, Number(customDuration), targetMode);
+    api.post('/podium/move-next').catch(() => {});
   };
 
   return (
@@ -139,7 +167,7 @@ export const PodiumDashboard = () => {
                     className="bg-slate-900/70 border border-slate-800 p-3.5 rounded-xl flex items-center justify-between hover:border-blue-500/40 transition group"
                   >
                     <div className="flex items-center gap-3">
-                      <img src={player.picture} alt="" className="w-10 h-10 rounded-full object-cover border border-slate-700" />
+                      <img src={player.imageUrl} alt="" className="w-10 h-10 rounded-full object-cover border border-slate-700" />
                       <div>
                         <p className="font-extrabold text-xs text-white group-hover:text-blue-400 transition">{player.name}</p>
                         <p className="text-[11px] text-slate-400">
@@ -224,6 +252,24 @@ export const PodiumDashboard = () => {
                   </div>
                 </div>
               </div>
+
+              {/* Quick Launch Buttons */}
+              <div className="grid grid-cols-2 gap-3 pt-2">
+                <button
+                  onClick={handleSelectRandom}
+                  disabled={!!podiumPlayer || unsoldPlayers.length === 0}
+                  className="py-2.5 px-4 bg-amber-600/20 hover:bg-amber-600 text-amber-300 hover:text-white border border-amber-500/40 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  <Shuffle className="w-4 h-4" /> Random Lottery Pick
+                </button>
+                <button
+                  onClick={handleMoveNext}
+                  disabled={!!podiumPlayer || unsoldPlayers.length === 0}
+                  className="py-2.5 px-4 bg-blue-600/20 hover:bg-blue-600 text-blue-300 hover:text-white border border-blue-500/40 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  <SkipForward className="w-4 h-4" /> Next Player in Queue
+                </button>
+              </div>
             </div>
 
             {/* Active Podium Spotlight Card */}
@@ -235,7 +281,7 @@ export const PodiumDashboard = () => {
                   <div className="flex items-center gap-4">
                     <div className="relative">
                       <img
-                        src={podiumPlayer.picture}
+                        src={podiumPlayer.imageUrl}
                         alt=""
                         className="w-24 h-24 rounded-2xl object-cover border-2 border-emerald-500/40 shadow-xl"
                       />

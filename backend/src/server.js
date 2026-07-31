@@ -16,6 +16,7 @@ import adminRoutes from './routes/adminRoutes.js';
 import playerRoutes from './routes/playerRoutes.js';
 import podiumRoutes from './routes/podiumRoutes.js';
 import managerRoutes from './routes/managerRoutes.js';
+import configRoutes from './routes/configRoutes.js';
 
 const app = express();
 const httpServer = createServer(app);
@@ -59,6 +60,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/players', playerRoutes);
 app.use('/api/podium', podiumRoutes);
 app.use('/api/manager', managerRoutes);
+app.use('/api/config', configRoutes);
 
 // Socket Handler Initialization
 handleSocketConnections(io);

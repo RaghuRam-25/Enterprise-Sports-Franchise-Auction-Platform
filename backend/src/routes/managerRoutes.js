@@ -3,6 +3,7 @@ import { protect, authorize } from '../middleware/auth.js';
 import {
   getOwnTeam,
   getOwnBudget,
+  getOwnRoster,
   placeBid,
   placeBlindBid,
   changeOwnPassword,
@@ -22,18 +23,20 @@ router.get('/team', authorize('TEAM_MANAGER', 'SUPER_ADMIN'), getOwnTeam);
 // GET /api/manager/budget — view own budget & roster slots
 router.get('/budget', authorize('TEAM_MANAGER', 'SUPER_ADMIN'), getOwnBudget);
 
+// GET /api/manager/roster — view acquired players (GAP 8 FIX)
+router.get('/roster', authorize('TEAM_MANAGER', 'SUPER_ADMIN'), getOwnRoster);
+
 // GET /api/manager/history — view auction history (read-only)
 router.get('/history', authorize('TEAM_MANAGER', 'SUPER_ADMIN'), getAuctionHistory);
 
-// POST /api/manager/bid — place a normal bid during live auction
-router.post('/bid', authorize('TEAM_MANAGER', 'SUPER_ADMIN'), placeBid);
+// POST /api/manager/bid — place a normal bid during live auction (TEAM_MANAGER only)
+router.post('/bid', authorize('TEAM_MANAGER'), placeBid);
 
-// POST /api/manager/blind-bid — place a sealed blind bid
-router.post('/blind-bid', authorize('TEAM_MANAGER', 'SUPER_ADMIN'), placeBlindBid);
+// POST /api/manager/blind-bid — place a sealed blind bid (TEAM_MANAGER only)
+router.post('/blind-bid', authorize('TEAM_MANAGER'), placeBlindBid);
 
-// ── Team Manager only (own password — no Super Admin escalation here) ─────────
-
+// ── All authenticated users can change their own password ─────────────────────
 // PUT /api/manager/password — change own password
-router.put('/password', authorize('TEAM_MANAGER', 'PODIUM_ADMIN', 'PLAYER'), changeOwnPassword);
+router.put('/password', authorize('TEAM_MANAGER', 'PODIUM_ADMIN', 'PLAYER', 'SUPER_ADMIN'), changeOwnPassword);
 
 export default router;

@@ -30,6 +30,7 @@ const editPlayerSchema = z.object({
   category: z.string().optional(),
   session: z.string().optional(),
   tShirtSize: z.enum(['S', 'M', 'L', 'XL', 'XXL']).optional(),
+  tShirtNumber: z.string().optional(),
   status: z.string().optional(),
   basePrice: z.number().min(0).optional(),
   imageUrl: z.string().url().optional(),
@@ -145,10 +146,30 @@ export const updateBiddingTier = async (req, res, next) => {
   } catch (e) { next(e); }
 };
 
+export const createBiddingTier = async (req, res, next) => {
+  try {
+    const parsed = biddingTierSchema.parse(req.body);
+    const tier = await BiddingTier.create(parsed);
+    await logAdminAction('CREATE_BIDDING_TIER', req.user?.email || 'admin', tier);
+    res.status(201).json({ success: true, data: tier });
+  } catch (e) { next(e); }
+};
+
+export const deleteBiddingTier = async (req, res, next) => {
+  try {
+    await BiddingTier.findByIdAndDelete(req.params.id);
+    await logAdminAction('DELETE_BIDDING_TIER', req.user?.email || 'admin', { id: req.params.id });
+    res.json({ success: true, message: 'Bidding tier deleted' });
+  } catch (e) { next(e); }
+};
+
 // --- TEAMS ---
+// GAP 11 FIX: populate currentRoster so PublicTeamsView can show roster players
 export const getTeams = async (req, res, next) => {
   try {
-    const teams = await Team.find().sort({ name: 1 });
+    const teams = await Team.find()
+      .populate('currentRoster', 'name jerseyName primaryPosition category finalPrice imageUrl')
+      .sort({ name: 1 });
     res.json({ success: true, count: teams.length, data: teams });
   } catch (e) { next(e); }
 };
@@ -192,10 +213,10 @@ export const deleteTeam = async (req, res, next) => {
   } catch (e) { next(e); }
 };
 
-// --- MANAGERS & PODIUM ADMINS ---
+// --- MANAGERS, PODIUM ADMINS & USER ACCOUNTS ---
 export const getManagers = async (req, res, next) => {
   try {
-    const managers = await User.find({ role: { $in: ['TEAM_MANAGER', 'PODIUM_ADMIN'] } })
+    const managers = await User.find({ role: { $in: ['TEAM_MANAGER', 'PODIUM_ADMIN', 'SUPER_ADMIN', 'PLAYER'] } })
       .populate('teamId')
       .select('-passwordHash')
       .sort({ role: 1, createdAt: -1 });
@@ -205,26 +226,49 @@ export const getManagers = async (req, res, next) => {
 
 export const createManager = async (req, res, next) => {
   try {
-    const { name, email, password, teamId } = req.body;
+    const { name, email, password, teamId, role } = req.body;
     if (!name || !email) return res.status(400).json({ success: false, message: 'Name and email are required' });
 
     const exists = await User.findOne({ email: email.toLowerCase() });
-    if (exists) return res.status(400).json({ success: false, message: 'Manager email already exists' });
+    if (exists) return res.status(400).json({ success: false, message: 'User email already exists' });
 
     const salt = await bcrypt.genSalt(10);
-    const passwordHash = await bcrypt.hash(password || 'manager123', salt);
+    const passwordHash = await bcrypt.hash(password || 'user12345', salt);
+
+    const targetRole = (role && ['TEAM_MANAGER', 'PODIUM_ADMIN', 'SUPER_ADMIN', 'PLAYER'].includes(role)) ? role : 'TEAM_MANAGER';
 
     const manager = await User.create({
       name,
       email: email.toLowerCase(),
       passwordHash,
-      role: 'TEAM_MANAGER',
+      role: targetRole,
       teamId: teamId || null,
       mustResetPassword: true
     });
 
-    await logAdminAction('CREATE_MANAGER', req.user?.email || 'admin', { email, name });
+    await logAdminAction('CREATE_USER', req.user?.email || 'admin', { email, name, role: targetRole });
     res.status(201).json({ success: true, data: { id: manager._id, name: manager.name, email: manager.email, role: manager.role } });
+  } catch (e) { next(e); }
+};
+
+export const editManager = async (req, res, next) => {
+  try {
+    const { name, email, role, teamId } = req.body;
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ success: false, message: 'User account not found' });
+
+    if (name) user.name = name;
+    if (email) user.email = email.toLowerCase();
+    if (role && ['TEAM_MANAGER', 'PODIUM_ADMIN', 'SUPER_ADMIN', 'PLAYER'].includes(role)) {
+      user.role = role;
+    }
+    if (teamId !== undefined) {
+      user.teamId = teamId || null;
+    }
+
+    await user.save();
+    await logAdminAction('EDIT_USER', req.user?.email || 'admin', { id: user._id, name: user.name, role: user.role, teamId: user.teamId });
+    res.json({ success: true, message: `Account '${user.name}' updated to role '${user.role}'`, data: user });
   } catch (e) { next(e); }
 };
 
@@ -232,13 +276,10 @@ export const deleteManager = async (req, res, next) => {
   try {
     const user = await User.findById(req.params.id);
     if (!user) return res.status(404).json({ success: false, message: 'User not found' });
-    if (!['TEAM_MANAGER', 'PODIUM_ADMIN'].includes(user.role)) {
-      return res.status(400).json({ success: false, message: 'Can only delete managers or podium admins via this endpoint' });
-    }
 
     await User.findByIdAndDelete(req.params.id);
-    await logAdminAction('DELETE_MANAGER', req.user?.email || 'admin', { id: req.params.id, email: user.email });
-    res.json({ success: true, message: `${user.role === 'PODIUM_ADMIN' ? 'Podium Admin' : 'Manager'} '${user.name}' deleted` });
+    await logAdminAction('DELETE_USER', req.user?.email || 'admin', { id: req.params.id, email: user.email });
+    res.json({ success: true, message: `Account '${user.name}' deleted` });
   } catch (e) { next(e); }
 };
 
@@ -253,7 +294,7 @@ export const resetManagerPassword = async (req, res, next) => {
     if (!user) return res.status(404).json({ success: false, message: 'User not found' });
 
     user.passwordHash = await bcrypt.hash(newPassword, 10);
-    user.mustResetPassword = true; // Force them to change on next login
+    user.mustResetPassword = true;
     await user.save();
 
     await logAdminAction('RESET_PASSWORD', req.user?.email || 'admin', { id: req.params.id, email: user.email });
@@ -404,7 +445,6 @@ export const exportReports = async (req, res, next) => {
       AuctionLedger.find().sort({ createdAt: -1 })
     ]);
 
-    // Return CSV-friendly JSON for export
     res.json({
       success: true,
       exportedAt: new Date().toISOString(),

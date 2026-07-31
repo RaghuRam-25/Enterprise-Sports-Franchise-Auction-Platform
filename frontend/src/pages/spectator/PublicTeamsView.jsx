@@ -1,5 +1,5 @@
 import React from 'react';
-import { Shield, Users, DollarSign, Trophy } from 'lucide-react';
+import { Shield, Users } from 'lucide-react';
 import { useAuction } from '../../context/AuctionContext';
 import Navbar from '../../components/Navbar';
 
@@ -11,7 +11,7 @@ export default function PublicTeamsView() {
       <Navbar />
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-        
+
         <div className="glass-card rounded-2xl p-6 border border-slate-800 flex items-center justify-between">
           <div>
             <span className="text-xs font-bold uppercase tracking-widest text-emerald-400">Public Franchise Directory</span>
@@ -25,17 +25,25 @@ export default function PublicTeamsView() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {teams.map(team => {
             const totalSpent = team.totalBudget - team.remainingBudget;
+            // GAP 11 FIX: currentRoster is now populated with player objects from backend
+            const roster = Array.isArray(team.currentRoster) ? team.currentRoster : [];
             return (
-              <div key={team.id} className="glass-card rounded-2xl p-6 border border-slate-800 space-y-6">
-                
+              <div key={team.id || team._id} className="glass-card rounded-2xl p-6 border border-slate-800 space-y-6">
+
                 {/* Team Info Header */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <span className="text-4xl">{team.logo}</span>
+                    {team.logoUrl ? (
+                      <img src={team.logoUrl} alt={team.name} className="w-12 h-12 rounded-xl object-cover border border-slate-700" />
+                    ) : (
+                      <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center text-white font-black text-lg">
+                        {(team.shortCode || team.name || 'T')[0]}
+                      </div>
+                    )}
                     <div>
                       <h2 className="text-xl font-black text-white">{team.name}</h2>
                       <span className="font-mono text-xs text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
-                        {team.code}
+                        {team.shortCode}
                       </span>
                     </div>
                   </div>
@@ -55,28 +63,37 @@ export default function PublicTeamsView() {
                   <div className="w-full bg-slate-900 h-2.5 rounded-full overflow-hidden border border-slate-800">
                     <div
                       className="bg-gradient-to-r from-emerald-500 to-teal-400 h-full transition-all"
-                      style={{ width: `${Math.min(100, (totalSpent / team.totalBudget) * 100)}%` }}
+                      style={{ width: `${Math.min(100, (totalSpent / (team.totalBudget || 1)) * 100)}%` }}
                     />
                   </div>
                 </div>
 
-                {/* Roster Squad List */}
+                {/* Roster Squad List — populated players */}
                 <div className="space-y-3 pt-2">
                   <h4 className="text-xs font-bold uppercase text-slate-400 flex items-center gap-1.5">
-                    <Users className="w-3.5 h-3.5 text-blue-400" /> Acquired Squad ({team.currentRoster.length} Players)
+                    <Users className="w-3.5 h-3.5 text-blue-400" /> Acquired Squad ({roster.length} Players)
                   </h4>
 
                   <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
-                    {team.currentRoster.length === 0 ? (
+                    {roster.length === 0 ? (
                       <p className="text-xs text-slate-500 py-4 text-center">No players acquired yet.</p>
                     ) : (
-                      team.currentRoster.map((player, idx) => (
-                        <div key={idx} className="bg-slate-900/70 border border-slate-800 p-2.5 rounded-xl flex items-center justify-between text-xs">
-                          <div>
-                            <span className="font-bold text-white">{player.name}</span>
-                            <span className="text-[10px] text-slate-400 ml-2">({player.position})</span>
+                      roster.map((player, idx) => (
+                        <div key={player._id || player.id || idx} className="bg-slate-900/70 border border-slate-800 p-2.5 rounded-xl flex items-center justify-between text-xs">
+                          <div className="flex items-center gap-2">
+                            {player.imageUrl && (
+                              <img
+                                src={player.imageUrl}
+                                alt={player.name}
+                                className="w-6 h-6 rounded-md object-cover border border-slate-700"
+                              />
+                            )}
+                            <div>
+                              <span className="font-bold text-white">{player.name}</span>
+                              <span className="text-[10px] text-slate-400 ml-2">({player.primaryPosition || player.position})</span>
+                            </div>
                           </div>
-                          <span className="font-mono font-bold text-emerald-400">{formatCurrency(player.price)}</span>
+                          <span className="font-mono font-bold text-emerald-400">{formatCurrency(player.finalPrice || player.price)}</span>
                         </div>
                       ))
                     )}

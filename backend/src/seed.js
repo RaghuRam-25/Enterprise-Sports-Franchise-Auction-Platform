@@ -125,12 +125,13 @@ const seedData = async () => {
         session: i % 2 === 0 ? '22-23 Academic Session' : '23-24 Academic Session',
         jerseyName: `${playerNames[i].split(' ')[0].toUpperCase()} ${10 + i}`,
         tShirtSize: sizes[i % sizes.length],
+        tShirtNumber: String(10 + i),
         positions: [positions[i % positions.length].code],
         primaryPosition: positions[i % positions.length].code,
         imageUrl: `https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80`,
         category: i < 4 ? 'Icon Category' : i < 10 ? 'A Grade' : 'B Grade',
         basePrice: i < 4 ? 5000000 : i < 10 ? 3000000 : 1500000,
-        status: i === 0 ? 'ON_PODIUM' : 'UNSOLD'
+        status: i === 0 ? 'ON_PODIUM' : 'APPROVED'
       });
       players.push(p);
     }

@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-import { Volume2, VolumeX, Radio, Trophy, Shield, Clock, Flame, Sparkles } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Volume2, VolumeX, Radio, Trophy, Shield, Clock, Flame, Sparkles, Wifi, WifiOff } from 'lucide-react';
 import { useAuction } from '../../context/AuctionContext';
+import { useSocket } from '../../context/SocketContext';
 import Navbar from '../../components/Navbar';
 
 export default function PublicLiveView() {
@@ -15,7 +16,15 @@ export default function PublicLiveView() {
     formatCurrency
   } = useAuction();
 
+  const { socket, isConnected } = useSocket();
   const [soundEnabled, setSoundEnabled] = useState(true);
+
+  // GAP-9: Request fresh auction state from server on mount (reconnect pattern)
+  useEffect(() => {
+    if (socket && isConnected) {
+      socket.emit('auction:sync-request');
+    }
+  }, [socket, isConnected]);
 
   return (
     <div className="min-h-screen flex flex-col bg-darkBg text-slate-100 relative overflow-hidden">
@@ -27,11 +36,20 @@ export default function PublicLiveView() {
         <div className="glass-card rounded-2xl p-4 border border-slate-800 flex items-center justify-between bg-gradient-to-r from-slate-900 via-blue-950/30 to-slate-900">
           <div className="flex items-center space-x-3">
             <span className="relative flex h-3 w-3">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+              <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${isConnected ? 'bg-emerald-400' : 'bg-amber-400'}`}></span>
+              <span className={`relative inline-flex rounded-full h-3 w-3 ${isConnected ? 'bg-emerald-500' : 'bg-amber-500'}`}></span>
             </span>
             <span className="text-xs font-black uppercase tracking-widest text-emerald-400 flex items-center gap-1.5">
               <Radio className="w-4 h-4 text-emerald-400" /> LIVE STADIUM BROADCAST
+            </span>
+            {/* WebSocket connection badge */}
+            <span className={`hidden sm:flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold border ${
+              isConnected
+                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+            }`}>
+              {isConnected ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
+              {isConnected ? 'WS LIVE' : 'RECONNECTING'}
             </span>
           </div>
 
@@ -59,8 +77,8 @@ export default function PublicLiveView() {
                   <div className="flex items-center gap-6">
                     <div className="relative">
                       <img
-                        src={podiumPlayer.picture}
-                        alt=""
+                        src={podiumPlayer.imageUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80'}
+                        alt={podiumPlayer.name}
                         className="w-32 h-32 rounded-3xl object-cover border-4 border-emerald-500/50 shadow-2xl"
                       />
                       <span className="absolute -bottom-2 -right-2 px-3 py-1 bg-emerald-400 text-slate-950 font-black text-xs rounded-lg uppercase tracking-wider shadow-lg">

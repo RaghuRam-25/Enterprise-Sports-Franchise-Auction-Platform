@@ -1,4 +1,5 @@
 import { timerService } from './timerService.js';
+import { BiddingTier } from '../models/BiddingTier.js';
 
 class AuctionEngine {
   constructor() {
@@ -11,17 +12,44 @@ class AuctionEngine {
     this.bidHistory = [];
     this.blindBids = []; // Array of { teamId, teamName, amount, timestamp }
     this.bidQueue = Promise.resolve(); // Serialized Queue Lock
+    // GAP 13 FIX: Dynamic tiers loaded from DB at launch time
+    this.activeTiers = [];
   }
 
   init(ioInstance) {
     this.io = ioInstance;
   }
 
-  // Calculate raise dynamically based on BiddingTier percentages
+  // GAP 13 FIX: Load bidding tiers from DB before calculating bids
+  async loadTiers() {
+    try {
+      const tiers = await BiddingTier.find().sort({ minPercent: 1 });
+      if (tiers.length > 0) {
+        this.activeTiers = tiers;
+      }
+    } catch (err) {
+      console.warn('[AuctionEngine] Could not load bidding tiers from DB, using hardcoded fallback:', err.message);
+      this.activeTiers = [];
+    }
+  }
+
+  // GAP 13 FIX: Calculate dynamically from DB tiers; fallback to hardcoded
   calculateNextBidAmount(currentBid, totalPurse = 100000000) {
     const currentNum = currentBid || 0;
     const percentOfPurse = (currentNum / totalPurse) * 100;
 
+    // Try DB tiers first
+    if (this.activeTiers.length > 0) {
+      const matchingTier = this.activeTiers.find(
+        t => percentOfPurse >= (t.minPercent ?? 0) && percentOfPurse < (t.maxPercent ?? 100)
+      ) || this.activeTiers[this.activeTiers.length - 1];
+
+      const raisePercent = matchingTier ? matchingTier.raisePercent : 0.15;
+      const monetaryRaise = Math.round((totalPurse * raisePercent) / 100);
+      return currentNum + monetaryRaise;
+    }
+
+    // Hardcoded fallback
     let raisePercent = 0.15;
     if (percentOfPurse >= 0 && percentOfPurse < 3) raisePercent = 0.15;
     else if (percentOfPurse >= 3 && percentOfPurse < 5) raisePercent = 0.25;
@@ -33,7 +61,10 @@ class AuctionEngine {
   }
 
   // --- PODIUM ADMIN CONTROLS ---
-  launchPlayer(playerData, durationSeconds = 60, mode = 'NORMAL') {
+  async launchPlayer(playerData, durationSeconds = 60, mode = 'NORMAL') {
+    // GAP 13 FIX: refresh tiers from DB every time a player is launched
+    await this.loadTiers();
+
     this.podiumPlayer = playerData;
     this.currentBid = playerData.basePrice || 1000000;
     this.highestBidder = null;
@@ -150,7 +181,7 @@ class AuctionEngine {
   // --- BLIND BIDDING ENGINE (BLIND BID BUDGET GUARDRAIL) ---
   placeBlindBid(teamData, amount, lowestBasePrice = 1000000) {
     if (!this.podiumPlayer) return { success: false, error: 'No player on podium' };
-    
+
     const bidAmount = Number(amount);
     if (isNaN(bidAmount) || bidAmount <= 0) {
       return { success: false, error: 'Invalid numeric bid amount' };
@@ -164,7 +195,7 @@ class AuctionEngine {
 
     if (bidAmount > maxAllowableBid) {
       const errorMsg = `BLIND BID REJECTED: Bid of ${bidAmount} BDT exceeds allowable limit. Required reserve for ${slotsNeeded} remaining slots is ${requiredReserve} BDT.`;
-      
+
       // Notify ONLY this specific team manager via private socket room!
       if (this.io && teamData.id) {
         this.io.to(`team:${teamData.id}`).emit('bid:error', { error: errorMsg });
@@ -174,7 +205,7 @@ class AuctionEngine {
 
     // Register valid blind bid
     this.blindBids.push({ teamId: teamData.id, teamName: teamData.name, amount: bidAmount, timestamp: Date.now() });
-    
+
     if (this.io && teamData.id) {
       this.io.to(`team:${teamData.id}`).emit('bid:blind-success', { amount: bidAmount });
     }

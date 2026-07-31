@@ -6,20 +6,9 @@ import { useAuction } from '../context/AuctionContext';
 
 export default function Navbar() {
   const { user, logout } = useAuth();
-  const { lastActionToast, timerStatus, podiumPlayer, currentBid, formatCurrency } = useAuction();
+  const { lastActionToast, timerStatus, podiumPlayer, currentBid, formatCurrency, isRegistrationFrozen } = useAuction();
   const navigate = useNavigate();
   const location = useLocation();
-
-  const role = user?.role || null;
-
-  // ── Role-based nav visibility ─────────────────────────────────────────────
-  // Derived from RBAC spec accessible pages per role.
-  const showSuperAdmin  = role === 'SUPER_ADMIN';
-  const showPodium      = role === 'PODIUM_ADMIN' || role === 'SUPER_ADMIN';
-  const showManager     = role === 'TEAM_MANAGER' || role === 'SUPER_ADMIN';
-  const showPlayerPortal = role === 'PLAYER' || role === 'SUPER_ADMIN';
-  // Live Stadium is accessible to everyone (Spectator + all roles)
-  const showLive = true;
 
   return (
     <header className="sticky top-0 z-50 glass-card border-b border-slate-800 backdrop-blur-md">
@@ -77,92 +66,83 @@ export default function Navbar() {
             )}
           </div>
 
-          {/* Role-Gated Navigation Toolbar */}
+          {/* Navigation Toolbar per PRD */}
           <div className="flex items-center space-x-2">
-            <div className="hidden lg:flex items-center space-x-1 bg-slate-950/80 p-1 rounded-xl border border-slate-800 text-xs">
+            <div className="hidden md:flex items-center space-x-1 bg-slate-950/80 p-1 rounded-xl border border-slate-800 text-xs">
 
-              {/* Super Admin dashboard — SUPER_ADMIN only */}
-              {showSuperAdmin && (
-                <Link
-                  to="/admin/dashboard"
-                  id="nav-super-admin"
-                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg transition font-medium ${
-                    location.pathname.startsWith('/admin')
-                      ? 'bg-blue-600 text-white shadow-md'
-                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
-                  }`}
-                >
-                  <Shield className="w-3.5 h-3.5" />
-                  <span>Super Admin</span>
-                </Link>
-              )}
+              {/* 1. Home */}
+              <Link
+                to="/"
+                id="nav-home"
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition font-semibold ${
+                  location.pathname === '/'
+                    ? 'bg-blue-600 text-white shadow-md'
+                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                }`}
+              >
+                <span>Home</span>
+              </Link>
 
-              {/* Podium Admin dashboard — PODIUM_ADMIN + SUPER_ADMIN */}
-              {showPodium && (
-                <Link
-                  to="/podium/dashboard"
-                  id="nav-podium"
-                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg transition font-medium ${
-                    location.pathname.startsWith('/podium')
-                      ? 'bg-rose-600 text-white shadow-md'
-                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
-                  }`}
-                >
-                  <Gavel className="w-3.5 h-3.5" />
-                  <span>Podium Admin</span>
-                </Link>
-              )}
+              {/* 2. Teams */}
+              <Link
+                to="/teams"
+                id="nav-teams"
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition font-semibold ${
+                  location.pathname === '/teams'
+                    ? 'bg-blue-600 text-white shadow-md'
+                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                }`}
+              >
+                <Users className="w-3.5 h-3.5 text-blue-400" />
+                <span>Teams</span>
+              </Link>
 
-              {/* Team Manager dashboard — TEAM_MANAGER + SUPER_ADMIN */}
-              {showManager && (
-                <Link
-                  to="/manager/dashboard"
-                  id="nav-manager"
-                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg transition font-medium ${
-                    location.pathname.startsWith('/manager')
-                      ? 'bg-emerald-600 text-white shadow-md'
-                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
-                  }`}
-                >
-                  <Users className="w-3.5 h-3.5" />
-                  <span>Team Manager</span>
-                </Link>
-              )}
+              {/* 3. Players */}
+              <Link
+                to="/players"
+                id="nav-players"
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition font-semibold ${
+                  location.pathname === '/players'
+                    ? 'bg-purple-600 text-white shadow-md'
+                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                }`}
+              >
+                <User className="w-3.5 h-3.5 text-purple-400" />
+                <span>Players</span>
+              </Link>
 
-              {/* Player Portal — PLAYER + SUPER_ADMIN */}
-              {showPlayerPortal && (
-                <Link
-                  to="/player/dashboard"
-                  id="nav-player"
-                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg transition font-medium ${
-                    location.pathname.startsWith('/player')
-                      ? 'bg-purple-600 text-white shadow-md'
-                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
-                  }`}
-                >
-                  <User className="w-3.5 h-3.5" />
-                  <span>Player Portal</span>
-                </Link>
-              )}
+              {/* 4. Live */}
+              <Link
+                to="/live"
+                id="nav-live"
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition font-semibold ${
+                  location.pathname === '/live'
+                    ? 'bg-emerald-600 text-white shadow-md'
+                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                }`}
+              >
+                <Radio className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
+                <span>Live</span>
+              </Link>
 
-              {/* Live Stadium — always visible (Spectators + all roles) */}
-              {showLive && (
+              {/* 5. Register (Only for Players when Registration is Open & Not logged in) */}
+              {!user && !isRegistrationFrozen && (
                 <Link
-                  to="/live"
-                  id="nav-live"
-                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg transition font-medium ${
-                    location.pathname === '/live'
+                  to="/player/register"
+                  id="nav-register"
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition font-semibold ${
+                    location.pathname === '/player/register'
                       ? 'bg-amber-600 text-white shadow-md'
                       : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
                   }`}
                 >
-                  <Radio className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
-                  <span>Live Stadium</span>
+                  <span>Register</span>
                 </Link>
               )}
+
             </div>
 
-            {/* User Profile / Logout */}
+            {/* Single Login / Logout Button */}
             {user ? (
               <div className="flex items-center space-x-2 pl-2 border-l border-slate-800">
                 <div className="hidden sm:block text-right">
@@ -181,11 +161,11 @@ export default function Navbar() {
                 </button>
               </div>
             ) : (
-              // Unauthenticated (Spectator): show Login button
+              // Single Login Button for guest users
               <Link
-                to="/manager/login"
+                to="/login"
                 id="nav-login"
-                className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-lg transition shadow-md"
+                className="px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl transition shadow-lg"
               >
                 Login
               </Link>

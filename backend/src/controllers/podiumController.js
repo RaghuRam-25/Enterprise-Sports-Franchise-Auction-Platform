@@ -85,14 +85,19 @@ export const declareWinner = async (req, res, next) => {
         teamName: result.winner.name
       });
 
-      await Player.findByIdAndUpdate(result.player._id || result.player.id, {
+      const playerId = result.player._id || result.player.id;
+      const teamId = result.winner._id || result.winner.id;
+
+      await Player.findByIdAndUpdate(playerId, {
         status: 'SOLD',
         finalPrice: result.soldPrice,
-        soldToTeam: result.winner._id || result.winner.id
+        soldToTeam: teamId
       });
 
-      await Team.findByIdAndUpdate(result.winner._id || result.winner.id, {
-        $inc: { remainingBudget: -result.soldPrice, currentRosterCount: 1 }
+      // GAP 7 FIX: push player into currentRoster array
+      await Team.findByIdAndUpdate(teamId, {
+        $inc: { remainingBudget: -result.soldPrice, currentRosterCount: 1 },
+        $push: { currentRoster: playerId }
       });
 
       await logPodiumAction('DECLARE_WINNER', req.user?.email || 'podium', {
@@ -144,14 +149,19 @@ export const forceSellAuction = async (req, res, next) => {
         teamName: result.winner.name
       });
 
-      await Player.findByIdAndUpdate(result.player._id || result.player.id, {
+      const fsPlayerId = result.player._id || result.player.id;
+      const fsTeamId = result.winner._id || result.winner.id;
+
+      await Player.findByIdAndUpdate(fsPlayerId, {
         status: 'SOLD',
         finalPrice: result.soldPrice,
-        soldToTeam: result.winner._id || result.winner.id
+        soldToTeam: fsTeamId
       });
 
-      await Team.findByIdAndUpdate(result.winner._id || result.winner.id, {
-        $inc: { remainingBudget: -result.soldPrice, currentRosterCount: 1 }
+      // GAP 7 FIX: push player into currentRoster array
+      await Team.findByIdAndUpdate(fsTeamId, {
+        $inc: { remainingBudget: -result.soldPrice, currentRosterCount: 1 },
+        $push: { currentRoster: fsPlayerId }
       });
 
       await logPodiumAction('FORCE_SELL', req.user?.email || 'podium', {
@@ -168,10 +178,11 @@ export const getAuctionState = (req, res) => {
   res.json({ success: true, data: auctionEngine.getState() });
 };
 
-// GET available players for Podium to select
+// GET available players for Podium to select — GAP 9 FIX: include APPROVED
 export const getAvailablePlayers = async (req, res, next) => {
   try {
-    const players = await Player.find({ status: { $in: ['REGISTERED', 'UNSOLD'] } })
+    // APPROVED = Super Admin approved the registration; UNSOLD = previously on podium but unsold
+    const players = await Player.find({ status: { $in: ['APPROVED', 'UNSOLD'] } })
       .sort({ category: 1, name: 1 });
     res.json({ success: true, count: players.length, data: players });
   } catch (e) { next(e); }

@@ -19,21 +19,24 @@ const router = express.Router();
 // ── Public Routes (Spectators can view live state) ────────────────────────────
 router.get('/state', getAuctionState);
 
-// ── Podium Admin + Super Admin only ──────────────────────────────────────────
-const podiumGuard = [protect, authorize('PODIUM_ADMIN', 'SUPER_ADMIN')];
+// ── Read-only for Podium Admin and Super Admin ──────────────────────────────
+router.get('/players', protect, authorize('PODIUM_ADMIN', 'SUPER_ADMIN'), getAvailablePlayers);
 
-// Player management for podium
-router.get('/players', ...podiumGuard, getAvailablePlayers);
-router.post('/launch-player', ...podiumGuard, launchPlayer);
-router.post('/select-unsold', ...podiumGuard, selectUnsoldPlayer);
-router.post('/move-next', ...podiumGuard, moveNextPlayer);
-router.post('/declare-winner', ...podiumGuard, declareWinner);
+// ── Full Control for Podium Admin AND Super Admin ──────────────────────────
+// Per RBAC spec: SUPER_ADMIN has full control on /podium/**, PODIUM_ADMIN has full control too
+const podiumControlGuard = [protect, authorize('PODIUM_ADMIN', 'SUPER_ADMIN')];
 
-// Auction clock control
-router.post('/pause', ...podiumGuard, pauseAuction);
-router.post('/resume', ...podiumGuard, resumeAuction);
-router.post('/rollback', ...podiumGuard, rollbackAuction);
-router.post('/cancel', ...podiumGuard, cancelAuction);
-router.post('/force-sell', ...podiumGuard, forceSellAuction);
+// Player launch and auction controls
+router.post('/launch-player', ...podiumControlGuard, launchPlayer);
+router.post('/select-unsold', ...podiumControlGuard, selectUnsoldPlayer);
+router.post('/move-next',     ...podiumControlGuard, moveNextPlayer);
+router.post('/declare-winner',...podiumControlGuard, declareWinner);
+
+// Auction clock dispute & state controls
+router.post('/pause',      ...podiumControlGuard, pauseAuction);
+router.post('/resume',     ...podiumControlGuard, resumeAuction);
+router.post('/rollback',   ...podiumControlGuard, rollbackAuction);
+router.post('/cancel',     ...podiumControlGuard, cancelAuction);
+router.post('/force-sell', ...podiumControlGuard, forceSellAuction);
 
 export default router;

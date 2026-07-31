@@ -4,14 +4,22 @@ import { User } from '../models/User.js';
 import { ENV } from '../config/env.js';
 
 const generateTokens = (user) => {
+  const userId = user._id || user.id;
   const token = jwt.sign(
-    { id: user._id || user.id, role: user.role, teamId: user.teamId },
+    {
+      id: userId,
+      _id: userId,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      teamId: user.teamId
+    },
     ENV.JWT_SECRET,
     { expiresIn: '1d' }
   );
 
   const refreshToken = jwt.sign(
-    { id: user._id || user.id },
+    { id: userId, _id: userId },
     ENV.JWT_REFRESH_SECRET,
     { expiresIn: '7d' }
   );
@@ -25,28 +33,38 @@ export const login = async (req, res, next) => {
     const loginIdentifier = email || username;
 
     let user = await User.findOne({
-      $or: [{ email: loginIdentifier }, { name: loginIdentifier }]
+      $or: [
+        { email: loginIdentifier?.toLowerCase() },
+        { email: loginIdentifier },
+        { name: loginIdentifier }
+      ]
     });
 
+    // If not found in User model directly, search Player model by studentId or email
     if (!user) {
-      // Fallback user if database is clean / unseeded
-      let userRole = role || 'SUPER_ADMIN';
-      if (loginIdentifier?.includes('mgr')) userRole = 'TEAM_MANAGER';
-      else if (loginIdentifier?.includes('podium')) userRole = 'PODIUM_ADMIN';
+      const { Player } = await import('../models/Player.js');
+      const player = await Player.findOne({
+        $or: [
+          { studentId: loginIdentifier },
+          { email: loginIdentifier?.toLowerCase() },
+          { email: loginIdentifier }
+        ]
+      });
 
-      user = {
-        _id: 'usr-mock-123',
-        name: loginIdentifier || 'Admin User',
-        email: email || 'admin@auction.com',
-        role: userRole,
-        teamId: 'team-1',
-        mustResetPassword: loginIdentifier === 'ctg_mgr'
-      };
-    } else {
-      const isMatch = await bcrypt.compare(password, user.passwordHash);
-      if (!isMatch) {
-        return res.status(401).json({ success: false, message: 'Invalid email or password' });
+      if (player && player.userId) {
+        user = await User.findById(player.userId);
+      } else if (player && player.email) {
+        user = await User.findOne({ email: player.email.toLowerCase() });
       }
+    }
+
+    if (!user) {
+      return res.status(401).json({ success: false, message: 'Invalid email, username, or password' });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.passwordHash);
+    if (!isMatch) {
+      return res.status(401).json({ success: false, message: 'Invalid email, username, or password' });
     }
 
     const tokens = generateTokens(user);

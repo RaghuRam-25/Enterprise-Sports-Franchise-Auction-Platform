@@ -1,12 +1,12 @@
 import express from 'express';
-import { protect, authorize } from '../middleware/auth.js';
+import { protect, optionalAuth, authorize } from '../middleware/auth.js';
 import {
   getSessions, createSession, deleteSession,
   getPositions, createPosition, deletePosition,
   getCategories, createCategory, deleteCategory,
-  getBiddingTiers, updateBiddingTier,
+  getBiddingTiers, createBiddingTier, updateBiddingTier, deleteBiddingTier,
   getTeams, createTeam, editTeam, deleteTeam,
-  getManagers, createManager, deleteManager, resetManagerPassword,
+  getManagers, createManager, editManager, deleteManager, resetManagerPassword,
   createPodiumAdmin,
   getAdminPlayers, editPlayer, approvePlayer, banPlayer,
   getReports, exportReports
@@ -14,44 +14,46 @@ import {
 
 const router = express.Router();
 
-// Apply auth protection & Super Admin enforcement to all routes
-router.use(protect);
-router.use(authorize('SUPER_ADMIN'));
+// ── Dynamic Config Enums — All mutations SUPER_ADMIN only, GETs via /api/config for other roles ──
+router.get('/sessions',      protect, authorize('SUPER_ADMIN'), getSessions);
+router.post('/sessions',     protect, authorize('SUPER_ADMIN'), createSession);
+router.delete('/sessions/:id', protect, authorize('SUPER_ADMIN'), deleteSession);
 
-// ── Sessions ──────────────────────────────────────────────────────────────────
-router.route('/sessions').get(getSessions).post(createSession);
-router.route('/sessions/:id').delete(deleteSession);
+router.get('/positions',     protect, authorize('SUPER_ADMIN'), getPositions);
+router.post('/positions',    protect, authorize('SUPER_ADMIN'), createPosition);
+router.delete('/positions/:id', protect, authorize('SUPER_ADMIN'), deletePosition);
 
-// ── Positions ─────────────────────────────────────────────────────────────────
-router.route('/positions').get(getPositions).post(createPosition);
-router.route('/positions/:id').delete(deletePosition);
+router.get('/categories',    protect, authorize('SUPER_ADMIN'), getCategories);
+router.post('/categories',   protect, authorize('SUPER_ADMIN'), createCategory);
+router.delete('/categories/:id', protect, authorize('SUPER_ADMIN'), deleteCategory);
 
-// ── Categories ────────────────────────────────────────────────────────────────
-router.route('/categories').get(getCategories).post(createCategory);
-router.route('/categories/:id').delete(deleteCategory);
+router.get('/bidding-tiers', protect, authorize('SUPER_ADMIN'), getBiddingTiers);
+router.post('/bidding-tiers', protect, authorize('SUPER_ADMIN'), createBiddingTier);
+router.put('/bidding-tiers/:id', protect, authorize('SUPER_ADMIN'), updateBiddingTier);
+router.delete('/bidding-tiers/:id', protect, authorize('SUPER_ADMIN'), deleteBiddingTier);
 
-// ── Bidding Tiers ─────────────────────────────────────────────────────────────
-router.route('/bidding-tiers').get(getBiddingTiers);
-router.route('/bidding-tiers/:id').put(updateBiddingTier);
+// ── Teams Directory (GET: optionalAuth so spectators can view, Mutations: SUPER_ADMIN) ──
+router.get('/teams',     optionalAuth, getTeams);
+router.post('/teams',    protect, authorize('SUPER_ADMIN'), createTeam);
+router.put('/teams/:id', protect, authorize('SUPER_ADMIN'), editTeam);
+router.delete('/teams/:id', protect, authorize('SUPER_ADMIN'), deleteTeam);
 
-// ── Teams ─────────────────────────────────────────────────────────────────────
-router.route('/teams').get(getTeams).post(createTeam);
-router.route('/teams/:id').put(editTeam).delete(deleteTeam);
+// ── Managers Directory (SUPER_ADMIN only) ──
+router.get('/managers',                       protect, authorize('SUPER_ADMIN'), getManagers);
+router.post('/managers',                      protect, authorize('SUPER_ADMIN'), createManager);
+router.put('/managers/:id',                   protect, authorize('SUPER_ADMIN'), editManager);
+router.delete('/managers/:id',                protect, authorize('SUPER_ADMIN'), deleteManager);
+router.put('/managers/:id/reset-password',    protect, authorize('SUPER_ADMIN'), resetManagerPassword);
+router.post('/podium-admins',                 protect, authorize('SUPER_ADMIN'), createPodiumAdmin);
 
-// ── Managers & Podium Admins ──────────────────────────────────────────────────
-router.route('/managers').get(getManagers).post(createManager);
-router.route('/managers/:id').delete(deleteManager);
-router.route('/managers/:id/reset-password').put(resetManagerPassword);
-router.route('/podium-admins').post(createPodiumAdmin);
+// ── Player Management — SUPER_ADMIN only ──
+router.get('/players',             protect, authorize('SUPER_ADMIN'), getAdminPlayers);
+router.put('/players/:id',         protect, authorize('SUPER_ADMIN'), editPlayer);
+router.put('/players/:id/approve', protect, authorize('SUPER_ADMIN'), approvePlayer);
+router.put('/players/:id/ban',     protect, authorize('SUPER_ADMIN'), banPlayer);
 
-// ── Player Management ─────────────────────────────────────────────────────────
-router.route('/players').get(getAdminPlayers);
-router.route('/players/:id').put(editPlayer);
-router.route('/players/:id/approve').put(approvePlayer);
-router.route('/players/:id/ban').put(banPlayer);
-
-// ── Reports ───────────────────────────────────────────────────────────────────
-router.route('/reports').get(getReports);
-router.route('/reports/export').get(exportReports);
+// ── Reports & System Analytics (SUPER_ADMIN ONLY) ─────────────────────────────
+router.get('/reports',         protect, authorize('SUPER_ADMIN'), getReports);
+router.get('/reports/export',  protect, authorize('SUPER_ADMIN'), exportReports);
 
 export default router;

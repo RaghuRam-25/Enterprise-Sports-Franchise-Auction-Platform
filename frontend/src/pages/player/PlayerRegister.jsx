@@ -8,18 +8,36 @@ export default function PlayerRegister() {
   const { sessions, positions, isRegistrationFrozen, setPlayers, triggerToast } = useAuction();
   const navigate = useNavigate();
 
+  const defaultSessions = [
+    { id: 'sess-1', name: '22-23' },
+    { id: 'sess-2', name: '23-24' },
+    { id: 'sess-3', name: '24-25' }
+  ];
+  const defaultPositions = [
+    { id: 'ST', code: 'ST', name: 'Striker / Forward' },
+    { id: 'GK', code: 'GK', name: 'Goalkeeper' },
+    { id: 'CB', code: 'CB', name: 'Center Back' },
+    { id: 'CM', code: 'CM', name: 'Midfielder' },
+    { id: 'RW', code: 'RW', name: 'Right Wing' },
+    { id: 'LW', code: 'LW', name: 'Left Wing' }
+  ];
+
+  const availableSessions  = Array.isArray(sessions) && sessions.length > 0 ? sessions : defaultSessions;
+  const availablePositions = Array.isArray(positions) && positions.length > 0 ? positions : defaultPositions;
+
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [studentId, setStudentId] = useState('');
-  const [selectedSession, setSelectedSession] = useState(sessions[0]?.name || '');
+  const [selectedSession, setSelectedSession] = useState(availableSessions[0]?.name || '22-23');
   const [jerseyName, setJerseyName] = useState('');
   const [tShirtSize, setTShirtSize] = useState('M');
-  
+  const [tShirtNumber, setTShirtNumber] = useState('');
+
   // Multi-position selection with primary position flag
-  const [selectedPositions, setSelectedPositions] = useState([]);
-  const [primaryPosId, setPrimaryPosId] = useState('');
+  const [selectedPositions, setSelectedPositions] = useState(['ST']);
+  const [primaryPosId, setPrimaryPosId] = useState('ST');
 
   // Image Upload & WebP Optimization State (PRD Section 4.A)
   const [imageFile, setImageFile] = useState(null);
@@ -60,7 +78,7 @@ export default function PlayerRegister() {
     reader.readAsDataURL(file);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (isRegistrationFrozen) {
       triggerToast('Registration is currently frozen by Super Admin.', 'error');
@@ -87,26 +105,59 @@ export default function PlayerRegister() {
       return;
     }
 
-    const newPlayer = {
-      id: `p-${Date.now()}`,
-      name,
-      email,
-      studentId,
-      session: selectedSession,
-      jerseyName: jerseyName.toUpperCase(),
-      tShirtSize,
-      positions: selectedPositions,
-      primaryPosition: primaryPosId,
-      category: 'B Grade', // Default assigned category
-      basePrice: 2000000,
-      status: 'unsold',
-      picture: imagePreview || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80',
-      optimizedWebP: true,
-    };
+    if (!imageFile) {
+      triggerToast('Profile picture is required per PRD guidelines.', 'error');
+      return;
+    }
 
-    setPlayers(prev => [...prev, newPlayer]);
-    triggerToast('Registration submitted successfully! User account created. Welcome to the Auction Pool.', 'success');
-    navigate('/player/dashboard');
+    // Build FormData for multipart upload (image + fields)
+    const formData = new FormData();
+    formData.append('name', name);
+    formData.append('email', email);
+    formData.append('password', password);
+    formData.append('studentId', studentId);
+    formData.append('session', selectedSession);
+    formData.append('jerseyName', jerseyName.toUpperCase());
+    formData.append('tShirtSize', tShirtSize);
+    formData.append('tShirtNumber', tShirtNumber);
+    formData.append('primaryPosition', primaryPosId);
+    selectedPositions.forEach(pos => formData.append('positions', pos));
+    formData.append('picture', imageFile);
+
+    try {
+      const res = await import('../../services/api').then(m => m.default.post('/players/register', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      }));
+
+      const data = res?.data || res;
+      if (data?.success !== false) {
+        // Optimistically add to players list in context
+        const newPlayer = data?.data || {
+          id: `p-${Date.now()}`,
+          name,
+          email,
+          studentId,
+          session: selectedSession,
+          jerseyName: jerseyName.toUpperCase(),
+          tShirtSize,
+          tShirtNumber,
+          positions: selectedPositions,
+          primaryPosition: primaryPosId,
+          category: 'B Grade',
+          basePrice: 2000000,
+          status: 'REGISTERED',
+          imageUrl: imagePreview || '',
+        };
+        setPlayers(prev => [...prev.filter(p => p.studentId !== studentId), { ...newPlayer, id: newPlayer._id || newPlayer.id }]);
+        triggerToast('Registration submitted! Welcome to the Auction Pool. Please login to view your profile.', 'success');
+        navigate('/login');
+      } else {
+        triggerToast(data?.message || 'Registration failed. Please try again.', 'error');
+      }
+    } catch (err) {
+      const errMsg = err?.response?.data?.message || err?.message || 'Registration failed';
+      triggerToast(errMsg, 'error');
+    }
   };
 
   return (
@@ -219,15 +270,15 @@ export default function PlayerRegister() {
                   className="glass-input w-full px-4 py-2.5 rounded-xl text-xs text-slate-200"
                   disabled={isRegistrationFrozen}
                 >
-                  {sessions.map(s => (
-                    <option key={s.id} value={s.name}>{s.name}</option>
+                  {availableSessions.map(s => (
+                    <option key={s.id || s._id || s.name} value={s.name}>{s.name}</option>
                   ))}
                 </select>
               </div>
             </div>
 
-            {/* Jersey Name & T-Shirt Size */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Jersey Name, T-Shirt Size & T-Shirt Number */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-400 mb-1">
                   Jersey Name (Max 15 Chars) *
@@ -237,7 +288,7 @@ export default function PlayerRegister() {
                   maxLength={15}
                   value={jerseyName}
                   onChange={e => setJerseyName(e.target.value)}
-                  placeholder="e.g. SHAKIB 75"
+                  placeholder="e.g. SHAKIB"
                   className="glass-input w-full px-4 py-2.5 rounded-xl text-xs uppercase"
                   disabled={isRegistrationFrozen}
                   required
@@ -260,6 +311,20 @@ export default function PlayerRegister() {
                   <option value="XXL">Double Extra Large (XXL)</option>
                 </select>
               </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 mb-1">T-Shirt Number *</label>
+                <input
+                  type="text"
+                  pattern="[0-9]*"
+                  value={tShirtNumber}
+                  onChange={e => setTShirtNumber(e.target.value.replace(/\D/g, ''))}
+                  placeholder="e.g. 7 or 10"
+                  className="glass-input w-full px-4 py-2.5 rounded-xl text-xs font-mono"
+                  disabled={isRegistrationFrozen}
+                  required
+                />
+              </div>
             </div>
 
             {/* Positions Multi-Select with Primary Flag (PRD Section 2.B) */}
@@ -269,14 +334,15 @@ export default function PlayerRegister() {
               </label>
 
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                {positions.map(p => {
-                  const isSelected = selectedPositions.includes(p.id);
-                  const isPrimary = primaryPosId === p.id;
+                {availablePositions.map(p => {
+                  const posKey = p.code || p.id || p._id;
+                  const isSelected = selectedPositions.includes(posKey);
+                  const isPrimary = primaryPosId === posKey;
 
                   return (
                     <div
-                      key={p.id}
-                      onClick={() => !isRegistrationFrozen && handlePositionToggle(p.id)}
+                      key={posKey}
+                      onClick={() => !isRegistrationFrozen && handlePositionToggle(posKey)}
                       className={`p-3 rounded-xl border text-xs cursor-pointer transition flex flex-col justify-between ${
                         isSelected
                           ? 'bg-blue-600/20 border-blue-500/50 text-white'
@@ -294,7 +360,7 @@ export default function PlayerRegister() {
                           type="button"
                           onClick={(e) => {
                             e.stopPropagation();
-                            setPrimaryPosId(p.id);
+                            setPrimaryPosId(posKey);
                           }}
                           className={`mt-2 py-0.5 px-2 rounded text-[10px] font-bold text-center transition ${
                             isPrimary ? 'bg-emerald-500 text-slate-950' : 'bg-slate-800 text-slate-400 hover:text-white'
