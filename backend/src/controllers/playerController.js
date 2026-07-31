@@ -258,3 +258,33 @@ export const updatePlayerProfile = async (req, res, next) => {
     res.json({ success: true, message: 'Profile updated successfully', data: updatedPlayer });
   } catch (e) { next(e); }
 };
+
+// ── REQUEST TEAM MANAGER ROLE (Player -> Team Manager Request) ─────────────
+export const requestManagerRole = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ success: false, message: 'User account not found' });
+
+    if (user.role === 'TEAM_MANAGER') {
+      return res.status(400).json({ success: false, message: 'You are already a Team Manager.' });
+    }
+
+    if (user.managerRequestStatus === 'PENDING') {
+      return res.status(400).json({ success: false, message: 'Your request for Team Manager role is already PENDING review.' });
+    }
+
+    const { note } = req.body;
+    user.managerRequestStatus = 'PENDING';
+    user.managerRequestNote = note || 'Interested in managing a franchise team.';
+    await user.save();
+
+    res.json({
+      success: true,
+      message: 'Team Manager request submitted successfully to Super Admin.',
+      data: {
+        managerRequestStatus: user.managerRequestStatus,
+        managerRequestNote: user.managerRequestNote
+      }
+    });
+  } catch (e) { next(e); }
+};

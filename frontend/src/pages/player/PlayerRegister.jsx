@@ -5,7 +5,7 @@ import { useAuction } from '../../context/AuctionContext';
 import Navbar from '../../components/Navbar';
 
 export default function PlayerRegister() {
-  const { sessions, positions, isRegistrationFrozen, setPlayers, triggerToast } = useAuction();
+  const { sessions, positions, isRegistrationFrozen, setPlayers, refetchPlayers, triggerToast } = useAuction();
   const navigate = useNavigate();
 
   const defaultSessions = [
@@ -105,10 +105,7 @@ export default function PlayerRegister() {
       return;
     }
 
-    if (!imageFile) {
-      triggerToast('Profile picture is required per PRD guidelines.', 'error');
-      return;
-    }
+
 
     // Build FormData for multipart upload (image + fields)
     const formData = new FormData();
@@ -122,7 +119,9 @@ export default function PlayerRegister() {
     formData.append('tShirtNumber', tShirtNumber);
     formData.append('primaryPosition', primaryPosId);
     selectedPositions.forEach(pos => formData.append('positions', pos));
-    formData.append('picture', imageFile);
+    if (imageFile) {
+      formData.append('picture', imageFile);
+    }
 
     try {
       const res = await import('../../services/api').then(m => m.default.post('/players/register', formData, {
@@ -149,6 +148,7 @@ export default function PlayerRegister() {
           imageUrl: imagePreview || '',
         };
         setPlayers(prev => [...prev.filter(p => p.studentId !== studentId), { ...newPlayer, id: newPlayer._id || newPlayer.id }]);
+        if (typeof refetchPlayers === 'function') refetchPlayers();
         triggerToast('Registration submitted! Welcome to the Auction Pool. Please login to view your profile.', 'success');
         navigate('/login');
       } else {

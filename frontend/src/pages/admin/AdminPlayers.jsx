@@ -19,6 +19,7 @@ export default function AdminPlayers() {
   const {
     players,
     setPlayers,
+    refetchPlayers,
     sessions,
     positions,
     isRegistrationFrozen,
@@ -82,6 +83,7 @@ export default function AdminPlayers() {
     try {
       await adminAPI.approvePlayer(id);
       setPlayers(prev => prev.map(p => (p._id || p.id) === id ? { ...p, status: 'APPROVED' } : p));
+      if (typeof refetchPlayers === 'function') refetchPlayers();
       triggerToast(`Approved player: ${playerName}`, 'success');
     } catch (err) {
       triggerToast(err?.response?.data?.message || 'Failed to approve player', 'error');

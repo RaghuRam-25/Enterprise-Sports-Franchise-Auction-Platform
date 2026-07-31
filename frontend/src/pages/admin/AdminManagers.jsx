@@ -356,13 +356,47 @@ export default function AdminManagers() {
                       {team ? `${team.logo || '🏆'} ${team.name}` : isPodium ? 'Auction Control' : isSuper ? 'Global System' : isPlayer ? 'Player Portal' : 'Unassigned'}
                     </td>
                     <td className="py-3 px-4">
-                      {mgr.mustChangePass || mgr.mustResetPassword ? (
+                      {mgr.managerRequestStatus === 'PENDING' ? (
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[11px] font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20 animate-pulse">
+                            Request Pending
+                          </span>
+                          {isSuperAdmin && (
+                            <>
+                              <button
+                                onClick={async () => {
+                                  try {
+                                    await adminAPI.updateManagerRequest(mgrId, 'APPROVE');
+                                    setManagers(prev => prev.map(m => (m._id || m.id) === mgrId ? { ...m, role: 'TEAM_MANAGER', managerRequestStatus: 'APPROVED' } : m));
+                                    triggerToast(`Approved manager access for ${mgr.name}`, 'success');
+                                  } catch (err) { triggerToast('Failed to approve request', 'error'); }
+                                }}
+                                className="px-2 py-0.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[10px] rounded"
+                              >
+                                Approve
+                              </button>
+                              <button
+                                onClick={async () => {
+                                  try {
+                                    await adminAPI.updateManagerRequest(mgrId, 'REJECT');
+                                    setManagers(prev => prev.map(m => (m._id || m.id) === mgrId ? { ...m, managerRequestStatus: 'REJECTED' } : m));
+                                    triggerToast(`Rejected manager access for ${mgr.name}`, 'info');
+                                  } catch (err) { triggerToast('Failed to reject request', 'error'); }
+                                }}
+                                className="px-2 py-0.5 bg-rose-600 hover:bg-rose-500 text-white font-bold text-[10px] rounded"
+                              >
+                                Reject
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      ) : mgr.mustChangePass || mgr.mustResetPassword ? (
                         <span className="text-[11px] font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
                           Reset Required
                         </span>
                       ) : (
                         <span className="text-[11px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
-                          Active & Verified
+                          Active
                         </span>
                       )}
                     </td>

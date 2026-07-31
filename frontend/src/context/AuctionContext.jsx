@@ -37,63 +37,93 @@ export const AuctionProvider = ({ children }) => {
     setTimeout(() => setLastActionToast(null), 4000);
   };
 
-  // --- CONSOLIDATED INITIAL DATA LOADING ---
-  useEffect(() => {
-    const loadAllData = async () => {
-      try {
-        setIsDataLoading(true);
-        const [sessRes, posRes, catRes, tierRes, teamRes, playerRes, regRes] = await Promise.allSettled([
-          api.get('/config/sessions'),
-          api.get('/config/positions'),
-          api.get('/config/categories'),
-          api.get('/config/bidding-tiers'),
-          api.get('/config/teams'),
-          api.get('/players'),
-          api.get('/players/status')
-        ]);
-
-        if (sessRes.status === 'fulfilled' && sessRes.value?.data) {
-          const raw = sessRes.value.data.data || sessRes.value.data;
-          if (Array.isArray(raw)) setSessions(raw.map(s => ({ ...s, id: s._id || s.id })));
-        }
-        if (posRes.status === 'fulfilled' && posRes.value?.data) {
-          const raw = posRes.value.data.data || posRes.value.data;
-          if (Array.isArray(raw)) setPositions(raw.map(p => ({ ...p, id: p._id || p.id })));
-        }
-        if (catRes.status === 'fulfilled' && catRes.value?.data) {
-          const raw = catRes.value.data.data || catRes.value.data;
-          if (Array.isArray(raw)) setCategories(raw.map(c => ({ ...c, id: c._id || c.id })));
-        }
-        if (tierRes.status === 'fulfilled' && tierRes.value?.data) {
-          const raw = tierRes.value.data.data || tierRes.value.data;
-          if (Array.isArray(raw)) setBiddingTiers(raw.map(t => ({ ...t, id: t._id || t.id })));
-        }
-        if (teamRes.status === 'fulfilled' && teamRes.value?.data) {
-          const raw = teamRes.value.data.data || teamRes.value.data;
-          if (Array.isArray(raw)) {
-            setTeams(raw.map(t => ({
-              ...t,
-              id: t._id || t.id,
-              currentRoster: t.currentRoster || [],
-              currentRosterCount: t.currentRosterCount || 0
-            })));
-          }
-        }
-        if (playerRes.status === 'fulfilled' && playerRes.value?.data) {
-          const raw = playerRes.value.data.data || playerRes.value.data;
-          if (Array.isArray(raw)) setPlayers(raw.map(p => ({ ...p, id: p._id || p.id })));
-        }
-        if (regRes.status === 'fulfilled' && regRes.value?.data) {
-          setIsRegistrationFrozen(regRes.value.data.isRegistrationFrozen || false);
-        }
-      } catch (err) {
-        console.warn('[AuctionContext] Non-critical initial data fetch warning:', err.message);
-      } finally {
-        setIsDataLoading(false);
+  // --- REFETCH HELPERS FOR INSTANT STATE SYNCHRONIZATION ---
+  const refetchPlayers = useCallback(async () => {
+    try {
+      const res = await api.get('/players');
+      const raw = res?.data?.data || res?.data || res;
+      if (Array.isArray(raw)) {
+        setPlayers(raw.map(p => ({ ...p, id: p._id || p.id })));
       }
-    };
-    loadAllData();
+    } catch (err) {
+      console.warn('[AuctionContext] Failed to refetch players:', err.message);
+    }
   }, []);
+
+  const refetchTeams = useCallback(async () => {
+    try {
+      const res = await api.get('/config/teams');
+      const raw = res?.data?.data || res?.data || res;
+      if (Array.isArray(raw)) {
+        setTeams(raw.map(t => ({
+          ...t,
+          id: t._id || t.id,
+          currentRoster: t.currentRoster || [],
+          currentRosterCount: t.currentRosterCount || 0
+        })));
+      }
+    } catch (err) {
+      console.warn('[AuctionContext] Failed to refetch teams:', err.message);
+    }
+  }, []);
+
+  const loadAllData = useCallback(async () => {
+    try {
+      setIsDataLoading(true);
+      const [sessRes, posRes, catRes, tierRes, teamRes, playerRes, regRes] = await Promise.allSettled([
+        api.get('/config/sessions'),
+        api.get('/config/positions'),
+        api.get('/config/categories'),
+        api.get('/config/bidding-tiers'),
+        api.get('/config/teams'),
+        api.get('/players'),
+        api.get('/players/status')
+      ]);
+
+      if (sessRes.status === 'fulfilled' && sessRes.value?.data) {
+        const raw = sessRes.value.data.data || sessRes.value.data;
+        if (Array.isArray(raw)) setSessions(raw.map(s => ({ ...s, id: s._id || s.id })));
+      }
+      if (posRes.status === 'fulfilled' && posRes.value?.data) {
+        const raw = posRes.value.data.data || posRes.value.data;
+        if (Array.isArray(raw)) setPositions(raw.map(p => ({ ...p, id: p._id || p.id })));
+      }
+      if (catRes.status === 'fulfilled' && catRes.value?.data) {
+        const raw = catRes.value.data.data || catRes.value.data;
+        if (Array.isArray(raw)) setCategories(raw.map(c => ({ ...c, id: c._id || c.id })));
+      }
+      if (tierRes.status === 'fulfilled' && tierRes.value?.data) {
+        const raw = tierRes.value.data.data || tierRes.value.data;
+        if (Array.isArray(raw)) setBiddingTiers(raw.map(t => ({ ...t, id: t._id || t.id })));
+      }
+      if (teamRes.status === 'fulfilled' && teamRes.value?.data) {
+        const raw = teamRes.value.data.data || teamRes.value.data;
+        if (Array.isArray(raw)) {
+          setTeams(raw.map(t => ({
+            ...t,
+            id: t._id || t.id,
+            currentRoster: t.currentRoster || [],
+            currentRosterCount: t.currentRosterCount || 0
+          })));
+        }
+      }
+      if (playerRes.status === 'fulfilled' && playerRes.value?.data) {
+        const raw = playerRes.value.data.data || playerRes.value.data;
+        if (Array.isArray(raw)) setPlayers(raw.map(p => ({ ...p, id: p._id || p.id })));
+      }
+      if (regRes.status === 'fulfilled' && regRes.value?.data) {
+        setIsRegistrationFrozen(regRes.value.data.isRegistrationFrozen || false);
+      }
+    } catch (err) {
+      console.warn('[AuctionContext] Initial data fetch warning:', err.message);
+    } finally {
+      setIsDataLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadAllData();
+  }, [loadAllData]);
 
   // Load managers separately (only called when privileged user accesses manager list)
   const loadManagers = useCallback(async () => {
@@ -192,6 +222,20 @@ export const AuctionProvider = ({ children }) => {
       else setTimerStatus('running');
     };
 
+    const handlePlayerUpdate = () => {
+      refetchPlayers();
+    };
+
+    const handleTeamUpdate = () => {
+      refetchTeams();
+    };
+
+    const handleFreezeToggle = (data) => {
+      if (typeof data?.isRegistrationFrozen === 'boolean') {
+        setIsRegistrationFrozen(data.isRegistrationFrozen);
+      }
+    };
+
     socket.on('auction:state', handleState);
     socket.on('auction:player-launched', handlePlayerLaunched);
     socket.on('auction:completed', handleCompleted);
@@ -201,6 +245,9 @@ export const AuctionProvider = ({ children }) => {
     socket.on('auction:rollback', handleState);
     socket.on('auction:new-bid', handleState);
     socket.on('auction:timer-update', handleTimerUpdate);
+    socket.on('player:updated', handlePlayerUpdate);
+    socket.on('team:updated', handleTeamUpdate);
+    socket.on('registration:freeze-toggled', handleFreezeToggle);
 
     socket.on('bid:error', (data) => {
       triggerToast(data.error || 'Bid rejected by server guardrail', 'error');
@@ -220,10 +267,13 @@ export const AuctionProvider = ({ children }) => {
       socket.off('auction:rollback', handleState);
       socket.off('auction:new-bid', handleState);
       socket.off('auction:timer-update', handleTimerUpdate);
+      socket.off('player:updated', handlePlayerUpdate);
+      socket.off('team:updated', handleTeamUpdate);
+      socket.off('registration:freeze-toggled', handleFreezeToggle);
       socket.off('bid:error');
       socket.off('bid:blind-success');
     };
-  }, [socket, formatCurrency]);
+  }, [socket, formatCurrency, refetchPlayers, refetchTeams]);
 
   // Fallback Countdown Timer if socket offline
   useEffect(() => {
@@ -422,7 +472,7 @@ export const AuctionProvider = ({ children }) => {
       value={{
         sessions, positions, categories, biddingTiers, isRegistrationFrozen, setIsRegistrationFrozen,
         addSession, deleteSession, addPosition, deletePosition, addCategory, deleteCategory, updateBiddingTier,
-        teams, setTeams, players, setPlayers, managers, setManagers, isDataLoading, loadManagers,
+        teams, setTeams, players, setPlayers, managers, setManagers, isDataLoading, loadManagers, refetchPlayers, refetchTeams, loadAllData,
         podiumPlayer, currentBid, highestBidder, biddingMode, timerDuration, timerRemaining, timerStatus, bidHistory, lastActionToast,
         formatCurrency, calculateNextBidAmount, getLowestCategoryBasePrice,
         pushToPodium, pauseTimer, resumeTimer, rollbackBid, hammerSell, cancelAuction, placeNormalBid, placeBlindBid, triggerToast

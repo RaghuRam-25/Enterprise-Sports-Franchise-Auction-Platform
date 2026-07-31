@@ -11,7 +11,13 @@ const userSchema = new mongoose.Schema({
   },
   teamId: { type: mongoose.Schema.Types.ObjectId, ref: 'Team', default: null },
   isActive: { type: Boolean, default: true },
-  mustResetPassword: { type: Boolean, default: false }
+  mustResetPassword: { type: Boolean, default: false },
+  managerRequestStatus: {
+    type: String,
+    enum: ['NONE', 'PENDING', 'APPROVED', 'REJECTED'],
+    default: 'NONE'
+  },
+  managerRequestNote: { type: String, default: '' }
 }, { timestamps: true });
 
 export const User = mongoose.model('User', userSchema);

@@ -175,7 +175,7 @@ export default function PlayerDashboard() {
           </div>
         </div>
 
-        {/* Positions */}
+        {/* Positions & Jersey */}
         <div className="glass-card rounded-2xl p-5 border border-slate-800">
           <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">Positions & Jersey</h3>
           <div className="flex flex-wrap gap-2">
@@ -199,6 +199,52 @@ export default function PlayerDashboard() {
               T-Shirt No: {myPlayer.tShirtNumber || '—'}
             </span>
           </div>
+        </div>
+
+        {/* Become a Team Manager Access Request Section */}
+        <div className="glass-card rounded-2xl p-6 border border-slate-800 space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-sm font-bold text-white uppercase tracking-wider">Franchise Management</h3>
+              <p className="text-xs text-slate-400">Request permission to become a Team Manager and manage a franchise team.</p>
+            </div>
+            {user?.managerRequestStatus === 'PENDING' && (
+              <span className="px-3 py-1 bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-lg text-xs font-bold animate-pulse">
+                Request Pending Review
+              </span>
+            )}
+            {user?.managerRequestStatus === 'APPROVED' && (
+              <span className="px-3 py-1 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-lg text-xs font-bold">
+                Approved — Team Manager
+              </span>
+            )}
+            {user?.managerRequestStatus === 'REJECTED' && (
+              <span className="px-3 py-1 bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded-lg text-xs font-bold">
+                Request Declined
+              </span>
+            )}
+          </div>
+
+          {(!user?.managerRequestStatus || user?.managerRequestStatus === 'NONE' || user?.managerRequestStatus === 'REJECTED') && (
+            <div className="flex gap-3">
+              <button
+                onClick={async () => {
+                  try {
+                    const res = await api.post('/players/request-manager', { note: 'Interested in leading a team roster.' });
+                    if (res?.data?.success || res?.success) {
+                      alert('Team Manager request submitted to Super Admin for approval!');
+                      window.location.reload();
+                    }
+                  } catch (err) {
+                    alert(err?.response?.data?.message || 'Failed to submit request');
+                  }
+                }}
+                className="px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl transition shadow-lg"
+              >
+                Request Team Manager Role
+              </button>
+            </div>
+          )}
         </div>
 
       </main>

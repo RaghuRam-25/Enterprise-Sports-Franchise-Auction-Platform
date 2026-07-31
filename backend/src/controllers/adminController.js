@@ -272,6 +272,29 @@ export const editManager = async (req, res, next) => {
   } catch (e) { next(e); }
 };
 
+export const handleManagerRequest = async (req, res, next) => {
+  try {
+    const { action } = req.body; // 'APPROVE' or 'REJECT'
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+
+    if (action === 'APPROVE') {
+      user.role = 'TEAM_MANAGER';
+      user.managerRequestStatus = 'APPROVED';
+      await user.save();
+      await logAdminAction('APPROVE_MANAGER_REQUEST', req.user?.email || 'admin', { id: user._id, email: user.email });
+      return res.json({ success: true, message: `Manager request APPROVED for '${user.name}'. User is now TEAM_MANAGER.`, data: user });
+    } else if (action === 'REJECT') {
+      user.managerRequestStatus = 'REJECTED';
+      await user.save();
+      await logAdminAction('REJECT_MANAGER_REQUEST', req.user?.email || 'admin', { id: user._id, email: user.email });
+      return res.json({ success: true, message: `Manager request REJECTED for '${user.name}'.`, data: user });
+    } else {
+      return res.status(400).json({ success: false, message: "Invalid action. Must be 'APPROVE' or 'REJECT'." });
+    }
+  } catch (e) { next(e); }
+};
+
 export const deleteManager = async (req, res, next) => {
   try {
     const user = await User.findById(req.params.id);

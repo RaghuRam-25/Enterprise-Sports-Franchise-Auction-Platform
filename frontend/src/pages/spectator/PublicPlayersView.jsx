@@ -164,7 +164,7 @@ function PlayerCard({ player, isPrivileged, formatCurrency }) {
 }
 
 export default function PublicPlayersView() {
-  const { players: ctxPlayers, positions, categories, formatCurrency, isDataLoading } = useAuction();
+  const { players: ctxPlayers, positions, categories, formatCurrency, isDataLoading, refetchPlayers } = useAuction();
   const { user } = useAuth();
 
   const role = user?.role || null;
@@ -180,27 +180,19 @@ export default function PublicPlayersView() {
   const [players, setPlayers]         = useState([]);
   const [loading, setLoading]         = useState(true);
 
-  // ── Fetch players directly (fresh, role-aware) ───────────────────────────
+  // ── Sync with global context players for instant updates ─────────────────
   useEffect(() => {
-    const fetchPlayers = async () => {
-      try {
-        setLoading(true);
-        const res = await api.get('/players');
-        const raw = res?.data || res;
-        if (Array.isArray(raw)) {
-          setPlayers(raw.map(p => ({ ...p, id: p._id || p.id })));
-        } else if (Array.isArray(raw?.data)) {
-          setPlayers(raw.data.map(p => ({ ...p, id: p._id || p.id })));
-        }
-      } catch {
-        // Fallback to context players
-        setPlayers(ctxPlayers);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchPlayers();
-  }, [user]);
+    if (Array.isArray(ctxPlayers)) {
+      setPlayers(ctxPlayers.map(p => ({ ...p, id: p._id || p.id })));
+      setLoading(false);
+    }
+  }, [ctxPlayers]);
+
+  useEffect(() => {
+    if (typeof refetchPlayers === 'function') {
+      refetchPlayers();
+    }
+  }, [refetchPlayers]);
 
   // ── Derived filter options ───────────────────────────────────────────────
   const statusOptions  = ['ALL', 'REGISTERED', 'SOLD', 'UNSOLD', 'WITHDRAWN'];

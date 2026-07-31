@@ -103,6 +103,7 @@ export const adminAPI = {
   editManager:          (id, data) => api.put(`/admin/managers/${id}`, data),
   deleteManager:        (id) => api.delete(`/admin/managers/${id}`),
   resetManagerPassword: (id, data) => api.put(`/admin/managers/${id}/reset-password`, data),
+  updateManagerRequest: (id, action) => api.put(`/admin/managers/${id}/request`, { action }),
   createPodiumAdmin:    (data) => api.post('/admin/podium-admins', data),
 
   // Player Management

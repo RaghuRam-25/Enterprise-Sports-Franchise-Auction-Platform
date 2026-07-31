@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Trophy, Shield, Gavel, Users, User, Radio, LogOut, CheckCircle2, AlertTriangle, Sun, Moon } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
+import { useAuth, getDashboardForRole } from '../context/AuthContext';
 import { useAuction } from '../context/AuctionContext';
 import { useTheme } from '../context/ThemeContext';
 
@@ -127,7 +127,23 @@ export default function Navbar() {
                 <span>Live</span>
               </Link>
 
-              {/* 5. Register (Only for Players when Registration is Open & Not logged in) */}
+              {/* Dashboard Link (For logged in users) */}
+              {user && (
+                <Link
+                  to={getDashboardForRole(user.role)}
+                  id="nav-dashboard"
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition font-semibold ${
+                    location.pathname.includes('/dashboard')
+                      ? 'bg-blue-600 text-white shadow-md'
+                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                  }`}
+                >
+                  <Shield className="w-3.5 h-3.5 text-blue-400" />
+                  <span>Dashboard</span>
+                </Link>
+              )}
+
+              {/* 5. Register (Only for guest users when Registration is Open) */}
               {!user && !isRegistrationFrozen && (
                 <Link
                   to="/player/register"
