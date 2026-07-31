@@ -8,7 +8,7 @@ export default function AdminLayout() {
   const { user } = useAuth();
 
   const adminNavItems = [
-    { path: '/admin/dashboard', label: 'System Overview', icon: LayoutDashboard },
+    { path: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { path: '/podium/dashboard', label: 'Podium Control Room', icon: Gavel, tag: 'LIVE' },
     { path: '/admin/configurations/sessions', label: 'Dynamic Enums', icon: Sliders },
     { path: '/admin/teams', label: 'Franchise Teams', icon: ShieldCheck },

@@ -38,10 +38,12 @@ export const AuctionProvider = ({ children }) => {
   };
 
   // --- REFETCH HELPERS FOR INSTANT STATE SYNCHRONIZATION ---
+  // NOTE: axios interceptor already unwraps response.data, so res = { success, data: [...] }
   const refetchPlayers = useCallback(async () => {
     try {
       const res = await api.get('/players');
-      const raw = res?.data?.data || res?.data || res;
+      // res is already response.data from interceptor: { success, count, data: [...] }
+      const raw = Array.isArray(res?.data) ? res.data : Array.isArray(res) ? res : [];
       if (Array.isArray(raw)) {
         setPlayers(raw.map(p => ({ ...p, id: p._id || p.id })));
       }
@@ -53,7 +55,7 @@ export const AuctionProvider = ({ children }) => {
   const refetchTeams = useCallback(async () => {
     try {
       const res = await api.get('/config/teams');
-      const raw = res?.data?.data || res?.data || res;
+      const raw = Array.isArray(res?.data) ? res.data : Array.isArray(res) ? res : [];
       if (Array.isArray(raw)) {
         setTeams(raw.map(t => ({
           ...t,
@@ -80,25 +82,32 @@ export const AuctionProvider = ({ children }) => {
         api.get('/players/status')
       ]);
 
-      if (sessRes.status === 'fulfilled' && sessRes.value?.data) {
-        const raw = sessRes.value.data.data || sessRes.value.data;
-        if (Array.isArray(raw)) setSessions(raw.map(s => ({ ...s, id: s._id || s.id })));
+      // axios interceptor returns response.data directly so value = { success, data: [...] }
+      const extract = (result) => {
+        const v = result?.value;
+        return Array.isArray(v?.data) ? v.data : Array.isArray(v) ? v : [];
+      };
+      const extractObj = (result) => result?.value || {};
+
+      if (sessRes.status === 'fulfilled') {
+        const raw = extract(sessRes);
+        if (raw.length) setSessions(raw.map(s => ({ ...s, id: s._id || s.id })));
       }
-      if (posRes.status === 'fulfilled' && posRes.value?.data) {
-        const raw = posRes.value.data.data || posRes.value.data;
-        if (Array.isArray(raw)) setPositions(raw.map(p => ({ ...p, id: p._id || p.id })));
+      if (posRes.status === 'fulfilled') {
+        const raw = extract(posRes);
+        if (raw.length) setPositions(raw.map(p => ({ ...p, id: p._id || p.id })));
       }
-      if (catRes.status === 'fulfilled' && catRes.value?.data) {
-        const raw = catRes.value.data.data || catRes.value.data;
-        if (Array.isArray(raw)) setCategories(raw.map(c => ({ ...c, id: c._id || c.id })));
+      if (catRes.status === 'fulfilled') {
+        const raw = extract(catRes);
+        if (raw.length) setCategories(raw.map(c => ({ ...c, id: c._id || c.id })));
       }
-      if (tierRes.status === 'fulfilled' && tierRes.value?.data) {
-        const raw = tierRes.value.data.data || tierRes.value.data;
-        if (Array.isArray(raw)) setBiddingTiers(raw.map(t => ({ ...t, id: t._id || t.id })));
+      if (tierRes.status === 'fulfilled') {
+        const raw = extract(tierRes);
+        if (raw.length) setBiddingTiers(raw.map(t => ({ ...t, id: t._id || t.id })));
       }
-      if (teamRes.status === 'fulfilled' && teamRes.value?.data) {
-        const raw = teamRes.value.data.data || teamRes.value.data;
-        if (Array.isArray(raw)) {
+      if (teamRes.status === 'fulfilled') {
+        const raw = extract(teamRes);
+        if (raw.length) {
           setTeams(raw.map(t => ({
             ...t,
             id: t._id || t.id,
@@ -107,12 +116,13 @@ export const AuctionProvider = ({ children }) => {
           })));
         }
       }
-      if (playerRes.status === 'fulfilled' && playerRes.value?.data) {
-        const raw = playerRes.value.data.data || playerRes.value.data;
-        if (Array.isArray(raw)) setPlayers(raw.map(p => ({ ...p, id: p._id || p.id })));
+      if (playerRes.status === 'fulfilled') {
+        const raw = extract(playerRes);
+        setPlayers(raw.map(p => ({ ...p, id: p._id || p.id })));
       }
-      if (regRes.status === 'fulfilled' && regRes.value?.data) {
-        setIsRegistrationFrozen(regRes.value.data.isRegistrationFrozen || false);
+      if (regRes.status === 'fulfilled') {
+        const obj = extractObj(regRes);
+        setIsRegistrationFrozen(obj.isRegistrationFrozen || false);
       }
     } catch (err) {
       console.warn('[AuctionContext] Initial data fetch warning:', err.message);
@@ -129,7 +139,8 @@ export const AuctionProvider = ({ children }) => {
   const loadManagers = useCallback(async () => {
     try {
       const res = await api.get('/admin/managers');
-      const raw = res.data?.data || res.data;
+      // axios interceptor returns response.data directly: { success, data: [...] }
+      const raw = Array.isArray(res?.data) ? res.data : Array.isArray(res) ? res : [];
       if (Array.isArray(raw)) {
         setManagers(raw.map(m => ({
           ...m,

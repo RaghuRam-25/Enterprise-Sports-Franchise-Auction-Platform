@@ -2,11 +2,20 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { UserPlus, Upload, CheckCircle2, AlertCircle, FileImage, ShieldCheck, Lock } from 'lucide-react';
 import { useAuction } from '../../context/AuctionContext';
+import { useAuth } from '../../context/AuthContext';
 import Navbar from '../../components/Navbar';
 
 export default function PlayerRegister() {
+  const { user } = useAuth();
   const { sessions, positions, isRegistrationFrozen, setPlayers, refetchPlayers, triggerToast } = useAuction();
   const navigate = useNavigate();
+
+  React.useEffect(() => {
+    if (user) {
+      if (user.role === 'PLAYER') navigate('/player/dashboard', { replace: true });
+      else navigate('/', { replace: true });
+    }
+  }, [user, navigate]);
 
   const defaultSessions = [
     { id: 'sess-1', name: '22-23' },

@@ -1,7 +1,9 @@
 import express from 'express';
 import { protect, authorize } from '../middleware/auth.js';
+import { uploadMiddleware } from '../services/imageService.js';
 import {
   getOwnTeam,
+  updateOwnTeam,
   getOwnBudget,
   getOwnRoster,
   placeBid,
@@ -19,6 +21,9 @@ router.use(protect);
 
 // GET /api/manager/team — view own team info
 router.get('/team', authorize('TEAM_MANAGER', 'SUPER_ADMIN'), getOwnTeam);
+
+// PUT /api/manager/team — edit own team details & logo
+router.put('/team', authorize('TEAM_MANAGER'), uploadMiddleware.single('logo'), updateOwnTeam);
 
 // GET /api/manager/budget — view own budget & roster slots
 router.get('/budget', authorize('TEAM_MANAGER', 'SUPER_ADMIN'), getOwnBudget);

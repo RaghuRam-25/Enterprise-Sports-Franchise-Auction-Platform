@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Shield, Zap, DollarSign, AlertCircle, Users, Gavel, Clock, Lock, CheckCircle2, TrendingUp, Search, Key, X } from 'lucide-react';
 import { useAuction } from '../../context/AuctionContext';
 import { useAuth } from '../../context/AuthContext';
-import api from '../../services/api';
+import api, { managerAPI } from '../../services/api';
 import Navbar from '../../components/Navbar';
 
 export const ManagerDashboard = () => {
@@ -22,7 +22,8 @@ export const ManagerDashboard = () => {
     placeBlindBid,
     getLowestCategoryBasePrice,
     formatCurrency = (v) => `${v} BDT`,
-    triggerToast = () => {}
+    triggerToast = () => {},
+    refetchTeams
   } = useAuction();
 
   // Fallback default team object so page never crashes if teams list is initializing
@@ -48,6 +49,54 @@ export const ManagerDashboard = () => {
   const [newPass, setNewPass] = useState('');
   const [confirmPass, setConfirmPass] = useState('');
   const [changingPass, setChangingPass] = useState(false);
+
+  // Team Edit Modal state
+  const [showEditTeamModal, setShowEditTeamModal] = useState(false);
+  const [teamForm, setTeamForm] = useState({ name: '', shortCode: '', description: '' });
+  const [teamLogoFile, setTeamLogoFile] = useState(null);
+  const [teamLogoPreview, setTeamLogoPreview] = useState(null);
+  const [removeTeamLogo, setRemoveTeamLogo] = useState(false);
+  const [savingTeam, setSavingTeam] = useState(false);
+
+  const openTeamEdit = () => {
+    setTeamForm({
+      name: activeTeam?.name || '',
+      shortCode: activeTeam?.shortCode || activeTeam?.code || '',
+      description: activeTeam?.description || ''
+    });
+    setTeamLogoFile(null);
+    setTeamLogoPreview(null);
+    setRemoveTeamLogo(false);
+    setShowEditTeamModal(true);
+  };
+
+  const handleSaveTeamProfile = async (e) => {
+    e.preventDefault();
+    setSavingTeam(true);
+    try {
+      const formData = new FormData();
+      if (teamForm.name) formData.append('name', teamForm.name);
+      if (teamForm.shortCode) formData.append('shortCode', teamForm.shortCode.toUpperCase());
+      formData.append('description', teamForm.description || '');
+
+      if (teamLogoFile) {
+        formData.append('logo', teamLogoFile);
+      } else if (removeTeamLogo) {
+        formData.append('removeLogo', 'true');
+      }
+
+      const res = await managerAPI.updateTeam(formData);
+      if (res?.success || res?.data) {
+        triggerToast('Team profile updated successfully!', 'success');
+        if (typeof refetchTeams === 'function') refetchTeams();
+        setShowEditTeamModal(false);
+      }
+    } catch (err) {
+      triggerToast(err?.response?.data?.message || 'Failed to update team profile', 'error');
+    } finally {
+      setSavingTeam(false);
+    }
+  };
 
   const activeRoster = Array.isArray(activeTeam?.currentRoster) ? activeTeam.currentRoster : [];
   const safeBidHistory = Array.isArray(bidHistory) ? bidHistory : [];
@@ -162,6 +211,13 @@ export const ManagerDashboard = () => {
               <h3 className="text-xl font-black font-mono text-emerald-400">{formatCurrency(activeTeam.remainingBudget)}</h3>
             </div>
 
+            <button
+              onClick={openTeamEdit}
+              className="px-3.5 py-2 bg-emerald-600/20 hover:bg-emerald-600 text-emerald-300 hover:text-white border border-emerald-500/30 text-xs font-bold rounded-xl transition shadow flex items-center gap-1.5"
+            >
+              <Shield className="w-3.5 h-3.5" /> Edit Team
+            </button>
+
             <Link
               to="/manager/roster"
               className="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 text-xs font-bold rounded-xl transition shadow flex items-center gap-1.5"
@@ -170,7 +226,7 @@ export const ManagerDashboard = () => {
             </Link>
 
             <Link
-              to="/admin/players"
+              to="/players"
               className="px-3.5 py-2 bg-blue-600/20 hover:bg-blue-600 text-blue-300 hover:text-white border border-blue-500/30 text-xs font-bold rounded-xl transition shadow flex items-center gap-1.5"
             >
               <Search className="w-3.5 h-3.5" /> Player Pool (Read-Only)
@@ -438,6 +494,123 @@ export const ManagerDashboard = () => {
                 >
                   {changingPass ? <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Key className="w-3.5 h-3.5" />}
                   Update Password
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      {/* Edit Team Modal */}
+      {showEditTeamModal && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="glass-card w-full max-w-sm rounded-2xl p-6 border border-slate-700 space-y-5 shadow-2xl">
+            <div className="flex justify-between items-center">
+              <h2 className="text-lg font-black text-white flex items-center gap-2">
+                <Shield className="w-5 h-5 text-emerald-400" /> Edit Franchise Profile
+              </h2>
+              <button onClick={() => setShowEditTeamModal(false)} className="p-2 text-slate-400 hover:text-white rounded-lg">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveTeamProfile} className="space-y-4 text-xs">
+              <div>
+                <label className="block font-semibold text-slate-400 mb-1">Team Logo</label>
+                <div className="flex items-center gap-3">
+                  {removeTeamLogo ? (
+                    <div className="w-12 h-12 rounded-xl bg-slate-800 flex items-center justify-center text-white font-black">
+                      {(teamForm.name || 'T')[0]}
+                    </div>
+                  ) : (
+                    <img
+                      src={teamLogoPreview || activeTeam.logoUrl || 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=200&auto=format&fit=crop&q=80'}
+                      alt="Logo Preview"
+                      className="w-12 h-12 rounded-xl object-cover border border-slate-700"
+                    />
+                  )}
+                  <div className="flex-1 space-y-1">
+                    <label className="cursor-pointer px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg font-semibold text-xs inline-flex items-center gap-1.5 border border-slate-700">
+                      <span>Upload Logo</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={e => {
+                          const file = e.target.files[0];
+                          if (file) {
+                            setTeamLogoFile(file);
+                            setTeamLogoPreview(URL.createObjectURL(file));
+                            setRemoveTeamLogo(false);
+                          }
+                        }}
+                        className="hidden"
+                      />
+                    </label>
+                    {(activeTeam.logoUrl || teamLogoPreview) && !removeTeamLogo && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setTeamLogoFile(null);
+                          setTeamLogoPreview(null);
+                          setRemoveTeamLogo(true);
+                        }}
+                        className="block text-[11px] text-rose-400 hover:text-rose-300 font-semibold"
+                      >
+                        Remove Logo
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-400 mb-1">Franchise Team Name *</label>
+                <input
+                  type="text"
+                  value={teamForm.name}
+                  onChange={e => setTeamForm(prev => ({ ...prev, name: e.target.value }))}
+                  className="glass-input w-full px-3 py-2 rounded-xl text-white font-semibold"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-400 mb-1">Short Code (3-4 Chars) *</label>
+                <input
+                  type="text"
+                  maxLength={4}
+                  value={teamForm.shortCode}
+                  onChange={e => setTeamForm(prev => ({ ...prev, shortCode: e.target.value.toUpperCase() }))}
+                  className="glass-input w-full px-3 py-2 rounded-xl text-white font-mono uppercase"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-400 mb-1">Description (Optional)</label>
+                <textarea
+                  rows={2}
+                  value={teamForm.description}
+                  onChange={e => setTeamForm(prev => ({ ...prev, description: e.target.value }))}
+                  className="glass-input w-full px-3 py-2 rounded-xl text-white"
+                  placeholder="Team slogan or details..."
+                />
+              </div>
+
+              <div className="flex gap-3 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setShowEditTeamModal(false)}
+                  className="flex-1 py-2.5 border border-slate-700 text-slate-300 hover:bg-slate-800 rounded-xl text-xs font-semibold transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingTeam}
+                  className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition disabled:opacity-60"
+                >
+                  {savingTeam ? <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Shield className="w-3.5 h-3.5" />}
+                  Save Team
                 </button>
               </div>
             </form>

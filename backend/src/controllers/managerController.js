@@ -27,6 +27,36 @@ export const getOwnTeam = async (req, res, next) => {
   } catch (e) { next(e); }
 };
 
+// ── UPDATE OWN TEAM (Team Manager Profile Edit) ───────────────────────────────
+export const updateOwnTeam = async (req, res, next) => {
+  try {
+    const teamId = req.user.teamId;
+    if (!teamId) {
+      return res.status(404).json({ success: false, message: 'No team assigned to this manager' });
+    }
+
+    const team = await Team.findById(teamId);
+    if (!team) return res.status(404).json({ success: false, message: 'Team not found' });
+
+    const { name, shortCode, description } = req.body;
+    const updateData = {};
+
+    if (name) updateData.name = name;
+    if (shortCode) updateData.shortCode = shortCode.toUpperCase();
+    if (description !== undefined) updateData.description = description;
+
+    if (req.file) {
+      const { processAndUploadImage } = await import('../services/imageService.js');
+      updateData.logoUrl = await processAndUploadImage(req.file.buffer, `team_${team._id}`);
+    } else if (req.body.removeLogo === 'true') {
+      updateData.logoUrl = '';
+    }
+
+    const updatedTeam = await Team.findByIdAndUpdate(teamId, updateData, { new: true });
+    res.json({ success: true, message: 'Team profile updated successfully', data: updatedTeam });
+  } catch (e) { next(e); }
+};
+
 // ── GET OWN BUDGET ────────────────────────────────────────────────────────────
 export const getOwnBudget = async (req, res, next) => {
   try {

@@ -74,11 +74,14 @@ export const login = async (req, res, next) => {
       refreshToken: tokens.refreshToken,
       user: {
         id: user._id,
+        _id: user._id,
         name: user.name,
         email: user.email,
         role: user.role,
         teamId: user.teamId,
-        mustResetPassword: user.mustResetPassword
+        mustResetPassword: user.mustResetPassword,
+        managerRequestStatus: user.managerRequestStatus || 'NONE',
+        managerRequestNote: user.managerRequestNote || ''
       }
     });
   } catch (e) { next(e); }

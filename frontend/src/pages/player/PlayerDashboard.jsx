@@ -2,12 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { User, Award, Settings, Trophy, CheckCircle2, Edit3, X, Save, Loader2, Camera } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { useAuction } from '../../context/AuctionContext';
 import { playerAPI } from '../../services/api';
 import api from '../../services/api';
 import Navbar from '../../components/Navbar';
 
+const DEFAULT_AVATAR = 'https://ui-avatars.com/api/?background=7c3aed&color=fff&size=256&bold=true&name=';
+
 export default function PlayerDashboard() {
   const { user } = useAuth();
+  const { formatCurrency, triggerToast, isRegistrationFrozen } = useAuction();
 
   const [myPlayer, setMyPlayer] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -15,16 +19,18 @@ export default function PlayerDashboard() {
   const [saving, setSaving] = useState(false);
   const [editForm, setEditForm] = useState({ jerseyName: '', tShirtSize: 'M', tShirtNumber: '' });
 
-  // GAP 1 FIX: Load logged-in player's own profile by userId match
+  // Load logged-in player's own profile by userId match
   useEffect(() => {
     const loadMyProfile = async () => {
       try {
         setLoading(true);
-        const res = await api.get('/players', { params: { search: user?.name } });
-        const allPlayers = res.data?.data || res.data || [];
-        // Match by userId stored on player
-        const mine = allPlayers.find(p => p.userId === user?._id || p.userId === user?.id || p.email === user?.email);
-        setMyPlayer(mine || allPlayers[0] || null);
+        // axios interceptor returns response.data already: { success, data: [...] }
+        const res = await api.get('/players');
+        const allPlayers = Array.isArray(res?.data) ? res.data : Array.isArray(res) ? res : [];
+        const mine = allPlayers.find(p =>
+          p.userId === user?._id || p.userId === user?.id || p.email === user?.email
+        );
+        setMyPlayer(mine || null);
       } catch (err) {
         console.error('Failed to load player profile:', err);
       } finally {
@@ -34,16 +40,41 @@ export default function PlayerDashboard() {
     if (user) loadMyProfile();
   }, [user]);
 
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [filePreview, setFilePreview] = useState(null);
+  const [removeImage, setRemoveImage] = useState(false);
+
   const openEdit = () => {
     setEditForm({
       jerseyName: myPlayer?.jerseyName || '',
       tShirtSize: myPlayer?.tShirtSize || 'M',
       tShirtNumber: myPlayer?.tShirtNumber || ''
     });
+    setSelectedFile(null);
+    setFilePreview(null);
+    setRemoveImage(false);
     setEditing(true);
   };
 
-  // GAP 6 FIX: Profile edit calling real API
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        triggerToast('Image file size must be less than 5MB', 'error');
+        return;
+      }
+      setSelectedFile(file);
+      setFilePreview(URL.createObjectURL(file));
+      setRemoveImage(false);
+    }
+  };
+
+  const handleRemovePicture = () => {
+    setSelectedFile(null);
+    setFilePreview(null);
+    setRemoveImage(true);
+  };
+
   const handleSaveProfile = async () => {
     if (!myPlayer) return;
     setSaving(true);
@@ -53,22 +84,32 @@ export default function PlayerDashboard() {
       if (editForm.tShirtSize) formData.append('tShirtSize', editForm.tShirtSize);
       formData.append('tShirtNumber', editForm.tShirtNumber || '');
 
+      if (selectedFile) {
+        formData.append('picture', selectedFile);
+      } else if (removeImage) {
+        formData.append('imageUrl', '');
+      }
+
       const res = await playerAPI.updateProfile(myPlayer._id || myPlayer.id, formData);
-      if (res?.data || res?.success) {
-        setMyPlayer(prev => ({ ...prev, ...editForm }));
+      const updatedData = res?.data || res;
+      if (updatedData) {
+        setMyPlayer(prev => ({
+          ...prev,
+          ...editForm,
+          imageUrl: removeImage ? '' : (updatedData.data?.imageUrl ?? updatedData.imageUrl ?? prev.imageUrl)
+        }));
+        triggerToast('Profile updated successfully!', 'success');
       }
       setEditing(false);
     } catch (err) {
       console.error('Profile update failed:', err);
+      triggerToast(err?.response?.data?.message || 'Failed to update profile', 'error');
     } finally {
       setSaving(false);
     }
   };
 
-  const formatCurrency = (val) => {
-    if (!val && val !== 0) return '— BDT';
-    return `${Number(val).toLocaleString('en-IN')} BDT`;
-  };
+
 
   if (loading) {
     return (
@@ -124,13 +165,18 @@ export default function PlayerDashboard() {
           </div>
 
           <div className="flex items-center gap-2">
-            {/* GAP 6 FIX: Edit Profile button */}
-            <button
-              onClick={openEdit}
-              className="px-4 py-2 bg-purple-600/20 hover:bg-purple-600 text-purple-300 hover:text-white border border-purple-500/30 text-xs font-bold rounded-xl transition flex items-center gap-1.5"
-            >
-              <Edit3 className="w-3.5 h-3.5" /> Edit Profile
-            </button>
+            {isRegistrationFrozen ? (
+              <span className="px-3 py-2 bg-amber-500/10 text-amber-400 border border-amber-500/20 text-xs font-bold rounded-xl flex items-center gap-1.5">
+                <Lock className="w-3.5 h-3.5" /> Read-Only (Registration Frozen)
+              </span>
+            ) : (
+              <button
+                onClick={openEdit}
+                className="px-4 py-2 bg-purple-600/20 hover:bg-purple-600 text-purple-300 hover:text-white border border-purple-500/30 text-xs font-bold rounded-xl transition flex items-center gap-1.5"
+              >
+                <Edit3 className="w-3.5 h-3.5" /> Edit Profile
+              </button>
+            )}
 
             <Link
               to="/player/settings"
@@ -261,6 +307,35 @@ export default function PlayerDashboard() {
             </div>
 
             <div className="space-y-4 text-xs">
+              <div>
+                <label className="block font-semibold text-slate-400 mb-1">Profile Picture</label>
+                <div className="flex items-center gap-3">
+                  <div className="relative">
+                    <img
+                      src={removeImage ? `${DEFAULT_AVATAR}${encodeURIComponent(myPlayer.name)}` : (filePreview || myPlayer.imageUrl || `${DEFAULT_AVATAR}${encodeURIComponent(myPlayer.name)}`)}
+                      alt="Avatar Preview"
+                      className="w-12 h-12 rounded-xl object-cover border border-slate-700"
+                    />
+                  </div>
+                  <div className="flex-1 space-y-1">
+                    <label className="cursor-pointer px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg font-semibold text-xs inline-flex items-center gap-1.5 border border-slate-700">
+                      <Camera className="w-3.5 h-3.5 text-purple-400" />
+                      <span>{myPlayer.imageUrl || filePreview ? 'Change Photo' : 'Upload Photo'}</span>
+                      <input type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
+                    </label>
+                    {(myPlayer.imageUrl || filePreview) && !removeImage && (
+                      <button
+                        type="button"
+                        onClick={handleRemovePicture}
+                        className="block text-[11px] text-rose-400 hover:text-rose-300 font-semibold"
+                      >
+                        Remove Photo
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+
               <div>
                 <label className="block font-semibold text-slate-400 mb-1">Jersey Name (max 15 chars)</label>
                 <input

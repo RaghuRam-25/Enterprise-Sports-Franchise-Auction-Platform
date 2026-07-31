@@ -134,6 +134,9 @@ export const playerAPI = {
 // ─── Manager (TEAM_MANAGER + SUPER_ADMIN) ─────────────────────────────────────
 export const managerAPI = {
   getTeam:          () => api.get('/manager/team'),
+  updateTeam:       (formData) => api.put('/manager/team', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }),
   getBudget:        () => api.get('/manager/budget'),
   // GAP 8 FIX: roster endpoint added
   getRoster:        () => api.get('/manager/roster'),
