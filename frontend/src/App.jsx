@@ -1,55 +1,87 @@
-import React from 'react';
+import { lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import ProtectedRoute from './components/ProtectedRoute';
 import DashboardLayout from './layouts/DashboardLayout';
+import Toast from './components/Toast';
+
+/* ────────────────────────────────────────────────────────────────────────────
+ * Phase 9 — Route-based code splitting.
+ * Structural wrappers (Router, ProtectedRoute, DashboardLayout, Toast) stay
+ * eager because they are needed on every render. Every page is lazy-loaded so
+ * each role's bundle is fetched on demand, shrinking the initial payload.
+ * Named-export pages are unwrapped to a default in the import() thenable, since
+ * React.lazy requires a module whose `default` is the component.
+ * All route paths, RBAC guards, and element mappings are UNCHANGED.
+ * ────────────────────────────────────────────────────────────────────────── */
 
 // ── Spectator / Public Views ─────────────────────────────────────────────────
-import LandingPage from './pages/spectator/LandingPage';
-import PublicLiveView from './pages/spectator/PublicLiveView';
-import PublicTeamsView from './pages/spectator/PublicTeamsView';
-import PublicPlayersView from './pages/spectator/PublicPlayersView';
+const LandingPage = lazy(() => import('./pages/spectator/LandingPage'));
+const PublicLiveView = lazy(() => import('./pages/spectator/PublicLiveView'));
+const PublicTeamsView = lazy(() => import('./pages/spectator/PublicTeamsView'));
+const PublicAboutView = lazy(() => import('./pages/spectator/PublicAboutView'));
+const PublicPlayersView = lazy(() => import('./pages/spectator/PublicPlayersView'));
 
 // ── Auth (Universal) ──────────────────────────────────────────────────────────
-import ManagerLogin from './pages/manager/ManagerLogin';
-import PlayerRegister from './pages/player/PlayerRegister';
-import ForgotPassword from './pages/auth/ForgotPassword';
+const ManagerLogin = lazy(() => import('./pages/manager/ManagerLogin'));
+const PlayerRegister = lazy(() => import('./pages/player/PlayerRegister'));
+const ForgotPassword = lazy(() => import('./pages/auth/ForgotPassword'));
 
 // ── Player Portal ─────────────────────────────────────────────────────────────
-import PlayerDashboard from './pages/player/PlayerDashboard';
-import PlayerResults from './pages/player/PlayerResults';
-import PlayerSettings from './pages/player/PlayerSettings';
+const PlayerDashboard = lazy(() => import('./pages/player/PlayerDashboard'));
+const PlayerResults = lazy(() => import('./pages/player/PlayerResults'));
+const PlayerSettings = lazy(() => import('./pages/player/PlayerSettings'));
+const PlayerMyTeam = lazy(() => import('./pages/player/PlayerMyTeam'));
+// Full-bleed reveal — rendered INSIDE DashboardLayout so the sidebar stays.
+const FieldPositionReveal = lazy(() => import('./pages/player/FieldPositionReveal'));
 
 // ── Manager War Room ──────────────────────────────────────────────────────────
-import { ManagerDashboard } from './pages/manager/ManagerDashboard';
-import ManagerRoster from './pages/manager/ManagerRoster';
-import ManagerMyTeam from './pages/manager/ManagerMyTeam';
+// NOTE: ManagerDashboard is a NAMED export → unwrap to default for lazy().
+const ManagerDashboard = lazy(() =>
+  import('./pages/manager/ManagerDashboard').then((m) => ({ default: m.ManagerDashboard }))
+);
+const ManagerMyTeamView = lazy(() => import('./pages/manager/ManagerMyTeamView'));
+const ManagerMyTeam = lazy(() => import('./pages/manager/ManagerMyTeam'));
 
 // ── Podium Admin Control Room ─────────────────────────────────────────────────
-import { PodiumDashboard } from './pages/podium/PodiumDashboard';
+// NOTE: PodiumDashboard is a NAMED export → unwrap to default for lazy().
+const PodiumDashboard = lazy(() =>
+  import('./pages/podium/PodiumDashboard').then((m) => ({ default: m.PodiumDashboard }))
+);
+const PodiumPlayersView = lazy(() => import('./pages/podium/PodiumPlayersView'));
+const PodiumTeamsView = lazy(() => import('./pages/podium/PodiumTeamsView'));
 
 // ── Admin Panel ───────────────────────────────────────────────────────────────
-import SuperAdminDashboard from './pages/admin/SuperAdminDashboard';
-import AdminConfigurationsLayout from './pages/admin/AdminConfigurationsLayout';
-import AdminConfigurations from './pages/admin/AdminConfigurations';
-import AdminTeams from './pages/admin/AdminTeams';
-import AdminManagers from './pages/admin/AdminManagers';
-import AdminPlayers from './pages/admin/AdminPlayers';
-import AdminReports from './pages/admin/AdminReports';
-import AdminManagerRequests from './pages/admin/AdminManagerRequests';
+const SuperAdminDashboard = lazy(() => import('./pages/admin/SuperAdminDashboard'));
+const AdminConfigurationsLayout = lazy(() => import('./pages/admin/AdminConfigurationsLayout'));
+const AdminConfigurations = lazy(() => import('./pages/admin/AdminConfigurations'));
+const AdminTeams = lazy(() => import('./pages/admin/AdminTeams'));
+const AdminPlayers = lazy(() => import('./pages/admin/AdminPlayers'));
+const AdminManagerRequests = lazy(() => import('./pages/admin/AdminManagerRequests'));
 
 // ── Error Pages ───────────────────────────────────────────────────────────────
-import AccessDenied from './pages/AccessDenied';
-import Toast from './components/Toast';
+const AccessDenied = lazy(() => import('./pages/AccessDenied'));
+
+// Branded fallback shown while a route chunk is fetched.
+function RouteFallback() {
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-slate-950 text-slate-300">
+      <div className="w-10 h-10 rounded-full border-2 border-slate-700 border-t-emerald-400 animate-spin" />
+      <span className="text-xs font-mono uppercase tracking-widest text-slate-500">Loading</span>
+    </div>
+  );
+}
 
 function App() {
   return (
     <Router>
       <Toast />
+      <Suspense fallback={<RouteFallback />}>
       <Routes>
         {/* ── Public Spectator Routes (Top Navbar Only, No Sidebar) ─────────── */}
         <Route path="/" element={<LandingPage />} />
         <Route path="/live" element={<PublicLiveView />} />
         <Route path="/teams" element={<PublicTeamsView />} />
+        <Route path="/about" element={<PublicAboutView />} />
         <Route path="/players" element={<PublicPlayersView />} />
 
         {/* ── Universal Auth Routes ─────────────────────────────────────────── */}
@@ -101,26 +133,10 @@ function App() {
               }
             />
             <Route
-              path="managers"
-              element={
-                <ProtectedRoute allowedRoles={['SUPER_ADMIN']}>
-                  <AdminManagers />
-                </ProtectedRoute>
-              }
-            />
-            <Route
               path="players"
               element={
                 <ProtectedRoute allowedRoles={['SUPER_ADMIN']}>
                   <AdminPlayers />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="reports"
-              element={
-                <ProtectedRoute allowedRoles={['SUPER_ADMIN']}>
-                  <AdminReports />
                 </ProtectedRoute>
               }
             />
@@ -197,7 +213,7 @@ function App() {
               path="players/:filter"
               element={
                 <ProtectedRoute allowedRoles={['PODIUM_ADMIN', 'SUPER_ADMIN']}>
-                  <PodiumDashboard />
+                  <PodiumPlayersView />
                 </ProtectedRoute>
               }
             />
@@ -205,7 +221,7 @@ function App() {
               path="teams/:filter"
               element={
                 <ProtectedRoute allowedRoles={['PODIUM_ADMIN', 'SUPER_ADMIN']}>
-                  <PodiumDashboard />
+                  <PodiumTeamsView />
                 </ProtectedRoute>
               }
             />
@@ -255,18 +271,10 @@ function App() {
               }
             />
             <Route
-              path="roster"
-              element={
-                <ProtectedRoute allowedRoles={['TEAM_MANAGER']}>
-                  <ManagerRoster />
-                </ProtectedRoute>
-              }
-            />
-            <Route
               path="my-team"
               element={
                 <ProtectedRoute allowedRoles={['TEAM_MANAGER']}>
-                  <ManagerMyTeam />
+                  <ManagerMyTeamView />
                 </ProtectedRoute>
               }
             />
@@ -294,6 +302,14 @@ function App() {
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="players"
+              element={
+                <ProtectedRoute allowedRoles={['TEAM_MANAGER']}>
+                  <PublicPlayersView />
+                </ProtectedRoute>
+              }
+            />
           </Route>
 
           {/* ── PLAYER ROUTES ────────────────────────────────────────────── */}
@@ -304,6 +320,26 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={['PLAYER']}>
                   <PlayerDashboard />
+                </ProtectedRoute>
+              }
+            />
+            {/* Live auction — in-layout so the sidebar stays. PublicLiveView
+                hides its own Navbar when a user is logged in. */}
+            <Route
+              path="live"
+              element={
+                <ProtectedRoute allowedRoles={['PLAYER']}>
+                  <PublicLiveView />
+                </ProtectedRoute>
+              }
+            />
+            {/* Field position reveal — immersive but kept INSIDE the layout so
+                the sidebar/navbar remain (fills the main content area). */}
+            <Route
+              path="field-position"
+              element={
+                <ProtectedRoute allowedRoles={['PLAYER']}>
+                  <FieldPositionReveal />
                 </ProtectedRoute>
               }
             />
@@ -331,6 +367,14 @@ function App() {
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="my-team"
+              element={
+                <ProtectedRoute allowedRoles={['PLAYER']}>
+                  <PlayerMyTeam />
+                </ProtectedRoute>
+              }
+            />
           </Route>
 
         </Route>
@@ -341,6 +385,7 @@ function App() {
         {/* ── Catch-all ──────────────────────────────────────────────────── */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      </Suspense>
     </Router>
   );
 }

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { UserPlus, Upload, CheckCircle2, AlertCircle, FileImage, ShieldCheck, Lock } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { UserPlus, CheckCircle2, FileImage, Lock } from 'lucide-react';
 import { useAuction } from '../../context/AuctionContext';
 import { useAuth } from '../../context/AuthContext';
 import Navbar from '../../components/Navbar';
@@ -201,12 +201,12 @@ export default function PlayerRegister() {
             {/* Name & Email */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-400 mb-1">Full Name *</label>
+                <label className="block text-xs font-semibold text-slate-400 mb-1">Full Name*</label>
                 <input
                   type="text"
                   value={name}
                   onChange={e => setName(e.target.value)}
-                  placeholder="e.g. Shakib Al Hasan"
+                  placeholder="e.g. Ayan Rahman"
                   className="glass-input w-full px-4 py-2.5 rounded-xl text-xs"
                   disabled={isRegistrationFrozen}
                   required
@@ -214,41 +214,12 @@ export default function PlayerRegister() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-400 mb-1">Gmail / Email Address *</label>
+                <label className="block text-xs font-semibold text-slate-400 mb-1">Gmail/Email*</label>
                 <input
                   type="email"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
                   placeholder="e.g. player@gmail.com"
-                  className="glass-input w-full px-4 py-2.5 rounded-xl text-xs"
-                  disabled={isRegistrationFrozen}
-                  required
-                />
-              </div>
-            </div>
-
-            {/* Password & Confirm Password */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-semibold text-slate-400 mb-1">Password *</label>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  placeholder="At least 6 characters"
-                  className="glass-input w-full px-4 py-2.5 rounded-xl text-xs"
-                  disabled={isRegistrationFrozen}
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-400 mb-1">Confirm Password *</label>
-                <input
-                  type="password"
-                  value={confirmPassword}
-                  onChange={e => setConfirmPassword(e.target.value)}
-                  placeholder="Re-enter password"
                   className="glass-input w-full px-4 py-2.5 rounded-xl text-xs"
                   disabled={isRegistrationFrozen}
                   required
@@ -272,7 +243,7 @@ export default function PlayerRegister() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-400 mb-1">Academic Session *</label>
+                <label className="block text-xs font-semibold text-slate-400 mb-1">Session *</label>
                 <select
                   value={selectedSession}
                   onChange={e => setSelectedSession(e.target.value)}
@@ -290,14 +261,14 @@ export default function PlayerRegister() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-400 mb-1">
-                  Jersey Name (Max 15 Chars) *
+                  Jersey Name*
                 </label>
                 <input
                   type="text"
                   maxLength={15}
                   value={jerseyName}
                   onChange={e => setJerseyName(e.target.value)}
-                  placeholder="e.g. SHAKIB"
+                  placeholder="e.g. AYAN"
                   className="glass-input w-full px-4 py-2.5 rounded-xl text-xs uppercase"
                   disabled={isRegistrationFrozen}
                   required
@@ -328,7 +299,7 @@ export default function PlayerRegister() {
                   pattern="[0-9]*"
                   value={tShirtNumber}
                   onChange={e => setTShirtNumber(e.target.value.replace(/\D/g, ''))}
-                  placeholder="e.g. 7 or 10"
+                  placeholder="e.g. 10"
                   className="glass-input w-full px-4 py-2.5 rounded-xl text-xs font-mono"
                   disabled={isRegistrationFrozen}
                   required
@@ -339,7 +310,7 @@ export default function PlayerRegister() {
             {/* Positions Multi-Select with Primary Flag (PRD Section 2.B) */}
             <div className="space-y-3">
               <label className="block text-xs font-semibold text-slate-400">
-                Positions (Select one or more; check exact Primary Position) *
+                Positions*
               </label>
 
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -387,7 +358,7 @@ export default function PlayerRegister() {
             {/* Picture Upload with WebP Optimization Badge (PRD Section 4.A) */}
             <div className="space-y-3">
               <label className="block text-xs font-semibold text-slate-400">
-                Profile Photo Upload (Auto WebP Optimization Engine) *
+                Profile Photo Upload*
               </label>
 
               <div className="border-2 border-dashed border-slate-800 hover:border-blue-500/40 rounded-2xl p-6 text-center space-y-3 bg-slate-950/60 transition">
@@ -428,6 +399,36 @@ export default function PlayerRegister() {
                 >
                   {imagePreview ? 'Change Photo' : 'Select Photo File'}
                 </label>
+              </div>
+            </div>
+
+
+            {/* Password & Confirm Password */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 mb-1">Password *</label>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  placeholder="At least 6 characters"
+                  className="glass-input w-full px-4 py-2.5 rounded-xl text-xs"
+                  disabled={isRegistrationFrozen}
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 mb-1">Confirm Password *</label>
+                <input
+                  type="password"
+                  value={confirmPassword}
+                  onChange={e => setConfirmPassword(e.target.value)}
+                  placeholder="Re-enter password"
+                  className="glass-input w-full px-4 py-2.5 rounded-xl text-xs"
+                  disabled={isRegistrationFrozen}
+                  required
+                />
               </div>
             </div>
 

@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useRef } from "react";
+import  { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import {
   User, Settings, Trophy, CheckCircle2, Edit3, X, Save, Loader2,
   Camera, Shield, Hash, Shirt, List, Star, Mail, GraduationCap, BadgeCheck,
-  Lock, Upload, Trash2, Image as ImageIcon, Phone, MapPin, FileText
+  Lock, Upload, Trash2
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useAuction } from "../../context/AuctionContext";
@@ -48,7 +48,7 @@ export default function PlayerDashboard() {
             p.userId === user?._id || p.userId === user?.id || p.email === user?.email || p.name === user?.name
           );
           setMyPlayer(mine || null);
-        } catch (err2) {
+        } catch {
           setMyPlayer(null);
         }
       } finally {
@@ -157,15 +157,15 @@ export default function PlayerDashboard() {
   const currentAvatar = removeImage ? `${DEFAULT_AVATAR}${encodeURIComponent(myPlayer.name)}` : (filePreview || myPlayer.imageUrl || `${DEFAULT_AVATAR}${encodeURIComponent(myPlayer.name)}`);
 
   return (
-    <div className="max-w-5xl w-full mx-auto px-4 py-8 space-y-6">
+    <div className="max-w-6xl mx-auto space-y-6">
       <div className="glass-card rounded-2xl p-6 border border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4 bg-gradient-to-r from-slate-900 via-purple-950/10 to-slate-900">
         <div className="flex items-center gap-4">
           <img src={myPlayer.imageUrl || `${DEFAULT_AVATAR}${encodeURIComponent(myPlayer.name)}`} alt={myPlayer.name} className="w-20 h-20 rounded-2xl object-cover border-2 border-purple-500/40 shadow-xl" />
           <div>
             <span className="text-[10px] font-bold text-purple-400 uppercase tracking-widest">Player Portal</span>
             <h1 className="text-2xl font-black font-heading text-white">{myPlayer.name}</h1>
-            <p className="text-xs text-slate-300">{myPlayer.jerseyName} &bull; <span className="font-mono text-slate-400">{myPlayer.studentId}</span></p>
-            <p className="text-[11px] text-slate-500 mt-0.5">{myPlayer.email}</p>
+            <p className="text-xs text-slate-300">{myPlayer.jerseyName || '—'} &bull; <span className="font-mono text-slate-400">{myPlayer.studentId || '—'}</span></p>
+            <p className="text-[11px] text-slate-500 mt-0.5">{myPlayer.email || '—'}</p>
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -183,17 +183,17 @@ export default function PlayerDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="glass-card rounded-2xl p-5 border border-slate-800 space-y-1">
           <span className="text-[10px] font-bold text-slate-400 uppercase">Category</span>
-          <p className="text-xl font-black text-amber-400">{myPlayer.category}</p>
+          <p className="text-xl font-black text-amber-400">{myPlayer.category || 'Unranked'}</p>
           <p className="text-[11px] text-slate-400">Base: <strong className="font-mono text-emerald-400">{formatCurrency(myPlayer.basePrice)}</strong></p>
         </div>
         <div className="glass-card rounded-2xl p-5 border border-slate-800 space-y-1">
           <span className="text-[10px] font-bold text-slate-400 uppercase">Session</span>
-          <p className="text-base font-extrabold text-white">{myPlayer.session}</p>
+          <p className="text-base font-extrabold text-white">{myPlayer.session || '—'}</p>
           <p className="text-[11px] text-emerald-400 font-semibold flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5" /> Verified</p>
         </div>
         <div className="glass-card rounded-2xl p-5 border border-slate-800 space-y-1">
           <span className="text-[10px] font-bold text-slate-400 uppercase">Auction Status</span>
-          <p className="text-xl font-black capitalize text-blue-400">{myPlayer.status}</p>
+          <p className="text-xl font-black capitalize text-blue-400">{(myPlayer.status || 'Registered').toLowerCase()}</p>
           <p className="text-[11px] text-slate-400">{myPlayer.status === "SOLD" ? "Sold at auction" : "Awaiting podium"}</p>
         </div>
       </div>
@@ -203,7 +203,7 @@ export default function PlayerDashboard() {
           {[{ label: "Full Name", value: myPlayer.name, cls: "text-white" }, { label: "Student ID", value: myPlayer.studentId, cls: "text-white font-mono" }, { label: "Session", value: myPlayer.session, cls: "text-white" }, { label: "Email", value: myPlayer.email, cls: "text-blue-300 truncate" }, { label: "Jersey Name", value: myPlayer.jerseyName, cls: "text-white font-mono font-bold" }, { label: "Kit", value: `${myPlayer.tShirtSize} / #${myPlayer.tShirtNumber || "--"}`, cls: "text-white" }].map(({ label, value, cls }) => (
             <div key={label} className="bg-slate-950/60 rounded-xl p-3 border border-slate-800">
               <span className="text-slate-500 uppercase text-[10px] font-bold">{label}</span>
-              <p className={`${cls} font-semibold mt-0.5`}>{value}</p>
+              <p className={`${cls} font-semibold mt-0.5`}>{value || <span className="text-slate-600">—</span>}</p>
             </div>
           ))}
         </div>
@@ -226,7 +226,24 @@ export default function PlayerDashboard() {
           {user?.managerRequestStatus === "REJECTED" && <span className="px-3 py-1 bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded-lg text-xs font-bold">Declined</span>}
         </div>
         {(!user?.managerRequestStatus || user?.managerRequestStatus === "NONE" || user?.managerRequestStatus === "REJECTED") && (
-          <button onClick={async () => { try { const r = await api.post("/players/request-manager", { note: "Interested." }); if (r?.data?.success || r?.success) { alert("Request submitted!"); window.location.reload(); } } catch (e) { alert(e?.response?.data?.message || "Failed"); } }} className="px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl transition shadow-lg">
+          <button onClick={async () => {
+            try {
+              const r = await api.post("/players/request-manager", { note: "Interested." });
+              if (r?.data?.success || r?.success || r?.data) {
+                triggerToast("Team Manager request submitted! Awaiting Super Admin review.", "success");
+                if (setUser) {
+                  setUser(prev => {
+                    if (!prev) return prev;
+                    const next = { ...prev, managerRequestStatus: "PENDING" };
+                    localStorage.setItem("user", JSON.stringify(next));
+                    return next;
+                  });
+                }
+              }
+            } catch (e) {
+              triggerToast(e?.response?.data?.message || "Failed to submit request.", "error");
+            }
+          }} className="px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl transition shadow-lg">
             Request Team Manager Role
           </button>
         )}
@@ -257,8 +274,8 @@ export default function PlayerDashboard() {
                       <input type="text" value={editForm.name} onChange={e => setEditForm(prev => ({ ...prev, name: e.target.value }))} className="glass-input w-full px-3 py-2.5 rounded-xl text-white" placeholder="Your full name" />
                     </div>
                     <div>
-                      <label className="block font-semibold text-slate-400 mb-1.5 flex items-center gap-1.5"><Hash className="w-3.5 h-3.5 text-amber-400" /> Student ID</label>
-                      <input type="text" value={editForm.studentId} onChange={e => setEditForm(prev => ({ ...prev, studentId: e.target.value }))} className="glass-input w-full px-3 py-2.5 rounded-xl text-white font-mono" placeholder="e.g. 20-41500-1" />
+                      <label className="block font-semibold text-slate-400 mb-1.5 flex items-center gap-1.5"><Hash className="w-3.5 h-3.5 text-amber-400" /> Student ID <span className="text-slate-600 font-normal ml-1">(read-only)</span></label>
+                      <input type="text" value={myPlayer.studentId || ""} readOnly disabled className="glass-input w-full px-3 py-2.5 rounded-xl text-slate-400 font-mono cursor-not-allowed opacity-70" placeholder="—" />
                     </div>
                   </div>
                   <div>

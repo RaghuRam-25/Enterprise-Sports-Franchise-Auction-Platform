@@ -7,6 +7,7 @@
   "scripts": {
     "start":      "node src/server.js",
     "dev":        "node --watch src/server.js",
+    "test":       "node --experimental-test-module-mocks --test tests/**/*.test.mjs",
     "seed":       "node src/seed.js",
     "seed:users": "node src/scripts/seedUsers.js"
   },

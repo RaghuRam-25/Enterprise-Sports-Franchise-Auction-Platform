@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import  { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import {
-  Shield, LogIn, ArrowRight, Eye, EyeOff,
+  Shield, LogIn, Eye, EyeOff,
   AlertCircle, Server, Loader2
 } from 'lucide-react';
 import { useAuth, getDashboardForRole } from '../../context/AuthContext';
@@ -40,7 +40,7 @@ export default function ManagerLogin() {
       } else {
         setError(res?.message || 'Authentication failed. Check your credentials.');
       }
-    } catch (_) {
+    } catch {
       setError('An unexpected error occurred. Please try again.');
     } finally {
       setLoading(false);

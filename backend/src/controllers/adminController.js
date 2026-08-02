@@ -10,7 +10,12 @@ import { z } from 'zod';
 
 // --- Zod Validation Schemas ---
 const sessionSchema = z.object({ name: z.string().min(2) });
-const positionSchema = z.object({ code: z.string().min(1), name: z.string().min(2) });
+const positionSchema = z.object({
+  code: z.string().min(1),
+  name: z.string().min(2),
+  fieldX: z.number().min(0).max(100).optional(),
+  fieldY: z.number().min(0).max(100).optional()
+});
 const categorySchema = z.object({ name: z.string().min(2), priorityLevel: z.number().min(1), basePrice: z.number().min(0) });
 const biddingTierSchema = z.object({ minPercent: z.number().min(0), maxPercent: z.number().min(0), raisePercent: z.number().min(0) });
 const teamSchema = z.object({ name: z.string().min(2), shortCode: z.string().min(2), totalBudget: z.number().min(0), minRoster: z.number().min(1) });

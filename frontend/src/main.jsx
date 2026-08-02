@@ -5,6 +5,7 @@ import './index.css';
 import { SocketProvider } from './context/SocketContext.jsx';
 import { AuthProvider } from './context/AuthContext.jsx';
 import { AuctionProvider } from './context/AuctionContext.jsx';
+import { PhaseProvider } from './context/PhaseContext.jsx';
 
 import { ThemeProvider } from './context/ThemeContext.jsx';
 
@@ -13,9 +14,11 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     <ThemeProvider>
       <AuthProvider>
         <SocketProvider>
-          <AuctionProvider>
-            <App />
-          </AuctionProvider>
+          <PhaseProvider>
+            <AuctionProvider>
+              <App />
+            </AuctionProvider>
+          </PhaseProvider>
         </SocketProvider>
       </AuthProvider>
     </ThemeProvider>

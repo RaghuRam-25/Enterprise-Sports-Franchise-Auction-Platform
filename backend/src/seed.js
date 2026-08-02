@@ -37,12 +37,12 @@ const seedData = async () => {
 
     // 3. Positions (6)
     const positions = await Position.insertMany([
-      { code: 'ST', name: 'Striker' },
-      { code: 'GK', name: 'Goalkeeper' },
-      { code: 'RW', name: 'Right Winger' },
-      { code: 'LW', name: 'Left Winger' },
-      { code: 'CM', name: 'Central Midfielder' },
-      { code: 'CB', name: 'Center Back' }
+      { code: 'ST', name: 'Striker', fieldX: 88, fieldY: 50 },
+      { code: 'GK', name: 'Goalkeeper', fieldX: 6, fieldY: 50 },
+      { code: 'RW', name: 'Right Winger', fieldX: 78, fieldY: 82 },
+      { code: 'LW', name: 'Left Winger', fieldX: 78, fieldY: 18 },
+      { code: 'CM', name: 'Central Midfielder', fieldX: 52, fieldY: 50 },
+      { code: 'CB', name: 'Center Back', fieldX: 22, fieldY: 50 }
     ]);
 
     // 4. Categories (3)
@@ -98,12 +98,14 @@ const seedData = async () => {
       managers.push(mgr);
     }
 
-    // 8. Players (20)
+    // 8. Players (20) — fictional, generic footballer names only. No real
+    // athletes' names or likenesses (per platform policy). Players without an
+    // uploaded image render the frontend's generic SVG placeholder.
     const playerNames = [
-      'Shakib Al Hasan', 'Tamim Iqbal', 'Mushfiqur Rahim', 'Mustafizur Rahman', 'Liton Das',
-      'Taskin Ahmed', 'Mehidy Hasan Miraz', 'Mahmudullah Riyad', 'Najmul Hossain Shanto', 'Towhid Hridoy',
-      'Shoriful Islam', 'Rishad Hossain', 'Tanzid Hasan Tamim', 'Hasan Mahmud', 'Nasum Ahmed',
-      'Afif Hossain', 'Nurul Hasan Sohan', 'Soumya Sarkar', 'Mahedi Hasan', 'Taijul Islam'
+      'Ayan Rahman', 'Fahim Chowdhury', 'Nabil Hossain', 'Tanvir Ahmed', 'Arif Uddin',
+      'Sakib Karim', 'Rafiul Islam', 'Mahfuz Alam', 'Jubair Hasan', 'Shakil Ahmed',
+      'Rakib Sheikh', 'Imran Kabir', 'Sajid Mahmud', 'Zubayer Khan', 'Nayem Hossain',
+      'Ashraful Islam', 'Tanim Sarkar', 'Saad Chowdhury', 'Mehedi Karim', 'Wasif Ahmed'
     ];
 
     const sizes = ['S', 'M', 'L', 'XL', 'XXL'];
@@ -128,7 +130,7 @@ const seedData = async () => {
         tShirtNumber: String(10 + i),
         positions: [positions[i % positions.length].code],
         primaryPosition: positions[i % positions.length].code,
-        imageUrl: `https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80`,
+        imageUrl: null,
         category: i < 4 ? 'Icon Category' : i < 10 ? 'A Grade' : 'B Grade',
         basePrice: i < 4 ? 5000000 : i < 10 ? 3000000 : 1500000,
         status: i === 0 ? 'ON_PODIUM' : 'APPROVED'

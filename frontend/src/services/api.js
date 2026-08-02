@@ -38,7 +38,7 @@ api.interceptors.response.use(
             return axios(originalRequest);
           }
         }
-      } catch (refreshError) {
+      } catch {
         localStorage.removeItem('token');
         localStorage.removeItem('refreshToken');
       }
@@ -66,6 +66,12 @@ export const authAPI = {
   refreshToken: (token) => api.post('/auth/refresh-token', { refreshToken: token }),
   forgotPassword: (email) => api.post('/auth/forgot-password', { email }),
   resetPassword: (data) => api.post('/auth/reset-password', data),
+};
+
+// ─── Phase (Global Event State Machine — SETUP/REGISTRATION/AUCTION/TOURNAMENT)
+export const phaseAPI = {
+  get: () => api.get('/phase'),
+  set: (phase) => api.patch('/phase', { phase }),
 };
 
 // ─── Admin Configuration (SUPER_ADMIN only) ───────────────────────────────────
@@ -124,6 +130,7 @@ export const playerAPI = {
   }),
   getAll: (params) => api.get('/players', { params }),
   getMyProfile: () => api.get('/players/me'),
+  getFieldPosition: () => api.get('/players/field-position'),
   getRegistrationStatus: () => api.get('/players/status'),
   withdraw: (id) => api.put(`/players/${id}/withdraw`),
   updateProfile: (id, formData) => api.put(`/players/${id}/profile`, formData, {

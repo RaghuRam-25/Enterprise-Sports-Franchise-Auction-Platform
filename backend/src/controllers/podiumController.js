@@ -16,16 +16,17 @@ export const launchPlayer = async (req, res, next) => {
     let player = await Player.findById(playerId);
 
     if (!player) {
-      // Fallback mock player if db unseeded
+      // Fallback mock player if db unseeded — generic fictional footballer,
+      // never a copyrighted photo or a real athlete's name/likeness.
       player = {
         _id: playerId || 'p-1',
-        name: 'Shakib Al Hasan',
+        name: 'Ayan Rahman',
         studentId: 'STU-2023-089',
         session: '22-23',
-        jerseyName: 'SHAKIB 75',
+        jerseyName: 'AYAN 10',
         category: 'Icon Category',
         basePrice: 5000000,
-        imageUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80'
+        imageUrl: null
       };
     } else {
       player.status = 'ON_PODIUM';

@@ -1,65 +1,106 @@
-import React, { useState, useEffect } from 'react';
-import { ShieldCheck, Image, Save, Loader2, DollarSign, Users, Award, FileText } from 'lucide-react';
+import  { useState, useEffect, useCallback } from 'react';
+
+import {
+  ShieldCheck, Save, Loader2, DollarSign, Users, Award, Edit3, X,
+  Wallet, TrendingUp, Camera, Sparkles, Quote,
+  MapPin, Mail, UserCog, CalendarDays, Palette, Info, Key
+} from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useAuction } from '../../context/AuctionContext';
-import api from '../../services/api';
+import api, { managerAPI } from '../../services/api';
 
 export default function ManagerMyTeam() {
   const { user } = useAuth();
-  const { triggerToast, teams } = useAuction();
+  const { triggerToast, formatCurrency, refetchTeams } = useAuction();
 
   const [team, setTeam] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
 
-  // Form State
-  const [name, setName] = useState('');
-  const [logo, setLogo] = useState('');
-  const [description, setDescription] = useState('');
-  const [motto, setMotto] = useState('');
+  // Modal and form state
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [teamForm, setTeamForm] = useState({
+    name: '', shortCode: '', description: '', motto: '',
+    ownerName: '', venue: '', contactEmail: '', primaryColor: '#10b981'
+  });
+  const [teamLogoFile, setTeamLogoFile] = useState(null);
+  const [teamLogoPreview, setTeamLogoPreview] = useState(null);
+  const [removeTeamLogo, setRemoveTeamLogo] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [currentPass, setCurrentPass] = useState('');
+  const [newPass, setNewPass] = useState('');
+  const [confirmPass, setConfirmPass] = useState('');
+  const [changingPass, setChangingPass] = useState(false);
+
+  const fetchTeamDetails = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await api.get('/manager/roster');
+      const data = res.data?.data || res.data || null;
+      if (data && data.team) {
+        setTeam(data.team);
+      } else {
+        triggerToast('Could not find an assigned team for your account.', 'warning');
+      }
+    } catch (err) {
+      console.error('Failed to load team details:', err);
+      triggerToast('Failed to load team data.', 'error');
+    } finally {
+      setLoading(false);
+    }
+  }, [triggerToast]);
 
   useEffect(() => {
-    const fetchTeamDetails = async () => {
-      try {
-        const res = await api.get('/teams');
-        const allTeams = res.data?.data || res.data || [];
-        // Find team belonging to manager
-        const myTeam = allTeams.find(
-          (t) => t.managerId === user?.id || t.managerId === user?._id || t.managerName === user?.name
-        ) || allTeams[0];
+    if (user) fetchTeamDetails();
+  }, [user, fetchTeamDetails]);
 
-        if (myTeam) {
-          setTeam(myTeam);
-          setName(myTeam.name || '');
-          setLogo(myTeam.logo || myTeam.logoUrl || '');
-          setDescription(myTeam.description || '');
-          setMotto(myTeam.motto || '');
-        }
-      } catch (err) {
-        console.error('Failed to load team details:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchTeamDetails();
-  }, [user]);
+  const openEditModal = () => {
+    if (!team) return;
+    setTeamForm({
+      name: team.name || '',
+      shortCode: team.shortCode || team.code || '',
+      description: team.description || '',
+      motto: team.motto || '',
+      ownerName: team.ownerName || '',
+      venue: team.venue || '',
+      contactEmail: team.contactEmail || '',
+      primaryColor: team.primaryColor || '#10b981'
+    });
+    setTeamLogoFile(null);
+    setTeamLogoPreview(team.logoUrl || null);
+    setRemoveTeamLogo(false);
+    setShowEditModal(true);
+  };
 
   const handleSave = async (e) => {
     e.preventDefault();
-    if (!team) return;
-
     setSaving(true);
     try {
-      const id = team._id || team.id;
-      await api.put(`/teams/${id}`, {
-        name,
-        logo,
-        description,
-        motto,
-      });
-      triggerToast('Team branding updated successfully!', 'success');
+      const formData = new FormData();
+      if (teamForm.name) formData.append('name', teamForm.name);
+      if (teamForm.shortCode) formData.append('shortCode', teamForm.shortCode.toUpperCase());
+      formData.append('description', teamForm.description || '');
+      formData.append('motto', teamForm.motto || '');
+      formData.append('ownerName', teamForm.ownerName || '');
+      formData.append('venue', teamForm.venue || '');
+      formData.append('contactEmail', teamForm.contactEmail || '');
+      formData.append('primaryColor', teamForm.primaryColor || '');
+
+      if (teamLogoFile) {
+        formData.append('logo', teamLogoFile);
+      } else if (removeTeamLogo) {
+        formData.append('removeLogo', 'true');
+      }
+
+      const res = await managerAPI.updateTeam(formData);
+      if (res?.success || res?.data) {
+        triggerToast('Team profile updated successfully!', 'success');
+        setShowEditModal(false);
+        fetchTeamDetails();
+        if (typeof refetchTeams === 'function') refetchTeams();
+      }
     } catch (err) {
-      triggerToast(err.response?.data?.message || 'Failed to update team branding.', 'error');
+      triggerToast(err?.response?.data?.message || 'Failed to update team profile', 'error');
     } finally {
       setSaving(false);
     }
@@ -73,110 +114,501 @@ export default function ManagerMyTeam() {
     );
   }
 
-  return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      <div>
-        <h1 className="text-2xl font-black font-heading text-white flex items-center gap-2">
-          <ShieldCheck className="w-6 h-6 text-emerald-400" /> My Franchise Team Profile
-        </h1>
-        <p className="text-xs text-slate-400 mt-1">
-          Customize your franchise team name, logo, description, and team motto.
-        </p>
+  if (!team) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <p className="text-slate-400">Could not load team information.</p>
       </div>
+    );
+  }
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+  const totalBudget = team.totalBudget || 0;
+  const remainingBudget = team.remainingBudget || 0;
+  const spentBudget = totalBudget - remainingBudget;
+  const utilization = totalBudget > 0 ? Math.min(100, Math.round((spentBudget / totalBudget) * 100)) : 0;
+  const squadSize = team.rosterCount ?? team.playerCount ?? team.players?.length ?? '—';
+  const squadTarget = team.requiredSlots ?? team.squadTarget ?? null;
 
-        {/* Team Preview Card */}
-        <div className="bg-slate-900/90 rounded-2xl p-6 border border-slate-800 space-y-4 text-center">
-          <div className="w-24 h-24 mx-auto rounded-2xl bg-slate-950 border border-slate-800 flex items-center justify-center overflow-hidden p-2">
-            {logo ? (
-              <img src={logo} alt={name} className="w-full h-full object-contain" />
-            ) : (
-              <ShieldCheck className="w-12 h-12 text-slate-600" />
-            )}
-          </div>
-          <div>
-            <h2 className="text-lg font-extrabold text-white">{name || 'Franchise Team'}</h2>
-            <p className="text-xs text-emerald-400 font-semibold italic mt-0.5">"{motto || 'No Motto Set'}"</p>
-          </div>
+  const stats = [
+    {
+      label: 'Total Purse',
+      value: formatCurrency ? formatCurrency(totalBudget) : totalBudget,
+      icon: Wallet,
+      tone: 'text-blue-300 bg-blue-500/10 border-blue-500/20',
+    },
+    {
+      label: 'Spent',
+      value: formatCurrency ? formatCurrency(spentBudget) : spentBudget,
+      icon: TrendingUp,
+      tone: 'text-amber-300 bg-amber-500/10 border-amber-500/20',
+    },
+    {
+      label: 'Remaining',
+      value: formatCurrency ? formatCurrency(remainingBudget) : remainingBudget,
+      icon: DollarSign,
+      tone: 'text-emerald-300 bg-emerald-500/10 border-emerald-500/20',
+    },
+    {
+      label: 'Squad Size',
+      value: squadTarget ? `${squadSize} / ${squadTarget}` : squadSize,
+      icon: Users,
+      tone: 'text-purple-300 bg-purple-500/10 border-purple-500/20',
+    },
+  ];
 
-          <div className="pt-4 border-t border-slate-800 space-y-2 text-xs">
-            <div className="flex justify-between text-slate-400">
-              <span>Manager:</span>
-              <span className="font-bold text-slate-200">{user?.name}</span>
-            </div>
-            <div className="flex justify-between text-slate-400">
-              <span>Purse Remaining:</span>
-              <span className="font-mono font-bold text-emerald-400">
-                ${(team?.budget || team?.purseRemaining || 10000000).toLocaleString()}
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    if (newPass !== confirmPass) {
+      triggerToast('New passwords do not match.', 'error');
+      return;
+    }
+    if (newPass.length < 6) {
+      triggerToast('Password must be at least 6 characters.', 'error');
+      return;
+    }
+    setChangingPass(true);
+    try {
+      await api.put('/manager/password', { currentPassword: currentPass, newPassword: newPass });
+      triggerToast('Password changed successfully!', 'success');
+      setShowPasswordModal(false);
+      setCurrentPass('');
+      setNewPass('');
+      setConfirmPass('');
+    } catch (err) {
+      triggerToast(err?.response?.data?.message || 'Failed to change password.', 'error');
+    } finally {
+      setChangingPass(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Profile Header Card */}
+      <div className="glass-card rounded-2xl border border-slate-800 overflow-hidden shadow-2xl shadow-purple-950/10">
+        {/* Banner */}
+        <div className="relative h-40 md:h-52 bg-gradient-to-br from-slate-950 via-indigo-950 to-purple-950 overflow-hidden">
+          {/* Ambient signature pattern — dot grid + soft radial glow, on-brand with the auction "podium light" motif */}
+          <div
+            className="absolute inset-0 opacity-40"
+            style={{
+              backgroundImage: 'radial-gradient(circle, rgba(148,163,184,0.35) 1px, transparent 1px)',
+              backgroundSize: '18px 18px',
+            }}
+          />
+          <div className="absolute -top-16 -right-16 w-64 h-64 bg-purple-600/20 rounded-full blur-3xl" />
+          <div className="absolute -bottom-20 -left-10 w-56 h-56 bg-emerald-500/10 rounded-full blur-3xl" />
+
+          <div className="relative h-full p-6 flex flex-col justify-between">
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/30 border border-white/10 text-[10px] font-bold tracking-wider uppercase text-slate-200 backdrop-blur-sm">
+                <Sparkles className="w-3 h-3 text-emerald-400" />
+                Franchise Profile
               </span>
             </div>
+            <button
+              onClick={openEditModal}
+              className="self-end px-4 py-2 bg-white/10 hover:bg-white text-white hover:text-slate-900 border border-white/20 text-xs font-bold rounded-xl transition backdrop-blur-sm flex items-center gap-1.5"
+            >
+              <Edit3 className="w-3.5 h-3.5" /> Edit Profile
+            </button>
           </div>
         </div>
 
-        {/* Team Edit Form */}
-        <div className="md:col-span-2 bg-slate-900/90 rounded-2xl p-6 border border-slate-800 space-y-4">
-          <h2 className="text-sm font-extrabold text-white border-b border-slate-800 pb-3">
-            Franchise Customization
-          </h2>
-
-          <form onSubmit={handleSave} className="space-y-4 text-xs">
-            <div>
-              <label className="block text-slate-400 font-semibold mb-1">Franchise Team Name</label>
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-emerald-500"
-                required
-              />
+        {/* Identity row */}
+        <div className="px-6 pb-6">
+          <div className="flex flex-col md:flex-row md:items-end gap-5 -mt-16 md:-mt-14">
+            {/* Avatar */}
+            <div className="relative w-32 h-32 flex-shrink-0 mx-auto md:mx-0">
+              <div className="w-full h-full rounded-2xl bg-slate-950 border-4 border-slate-900 flex items-center justify-center overflow-hidden shadow-lg">
+                {team.logoUrl ? (
+                  <img src={team.logoUrl} alt={team.name} className="w-full h-full object-contain" />
+                ) : (
+                  <span className="text-5xl">{team.logo || '🏆'}</span>
+                )}
+              </div>
+              <button
+                onClick={openEditModal}
+                className="absolute -bottom-2 -right-2 w-9 h-9 rounded-xl bg-emerald-500 hover:bg-emerald-400 border-4 border-slate-900 flex items-center justify-center shadow-lg transition"
+                title="Change logo"
+              >
+                <Camera className="w-4 h-4 text-slate-950" />
+              </button>
             </div>
 
-            <div>
-              <label className="block text-slate-400 font-semibold mb-1">Logo URL</label>
-              <input
-                type="text"
-                placeholder="https://example.com/team-logo.png"
-                value={logo}
-                onChange={(e) => setLogo(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-emerald-500"
-              />
-            </div>
-
-            <div>
-              <label className="block text-slate-400 font-semibold mb-1">Team Motto</label>
-              <input
-                type="text"
-                placeholder="e.g. Victory Through Honor"
-                value={motto}
-                onChange={(e) => setMotto(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-emerald-500"
-              />
-            </div>
-
-            <div>
-              <label className="block text-slate-400 font-semibold mb-1">Team Description</label>
-              <textarea
-                rows={4}
-                placeholder="Brief description of the franchise..."
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-emerald-500"
-              />
+            {/* Name + meta */}
+            <div className="flex-1 text-center md:text-left pb-1">
+              <div className="flex flex-col md:flex-row md:items-center gap-2 justify-center md:justify-start">
+                <h1 className="text-2xl md:text-3xl font-black font-heading text-white">
+                  {team.name || 'Franchise Team'}
+                </h1>
+                {(team.shortCode || team.code) && (
+                  <span className="inline-flex w-fit mx-auto md:mx-0 px-2.5 py-1 rounded-lg bg-slate-800 border border-slate-700 text-xs font-mono font-bold text-slate-300 tracking-widest">
+                    {team.shortCode || team.code}
+                  </span>
+                )}
+              </div>
+              {team.motto && (
+                <p className="text-sm text-purple-300/80 italic mt-1 flex items-center gap-1.5 justify-center md:justify-start">
+                  <Quote className="w-3.5 h-3.5 flex-shrink-0" />
+                  {team.motto}
+                </p>
+              )}
             </div>
 
             <button
-              type="submit"
-              disabled={saving}
-              className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold rounded-xl transition flex items-center justify-center gap-2"
+              onClick={() => setShowPasswordModal(true)}
+              className="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 text-xs font-bold rounded-xl transition shadow flex items-center gap-1.5"
             >
-              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-              Save Team Details
+              <Key className="w-3.5 h-3.5 text-amber-400" /> Change Password
             </button>
-          </form>
+          </div>
         </div>
-
       </div>
+
+      {/* Budget Utilization */}
+      <div className="glass-card rounded-2xl border border-slate-800 p-5 shadow-xl">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+            <Award className="w-4 h-4 text-emerald-400" /> Purse Utilization
+          </h3>
+          <span className="text-sm font-black text-white">{utilization}%</span>
+        </div>
+        <div className="w-full h-2.5 rounded-full bg-slate-800 overflow-hidden">
+          <div
+            className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-blue-500 transition-all duration-700"
+            style={{ width: `${utilization}%` }}
+          />
+        </div>
+      </div>
+
+      {/* Stat Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {stats.map(({ label, value, icon: Icon, tone }) => (
+          <div key={label} className="glass-card rounded-2xl border border-slate-800 p-4 shadow-lg">
+            <div className={`w-9 h-9 rounded-xl border flex items-center justify-center mb-3 ${tone}`}>
+              <Icon className="w-4.5 h-4.5" />
+            </div>
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">{label}</p>
+            <p className="text-lg font-black text-white mt-0.5 truncate">{value}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Team Details */}
+      <div className="glass-card rounded-2xl border border-slate-800 p-6 shadow-xl">
+        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4 flex items-center gap-2">
+          <Info className="w-4 h-4 text-emerald-400" /> Team Details
+        </h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="flex items-start gap-3">
+            <div className="w-9 h-9 rounded-xl bg-slate-800/60 border border-slate-700 flex items-center justify-center flex-shrink-0">
+              <UserCog className="w-4 h-4 text-slate-400" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Owner / Manager</p>
+              <p className="text-sm font-semibold text-white truncate">{team.ownerName || 'Not set'}</p>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-3">
+            <div className="w-9 h-9 rounded-xl bg-slate-800/60 border border-slate-700 flex items-center justify-center flex-shrink-0">
+              <MapPin className="w-4 h-4 text-slate-400" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Home Venue</p>
+              <p className="text-sm font-semibold text-white truncate">{team.venue || 'Not set'}</p>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-3">
+            <div className="w-9 h-9 rounded-xl bg-slate-800/60 border border-slate-700 flex items-center justify-center flex-shrink-0">
+              <Mail className="w-4 h-4 text-slate-400" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Contact Email</p>
+              <p className="text-sm font-semibold text-white truncate">{team.contactEmail || 'Not set'}</p>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-3">
+            <div className="w-9 h-9 rounded-xl bg-slate-800/60 border border-slate-700 flex items-center justify-center flex-shrink-0">
+              <CalendarDays className="w-4 h-4 text-slate-400" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Founded Session</p>
+              <p className="text-sm font-semibold text-white truncate">{team.session || team.foundedSession || 'Not set'}</p>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-3 sm:col-span-2">
+            <div className="w-9 h-9 rounded-xl bg-slate-800/60 border border-slate-700 flex items-center justify-center flex-shrink-0">
+              <Palette className="w-4 h-4 text-slate-400" />
+            </div>
+            <div className="min-w-0 flex items-center gap-2">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Team Color</p>
+                <p className="text-sm font-semibold text-white truncate">{team.primaryColor || 'Not set'}</p>
+              </div>
+              {team.primaryColor && (
+                <span
+                  className="w-6 h-6 rounded-lg border border-white/10 flex-shrink-0"
+                  style={{ backgroundColor: team.primaryColor }}
+                />
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* About */}
+      {team.description && (
+        <div className="glass-card rounded-2xl border border-slate-800 p-6 shadow-xl">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2 flex items-center gap-2">
+            <ShieldCheck className="w-4 h-4 text-emerald-400" /> About This Franchise
+          </h3>
+          <p className="text-sm text-slate-300 leading-relaxed">{team.description}</p>
+        </div>
+      )}
+
+      {/* Edit Team Modal */}
+      {showEditModal && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="glass-card w-full max-w-md rounded-2xl p-6 border border-slate-700 space-y-5 shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center">
+              <h2 className="text-lg font-black text-white flex items-center gap-2">
+                <ShieldCheck className="w-5 h-5 text-emerald-400" /> Edit Franchise Profile
+              </h2>
+              <button onClick={() => setShowEditModal(false)} className="p-2 text-slate-400 hover:text-white rounded-lg">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSave} className="space-y-4 text-xs">
+              <div>
+                <label className="block font-semibold text-slate-400 mb-1">Team Logo</label>
+                <div className="flex items-center gap-3">
+                  {removeTeamLogo ? (
+                    <div className="w-14 h-14 rounded-xl bg-slate-800 flex items-center justify-center text-white font-black text-lg">
+                      {(teamForm.name || 'T')[0]}
+                    </div>
+                  ) : (
+                    <div className="w-14 h-14 rounded-xl overflow-hidden border border-slate-700 bg-slate-950 flex items-center justify-center flex-shrink-0">
+                      {teamLogoPreview ? (
+                        <img src={teamLogoPreview} alt="Logo Preview" className="w-full h-full object-contain" />
+                      ) : (
+                        <span className="text-2xl">🏆</span>
+                      )}
+                    </div>
+                  )}
+                  <div className="flex-1 space-y-1">
+                    <label className="cursor-pointer px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg font-semibold text-xs inline-flex items-center gap-1.5 border border-slate-700">
+                      <Camera className="w-3.5 h-3.5" />
+                      <span>Upload Logo</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={e => {
+                          const file = e.target.files[0];
+                          if (file) {
+                            setTeamLogoFile(file);
+                            setTeamLogoPreview(URL.createObjectURL(file));
+                            setRemoveTeamLogo(false);
+                          }
+                        }}
+                        className="hidden"
+                      />
+                    </label>
+                    {(team.logoUrl || teamLogoPreview) && !removeTeamLogo && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setTeamLogoFile(null);
+                          setTeamLogoPreview(null);
+                          setRemoveTeamLogo(true);
+                        }}
+                        className="block text-[11px] text-rose-400 hover:text-rose-300 font-semibold"
+                      >
+                        Remove Logo
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-3">
+                <div className="col-span-2">
+                  <label className="block font-semibold text-slate-400 mb-1">Franchise Team Name *</label>
+                  <input
+                    type="text"
+                    value={teamForm.name}
+                    onChange={e => setTeamForm(prev => ({ ...prev, name: e.target.value }))}
+                    className="glass-input w-full px-3 py-2 rounded-xl text-white font-semibold"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block font-semibold text-slate-400 mb-1">Code *</label>
+                  <input
+                    type="text"
+                    maxLength={4}
+                    value={teamForm.shortCode}
+                    onChange={e => setTeamForm(prev => ({ ...prev, shortCode: e.target.value.toUpperCase() }))}
+                    className="glass-input w-full px-3 py-2 rounded-xl text-white font-mono uppercase"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-400 mb-1">Description (Optional)</label>
+                <textarea
+                  rows={2}
+                  value={teamForm.description}
+                  onChange={e => setTeamForm(prev => ({ ...prev, description: e.target.value }))}
+                  className="glass-input w-full px-3 py-2 rounded-xl text-white"
+                  placeholder="Team details or about section..."
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-400 mb-1">Team Motto (Optional)</label>
+                <input
+                  type="text"
+                  maxLength={80}
+                  value={teamForm.motto}
+                  onChange={e => setTeamForm(prev => ({ ...prev, motto: e.target.value }))}
+                  className="glass-input w-full px-3 py-2 rounded-xl text-white italic"
+                  placeholder='e.g. "Play hard. Win harder."'
+                />
+              </div>
+
+              <div className="pt-1 border-t border-slate-800" />
+              <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Team Details</p>
+
+              <div>
+                <label className="block font-semibold text-slate-400 mb-1">Owner / Manager Name (Optional)</label>
+                <input
+                  type="text"
+                  value={teamForm.ownerName}
+                  onChange={e => setTeamForm(prev => ({ ...prev, ownerName: e.target.value }))}
+                  className="glass-input w-full px-3 py-2 rounded-xl text-white"
+                  placeholder="e.g. Topon Rahman"
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-400 mb-1">Home Venue (Optional)</label>
+                <input
+                  type="text"
+                  value={teamForm.venue}
+                  onChange={e => setTeamForm(prev => ({ ...prev, venue: e.target.value }))}
+                  className="glass-input w-full px-3 py-2 rounded-xl text-white"
+                  placeholder="e.g. University Ground"
+                />
+              </div>
+
+              <div className="grid grid-cols-3 gap-3">
+                <div className="col-span-2">
+                  <label className="block font-semibold text-slate-400 mb-1">Contact Email (Optional)</label>
+                  <input
+                    type="email"
+                    value={teamForm.contactEmail}
+                    onChange={e => setTeamForm(prev => ({ ...prev, contactEmail: e.target.value }))}
+                    className="glass-input w-full px-3 py-2 rounded-xl text-white"
+                    placeholder="team@franchise.com"
+                  />
+                </div>
+                <div>
+                  <label className="block font-semibold text-slate-400 mb-1">Color</label>
+                  <input
+                    type="color"
+                    value={teamForm.primaryColor}
+                    onChange={e => setTeamForm(prev => ({ ...prev, primaryColor: e.target.value }))}
+                    className="w-full h-[38px] rounded-xl border border-slate-700 bg-slate-900 cursor-pointer"
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-3 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setShowEditModal(false)}
+                  className="flex-1 py-2.5 border border-slate-700 text-slate-300 hover:bg-slate-800 rounded-xl text-xs font-semibold transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition disabled:opacity-60"
+                >
+                  {saving ? <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Change Password Modal */}
+      {showPasswordModal && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="glass-card w-full max-w-sm rounded-2xl p-6 border border-slate-700 space-y-5 shadow-2xl">
+            <div className="flex justify-between items-center">
+              <h2 className="text-lg font-black text-white flex items-center gap-2">
+                <Key className="w-5 h-5 text-amber-400" /> Change Password
+              </h2>
+              <button onClick={() => setShowPasswordModal(false)} className="p-2 text-slate-400 hover:text-white rounded-lg">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleChangePassword} className="space-y-4 text-xs">
+              <div>
+                <label className="block font-semibold text-slate-400 mb-1">Current Password</label>
+                <input
+                  type="password"
+                  value={currentPass}
+                  onChange={e => setCurrentPass(e.target.value)}
+                  className="glass-input w-full px-3 py-2 rounded-xl text-white"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block font-semibold text-slate-400 mb-1">New Password</label>
+                <input
+                  type="password"
+                  value={newPass}
+                  onChange={e => setNewPass(e.target.value)}
+                  placeholder="At least 6 characters"
+                  className="glass-input w-full px-3 py-2 rounded-xl text-white"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block font-semibold text-slate-400 mb-1">Confirm New Password</label>
+                <input
+                  type="password"
+                  value={confirmPass}
+                  onChange={e => setConfirmPass(e.target.value)}
+                  className="glass-input w-full px-3 py-2 rounded-xl text-white"
+                  required
+                />
+              </div>
+              <div className="flex gap-3 pt-1">
+                <button type="button" onClick={() => setShowPasswordModal(false)} className="flex-1 py-2.5 border border-slate-700 text-slate-300 hover:bg-slate-800 rounded-xl text-xs font-semibold transition">
+                  Cancel
+                </button>
+                <button type="submit" disabled={changingPass} className="flex-1 py-2.5 bg-amber-600 hover:bg-amber-500 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition disabled:opacity-60">
+                  {changingPass ? <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Key className="w-3.5 h-3.5" />}
+                  Update Password
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

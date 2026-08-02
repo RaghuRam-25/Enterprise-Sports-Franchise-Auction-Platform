@@ -1,4 +1,4 @@
-import React from 'react';
+import 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ShieldX, ArrowLeft, Home, LogIn } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';

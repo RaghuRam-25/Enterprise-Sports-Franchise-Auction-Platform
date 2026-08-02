@@ -1,12 +1,12 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import  { useState, useEffect, useCallback } from 'react';
 import { ShieldAlert, CheckCircle2, Clock, XCircle, Check, X, Loader2, RefreshCw, AlertTriangle, Users, UserCheck } from 'lucide-react';
-import { useAuth } from '../../context/AuthContext';
+
 import { useAuction } from '../../context/AuctionContext';
 import { useSocket } from '../../context/SocketContext';
 import { adminAPI } from '../../services/api';
 
 export default function AdminManagerRequests() {
-  const { user } = useAuth();
+  
   const { triggerToast, refetchTeams } = useAuction();
   const { socket } = useSocket();
 

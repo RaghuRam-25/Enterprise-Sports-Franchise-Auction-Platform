@@ -1,9 +1,12 @@
 import { Player } from '../models/Player.js';
 import { Session } from '../models/Session.js';
 import { Position } from '../models/Position.js';
+import { Team } from '../models/Team.js';
 import { User } from '../models/User.js';
 import { SystemConfig, getConfig, setConfig } from '../models/SystemConfig.js';
+import { isRegistrationFrozen as isRegFrozenByPhase, getCurrentPhase } from '../services/phaseService.js';
 import { processAndUploadImage } from '../services/imageService.js';
+import { resolveFieldCoords } from '../utils/fieldPositions.js';
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 
@@ -26,28 +29,38 @@ export const getMyPlayerProfile = async (req, res, next) => {
   }
 };
 
-// ── Registration Freeze — GAP 5 FIX: persistent via MongoDB ──────────────────
+// ── Registration Freeze — now DERIVED from the global event phase ─────────────
+// Registration is "frozen" whenever the phase is not REGISTRATION. The phase
+// state machine (services/phaseService.js) is the single source of truth; this
+// endpoint is retained for backward compatibility with the existing frontend.
 export const getRegistrationStatus = async (req, res) => {
   try {
-    const isRegistrationFrozen = await getConfig('isRegistrationFrozen', false);
-    res.json({ success: true, isRegistrationFrozen });
+    const isRegistrationFrozen = await isRegFrozenByPhase();
+    const phase = await getCurrentPhase();
+    res.json({ success: true, isRegistrationFrozen, phase });
   } catch (e) {
-    res.json({ success: true, isRegistrationFrozen: false });
+    res.json({ success: true, isRegistrationFrozen: true });
   }
 };
 
+// Retained endpoint: registration open/closed is controlled by advancing the
+// phase (PATCH /api/phase), so this now reports guidance rather than flipping a
+// standalone boolean that could drift from the phase.
 export const toggleRegistrationFreeze = async (req, res) => {
   try {
-    const current = await getConfig('isRegistrationFrozen', false);
-    const newValue = !current;
-    await setConfig('isRegistrationFrozen', newValue, req.user?.email || 'admin');
-    res.json({
-      success: true,
-      isRegistrationFrozen: newValue,
-      message: newValue ? 'Registration is now FROZEN' : 'Registration is now ACTIVE'
+    const phase = await getCurrentPhase();
+    const isRegistrationFrozen = await isRegFrozenByPhase();
+    res.status(409).json({
+      success: false,
+      isRegistrationFrozen,
+      phase,
+      message:
+        'Registration open/closed is now controlled by the event phase. ' +
+        'Advance the phase via PATCH /api/phase (SETUP → REGISTRATION opens it, ' +
+        'REGISTRATION → AUCTION freezes it).',
     });
   } catch (e) {
-    res.status(500).json({ success: false, message: 'Failed to toggle registration freeze' });
+    res.status(500).json({ success: false, message: 'Failed to read registration phase' });
   }
 };
 
@@ -86,8 +99,8 @@ const PUBLIC_PLAYER_FIELDS = 'name jerseyName positions primaryPosition category
 // ── REGISTER PLAYER ───────────────────────────────────────────────────────────
 export const registerPlayer = async (req, res, next) => {
   try {
-    // GAP 5 FIX: check persistent freeze status
-    const isRegistrationFrozen = await getConfig('isRegistrationFrozen', false);
+    // Registration freeze is derived from the event phase (single source of truth).
+    const isRegistrationFrozen = await isRegFrozenByPhase();
 
     if (isRegistrationFrozen && req.user?.role !== 'SUPER_ADMIN') {
       return res.status(403).json({ success: false, message: 'Registration is currently frozen by Super Admin' });
@@ -145,7 +158,9 @@ export const registerPlayer = async (req, res, next) => {
     });
 
     // 4. Image upload processing using Sharp WebP pipeline
-    let imageUrl = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80';
+    // Default imageUrl is null so the frontend renders its generic footballer
+    // placeholder (original SVG artwork — never a copyrighted athlete photo).
+    let imageUrl = null;
     if (req.file) {
       imageUrl = await processAndUploadImage(req.file.buffer, parsed.studentId);
     }
@@ -206,8 +221,8 @@ export const getPlayers = async (req, res, next) => {
 // ── WITHDRAW PLAYER (own-resource guard enforced in route layer) ──────────────
 export const withdrawPlayer = async (req, res, next) => {
   try {
-    // GAP 5 FIX: check persistent freeze status
-    const isRegistrationFrozen = await getConfig('isRegistrationFrozen', false);
+    // Registration freeze is derived from the event phase (single source of truth).
+    const isRegistrationFrozen = await isRegFrozenByPhase();
 
     if (isRegistrationFrozen && req.user?.role !== 'SUPER_ADMIN') {
       return res.status(403).json({ success: false, message: 'Cannot withdraw: Registration freeze is active.' });
@@ -247,10 +262,66 @@ export const getMyProfile = async (req, res, next) => {
   } catch (e) { next(e); }
 };
 
+// ── GET OWN FIELD POSITION (/api/players/field-position) ─────────────────────
+// Powers the full-screen "Field Position Reveal" page. Returns the sold
+// player's assigned team, their position code, and the pitch coordinates
+// (percentages, attacking-right) used to place the marker.
+//
+// Returns 404 when the requesting player has NOT been sold yet — the frontend
+// treats that as the "you haven't been drafted yet" state (not an error).
+export const getMyFieldPosition = async (req, res, next) => {
+  try {
+    const userId = req.user._id;
+
+    let player = await Player.findOne({ userId }).populate('soldToTeam', 'name logo logoUrl shortCode');
+    if (!player && req.user.email) {
+      player = await Player.findOne({ email: req.user.email }).populate('soldToTeam', 'name logo logoUrl shortCode');
+    }
+
+    if (!player) {
+      return res.status(404).json({ success: false, message: 'No player profile found for this account' });
+    }
+
+    // Only sold players have a field position to reveal.
+    if (player.status !== 'SOLD' || !player.soldToTeam) {
+      return res.status(404).json({
+        success: false,
+        code: 'NOT_SOLD',
+        message: 'You have not been drafted yet.'
+      });
+    }
+
+    // Resolve pitch coordinates from the player's primary position. Prefer the
+    // Position document's own fieldX/fieldY; fall back to the canonical map so
+    // positions created before those fields existed still render correctly.
+    const code = player.primaryPosition;
+    const positionDoc = code ? await Position.findOne({ code }) : null;
+    const { fieldX, fieldY } = resolveFieldCoords(code, positionDoc);
+
+    const team = player.soldToTeam;
+
+    res.json({
+      success: true,
+      data: {
+        team: {
+          name: team?.name || 'Franchise Team',
+          logoUrl: team?.logoUrl || team?.logo || '',
+          shortCode: team?.shortCode || ''
+        },
+        assignedFieldPosition: code || null,
+        positionName: positionDoc?.name || code || null,
+        fieldX,
+        fieldY,
+        soldPrice: player.finalPrice || 0
+      }
+    });
+  } catch (e) { next(e); }
+};
+
 // ── UPDATE OWN PLAYER PROFILE ────────────────────────────────────────────────
 export const updatePlayerProfile = async (req, res, next) => {
   try {
-    const isRegistrationFrozen = await getConfig('isRegistrationFrozen', false);
+    const isRegistrationFrozen = await isRegFrozenByPhase();
 
     const player = await Player.findById(req.params.id);
     if (!player) return res.status(404).json({ success: false, message: 'Player not found' });

@@ -1,40 +1,19 @@
-import React from 'react';
+import 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Trophy, Users, User, Radio, LogOut, CheckCircle2, AlertTriangle, Sun, Moon } from 'lucide-react';
+import { Trophy, Radio, LogOut, Sun, Moon, Info, Shield } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useAuction } from '../context/AuctionContext';
 import { useTheme } from '../context/ThemeContext';
 
 export default function Navbar() {
   const { user, logout } = useAuth();
-  const { lastActionToast, timerStatus, podiumPlayer, currentBid, formatCurrency, isRegistrationFrozen } = useAuction();
+  const {  timerStatus, podiumPlayer, currentBid, formatCurrency, isRegistrationFrozen } = useAuction();
   const { isDark, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
 
   return (
     <header className="sticky top-0 z-40 bg-slate-900/90 border-b border-slate-800 backdrop-blur-md">
-      {/* Toast Notification Bar */}
-      {lastActionToast && (
-        <div
-          className={`px-4 py-1.5 text-xs font-bold text-center flex items-center justify-center gap-2 transition-all ${lastActionToast.type === 'error'
-              ? 'bg-rose-950/90 text-rose-300 border-b border-rose-800'
-              : lastActionToast.type === 'success'
-                ? 'bg-emerald-950/90 text-emerald-300 border-b border-emerald-800'
-                : lastActionToast.type === 'warning'
-                  ? 'bg-amber-950/90 text-amber-300 border-b border-amber-800'
-                  : 'bg-blue-950/90 text-blue-300 border-b border-blue-800'
-            }`}
-        >
-          {lastActionToast.type === 'error' ? (
-            <AlertTriangle className="w-4 h-4 text-rose-400 animate-bounce" />
-          ) : (
-            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-          )}
-          <span>{lastActionToast.msg}</span>
-        </div>
-      )}
-
       <div className="w-full px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
 
@@ -79,59 +58,6 @@ export default function Navbar() {
 
           {/* Public Top Nav Menu (Only for SPECTATOR / Unauthenticated) */}
           <div className="flex items-center space-x-2">
-            {!user && (
-              <div className="hidden md:flex items-center space-x-1 bg-slate-950/80 p-1 rounded-xl border border-slate-800 text-xs">
-                <Link
-                  to="/"
-                  className={`px-3 py-1.5 rounded-lg transition font-semibold ${location.pathname === '/'
-                      ? 'bg-blue-600 text-white shadow-md'
-                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
-                    }`}
-                >
-                  Home
-                </Link>
-                <Link
-                  to="/live"
-                  className={`flex items-center gap-1 px-3 py-1.5 rounded-lg transition font-semibold ${location.pathname === '/live'
-                      ? 'bg-emerald-600 text-white shadow-md'
-                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
-                    }`}
-                >
-                  <Radio className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
-                  Live Auction
-                </Link>
-                <Link
-                  to="/teams"
-                  className={`flex items-center gap-1 px-3 py-1.5 rounded-lg transition font-semibold ${location.pathname === '/teams'
-                      ? 'bg-blue-600 text-white shadow-md'
-                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
-                    }`}
-                >
-                  <Users className="w-3.5 h-3.5 text-blue-400" />
-                  Matches & Fixers
-                </Link>
-                <Link
-                  to="/players"
-                  className={`flex items-center gap-1 px-3 py-1.5 rounded-lg transition font-semibold ${location.pathname === '/players'
-                      ? 'bg-purple-600 text-white shadow-md'
-                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
-                    }`}
-                >
-                  <User className="w-3.5 h-3.5 text-purple-400" />
-                  About
-                </Link>
-              </div>
-            )}
-
-            {/* Theme Toggle Button */}
-            <button
-              onClick={toggleTheme}
-              title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-              className="p-2 text-slate-400 hover:text-amber-400 hover:bg-slate-800 rounded-xl transition border border-slate-800"
-            >
-              {isDark ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-500" />}
-            </button>
-
             {/* User Auth Buttons */}
             {user ? (
               <div className="flex items-center space-x-2 pl-2 border-l border-slate-800">
@@ -147,27 +73,58 @@ export default function Navbar() {
                     navigate('/login');
                   }}
                   title="Logout"
-                  className="p-2 text-slate-400 hover:text-rose-400 hover:bg-slate-800 rounded-lg transition"
+                  className="p-2 text-slate-400 hover:text-rose-400 hover:bg-slate-800 rounded-lg transition ui-focus"
                 >
                   <LogOut className="w-4 h-4" />
                 </button>
               </div>
             ) : (
-              <div className="flex items-center gap-2">
-                {!isRegistrationFrozen && (
-                  <Link
-                    to="/player/register"
-                    className="px-3.5 py-1.5 text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800 rounded-xl transition border border-slate-800"
-                  >
-                    Register
+              <div className="hidden md:flex items-center gap-4">
+                {/* Public Navigation */}
+                <div className="flex items-center space-x-1 bg-slate-950/80 p-1 rounded-xl border border-slate-800 text-xs">
+                  <Link to="/" className={`px-3 py-1.5 rounded-lg transition font-semibold ${location.pathname === '/' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'}`}>
+                    Home
                   </Link>
-                )}
-                <Link
-                  to="/login"
-                  className="px-4 py-1.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl transition shadow-lg"
+                  <Link to="/live" className={`flex items-center gap-1 px-3 py-1.5 rounded-lg transition font-semibold ${location.pathname === '/live' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'}`}>
+                    <Radio className="w-3.5 h-3.5" />
+                    Live Auction
+                  </Link>
+                  <Link to="/teams" className={`flex items-center gap-1 px-3 py-1.5 rounded-lg transition font-semibold ${location.pathname === '/teams' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'}`}>
+                    <Shield className="w-3.5 h-3.5" />
+                    Matches
+                  </Link>
+                  <Link to="/about" className={`flex items-center gap-1 px-3 py-1.5 rounded-lg transition font-semibold ${location.pathname === '/about' ? 'bg-purple-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'}`}>
+                    <Info className="w-3.5 h-3.5" />
+                    About
+                  </Link>
+                </div>
+
+                {/* Theme Toggle Button */}
+                <button
+                  onClick={toggleTheme}
+                  title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+                  className="p-2 text-slate-400 hover:text-amber-400 hover:bg-slate-800 rounded-xl transition border border-slate-800 ui-focus"
                 >
-                  Login
-                </Link>
+                  {isDark ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-500" />}
+                </button>
+
+                {/* Auth Actions */}
+                <div className="flex items-center gap-2">
+                  {!isRegistrationFrozen && (
+                    <Link
+                      to="/player/register"
+                      className="px-3.5 py-1.5 text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800 rounded-xl transition border border-slate-800 ui-focus"
+                    >
+                      Register
+                    </Link>
+                  )}
+                  <Link
+                    to="/login"
+                    className="ui-btn px-4 py-1.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl transition shadow-lg ui-focus"
+                  >
+                    Login
+                  </Link>
+                </div>
               </div>
             )}
           </div>

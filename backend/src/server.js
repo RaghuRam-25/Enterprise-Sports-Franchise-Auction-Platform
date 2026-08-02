@@ -18,6 +18,7 @@ import podiumRoutes from './routes/podiumRoutes.js';
 import managerRoutes from './routes/managerRoutes.js';
 import configRoutes from './routes/configRoutes.js';
 import matchRoutes from './routes/matchRoutes.js';
+import phaseRoutes from './routes/phaseRoutes.js';
 
 const app = express();
 const httpServer = createServer(app);
@@ -66,6 +67,7 @@ app.use('/api/podium', podiumRoutes);
 app.use('/api/manager', managerRoutes);
 app.use('/api/config', configRoutes);
 app.use('/api/matches', matchRoutes);
+app.use('/api/phase', phaseRoutes);
 
 // Socket Handler Initialization
 handleSocketConnections(io);

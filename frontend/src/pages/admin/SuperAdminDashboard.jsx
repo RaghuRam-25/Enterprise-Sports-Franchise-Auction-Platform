@@ -1,8 +1,17 @@
-import React, { useEffect, useState } from 'react';
-import { Users, ShieldCheck, Trophy, Lock, Unlock, DollarSign, Activity, Settings, Plus, Layers } from 'lucide-react';
+import  { useState } from 'react';
+import { Users, ShieldCheck, Trophy, Lock, DollarSign, Settings, Layers, ChevronRight, Loader } from 'lucide-react';
 import { useAuction } from '../../context/AuctionContext';
+import { usePhase } from '../../context/PhaseContext';
 import { Link } from 'react-router-dom';
 import api from '../../services/api';
+
+// Visual label per phase for the control stepper
+const PHASE_META = {
+  SETUP:        { label: 'Setup',        desc: 'Configure rules & teams' },
+  REGISTRATION: { label: 'Registration', desc: 'Players sign up' },
+  AUCTION:      { label: 'Auction',      desc: 'Live bidding on podium' },
+  TOURNAMENT:   { label: 'Tournament',   desc: 'Matches, stats & awards' },
+};
 
 export default function SuperAdminDashboard() {
   const {
@@ -13,59 +22,119 @@ export default function SuperAdminDashboard() {
     categories,
     biddingTiers,
     isRegistrationFrozen,
-    setIsRegistrationFrozen,
     formatCurrency,
     triggerToast
   } = useAuction();
 
+  // ── Phase state machine (global lifecycle) ─────────────────────────────────
+  const { phase, phases, loading: phaseLoading, rosterSizing } = usePhase();
+  const [advancing, setAdvancing] = useState(false);
+
   const totalRegistered = players.length;
   // GAP-15 FIX: status values are uppercase in DB
   const soldPlayers     = players.filter(p => (p.status || '').toUpperCase() === 'SOLD').length;
-  const approvedPlayers = players.filter(p => (p.status || '').toUpperCase() === 'APPROVED').length;
+
   const unsoldPlayers   = players.filter(p => (p.status || '').toUpperCase() === 'UNSOLD').length;
   const totalPurse      = teams.reduce((acc, t) => acc + (t.totalBudget || 0), 0);
-  const totalSpent      = teams.reduce((acc, t) => acc + ((t.totalBudget || 0) - (t.remainingBudget || 0)), 0);
 
-  const toggleFreeze = async () => {
+  // ── Advance the state machine (Super Admin only; backend validates legality) ─
+  const advancePhase = async () => {
+    if (!phase || advancing) return;
+    const idx = phases.indexOf(phase);
+    const next = phases[idx + 1];
+    if (!next) return;
+
+    setAdvancing(true);
     try {
-      await api.post('/players/toggle-freeze');
-      setIsRegistrationFrozen(prev => !prev);
-      triggerToast(
-        !isRegistrationFrozen ? 'Player registration FREEZE enabled.' : 'Player registration UNFROZEN.',
-        !isRegistrationFrozen ? 'warning' : 'info'
-      );
+      const res = await api.patch('/phase', { phase: next });
+      if (res?.data) {
+        triggerToast(`Phase advanced → ${next}`, 'success');
+      }
     } catch (err) {
-      // Optimistic fallback if backend not seeded
-      setIsRegistrationFrozen(prev => !prev);
-      triggerToast(!isRegistrationFrozen ? 'Registration FROZEN (local).' : 'Registration UNFROZEN (local).', 'warning');
+      triggerToast(err?.response?.data?.message || `Could not advance to ${next}`, 'error');
+    } finally {
+      setAdvancing(false);
     }
   };
 
   return (
     <div className="space-y-6">
       
-      {/* Top Banner */}
-      <div className="glass-card rounded-2xl p-6 border border-slate-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 bg-gradient-to-r from-slate-900 via-slate-900/90 to-blue-950/40">
-        <div>
-          <span className="text-xs font-bold uppercase tracking-widest text-blue-400">Architect Dashboard</span>
-          <h1 className="text-2xl font-black font-heading text-white">Global Event Control</h1>
-          <p className="text-xs text-slate-400 mt-1">
-            Manage global dynamic configurations, franchise purses, credentials, and live registration freezes.
-          </p>
+      {/* Top Banner — Global Phase Control */}
+      <div className="glass-card rounded-2xl p-6 border border-slate-800 bg-gradient-to-r from-slate-900 via-slate-900/90 to-blue-950/40 space-y-5">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div>
+            <span className="text-xs font-bold uppercase tracking-widest text-blue-400">Architect Dashboard</span>
+            <h1 className="text-2xl font-black font-heading text-white">Global Event Control</h1>
+            <p className="text-[11px] text-slate-400 mt-1">
+              Lifecycle: SETUP → REGISTRATION → AUCTION → TOURNAMENT.
+              {isRegistrationFrozen
+                ? ' Registration is currently CLOSED.'
+                : ' Registration is currently OPEN.'}
+            </p>
+          </div>
+
+          {/* Advance-phase action */}
+          {phase && phases.indexOf(phase) < phases.length - 1 ? (
+            <button
+              onClick={advancePhase}
+              disabled={advancing || phaseLoading}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs transition shadow-lg bg-blue-600/20 text-blue-200 border border-blue-500/40 hover:bg-blue-600 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {advancing ? <Loader className="w-4 h-4 animate-spin" /> : <ChevronRight className="w-4 h-4" />}
+              <span>
+                Advance to {PHASE_META[phases[phases.indexOf(phase) + 1]]?.label || phases[phases.indexOf(phase) + 1]}
+              </span>
+            </button>
+          ) : (
+            <span className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs bg-slate-800/60 text-slate-400 border border-slate-700">
+              <Lock className="w-4 h-4" /> Final phase — reset via Nuke protocol
+            </span>
+          )}
         </div>
 
-        {/* Freeze Controls */}
-        <button
-          onClick={toggleFreeze}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs transition shadow-lg ${
-            isRegistrationFrozen
-              ? 'bg-rose-600/20 text-rose-300 border border-rose-500/40 hover:bg-rose-600 hover:text-white'
-              : 'bg-emerald-600/20 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-600 hover:text-white'
-          }`}
-        >
-          {isRegistrationFrozen ? <Lock className="w-4 h-4 text-rose-400" /> : <Unlock className="w-4 h-4 text-emerald-400" />}
-          <span>{isRegistrationFrozen ? 'REGISTRATION FROZEN' : 'FREEZE REGISTRATION'}</span>
-        </button>
+        {/* Phase stepper */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {phases.map((p, i) => {
+            const currentIdx = phase ? phases.indexOf(phase) : -1;
+            const isCurrent = p === phase;
+            const isDone = currentIdx > i;
+            return (
+              <div
+                key={p}
+                className={`rounded-xl p-3 border transition ${
+                  isCurrent
+                    ? 'border-blue-500 bg-blue-500/15 ring-1 ring-blue-500/40'
+                    : isDone
+                      ? 'border-emerald-600/40 bg-emerald-500/10'
+                      : 'border-slate-800 bg-slate-900/50'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <span className={`text-[10px] font-mono font-bold ${isCurrent ? 'text-blue-300' : isDone ? 'text-emerald-400' : 'text-slate-500'}`}>
+                    {String(i + 1).padStart(2, '0')}
+                  </span>
+                  {isCurrent && <span className="text-[9px] font-bold uppercase text-blue-300 tracking-wider">Active</span>}
+                  {isDone && <span className="text-[9px] font-bold uppercase text-emerald-400 tracking-wider">Done</span>}
+                </div>
+                <p className={`text-sm font-extrabold mt-1 ${isCurrent ? 'text-white' : 'text-slate-300'}`}>
+                  {PHASE_META[p]?.label || p}
+                </p>
+                <p className="text-[10px] text-slate-500 mt-0.5">{PHASE_META[p]?.desc}</p>
+              </div>
+            );
+          })}
+        </div>
+
+        {rosterSizing?.minRosterSize != null && (
+          <p className="text-[11px] text-slate-400">
+            Roster range locked at registration freeze:{' '}
+            <span className="font-mono font-bold text-slate-200">
+              {rosterSizing.minRosterSize}–{rosterSizing.maxRosterSize}
+            </span>{' '}
+            players/team.
+          </p>
+        )}
       </div>
 
       {/* Overview Stat Cards */}

@@ -1,30 +1,30 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import  { useState, useMemo, useEffect } from 'react';
 import {
-  Users, Search, Filter, X, ChevronDown, Star, Shield,
+  Users, Search, X, ChevronDown, Star, Shield,
   Trophy, Zap, Eye, UserCheck, UserX, Clock, SlidersHorizontal,
-  RefreshCw, TrendingUp, Award, Tag, Hash
+  RefreshCw, TrendingUp, Tag, Hash
 } from 'lucide-react';
 import { useAuction } from '../../context/AuctionContext';
 import { useAuth } from '../../context/AuthContext';
 import Navbar from '../../components/Navbar';
-import api from '../../services/api';
+import '../../services/api';
 
 // ── Status badge config ──────────────────────────────────────────────────────
 const STATUS_CONFIG = {
-  REGISTERED:  { label: 'Registered',  color: 'text-blue-400',   bg: 'bg-blue-500/10',   border: 'border-blue-500/30',   icon: UserCheck },
-  SOLD:        { label: 'Sold',        color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/30', icon: Trophy },
-  UNSOLD:      { label: 'Unsold',      color: 'text-amber-400',   bg: 'bg-amber-500/10',   border: 'border-amber-500/30',   icon: Clock },
-  WITHDRAWN:   { label: 'Withdrawn',   color: 'text-rose-400',    bg: 'bg-rose-500/10',    border: 'border-rose-500/30',    icon: UserX },
-  PENDING:     { label: 'Pending',     color: 'text-slate-400',   bg: 'bg-slate-500/10',   border: 'border-slate-500/30',   icon: Clock },
-  AVAILABLE:   { label: 'Available',   color: 'text-teal-400',    bg: 'bg-teal-500/10',    border: 'border-teal-500/30',    icon: Zap },
+  REGISTERED: { label: 'Registered', color: 'text-blue-400', bg: 'bg-blue-500/10', border: 'border-blue-500/30', icon: UserCheck },
+  SOLD: { label: 'Sold', color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/30', icon: Trophy },
+  UNSOLD: { label: 'Unsold', color: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-500/30', icon: Clock },
+  WITHDRAWN: { label: 'Withdrawn', color: 'text-rose-400', bg: 'bg-rose-500/10', border: 'border-rose-500/30', icon: UserX },
+  PENDING: { label: 'Pending', color: 'text-slate-400', bg: 'bg-slate-500/10', border: 'border-slate-500/30', icon: Clock },
+  AVAILABLE: { label: 'Available', color: 'text-teal-400', bg: 'bg-teal-500/10', border: 'border-teal-500/30', icon: Zap },
 };
 
 const ROLE_BADGE = {
-  SUPER_ADMIN:  { label: 'Super Admin',   color: 'text-blue-300',   bg: 'bg-blue-900/60',   border: 'border-blue-700' },
-  PODIUM_ADMIN: { label: 'Podium Admin',  color: 'text-rose-300',   bg: 'bg-rose-900/60',   border: 'border-rose-700' },
-  TEAM_MANAGER: { label: 'Team Manager',  color: 'text-emerald-300',bg: 'bg-emerald-900/60',border: 'border-emerald-700' },
-  PLAYER:       { label: 'Player',        color: 'text-purple-300', bg: 'bg-purple-900/60', border: 'border-purple-700' },
-  null:         { label: 'Spectator',     color: 'text-slate-300',  bg: 'bg-slate-800/60',  border: 'border-slate-700' },
+  SUPER_ADMIN: { label: 'Super Admin', color: 'text-blue-300', bg: 'bg-blue-900/60', border: 'border-blue-700' },
+  PODIUM_ADMIN: { label: 'Podium Admin', color: 'text-rose-300', bg: 'bg-rose-900/60', border: 'border-rose-700' },
+  TEAM_MANAGER: { label: 'Team Manager', color: 'text-emerald-300', bg: 'bg-emerald-900/60', border: 'border-emerald-700' },
+  PLAYER: { label: 'Player', color: 'text-purple-300', bg: 'bg-purple-900/60', border: 'border-purple-700' },
+  null: { label: 'Spectator', color: 'text-slate-300', bg: 'bg-slate-800/60', border: 'border-slate-700' },
 };
 
 function StatusBadge({ status }) {
@@ -65,12 +65,11 @@ function PlayerCard({ player, isPrivileged, formatCurrency }) {
               </div>
             )}
             {/* Status dot */}
-            <span className={`absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full border-2 border-slate-900 ${
-              player.status === 'SOLD' ? 'bg-emerald-400' :
-              player.status === 'WITHDRAWN' ? 'bg-rose-400' :
-              player.status === 'UNSOLD' ? 'bg-amber-400' :
-              'bg-blue-400'
-            }`} />
+            <span className={`absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full border-2 border-slate-900 ${player.status === 'SOLD' ? 'bg-emerald-400' :
+                player.status === 'WITHDRAWN' ? 'bg-rose-400' :
+                  player.status === 'UNSOLD' ? 'bg-amber-400' :
+                    'bg-blue-400'
+              }`} />
           </div>
 
           {/* Name + Jersey */}
@@ -92,11 +91,10 @@ function PlayerCard({ player, isPrivileged, formatCurrency }) {
           {positions.map(pos => (
             <span
               key={pos}
-              className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide border ${
-                pos === player.primaryPosition
+              className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide border ${pos === player.primaryPosition
                   ? 'bg-amber-500/15 text-amber-400 border-amber-500/30'
                   : 'bg-slate-800/80 text-slate-400 border-slate-700'
-              }`}
+                }`}
             >
               {pos === player.primaryPosition && <Star className="w-2.5 h-2.5 inline mr-0.5 -mt-0.5" />}
               {pos}
@@ -108,11 +106,10 @@ function PlayerCard({ player, isPrivileged, formatCurrency }) {
         <div className="flex items-center justify-between text-xs text-slate-400 pt-3 border-t border-slate-800">
           <div className="flex items-center gap-1">
             <Tag className="w-3 h-3 text-slate-500" />
-            <span className={`font-semibold ${
-              player.category?.includes('A') ? 'text-amber-400' :
-              player.category?.includes('S') ? 'text-purple-400' :
-              'text-slate-400'
-            }`}>{player.category || 'B Grade'}</span>
+            <span className={`font-semibold ${player.category?.includes('A') ? 'text-amber-400' :
+                player.category?.includes('S') ? 'text-purple-400' :
+                  'text-slate-400'
+              }`}>{player.category || 'B Grade'}</span>
           </div>
 
           {player.session && (
@@ -163,6 +160,75 @@ function PlayerCard({ player, isPrivileged, formatCurrency }) {
   );
 }
 
+function PlayerListRow({ player, isPrivileged, formatCurrency }) {
+  const [imgErr, setImgErr] = useState(false);
+  const positions = Array.isArray(player.positions) ? player.positions : [];
+
+  return (
+    <div className="grid grid-cols-12 gap-3 px-4 py-3 hover:bg-slate-800/40 transition items-center text-sm">
+      <div className="col-span-1">
+        {player.imageUrl && !imgErr ? (
+          <img
+            src={player.imageUrl}
+            alt={player.name}
+            onError={() => setImgErr(true)}
+            className="w-9 h-9 rounded-lg object-cover border border-slate-700"
+          />
+        ) : (
+          <div className="w-9 h-9 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white font-black text-sm border border-slate-700">
+            {(player.name || 'P')[0].toUpperCase()}
+          </div>
+        )}
+      </div>
+
+      <div className="col-span-3">
+        <p className="font-bold text-white truncate">{player.name}</p>
+        {player.jerseyName && (
+          <p className="text-[10px] text-indigo-400 font-mono font-bold"># {player.jerseyName}</p>
+        )}
+        {isPrivileged && player.studentId && (
+          <p className="text-[10px] text-slate-500 font-mono">{player.studentId}</p>
+        )}
+      </div>
+
+      <div className="col-span-2 flex flex-wrap gap-1">
+        {positions.slice(0, 3).map(pos => (
+          <span
+            key={pos}
+            className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase ${pos === player.primaryPosition
+                ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30'
+                : 'bg-slate-800 text-slate-400 border border-slate-700'
+              }`}
+          >
+            {pos === player.primaryPosition && '* '}{pos}
+          </span>
+        ))}
+        {positions.length > 3 && (
+          <span className="px-1.5 py-0.5 rounded text-[9px] text-slate-500 bg-slate-800 border border-slate-700">
+            +{positions.length - 3}
+          </span>
+        )}
+      </div>
+
+      <div className="col-span-2">
+        <span className={`text-xs font-semibold ${player.category?.includes('A') ? 'text-amber-400' :
+            player.category?.includes('S') ? 'text-purple-400' :
+              'text-slate-400'
+          }`}>{player.category || '--'}</span>
+        {isPrivileged && player.basePrice !== undefined && (
+          <p className="text-[10px] font-mono text-emerald-400">{formatCurrency(player.basePrice)}</p>
+        )}
+      </div>
+
+      <div className="col-span-2 text-xs text-slate-400 font-mono">{player.session || '--'}</div>
+
+      <div className="col-span-2">
+        <StatusBadge status={player.status} />
+      </div>
+    </div>
+  );
+}
+
 export default function PublicPlayersView() {
   const { players: ctxPlayers, positions, categories, formatCurrency, isDataLoading, refetchPlayers } = useAuction();
   const { user } = useAuth();
@@ -171,14 +237,14 @@ export default function PublicPlayersView() {
   const isPrivileged = ['TEAM_MANAGER', 'PODIUM_ADMIN', 'SUPER_ADMIN'].includes(role);
 
   // ── Local state ──────────────────────────────────────────────────────────
-  const [search, setSearch]           = useState('');
+  const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState('ALL');
   const [filterCategory, setFilterCategory] = useState('ALL');
   const [filterPosition, setFilterPosition] = useState('ALL');
   const [showFilters, setShowFilters] = useState(false);
-  const [viewMode, setViewMode]       = useState('grid'); // grid | list
-  const [players, setPlayers]         = useState([]);
-  const [loading, setLoading]         = useState(true);
+  const [viewMode, setViewMode] = useState('grid'); // grid | list
+  const [players, setPlayers] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   // ── Sync with global context players for instant updates ─────────────────
   useEffect(() => {
@@ -195,7 +261,7 @@ export default function PublicPlayersView() {
   }, [refetchPlayers]);
 
   // ── Derived filter options ───────────────────────────────────────────────
-  const statusOptions  = ['ALL', 'REGISTERED', 'SOLD', 'UNSOLD', 'WITHDRAWN'];
+  const statusOptions = ['ALL', 'REGISTERED', 'SOLD', 'UNSOLD', 'WITHDRAWN'];
   const categoryOptions = ['ALL', ...categories.map(c => c.name)];
   const positionOptions = ['ALL', ...positions.map(p => p.code)];
 
@@ -208,7 +274,7 @@ export default function PublicPlayersView() {
         p.studentId?.toLowerCase().includes(search.toLowerCase()) ||
         p.session?.toLowerCase().includes(search.toLowerCase());
 
-      const matchStatus   = filterStatus   === 'ALL' || p.status?.toUpperCase() === filterStatus;
+      const matchStatus = filterStatus === 'ALL' || p.status?.toUpperCase() === filterStatus;
       const matchCategory = filterCategory === 'ALL' || p.category === filterCategory;
       const matchPosition = filterPosition === 'ALL' ||
         (Array.isArray(p.positions) && p.positions.includes(filterPosition)) ||
@@ -220,11 +286,11 @@ export default function PublicPlayersView() {
 
   // ── Summary stats ────────────────────────────────────────────────────────
   const stats = useMemo(() => ({
-    total:      players.length,
+    total: players.length,
     registered: players.filter(p => p.status === 'REGISTERED').length,
-    sold:       players.filter(p => p.status === 'SOLD').length,
-    unsold:     players.filter(p => p.status === 'UNSOLD').length,
-    withdrawn:  players.filter(p => p.status === 'WITHDRAWN').length,
+    sold: players.filter(p => p.status === 'SOLD').length,
+    unsold: players.filter(p => p.status === 'UNSOLD').length,
+    withdrawn: players.filter(p => p.status === 'WITHDRAWN').length,
   }), [players]);
 
   const roleBadge = ROLE_BADGE[role] || ROLE_BADGE[null];
@@ -244,16 +310,19 @@ export default function PublicPlayersView() {
 
   return (
     <div className="min-h-screen flex flex-col bg-darkBg text-slate-100">
-      <Navbar />
+      {/* Only show Navbar for public, unauthenticated view. Authenticated views get Navbar from DashboardLayout. */}
+      {!user && <Navbar />}
 
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+      <main className={`flex-1 space-y-6 ${!user
+          ? 'max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8'
+          : ''
+        }`}>
 
         {/* ── Page Header ─────────────────────────────────────────────────── */}
-        <div className="glass-card rounded-2xl p-6 border border-slate-800">
+        <div className="glass-card rounded-2xl p-4 border border-slate-600">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <span className="text-xs font-bold uppercase tracking-widest text-blue-400">Draft Participant Registry</span>
                 {/* Role badge */}
                 <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide border ${roleBadge.bg} ${roleBadge.color} ${roleBadge.border}`}>
                   <Eye className="w-2.5 h-2.5" />
@@ -261,11 +330,6 @@ export default function PublicPlayersView() {
                 </span>
               </div>
               <h1 className="text-2xl font-black font-heading text-white">All Players</h1>
-              <p className="text-xs text-slate-400 mt-1">
-                {isPrivileged
-                  ? 'Full player registry with private details, financial data, and contact info.'
-                  : 'Public participant directory — positions, categories, and draft status.'}
-              </p>
             </div>
 
             <div className="flex items-center gap-3">
@@ -299,11 +363,11 @@ export default function PublicPlayersView() {
         {/* ── Stats Strip ──────────────────────────────────────────────────── */}
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
           {[
-            { label: 'Total', value: stats.total,      color: 'text-blue-400',    icon: Users },
-            { label: 'Active', value: stats.registered, color: 'text-sky-400',     icon: UserCheck },
-            { label: 'Sold',   value: stats.sold,       color: 'text-emerald-400', icon: Trophy },
-            { label: 'Unsold', value: stats.unsold,     color: 'text-amber-400',   icon: TrendingUp },
-            { label: 'Withdrawn', value: stats.withdrawn, color: 'text-rose-400',  icon: UserX },
+            { label: 'Total', value: stats.total, color: 'text-blue-400', icon: Users },
+            { label: 'Active', value: stats.registered, color: 'text-sky-400', icon: UserCheck },
+            { label: 'Sold', value: stats.sold, color: 'text-emerald-400', icon: Trophy },
+            { label: 'Unsold', value: stats.unsold, color: 'text-amber-400', icon: TrendingUp },
+            { label: 'Withdrawn', value: stats.withdrawn, color: 'text-rose-400', icon: UserX },
           ].map(({ label, value, color, icon: Icon }) => (
             <div key={label} className="glass-card rounded-xl p-3 border border-slate-800 text-center">
               <div className="flex items-center justify-center gap-1.5 mb-1">
@@ -338,11 +402,10 @@ export default function PublicPlayersView() {
             {/* Filter Toggle */}
             <button
               onClick={() => setShowFilters(v => !v)}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-semibold transition ${
-                showFilters || activeFiltersCount > 0
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-semibold transition ${showFilters || activeFiltersCount > 0
                   ? 'bg-blue-600 border-blue-500 text-white'
                   : 'glass-input border-slate-700 text-slate-300 hover:text-white hover:border-slate-600'
-              }`}
+                }`}
             >
               <SlidersHorizontal className="w-4 h-4" />
               Filters
@@ -377,11 +440,10 @@ export default function PublicPlayersView() {
                     <button
                       key={s}
                       onClick={() => setFilterStatus(s)}
-                      className={`px-2.5 py-1 rounded-lg text-xs font-semibold border transition ${
-                        filterStatus === s
+                      className={`px-2.5 py-1 rounded-lg text-xs font-semibold border transition ${filterStatus === s
                           ? 'bg-blue-600 border-blue-500 text-white'
                           : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-white hover:border-slate-500'
-                      }`}
+                        }`}
                     >
                       {s === 'ALL' ? 'All' : s}
                     </button>
@@ -397,11 +459,10 @@ export default function PublicPlayersView() {
                     <button
                       key={c}
                       onClick={() => setFilterCategory(c)}
-                      className={`px-2.5 py-1 rounded-lg text-xs font-semibold border transition ${
-                        filterCategory === c
+                      className={`px-2.5 py-1 rounded-lg text-xs font-semibold border transition ${filterCategory === c
                           ? 'bg-amber-600 border-amber-500 text-white'
                           : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-white hover:border-slate-500'
-                      }`}
+                        }`}
                     >
                       {c}
                     </button>
@@ -417,11 +478,10 @@ export default function PublicPlayersView() {
                     <button
                       key={p}
                       onClick={() => setFilterPosition(p)}
-                      className={`px-2.5 py-1 rounded-lg text-xs font-semibold border transition ${
-                        filterPosition === p
+                      className={`px-2.5 py-1 rounded-lg text-xs font-semibold border transition ${filterPosition === p
                           ? 'bg-purple-600 border-purple-500 text-white'
                           : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-white hover:border-slate-500'
-                      }`}
+                        }`}
                     >
                       {p}
                     </button>
@@ -501,82 +561,14 @@ export default function PublicPlayersView() {
             </div>
 
             <div className="divide-y divide-slate-800/60">
-              {filtered.map((player, idx) => {
-                const positions = Array.isArray(player.positions) ? player.positions : [];
-                const [imgErr, setImgErr] = useState(false);
-                return (
-                  <div
-                    key={player._id || player.id || idx}
-                    className="grid grid-cols-12 gap-3 px-4 py-3 hover:bg-slate-800/40 transition items-center text-sm"
-                  >
-                    {/* Avatar */}
-                    <div className="col-span-1">
-                      {player.imageUrl && !imgErr ? (
-                        <img
-                          src={player.imageUrl}
-                          alt={player.name}
-                          onError={() => setImgErr(true)}
-                          className="w-9 h-9 rounded-lg object-cover border border-slate-700"
-                        />
-                      ) : (
-                        <div className="w-9 h-9 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white font-black text-sm border border-slate-700">
-                          {(player.name || 'P')[0].toUpperCase()}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Name */}
-                    <div className="col-span-3">
-                      <p className="font-bold text-white truncate">{player.name}</p>
-                      {player.jerseyName && (
-                        <p className="text-[10px] text-indigo-400 font-mono font-bold"># {player.jerseyName}</p>
-                      )}
-                      {isPrivileged && player.studentId && (
-                        <p className="text-[10px] text-slate-500 font-mono">{player.studentId}</p>
-                      )}
-                    </div>
-
-                    {/* Positions */}
-                    <div className="col-span-2 flex flex-wrap gap-1">
-                      {positions.slice(0, 3).map(pos => (
-                        <span
-                          key={pos}
-                          className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase ${
-                            pos === player.primaryPosition
-                              ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30'
-                              : 'bg-slate-800 text-slate-400 border border-slate-700'
-                          }`}
-                        >
-                          {pos === player.primaryPosition && '★ '}{pos}
-                        </span>
-                      ))}
-                      {positions.length > 3 && (
-                        <span className="px-1.5 py-0.5 rounded text-[9px] text-slate-500 bg-slate-800 border border-slate-700">+{positions.length - 3}</span>
-                      )}
-                    </div>
-
-                    {/* Category */}
-                    <div className="col-span-2">
-                      <span className={`text-xs font-semibold ${
-                        player.category?.includes('A') ? 'text-amber-400' :
-                        player.category?.includes('S') ? 'text-purple-400' :
-                        'text-slate-400'
-                      }`}>{player.category || '—'}</span>
-                      {isPrivileged && player.basePrice !== undefined && (
-                        <p className="text-[10px] font-mono text-emerald-400">{formatCurrency(player.basePrice)}</p>
-                      )}
-                    </div>
-
-                    {/* Session */}
-                    <div className="col-span-2 text-xs text-slate-400 font-mono">{player.session || '—'}</div>
-
-                    {/* Status */}
-                    <div className="col-span-2">
-                      <StatusBadge status={player.status} />
-                    </div>
-                  </div>
-                );
-              })}
+              {filtered.map((player, idx) => (
+                <PlayerListRow
+                  key={player._id || player.id || idx}
+                  player={player}
+                  isPrivileged={isPrivileged}
+                  formatCurrency={formatCurrency}
+                />
+              ))}
             </div>
           </div>
         )}

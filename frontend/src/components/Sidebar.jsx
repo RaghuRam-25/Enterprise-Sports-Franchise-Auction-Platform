@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import  { useState, useMemo } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -6,41 +6,42 @@ import {
   ShieldCheck,
   Users,
   UserCheck,
-  BarChart3,
-  Gavel,
   Radio,
   Settings,
   LogOut,
   ChevronDown,
   ChevronRight,
-  List,
-  Rocket,
-  SlidersHorizontal,
-  History,
-  UserX,
-  UserCheck2,
-  ShieldAlert,
-  Coins,
-  Activity,
-  DollarSign,
-  User,
   Award,
   ChevronLeft,
   Crown,
-  Sparkles
+  MapPin
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useAuction } from '../context/AuctionContext';
 
 export default function Sidebar({ isCollapsed, setIsCollapsed }) {
   const { user, logout } = useAuth();
+  const { players } = useAuction();
   const navigate = useNavigate();
+
+  // Has THIS player been sold? Gates the "Field Reveal" link (below). Derived
+  // from the already-loaded auction players list — same source PlayerMyTeam
+  // uses — so it costs no extra request. Falls back to false if data isn't in.
+  const isSoldPlayer = useMemo(() => {
+    if (user?.role !== 'PLAYER' || !Array.isArray(players)) return false;
+    const me = players.find(
+      (p) => p.userId === (user._id || user.id) || p.email === user.email
+    );
+    return !!me && (me.status === 'SOLD' || !!me.soldToTeam);
+  }, [user, players]);
+  
 
   // Expanded submenus state
   const [openSubmenus, setOpenSubmenus] = useState({
     configurations: true,
     podiumControl: true,
-    playerStatus: false,
-    teamStatus: false,
+    playerStatus: true,
+    teamStatus: true,
   });
 
   const toggleSubmenu = (key) => {
@@ -72,38 +73,35 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }) {
       ],
     },
     { type: 'item', path: '/podium/dashboard', label: 'Podium Control', icon: ShieldCheck },
-    { type: 'item', path: '/admin/teams', label: 'Teams', icon: ShieldCheck },
-    { type: 'item', path: '/admin/managers', label: 'Managers', icon: Users },
-    { type: 'item', path: '/admin/players', label: 'Players', icon: UserCheck },
-    { type: 'item', path: '/admin/reports', label: 'Reports', icon: BarChart3 },
-    { type: 'item', path: '/live', label: 'Live Auction', icon: Radio, highlight: true },
-    { type: 'item', path: '/admin/settings', label: 'Settings', icon: Settings },
+    { type: 'item', path: '/admin/teams', label: 'Team Management', icon: ShieldCheck },
+    { type: 'item', path: '/admin/players', label: 'Players', icon: UserCheck }
   ];
 
   // ── PODIUM ADMIN NAV CONFIG ─────────────────────────────────────────────
   const podiumAdminNav = [
     { type: 'item', path: '/podium/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { type: 'item', path: '/podium/teams/bought', label: 'Team Purchases', icon: ShieldCheck },
-    { type: 'item', path: '/podium/settings', label: 'Settings', icon: Settings },
   ];
 
   // ── TEAM MANAGER NAV CONFIG ─────────────────────────────────────────────
   const teamManagerNav = [
     { type: 'item', path: '/manager/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { type: 'item', path: '/manager/roster', label: 'Roster', icon: Users },
     { type: 'item', path: '/manager/my-team', label: 'My Team', icon: ShieldCheck },
-    { type: 'item', path: '/manager/history', label: 'Auction History', icon: History },
-    { type: 'item', path: '/manager/settings', label: 'Settings', icon: Settings },
-    { type: 'item', path: '/live', label: 'Live Podium', icon: Radio, highlight: true },
+    { type: 'item', path: '/manager/players', label: 'Player Pool', icon: Users },
+    { type: 'item', path: '/manager/settings', label: 'Team Settings', icon: Settings }
   ];
 
   // ── PLAYER NAV CONFIG ───────────────────────────────────────────────────
+  // "Live Auction" sits at the top — it's the most-used link during an active
+  // auction. "Field Reveal" only appears once the player has been sold.
   const playerNav = [
+    { type: 'item', path: '/player/live', label: 'Live Auction', icon: Radio, highlight: true },
     { type: 'item', path: '/player/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { type: 'item', path: '/teams', label: 'Teams', icon: ShieldCheck },
-    { type: 'item', path: '/live', label: 'Live Auction', icon: Radio, highlight: true },
+    { type: 'item', path: '/player/my-team', label: 'My Team', icon: Users },
+    ...(isSoldPlayer
+      ? [{ type: 'item', path: '/player/field-position', label: 'Field Reveal', icon: MapPin, highlight: true }]
+      : []),
     { type: 'item', path: '/player/results', label: 'Results', icon: Award },
-    { type: 'item', path: '/player/settings', label: 'Settings', icon: Settings },
+    { type: 'item', path: '/player/settings', label: 'Settings', icon: Settings }
   ];
 
   let currentNavConfig = [];
@@ -150,7 +148,7 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }) {
         )}
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}
-          className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition mx-auto"
+          className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition mx-auto ui-focus"
           title={isCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
         >
           {isCollapsed ? <ChevronRight className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />}
@@ -158,8 +156,8 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }) {
       </div>
 
       {/* Sidebar Navigation Items */}
-      <div className="flex-1 overflow-y-auto px-3 py-4 space-y-1.5 custom-scrollbar">
-        {currentNavConfig.map((item, index) => {
+      <div className="flex-1 overflow-y-auto px-3 py-4 space-y-1 custom-scrollbar">
+        {currentNavConfig.map((item) => {
           if (item.type === 'item') {
             const Icon = item.icon;
             return (
@@ -167,7 +165,7 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }) {
                 key={item.path}
                 to={item.path}
                 className={({ isActive }) =>
-                  `flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition group relative ${isActive
+                  `flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold transition group relative ${isActive
                     ? item.highlight
                       ? 'bg-emerald-600/20 text-emerald-400 border border-emerald-500/40 shadow-lg shadow-emerald-900/20'
                       : 'bg-blue-600/20 text-blue-400 border border-blue-500/30 shadow-md'
@@ -197,7 +195,7 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }) {
               <div key={item.key} className="space-y-1">
                 <button
                   onClick={() => !isCollapsed && toggleSubmenu(item.key)}
-                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition text-slate-400 hover:text-slate-100 hover:bg-slate-800/60 group relative`}
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition text-slate-400 hover:text-slate-100 hover:bg-slate-800/60 group relative`}
                 >
                   <div className="flex items-center gap-3">
                     <Icon className="w-4 h-4 flex-shrink-0 group-hover:scale-110 transition-transform" />
@@ -224,7 +222,7 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }) {
                         key={child.path}
                         to={child.path}
                         className={({ isActive }) =>
-                          `block px-3 py-2 rounded-lg text-xs font-medium transition ${isActive
+                          `block px-3 py-1.5 rounded-lg text-xs font-medium transition ${isActive
                             ? 'bg-blue-600/20 text-blue-400 font-semibold border-l-2 border-blue-500'
                             : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'
                           }`
@@ -260,7 +258,7 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }) {
             </div>
             <button
               onClick={handleLogout}
-              className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-slate-800 rounded-lg transition"
+              className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-slate-800 rounded-lg transition ui-focus"
               title="Logout"
             >
               <LogOut className="w-4 h-4" />

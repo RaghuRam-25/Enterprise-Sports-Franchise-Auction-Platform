@@ -13,6 +13,7 @@ import {
   getAvailablePlayers
 } from '../controllers/podiumController.js';
 import { protect, optionalAuth, authorize } from '../middleware/auth.js';
+import { requirePhase } from '../middleware/phase.js';
 
 const router = express.Router();
 
@@ -23,8 +24,9 @@ router.get('/state', getAuctionState);
 router.get('/players', protect, authorize('PODIUM_ADMIN', 'SUPER_ADMIN'), getAvailablePlayers);
 
 // ── Full Control for Podium Admin AND Super Admin ──────────────────────────
-// Per RBAC spec: SUPER_ADMIN has full control on /podium/**, PODIUM_ADMIN has full control too
-const podiumControlGuard = [protect, authorize('PODIUM_ADMIN', 'SUPER_ADMIN')];
+// Per RBAC spec: SUPER_ADMIN has full control on /podium/**, PODIUM_ADMIN has full control too.
+// Phase-gated: the podium only operates during the AUCTION phase.
+const podiumControlGuard = [protect, authorize('PODIUM_ADMIN', 'SUPER_ADMIN'), requirePhase('AUCTION')];
 
 // Player launch and auction controls
 router.post('/launch-player', ...podiumControlGuard, launchPlayer);

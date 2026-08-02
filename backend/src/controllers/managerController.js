@@ -45,21 +45,23 @@ export const updateOwnTeam = async (req, res, next) => {
       return res.status(403).json({ success: false, message: 'You can only edit your own team' });
     }
 
-    const { name, shortCode, description, motto } = req.body;
+    const { name, shortCode, description, motto, teamColor } = req.body;
     const updateData = {};
 
     if (name) updateData.name = name;
     if (shortCode) updateData.shortCode = shortCode.toUpperCase();
     if (description !== undefined) updateData.description = description;
     if (motto !== undefined) updateData.motto = motto;
+    if (teamColor) updateData.teamColor = teamColor;
 
-    if (req.file) {
+    if (req.files) {
       const { processAndUploadImage } = await import('../services/imageService.js');
-      updateData.logoUrl = await processAndUploadImage(req.file.buffer, `team_${team._id}`);
-    } else if (req.body.removeLogo === 'true') {
-      // Restore to default generated avatar
-      const teamName = updateData.name || team.name;
-      updateData.logoUrl = `https://ui-avatars.com/api/?background=059669&color=fff&size=256&bold=true&name=${encodeURIComponent(teamName)}`;
+      if (req.files.logo && req.files.logo[0]) {
+        updateData.logoUrl = await processAndUploadImage(req.files.logo[0].buffer, `team_logo_${team._id}`);
+      }
+      if (req.files.banner && req.files.banner[0]) {
+        updateData.bannerUrl = await processAndUploadImage(req.files.banner[0].buffer, `team_banner_${team._id}`);
+      }
     }
 
     const updatedTeam = await Team.findByIdAndUpdate(teamId, updateData, { new: true });

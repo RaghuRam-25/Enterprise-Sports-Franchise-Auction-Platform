@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import  { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { authAPI } from '../services/api';
 
 // ── Canonical role values (what the backend/DB stores) ───────────────────────
@@ -43,6 +43,12 @@ export const AuthProvider = ({ children }) => {
   // Store the socket ref so we can attach the role-update listener
   const socketRef = useRef(null);
 
+  function clearSession() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('user');
+  }
+
   // ── Rehydrate from localStorage on app load ───────────────────────────────
   useEffect(() => {
     const storedUser  = localStorage.getItem('user');
@@ -55,12 +61,12 @@ export const AuthProvider = ({ children }) => {
 
         if (!VALID_ROLES.includes(normalizedRole)) {
           console.warn('[AuthContext] Stored user has invalid role. Clearing session.');
-          _clearSession();
+          clearSession();
         } else {
           setUser({ ...parsed, role: normalizedRole });
         }
-      } catch (_) {
-        _clearSession();
+      } catch {
+        clearSession();
       }
     }
 
@@ -68,12 +74,6 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   // ── Internal helpers ──────────────────────────────────────────────────────
-  const _clearSession = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('refreshToken');
-    localStorage.removeItem('user');
-  };
-
   // ── updateUser — partial update of user state + localStorage ─────────────
   /**
    * Updates the current user in state and localStorage with the given partial data.
@@ -95,7 +95,7 @@ export const AuthProvider = ({ children }) => {
 
   // ── Login — REAL BACKEND ONLY, no mock fallback ───────────────────────────
   const login = useCallback(async (credentials) => {
-    _clearSession();
+    clearSession();
     setUser(null);
 
     const loginId = credentials.email || credentials.username || '';
@@ -149,7 +149,7 @@ export const AuthProvider = ({ children }) => {
 
   // ── Logout — wipes ALL session data ──────────────────────────────────────
   const logout = useCallback(() => {
-    _clearSession();
+    clearSession();
     setUser(null);
   }, []);
 

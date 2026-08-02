@@ -1,6 +1,6 @@
-import React from 'react';
+import 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
-import { Sliders, Calendar, Award, Tag, DollarSign } from 'lucide-react';
+import {  Calendar, Award, Tag, DollarSign } from 'lucide-react';
 
 export default function AdminConfigurationsLayout() {
   const location = useLocation();
@@ -14,15 +14,6 @@ export default function AdminConfigurationsLayout() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-black font-heading text-white flex items-center gap-2">
-          <Sliders className="w-6 h-6 text-blue-400" /> Platform Configurations
-        </h1>
-        <p className="text-xs text-slate-400 mt-1">
-          Manage dynamic auction parameters, session timers, player positions, categories, and bidding increments.
-        </p>
-      </div>
-
       {/* Tabs */}
       <div className="flex border-b border-slate-800 space-x-2 overflow-x-auto">
         {tabs.map((tab) => {

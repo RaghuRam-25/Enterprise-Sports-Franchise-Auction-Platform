@@ -1,14 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Settings, Lock, AlertTriangle, ArrowLeft, Loader2, Key, ShieldCheck, CheckCircle2, Clock, XCircle, Bell, LogOut } from 'lucide-react';
+import  { useState, useEffect } from 'react';
+import {  useNavigate } from 'react-router-dom';
+import { Settings, Lock, AlertTriangle, Loader2, Key, ShieldCheck, CheckCircle2, Clock, XCircle, Bell, LogOut } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useAuction } from '../../context/AuctionContext';
-import { playerAPI } from '../../services/api';
 import api from '../../services/api';
 
 export default function PlayerSettings() {
   const { user, updateUser, logout } = useAuth();
-  const { isRegistrationFrozen, triggerToast } = useAuction();
+  const { isRegistrationFrozen, triggerToast, refetchPlayers } = useAuction();
   const navigate = useNavigate();
 
   const [myPlayer, setMyPlayer] = useState(null);
@@ -34,7 +33,7 @@ export default function PlayerSettings() {
   useEffect(() => {
     const loadMyProfile = async () => {
       try {
-        const res = await playerAPI.getMyProfile();
+        const res = await api.get('/players/me');
         setMyPlayer(res.data || null);
       } catch (err) {
         console.error('Failed to load player profile:', err);
@@ -105,8 +104,11 @@ export default function PlayerSettings() {
     setWithdrawing(true);
     try {
       const id = myPlayer._id || myPlayer.id;
-      await playerAPI.withdraw(id);
+      await api.put(`/players/${id}/withdraw`);
       setMyPlayer((prev) => ({ ...prev, status: 'WITHDRAWN' }));
+      if (typeof refetchPlayers === 'function') {
+        refetchPlayers();
+      }
       triggerToast('Participation withdrawn successfully.', 'warning');
     } catch (err) {
       triggerToast(err.response?.data?.message || 'Failed to withdraw participation.', 'error');
@@ -124,21 +126,14 @@ export default function PlayerSettings() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="max-w-6xl mx-auto space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-black font-heading text-white flex items-center gap-2">
             <Settings className="w-6 h-6 text-purple-400" /> Account Settings
           </h1>
-          <p className="text-xs text-slate-400 mt-1">Manage security credentials, preferences, and platform role requests.</p>
         </div>
-        <Link
-          to="/player/profile"
-          className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-slate-300 rounded-xl border border-slate-800 transition"
-        >
-          <ArrowLeft className="w-4 h-4" /> Back to My Profile
-        </Link>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -289,11 +284,10 @@ export default function PlayerSettings() {
                 <button
                   onClick={handleWithdraw}
                   disabled={myPlayer?.status === 'WITHDRAWN' || myPlayer?.status === 'withdrawn' || withdrawing}
-                  className={`w-full py-2.5 rounded-xl font-bold transition border flex items-center justify-center gap-2 ${
-                    myPlayer?.status === 'WITHDRAWN' || myPlayer?.status === 'withdrawn'
+                  className={`w-full py-2.5 rounded-xl font-bold transition border flex items-center justify-center gap-2 ${myPlayer?.status === 'WITHDRAWN' || myPlayer?.status === 'withdrawn'
                       ? 'bg-slate-800 text-slate-500 border-slate-700 cursor-not-allowed'
                       : 'bg-rose-600/20 hover:bg-rose-600 text-rose-400 hover:text-white border-rose-500/40'
-                  }`}
+                    }`}
                 >
                   {withdrawing && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                   {myPlayer?.status === 'WITHDRAWN' || myPlayer?.status === 'withdrawn'

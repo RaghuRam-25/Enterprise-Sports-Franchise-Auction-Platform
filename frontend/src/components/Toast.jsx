@@ -1,6 +1,8 @@
-import React from 'react';
+import 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle2, AlertTriangle, Info, XCircle } from 'lucide-react';
 import { useAuction } from '../context/AuctionContext';
+import { useLocation } from 'react-router-dom';
 
 const ICONS = {
   success: CheckCircle2,
@@ -18,18 +20,37 @@ const STYLES = {
 
 export default function Toast() {
   const { lastActionToast } = useAuction();
+  const location = useLocation();
 
-  if (!lastActionToast) return null;
+  // Hide toasts on immersive full-screen views to avoid distraction.
+  // This includes the public /live view and authenticated immersive views.
+  const isImmersiveLiveView = [
+    '/live',
+    '/podium/live',
+    '/manager/podium',
+    '/manager/bid-center',
+  ].includes(location.pathname);
 
-  const Icon = ICONS[lastActionToast.type] || Info;
-  const style = STYLES[lastActionToast.type] || STYLES.info;
+  const Icon = lastActionToast ? (ICONS[lastActionToast.type] || Info) : Info;
+  const style = lastActionToast ? (STYLES[lastActionToast.type] || STYLES.info) : STYLES.info;
 
   return (
-    <div className="fixed top-5 right-5 z-[9999] animate-slide-in-right">
-      <div className={`flex items-center gap-3 px-5 py-3.5 rounded-xl border shadow-2xl backdrop-blur-md text-xs font-semibold ${style}`}>
-        <Icon className="w-4.5 h-4.5 flex-shrink-0" />
-        <span>{lastActionToast.msg}</span>
-      </div>
-    </div>
+    <AnimatePresence>
+      {lastActionToast && !isImmersiveLiveView && (
+        <motion.div
+          key={lastActionToast.id}
+          className="fixed top-5 right-5 z-[9999]"
+          initial={{ opacity: 0, x: 60, scale: 0.9 }}
+          animate={{ opacity: 1, x: 0, scale: 1 }}
+          exit={{ opacity: 0, x: 60, scale: 0.9 }}
+          transition={{ type: 'spring', stiffness: 380, damping: 28 }}
+        >
+          <div className={`flex items-center gap-3 px-5 py-3.5 rounded-xl border shadow-2xl backdrop-blur-md text-xs font-semibold ${style}`}>
+            <Icon className="w-4.5 h-4.5 flex-shrink-0" />
+            <span>{lastActionToast.msg}</span>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }

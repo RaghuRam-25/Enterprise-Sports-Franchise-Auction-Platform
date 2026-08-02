@@ -1,7 +1,16 @@
-import React, { useState } from 'react';
-import { Play, Pause, RotateCcw, XCircle, Gavel, Search, Settings2, ShieldAlert, CheckCircle2, Clock, Eye, AlertCircle, Shuffle, SkipForward } from 'lucide-react';
+import { useState } from 'react';
+import { Play, Pause, RotateCcw, XCircle, Gavel, Search, Settings2, ShieldAlert, Shuffle, SkipForward } from 'lucide-react';
 import { useAuction } from '../../context/AuctionContext';
 import api from '../../services/api';
+import {
+  WaitingAnimation,
+  PlayerRevealAnimation,
+  WinnerAnimation,
+  RosterAnimation,
+} from '../../components/auction';
+import { useAuctionAnimation } from '../../hooks/useAuctionAnimation';
+import { playerFallback } from '../../utils/playerFallback';
+import { AnimatePresence } from 'framer-motion';
 export const PodiumDashboard = () => {
   const {
     players,
@@ -9,19 +18,27 @@ export const PodiumDashboard = () => {
     currentBid,
     highestBidder,
     biddingMode,
-    timerDuration,
-    timerRemaining,
-    timerStatus,
-    bidHistory,
-    pushToPodium,
-    pauseTimer,
-    resumeTimer,
-    rollbackBid,
-    hammerSell,
-    cancelAuction,
-    formatCurrency,
-    triggerToast
-  } = useAuction();
+     timerRemaining,
+     timerStatus,
+     bidHistory,
+     pushToPodium,
+     pauseTimer,
+     resumeTimer,
+     rollbackBid,
+     hammerSell,
+     cancelAuction,
+     formatCurrency,
+     triggerToast
+   } = useAuction();
+
+  const {
+    animState,
+    introPlayer,
+    winnerData,
+    rosterUpdate,
+    ANIM_STATES,
+    onAnimationComplete,
+  } = useAuctionAnimation();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState('ALL');
@@ -73,31 +90,6 @@ export const PodiumDashboard = () => {
 
   return (
     <div className="space-y-6">
-        <div className="glass-card rounded-2xl p-6 border border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-gradient-to-r from-slate-900 via-rose-950/20 to-slate-900">
-          <div className="flex items-center space-x-3">
-            <div className="bg-rose-600/20 p-3 rounded-2xl text-rose-400 border border-rose-500/30">
-              <Gavel className="w-7 h-7 animate-pulse" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-black font-heading uppercase text-white tracking-wide">
-                Podium Admin Control Room
-              </h1>
-              <p className="text-xs text-slate-400">
-                The Auctioneer Dashboard / Live Control Deck & Real-Time Dispute Resolution
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <div className="bg-slate-950 px-4 py-2 rounded-xl border border-slate-800 flex items-center gap-2">
-              <span className={`w-3 h-3 rounded-full ${timerStatus === 'running' ? 'bg-emerald-400 animate-ping' : 'bg-amber-400'}`}></span>
-              <span className="text-xs font-bold text-slate-200 tracking-wide uppercase">
-                STATUS: {timerStatus}
-              </span>
-            </div>
-          </div>
-        </div>
-
         {/* Main Grid: Unsold Pool vs Control Deck */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
@@ -160,7 +152,7 @@ export const PodiumDashboard = () => {
                     className="bg-slate-900/70 border border-slate-800 p-3.5 rounded-xl flex items-center justify-between hover:border-blue-500/40 transition group"
                   >
                     <div className="flex items-center gap-3">
-                      <img src={player.imageUrl} alt="" className="w-10 h-10 rounded-full object-cover border border-slate-700" />
+                      <img src={player.imageUrl || playerFallback('slate')} alt="" className="w-10 h-10 rounded-full object-cover border border-slate-700" />
                       <div>
                         <p className="font-extrabold text-xs text-white group-hover:text-blue-400 transition">{player.name}</p>
                         <p className="text-[11px] text-slate-400">
@@ -192,7 +184,7 @@ export const PodiumDashboard = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-950/80 p-4 rounded-xl border border-slate-800">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-400 mb-1">Timer Duration (Seconds):</label>
+                  <label className="block text-xs font-semibold text-slate-400 mb-1">Time(S):</label>
                   <div className="flex items-center gap-2">
                     {[30, 60, 90].map(dur => (
                       <button
@@ -262,16 +254,36 @@ export const PodiumDashboard = () => {
               </div>
             </div>
 
-            {/* Active Podium Spotlight Card */}
+            {/* Player Details / Podium spotlight area — every cinematic here is
+                confined to THIS section so the admin's Unsold Pool sidebar,
+                Launchpad, and bid log stay visible at all times. */}
+            <div className="relative">
             {podiumPlayer ? (
-              <div className="glass-card rounded-2xl p-6 border border-slate-800 space-y-6 bg-gradient-to-b from-slate-900 via-slate-900/90 to-blue-950/20">
+              <div className="glass-card relative overflow-hidden rounded-2xl p-6 border border-slate-800 space-y-6 bg-gradient-to-b from-slate-900 via-slate-900/90 to-blue-950/20">
+
+                {/* Inline cinematic player intro — replaces the detail section in
+                    place during the INTRO phase, then self-dismisses to LIVE
+                    (socket handler advances the state machine after ~3.5s), at
+                    which point the admin control deck below becomes visible. */}
+                <AnimatePresence>
+                  {animState === ANIM_STATES.INTRO && introPlayer && (
+                    <PlayerRevealAnimation
+                      key="podium-inline-reveal"
+                      inline
+                      player={introPlayer}
+                      onComplete={onAnimationComplete}
+                      isActive={animState === ANIM_STATES.INTRO}
+                    />
+                  )}
+                </AnimatePresence>
+
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
 
                   {/* Player Info & Photo */}
                   <div className="flex items-center gap-4">
                     <div className="relative">
                       <img
-                        src={podiumPlayer.imageUrl}
+                        src={podiumPlayer.imageUrl || playerFallback('slate')}
                         alt=""
                         className="w-24 h-24 rounded-2xl object-cover border-2 border-emerald-500/40 shadow-xl"
                       />
@@ -371,14 +383,59 @@ export const PodiumDashboard = () => {
 
               </div>
             ) : (
-              <div className="glass-card rounded-2xl p-12 border border-slate-800 text-center space-y-3">
-                <Gavel className="w-12 h-12 text-slate-600 mx-auto" />
-                <h3 className="text-base font-bold text-slate-300">Podium is currently empty</h3>
-                <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                  Select an unsold player from the left panel and click "Push to Podium" to start the live bidding timer.
-                </p>
+              <div className="glass-card relative overflow-hidden rounded-2xl border border-slate-800 min-h-[420px]">
+                {/* Waiting cinematic — confined to THIS Player Details panel only.
+                    Navbar + Unsold Player Pool sidebar stay visible; the
+                    animation never becomes a full-screen takeover for the admin. */}
+                {timerStatus === 'idle' && animState === 'idle' ? (
+                  <WaitingAnimation
+                    inline
+                    teamsConnected={0}
+                    managersReady={0}
+                    isActive
+                  />
+                ) : (
+                  <div className="p-12 text-center space-y-3">
+                    <Gavel className="w-12 h-12 text-slate-600 mx-auto" />
+                    <h3 className="text-base font-bold text-slate-300">Podium is currently empty</h3>
+                    <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                      Select an unsold player from the left panel and click "Push to Podium" to start the live bidding timer.
+                    </p>
+                  </div>
+                )}
               </div>
             )}
+
+            {/* Inline "SOLD" celebration + roster update — confined to this
+                spotlight section (absolute inset-0). Rendered at the section
+                level so they remain visible even after podiumPlayer clears on
+                sell. The admin's sidebar, launchpad, and bid log stay visible. */}
+            <AnimatePresence>
+              {winnerData && (
+                <WinnerAnimation
+                  key="podium-inline-winner"
+                  inline
+                  winnerData={winnerData}
+                  isManagerWinner={false}
+                  onComplete={() => {}}
+                  isActive={!!winnerData}
+                />
+              )}
+            </AnimatePresence>
+
+            <AnimatePresence>
+              {rosterUpdate && (
+                <RosterAnimation
+                  key="podium-inline-roster"
+                  inline
+                  rosterUpdate={rosterUpdate}
+                  onComplete={() => {}}
+                  isActive={!!rosterUpdate}
+                />
+              )}
+            </AnimatePresence>
+            </div>
+            {/* end spotlight area */}
 
             {/* Live Bid Log History */}
             <div className="glass-card rounded-2xl p-6 border border-slate-800 space-y-3">
@@ -407,6 +464,15 @@ export const PodiumDashboard = () => {
 
         </div>
 
-    </div>
-  );
-};
+        {/* ════════════════════════════════════════════════════════
+            ANIMATION OVERLAYS
+            ════════════════════════════════════════════════════════ */}
+
+        {/* Player Reveal, Waiting, Winner, and Roster are ALL rendered inline
+            inside the spotlight section above — no cinematic on this page ever
+            takes over the whole screen. The admin's Unsold Pool sidebar,
+            Launchpad, and bid log remain visible throughout. */}
+
+      </div>
+    );
+  };

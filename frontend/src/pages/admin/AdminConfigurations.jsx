@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
-import { NavLink, useParams, useNavigate } from 'react-router-dom';
-import { Sliders, Calendar, Award, Tag, Percent, Plus, Trash2, CheckCircle, Calculator } from 'lucide-react';
+import  { useState } from 'react';
+import {  useParams } from 'react-router-dom';
+import {  Plus, Trash2, Calculator } from 'lucide-react';
 import { useAuction } from '../../context/AuctionContext';
 
 export default function AdminConfigurations() {
   const { subtab } = useParams();
   const activeTab = subtab || 'sessions';
-  const navigate = useNavigate();
+  
 
   const {
     sessions,
@@ -70,76 +70,14 @@ export default function AdminConfigurations() {
 
   return (
     <div className="space-y-6">
-      
-      {/* Header */}
-      <div className="glass-card rounded-2xl p-6 border border-slate-800 flex items-center justify-between">
-        <div>
-          <span className="text-xs font-bold uppercase tracking-widest text-blue-400">Super Admin Settings</span>
-          <h1 className="text-2xl font-black font-heading text-white">Dynamic Enums & Bidding Tiers</h1>
-          <p className="text-xs text-slate-400 mt-1">
-            Configure dynamic sessions, sports positions, player category base prices, and percentage-based bid raise logic.
-          </p>
-        </div>
-        <Sliders className="w-8 h-8 text-blue-400 opacity-80" />
-      </div>
-
-      {/* Navigation Sub-Tabs */}
-      <div className="flex border-b border-slate-800 space-x-2">
-        <button
-          onClick={() => navigate('/admin/configurations/sessions')}
-          className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold rounded-t-xl transition border-t border-x ${
-            activeTab === 'sessions'
-              ? 'bg-slate-900 text-blue-400 border-slate-700 border-b-transparent'
-              : 'text-slate-400 border-transparent hover:text-slate-200'
-          }`}
-        >
-          <Calendar className="w-4 h-4" /> Academic Sessions
-        </button>
-
-        <button
-          onClick={() => navigate('/admin/configurations/positions')}
-          className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold rounded-t-xl transition border-t border-x ${
-            activeTab === 'positions'
-              ? 'bg-slate-900 text-emerald-400 border-slate-700 border-b-transparent'
-              : 'text-slate-400 border-transparent hover:text-slate-200'
-          }`}
-        >
-          <Tag className="w-4 h-4" /> Sports Positions
-        </button>
-
-        <button
-          onClick={() => navigate('/admin/configurations/categories')}
-          className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold rounded-t-xl transition border-t border-x ${
-            activeTab === 'categories'
-              ? 'bg-slate-900 text-amber-400 border-slate-700 border-b-transparent'
-              : 'text-slate-400 border-transparent hover:text-slate-200'
-          }`}
-        >
-          <Award className="w-4 h-4" /> Player Categories
-        </button>
-
-        <button
-          onClick={() => navigate('/admin/configurations/bidding-tiers')}
-          className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold rounded-t-xl transition border-t border-x ${
-            activeTab === 'bidding-tiers'
-              ? 'bg-slate-900 text-purple-400 border-slate-700 border-b-transparent'
-              : 'text-slate-400 border-transparent hover:text-slate-200'
-          }`}
-        >
-          <Percent className="w-4 h-4" /> Dynamic Bidding Tiers
-        </button>
-      </div>
-
       {/* Tab Content */}
       <div className="glass-card rounded-2xl p-6 border border-slate-800">
-        
         {/* 1. Academic Sessions Tab */}
         {activeTab === 'sessions' && (
           <div className="space-y-6">
             <h3 className="text-sm font-bold uppercase tracking-wider text-slate-300">
-              Manage Academic Sessions / Batches
+              Manage Sessions/Batches
             </h3>
-
             <form onSubmit={handleAddSession} className="flex gap-3 max-w-md">
               <input
                 type="text"
@@ -314,7 +252,7 @@ export default function AdminConfigurations() {
                 Percentage-Based Dynamic Raise Logic (PRD Section 2.A)
               </h3>
               <p className="text-xs text-slate-400 mt-1">
-                Configure raise percentage bounds of team budget (e.g. 0-3% = 0.15% raise). The backend automatically calculates exact monetary raises based on active franchise purse.
+                Configure raise percentage bounds of team budget (e.g. 0-3% = 0.15% raise).
               </p>
             </div>
 

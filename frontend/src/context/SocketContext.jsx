@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
+import  { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { io } from 'socket.io-client';
 import { useAuth, getDashboardForRole, ROLE_MAP, VALID_ROLES } from './AuthContext';
 
@@ -9,7 +9,7 @@ export const useSocket = () => useContext(SocketContext);
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
 
 export const SocketProvider = ({ children }) => {
-  const { user, updateUser } = useAuth();
+  const {  updateUser } = useAuth();
   const [socket, setSocket] = useState(null);
   const [isConnected, setIsConnected] = useState(false);
   const socketRef = useRef(null);

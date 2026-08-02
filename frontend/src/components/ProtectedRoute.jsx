@@ -1,4 +1,4 @@
-import React from 'react';
+import 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth, ROLE_MAP } from '../context/AuthContext';
 

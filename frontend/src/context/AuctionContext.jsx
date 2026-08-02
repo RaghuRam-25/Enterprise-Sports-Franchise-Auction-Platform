@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import  { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useSocket } from './SocketContext';
 import api from '../services/api';
 
@@ -219,7 +219,7 @@ export const AuctionProvider = ({ children }) => {
       }
     };
 
-    const handleCancelled = (state) => {
+    const handleCancelled = () => {
       setPodiumPlayer(null);
       setCurrentBid(0);
       setHighestBidder(null);

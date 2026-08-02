@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import  { useState } from 'react';
 import { UserCheck, Ban, CheckCircle2, Search, Edit3, Lock, Unlock, X, Save, Eye, User, Camera } from 'lucide-react';
 import { useAuction } from '../../context/AuctionContext';
 import { useAuth } from '../../context/AuthContext';
-import { adminAPI, playerAPI } from '../../services/api';
+import { adminAPI } from '../../services/api';
 import api from '../../services/api';
 
 const STATUS_STYLES = {
@@ -73,7 +73,7 @@ export default function AdminPlayers() {
         !isRegistrationFrozen ? 'Player registration FREEZE enabled.' : 'Player registration UNFROZEN.',
         !isRegistrationFrozen ? 'warning' : 'info'
       );
-    } catch (err) {
+    } catch {
       setIsRegistrationFrozen(prev => !prev);
       triggerToast(!isRegistrationFrozen ? 'Registration FROZEN (local).' : 'Registration UNFROZEN (local).', 'warning');
     }
@@ -85,7 +85,7 @@ export default function AdminPlayers() {
       setPlayers(prev => prev.map(p => (p._id || p.id) === id ? { ...p, status: 'APPROVED' } : p));
       if (typeof refetchPlayers === 'function') refetchPlayers();
       triggerToast(`Approved player: ${playerName}`, 'success');
-    } catch (err) {
+    } catch {
       triggerToast(err?.response?.data?.message || 'Failed to approve player', 'error');
     }
   };
@@ -205,7 +205,7 @@ export default function AdminPlayers() {
           headers: { 'Content-Type': 'multipart/form-data' }
         });
         updatedData = res?.data?.data || res?.data || res;
-      } catch (err) {
+      } catch {
         // Fallback optimistic update
         updatedData = {
           name: selfForm.name,

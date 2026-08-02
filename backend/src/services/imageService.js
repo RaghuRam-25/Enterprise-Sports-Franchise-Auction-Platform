@@ -70,7 +70,8 @@ export const processAndUploadImage = async (fileBuffer, fileNameHint = 'player')
     return `/uploads/${fileName}`;
   } catch (error) {
     console.error('Image Processing Error:', error);
-    // Safe fallback URL if sharp/upload fails
-    return 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=500&auto=format&fit=crop&q=80';
+    // On failure, return null so the client renders its generic footballer
+    // placeholder (original SVG) rather than a copyrighted stock photo.
+    return null;
   }
 };

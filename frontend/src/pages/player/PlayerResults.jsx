@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { Trophy, ArrowLeft, Loader2, Clock, ShieldOff } from 'lucide-react';
+import  { useState, useEffect } from 'react';
+
+import { Trophy, Loader2, Clock, ShieldOff } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { playerFallback } from '../../utils/playerFallback';
 import api from '../../services/api';
 
 
@@ -60,12 +61,7 @@ export default function PlayerResults() {
   const isSold = myPlayer?.status === 'SOLD' || !!ledgerEntry;
 
   return (
-    <div className="max-w-3xl w-full mx-auto px-4 py-8 space-y-6">
-
-        <Link to="/player/profile" className="flex items-center gap-2 text-xs font-bold text-slate-400 hover:text-white transition">
-          <ArrowLeft className="w-4 h-4" /> Back to Dashboard
-        </Link>
-
+    <div className="max-w-8xl w-full mx-auto px-4 py-8 space-y-12">
         <div className="glass-card rounded-2xl p-8 border border-slate-800 space-y-6 text-center shadow-2xl">
 
           <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mx-auto shadow-lg ${
@@ -86,13 +82,13 @@ export default function PlayerResults() {
               <div className="flex items-center justify-center gap-3">
                 {/* GAP 1 FIX: imageUrl not picture */}
                 <img
-                  src={myPlayer.imageUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80'}
+                  src={myPlayer.imageUrl || playerFallback('gold')}
                   alt={myPlayer.name}
                   className="w-16 h-16 rounded-full object-cover border-2 border-amber-500/40"
                 />
                 <div className="text-left">
-                  <h3 className="font-black text-lg text-white">{myPlayer.name}</h3>
-                  <p className="text-xs text-slate-400">{myPlayer.jerseyName} &bull; {myPlayer.category}</p>
+                  <h3 className="font-black text-lg text-white">{myPlayer.name || 'Unnamed Player'}</h3>
+                  <p className="text-xs text-slate-400">{myPlayer.jerseyName || '—'} &bull; {myPlayer.category || 'Unranked'}</p>
                 </div>
               </div>
 

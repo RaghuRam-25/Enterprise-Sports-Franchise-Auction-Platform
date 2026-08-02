@@ -1,18 +1,17 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import  { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
-  Trophy, Radio, Shield, Users, ArrowRight, Zap, Sparkles,
-  UserCheck, UserX, Clock, CheckCircle2, AlertTriangle, Activity,
-  TrendingUp, Award, DollarSign, Calendar, ChevronRight, Play,
-  Pause, RotateCcw, Flame, Target, Star, ExternalLink, Lock
+  Trophy, Radio, ArrowRight, Zap, Activity, ChevronRight, Lock
 } from 'lucide-react';
 import { useAuction } from '../../context/AuctionContext';
+import { usePhase } from '../../context/PhaseContext';
 import { useAuth, getDashboardForRole } from '../../context/AuthContext';
 import { useSocket } from '../../context/SocketContext';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
-import api from '../../services/api';
+import { playerFallback } from '../../utils/playerFallback';
+import '../../services/api';
 
 // ── Animated Counter Helper ──────────────────────────────────────────────────
 function AnimatedCounter({ value, prefix = '', suffix = '' }) {
@@ -39,15 +38,19 @@ export default function LandingPage() {
     biddingMode,
     timerRemaining,
     timerStatus,
-    bidHistory,
     isRegistrationFrozen,
-    formatCurrency,
-    isDataLoading
+    formatCurrency
   } = useAuction();
 
   const { user } = useAuth();
   const { socket, isConnected } = useSocket();
+  const { phase, loading: phaseLoading, isAuctionActive, isTournamentActive } = usePhase();
   const navigate = useNavigate();
+
+  // Phase is the authoritative source of truth (backend re-verifies on every write).
+  // Registration is only truly open in the REGISTRATION phase; the config-store
+  // freeze flag acts as a secondary manual override within that phase.
+  const registrationOpen = phase === 'REGISTRATION' && !isRegistrationFrozen;
 
   // If user is already logged in, automatically redirect to their assigned dashboard
   useEffect(() => {
@@ -123,17 +126,13 @@ export default function LandingPage() {
   }, [socket, formatCurrency]);
 
   // ── Derived Statistics ──────────────────────────────────────────────────────
-  const totalPurse = useMemo(() => teams.reduce((acc, t) => acc + (t.totalBudget || 0), 0), [teams]);
-  const totalSpent = useMemo(() => teams.reduce((acc, t) => acc + ((t.totalBudget || 0) - (t.remainingBudget || 0)), 0), [teams]);
-  const registeredCount = useMemo(() => players.filter(p => p.status === 'REGISTERED').length, [players]);
+  
+  
+  
   const soldCount = useMemo(() => players.filter(p => p.status === 'SOLD').length, [players]);
   const unsoldCount = useMemo(() => players.filter(p => p.status === 'UNSOLD').length, [players]);
 
-  const highestSoldPlayer = useMemo(() => {
-    const sold = players.filter(p => p.status === 'SOLD' && p.soldPrice);
-    if (sold.length === 0) return null;
-    return sold.reduce((prev, current) => (prev.soldPrice > current.soldPrice) ? prev : current, sold[0]);
-  }, [players]);
+  
 
   // Top players showcase (highest base price or sold)
   const topPlayersShowcase = useMemo(() => {
@@ -161,6 +160,58 @@ export default function LandingPage() {
       </div>
 
       <main className="flex-1 relative z-10 space-y-16 pb-20">
+
+        {/* ── EVENT PHASE RIBBON (conditional per event_phase) ─────────────── */}
+        {!phaseLoading && phase && (
+          <section className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto pt-6">
+            <div className={`rounded-2xl border px-5 py-3 flex flex-wrap items-center justify-between gap-3 backdrop-blur-md ${
+              isAuctionActive
+                ? 'border-emerald-500/40 bg-emerald-500/10'
+                : isTournamentActive
+                  ? 'border-amber-500/40 bg-amber-500/10'
+                  : phase === 'REGISTRATION'
+                    ? 'border-purple-500/40 bg-purple-500/10'
+                    : 'border-slate-700 bg-slate-900/60'
+            }`}>
+              <div className="flex items-center gap-3">
+                <Radio className={`w-4 h-4 ${isAuctionActive ? 'animate-pulse text-emerald-400' : isTournamentActive ? 'text-amber-400' : phase === 'REGISTRATION' ? 'text-purple-400' : 'text-slate-400'}`} />
+                <div>
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Current Event Phase</span>
+                  <p className="text-sm font-black uppercase tracking-wide text-white">
+                    {phase === 'SETUP' && 'Setup — configuring the league'}
+                    {phase === 'REGISTRATION' && 'Registration — players signing up'}
+                    {phase === 'AUCTION' && 'Live Auction — bidding in progress'}
+                    {phase === 'TOURNAMENT' && 'Tournament — matches underway'}
+                  </p>
+                </div>
+              </div>
+              {isAuctionActive && (
+                <Link
+                  to="/live"
+                  className="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs uppercase tracking-wider flex items-center gap-2 transition"
+                >
+                  <Radio className="w-4 h-4" /> Watch Live
+                </Link>
+              )}
+              {isTournamentActive && (
+                <Link
+                  to="/teams"
+                  className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs uppercase tracking-wider flex items-center gap-2 transition"
+                >
+                  <Trophy className="w-4 h-4" /> View Standings
+                </Link>
+              )}
+              {registrationOpen && (
+                <Link
+                  to="/player/register"
+                  className="px-4 py-2 rounded-xl bg-purple-500 hover:bg-purple-400 text-white font-black text-xs uppercase tracking-wider flex items-center gap-2 transition"
+                >
+                  Register Now <ArrowRight className="w-4 h-4" />
+                </Link>
+              )}
+            </div>
+          </section>
+        )}
 
         {/* ── HERO SECTION ─────────────────────────────────────────────────── */}
         <section className="relative pt-12 lg:pt-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
@@ -190,7 +241,7 @@ export default function LandingPage() {
               transition={{ duration: 0.5 }}
               className="text-4xl sm:text-6xl lg:text-7xl font-black font-heading uppercase tracking-tight text-white max-w-5xl mx-auto leading-[0.95]"
             >
-              THE NEXT-GEN <span className="bg-gradient-to-r from-blue-400 via-teal-400 to-emerald-400 bg-clip-text text-transparent">LIVE AUCTION &amp; DRAFT</span> PLATFORM
+              <i>THE NEXT-GEN <span className="bg-gradient-to-r from-blue-400 via-teal-400 to-emerald-400 bg-clip-text text-transparent">LIVE AUCTION &amp; DRAFT</span> PLATFORM</i>
             </motion.h1>
 
             <motion.p
@@ -224,7 +275,7 @@ export default function LandingPage() {
                 EXPLORE FRANCHISES
               </Link>
 
-              {!isRegistrationFrozen ? (
+              {registrationOpen ? (
                 <Link
                   to="/player/register"
                   className="px-8 py-4 bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 border border-purple-500/40 font-extrabold text-sm uppercase tracking-wider rounded-2xl transition shadow-xl"
@@ -233,7 +284,12 @@ export default function LandingPage() {
                 </Link>
               ) : (
                 <span className="px-6 py-4 bg-slate-900/80 text-slate-500 border border-slate-800 font-bold text-xs uppercase tracking-wider rounded-2xl flex items-center gap-2 cursor-not-allowed">
-                  <Lock className="w-4 h-4 text-rose-400" /> REGISTRATION FROZEN BY ADMIN
+                  <Lock className="w-4 h-4 text-rose-400" />
+                  {phase === 'SETUP'
+                    ? 'REGISTRATION OPENS SOON'
+                    : phase === 'REGISTRATION'
+                      ? 'REGISTRATION FROZEN BY ADMIN'
+                      : 'REGISTRATION CLOSED'}
                 </span>
               )}
             </motion.div>
@@ -249,10 +305,10 @@ export default function LandingPage() {
               <div className="p-2 flex flex-col justify-center">
                 <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Registration</span>
                 <span className={`text-sm font-black uppercase mt-1 flex items-center justify-center gap-1.5 ${
-                  isRegistrationFrozen ? 'text-rose-400' : 'text-emerald-400'
+                  registrationOpen ? 'text-emerald-400' : 'text-rose-400'
                 }`}>
-                  <span className={`w-2 h-2 rounded-full ${isRegistrationFrozen ? 'bg-rose-500' : 'bg-emerald-500'}`} />
-                  {isRegistrationFrozen ? 'FROZEN' : 'OPEN'}
+                  <span className={`w-2 h-2 rounded-full ${registrationOpen ? 'bg-emerald-500' : 'bg-rose-500'}`} />
+                  {registrationOpen ? 'OPEN' : 'CLOSED'}
                 </span>
               </div>
 
@@ -351,7 +407,7 @@ export default function LandingPage() {
                     <div className="md:col-span-5 text-center">
                       <div className="relative inline-block group">
                         <img
-                          src={podiumPlayer.imageUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80'}
+                          src={podiumPlayer.imageUrl || playerFallback('slate')}
                           alt={podiumPlayer.name}
                           className="w-48 h-48 md:w-56 md:h-56 rounded-2xl object-cover border-4 border-slate-700 shadow-2xl mx-auto"
                         />
@@ -443,7 +499,7 @@ export default function LandingPage() {
                   {/* Feed Items */}
                   <div className="space-y-2.5 max-h-[320px] overflow-y-auto pr-1">
                     {activities.map(item => {
-                      const Icon = item.icon || Activity;
+                      
                       return (
                         <div key={item.id} className="p-3 bg-slate-900/60 rounded-xl border border-slate-800/80 text-xs space-y-1">
                           <div className="flex items-center justify-between text-[10px] text-slate-500">

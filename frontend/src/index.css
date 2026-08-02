@@ -186,3 +186,123 @@ html.light ::-webkit-scrollbar-thumb {
 .animate-slide-in-right {
   animation: slide-in-right 0.3s ease-out;
 }
+
+/* ─────────────────────────────────────────────────────────────────────────
+ * Phase 6 — Global UI polish utilities (additive; opt-in only).
+ * Every class here is new, so existing markup is unaffected. Components add
+ * these classNames to gain premium hover/press/entrance behavior without any
+ * structural change. All effects use GPU-friendly transform/opacity/filter.
+ * ──────────────────────────────────────────────────────────────────────── */
+
+/* Interactive lift for any card/tile. Pairs with glass-card. */
+.ui-lift {
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 0.25s ease;
+  will-change: transform;
+}
+.ui-lift:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 16px 40px -8px rgba(0, 0, 0, 0.5);
+}
+.ui-lift:active {
+  transform: translateY(-1px);
+}
+
+/* Premium button micro-interactions: press-scale + sheen sweep on hover. */
+.ui-btn {
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.15s ease, box-shadow 0.2s ease, filter 0.2s ease;
+  will-change: transform;
+}
+.ui-btn:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.06);
+}
+.ui-btn:active {
+  transform: translateY(0) scale(0.97);
+}
+.ui-btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    120deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.18) 50%,
+    transparent 70%
+  );
+  transform: translateX(-120%);
+  transition: transform 0.6s ease;
+  pointer-events: none;
+}
+.ui-btn:hover::after {
+  transform: translateX(120%);
+}
+
+/* Accessible focus ring for keyboard users on any interactive element. */
+.ui-focus:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.55);
+  border-radius: 0.5rem;
+}
+
+/* Skeleton loader shimmer. Apply to a bg-slate block while data loads. */
+@keyframes ui-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.ui-skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(148, 163, 184, 0.08) 25%,
+    rgba(148, 163, 184, 0.18) 37%,
+    rgba(148, 163, 184, 0.08) 63%
+  );
+  background-size: 200% 100%;
+  animation: ui-shimmer 1.4s ease-in-out infinite;
+  border-radius: 0.5rem;
+}
+html.light .ui-skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(100, 116, 139, 0.1) 25%,
+    rgba(100, 116, 139, 0.22) 37%,
+    rgba(100, 116, 139, 0.1) 63%
+  );
+  background-size: 200% 100%;
+}
+
+/* Fade-up entrance for page/content mount. */
+@keyframes ui-fade-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.ui-fade-up {
+  animation: ui-fade-up 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Soft entrance for lists — pair with inline animation-delay for stagger. */
+@keyframes ui-pop-in {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+.ui-pop-in {
+  animation: ui-pop-in 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Respect user motion preference — disable non-essential motion globally. */
+@media (prefers-reduced-motion: reduce) {
+  .ui-lift,
+  .ui-btn,
+  .ui-fade-up,
+  .ui-pop-in,
+  .ui-skeleton,
+  .animate-slide-in-right,
+  .animate-pulse-ring {
+    animation: none !important;
+    transition: none !important;
+  }
+  .ui-btn::after { display: none; }
+}
