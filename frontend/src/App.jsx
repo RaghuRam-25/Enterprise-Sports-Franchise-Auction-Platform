@@ -41,6 +41,8 @@ const ManagerDashboard = lazy(() =>
 );
 const ManagerMyTeamView = lazy(() => import('./pages/manager/ManagerMyTeamView'));
 const ManagerMyTeam = lazy(() => import('./pages/manager/ManagerMyTeam'));
+const TargetPlayersView = lazy(() => import('./pages/manager/TargetPlayersView'));
+
 
 // ── Podium Admin Control Room ─────────────────────────────────────────────────
 // NOTE: PodiumDashboard is a NAMED export → unwrap to default for lazy().
@@ -254,6 +256,15 @@ function App() {
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="target-players"
+              element={
+                <ProtectedRoute allowedRoles={['TEAM_MANAGER']}>
+                  <TargetPlayersView />
+                </ProtectedRoute>
+              }
+            />
+
             <Route
               path="podium"
               element={

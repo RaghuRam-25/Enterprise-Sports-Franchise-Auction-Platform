@@ -89,12 +89,26 @@ export default function PublicLiveView() {
           </button>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* One continuous premium broadcast panel — the cinematic stage, the
+            live auction information, and the bid ledger all live inside a
+            SINGLE glass card, separated by smooth dividers. No detached columns
+            and no empty gap beneath the animation. */}
+        <motion.div
+          className="glass-card rounded-3xl border overflow-hidden bg-gradient-to-b from-slate-900/90 via-slate-900 to-blue-950/20 shadow-2xl"
+          animate={{
+            borderColor: isUrgent ? 'rgba(244,63,94,0.6)' : 'rgba(30,41,59,1)',
+            boxShadow: isUrgent
+              ? '0 0 40px rgba(244,63,94,0.25)'
+              : '0 25px 50px -12px rgba(0,0,0,0.5)',
+          }}
+          transition={{ duration: 0.4 }}
+        >
           {/* Shared confined Player Display stage — the premium cinematic
-              surface for the Live Auction / Spectator view. It stays inside
-              this card: navbar, bid ledger, and all other UI remain visible. */}
+              surface. Collapses flush during LIVE so the auction info sits
+              directly beneath it with no reserved gap. */}
           <PlayerDisplayStage
-            className="lg:col-span-2 min-h-[520px]"
+            className="rounded-none"
+            cinematicHeight="min-h-[480px] sm:min-h-[620px] lg:min-h-[720px]"
             animState={animState}
             ANIM_STATES={ANIM_STATES}
             introPlayer={introPlayer}
@@ -104,16 +118,7 @@ export default function PublicLiveView() {
             showWaiting={showWaiting}
             waitingStats={{ teamsConnected, managersReady }}
           >
-          <motion.div
-            className="lg:col-span-2 glass-card rounded-3xl p-6 sm:p-8 border space-y-8 bg-gradient-to-b from-slate-900/90 via-slate-900 to-blue-950/20 shadow-2xl relative overflow-hidden"
-            animate={{
-              borderColor: isUrgent ? 'rgba(244,63,94,0.6)' : 'rgba(30,41,59,1)',
-              boxShadow: isUrgent
-                ? '0 0 40px rgba(244,63,94,0.25)'
-                : '0 25px 50px -12px rgba(0,0,0,0.5)',
-            }}
-            transition={{ duration: 0.4 }}
-          >
+          <div className="relative p-6 sm:p-8 space-y-8">
             <AnimatePresence mode="wait">
             {podiumPlayer ? (
               <motion.div
@@ -200,10 +205,11 @@ export default function PublicLiveView() {
               </motion.div>
             )}
             </AnimatePresence>
-          </motion.div>
+          </div>
           </PlayerDisplayStage>
 
-          <div className="glass-card rounded-3xl p-6 border border-slate-800 space-y-4 flex flex-col h-[520px]">
+          {/* Live Bid Ledger — same continuous panel, separated by a divider. */}
+          <div className="border-t border-slate-800/80 p-6 sm:p-8 space-y-4">
             <div>
               <h3 className="text-sm font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
                 <Clock className="w-4 h-4 text-emerald-400" /> Live Bid Ledger
@@ -211,7 +217,7 @@ export default function PublicLiveView() {
               <p className="text-[11px] text-slate-400">Real-time audited auction bid stream</p>
             </div>
 
-            <div className="flex-1 overflow-y-auto space-y-3 pr-1">
+            <div className="max-h-[320px] overflow-y-auto space-y-3 pr-1">
               {safeBidHistory.length === 0 ? (
                 <div className="text-center py-16 text-slate-500 text-xs">No bids logged in ledger yet.</div>
               ) : (
@@ -232,7 +238,7 @@ export default function PublicLiveView() {
               )}
             </div>
           </div>
-        </div>
+        </motion.div>
       </main>
     </div>
   );

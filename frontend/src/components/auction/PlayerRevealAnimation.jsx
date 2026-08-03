@@ -5,43 +5,6 @@ import SpotlightBackground from './SpotlightBackground';
 import FloatingParticles from './FloatingParticles';
 import { soundManager, AUCTION_SOUNDS } from './soundManager';
 
-/**
- * PlayerRevealAnimation — Cinematic sports-broadcast player introduction.
- *
- * REDESIGN: a single continuous composition (not a card), choreographed as a
- * TV-style reveal. Every element, once shown, STAYS on screen — the scene
- * builds up rather than swapping between phases:
- *
- *   STEP 1 (lights) 0.20s → Stadium lighting + spotlight + particles fade up
- *   STEP 2 (image)  0.60s → Player image scales in, tilts in 3D, glowing glass
- *                            frame, floating particles, soft light sweep — HELD
- *   STEP 3 (name)   1.15s → Name types in letter-by-letter, then glow-pulses
- *   STEP 4 (stats)  2.00s → Key info slides/fades/glows in ONE AT A TIME
- *                            (Position → Category → Session → Base Price → …)
- *   STEP 5 (hold)   3.05s → Complete presentation holds, then dissolves
- *   onComplete fires at 3.40s → state machine advances to LIVE bidding.
- *
- * The total runtime (3.40s) is intentionally kept just under the 3500ms
- * socket fallback in useAuctionAnimation (handlePlayerLaunched), so this
- * component drives the INTRO→LIVE transition via onComplete WITHOUT changing
- * any timer / socket / bidding logic. Do not exceed that budget here.
- *
- * GPU-friendly transform / opacity / filter throughout; honors
- * prefers-reduced-motion.
- *
- * Props (contract preserved — do not change):
- *   - player: { name, imageUrl|image, category, primaryPosition|positions[],
- *               jerseyName, basePrice, studentId, session, country, experience }
- *   - onComplete: () => void  (called when animation finishes)
- *   - isActive: boolean       (controls mount/unmount)
- *   - inline: boolean         (default false) — when true the overlay renders
- *              as an ABSOLUTE layer filling its nearest positioned ancestor
- *              (Podium Admin player-detail panel, Manager / Spectator stage).
- *              When false it stays a full-screen fixed overlay.
- */
-
-// Neutral, generic footballer crest used when a player has no uploaded image.
-// Original artwork — deliberately not modeled on any real person's likeness.
 const PLAYER_FALLBACK_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="320" height="320" viewBox="0 0 320 320">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
@@ -64,14 +27,20 @@ const PLAYER_FALLBACK_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="320"
 
 // Additive step scheduler — each step turns another layer ON and leaves the
 // previous ones visible, so the scene accumulates like a broadcast build-up.
+// Pacing (per spec) is deliberately unhurried so viewers can actually read
+// every detail before the stage hands off to LIVE bidding:
+//   0.2–2.0s  cinematic opening — lights, particles, player image
+//   2.2s      letter-by-letter name reveal (~1.8s to finish typing)
+//   4.0s      player info revealed one item at a time (~1.6s cascade)
+//   6.2–8.2s  complete presentation held fully visible for reading
 const STEP_TIMINGS = [
   { step: 1, at: 200 },   // lights / stadium
-  { step: 2, at: 600 },   // image reveal (held)
-  { step: 3, at: 1150 },  // name typing
-  { step: 4, at: 2000 },  // stat cascade
-  { step: 5, at: 3050 },  // final hold
+  { step: 2, at: 900 },   // image reveal (held)
+  { step: 3, at: 2200 },  // name typing
+  { step: 4, at: 4000 },  // stat cascade
+  { step: 5, at: 6200 },  // final hold
 ];
-const COMPLETE_AT = 3400;
+const COMPLETE_AT = 8200;
 
 export default function PlayerRevealAnimation({ player, onComplete, isActive = true, inline = false }) {
   const reduceMotion = useReducedMotion();
@@ -176,9 +145,12 @@ export default function PlayerRevealAnimation({ player, onComplete, isActive = t
             animate={{ opacity: showLights ? 1 : 0, scaleY: showLights ? 1 : 0.4 }}
             transition={{ duration: 0.7, ease: 'easeOut' }}
           />
-          {/* Soft camera push-in on the whole stage as the scene assembles */}
+          {/* Soft camera push-in on the whole stage as the scene assembles.
+              Fills the (now larger) container, stays centered, and can scroll
+              vertically as an overflow safety-net so nothing is ever clipped on
+              short viewports. Padding/gap scale down on small screens. */}
           <motion.div
-            className="relative z-10 flex flex-col items-center gap-6 px-6 text-center"
+            className="relative z-10 flex h-full w-full max-w-4xl flex-col items-center justify-center gap-4 overflow-y-auto px-4 py-6 text-center sm:gap-6 sm:px-8"
             initial={{ scale: 1.06 }}
             animate={{ scale: showStats ? 1 : 1.03 }}
             transition={{ duration: 3, ease: [0.16, 1, 0.3, 1] }}
@@ -215,7 +187,7 @@ export default function PlayerRevealAnimation({ player, onComplete, isActive = t
                       <img
                         src={imageSrc}
                         alt={player.name}
-                        className="h-40 w-40 rounded-[1.6rem] object-cover sm:h-48 sm:w-48"
+                        className="h-32 w-32 rounded-[1.6rem] object-cover sm:h-44 sm:w-44 lg:h-52 lg:w-52"
                         style={{ willChange: 'transform, filter' }}
                       />
                       {/* Soft light sweep across the portrait */}
@@ -272,17 +244,17 @@ export default function PlayerRevealAnimation({ player, onComplete, isActive = t
               {showName && (
                 <motion.div key="name" className="relative">
                   <motion.h1
-                    className="flex flex-wrap items-center justify-center text-center text-4xl font-black font-heading tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-blue-400 to-emerald-400 sm:text-5xl lg:text-6xl"
+                    className="flex max-w-full flex-wrap items-center justify-center px-2 text-center text-3xl font-black font-heading tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-blue-400 to-emerald-400 sm:text-5xl lg:text-6xl"
                     aria-label={player.name}
                     animate={
                       namePulsing
                         ? {
-                            filter: [
-                              'drop-shadow(0 0 0px rgba(56,189,248,0))',
-                              'drop-shadow(0 0 18px rgba(56,189,248,0.65))',
-                              'drop-shadow(0 0 4px rgba(56,189,248,0.2))',
-                            ],
-                          }
+                          filter: [
+                            'drop-shadow(0 0 0px rgba(56,189,248,0))',
+                            'drop-shadow(0 0 18px rgba(56,189,248,0.65))',
+                            'drop-shadow(0 0 4px rgba(56,189,248,0.2))',
+                          ],
+                        }
                         : {}
                     }
                     transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
@@ -329,18 +301,17 @@ export default function PlayerRevealAnimation({ player, onComplete, isActive = t
               {showStats && (
                 <motion.div
                   key="stats"
-                  className="flex w-full max-w-md flex-col items-stretch gap-2.5"
+                  className="grid w-full max-w-2xl grid-cols-1 gap-2.5 sm:grid-cols-2"
                 >
                   {detailItems.map((item, idx) => {
                     const Icon = item.icon;
                     return (
                       <motion.div
                         key={item.label}
-                        className={`flex items-center gap-3 rounded-xl border px-4 py-2.5 backdrop-blur-md ${
-                          item.highlight
-                            ? 'border-emerald-400/50 bg-emerald-500/10'
-                            : 'border-white/10 bg-white/5'
-                        }`}
+                        className={`flex items-center gap-3 rounded-xl border px-4 py-2.5 backdrop-blur-md ${item.highlight
+                          ? 'border-emerald-400/50 bg-emerald-500/10'
+                          : 'border-white/10 bg-white/5'
+                          }`}
                         initial={{ opacity: 0, x: -32, filter: 'blur(6px)' }}
                         animate={{
                           opacity: 1,
@@ -365,19 +336,17 @@ export default function PlayerRevealAnimation({ player, onComplete, isActive = t
                         style={{ willChange: 'transform, opacity, filter' }}
                       >
                         <Icon
-                          className={`h-4 w-4 flex-shrink-0 ${
-                            item.highlight ? 'text-emerald-300' : 'text-cyan-300'
-                          }`}
+                          className={`h-4 w-4 flex-shrink-0 ${item.highlight ? 'text-emerald-300' : 'text-cyan-300'
+                            }`}
                         />
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                        <span className="whitespace-nowrap text-[11px] font-bold uppercase tracking-widest text-slate-400">
                           {item.label}
                         </span>
                         <span
-                          className={`ml-auto font-bold ${
-                            item.highlight
-                              ? 'font-mono text-lg text-emerald-300'
-                              : 'text-sm text-white'
-                          }`}
+                          className={`ml-auto min-w-0 truncate text-right font-bold ${item.highlight
+                            ? 'font-mono text-lg text-emerald-300'
+                            : 'text-base text-white'
+                            }`}
                         >
                           {item.value}
                         </span>

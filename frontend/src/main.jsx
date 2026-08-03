@@ -9,18 +9,22 @@ import { PhaseProvider } from './context/PhaseContext.jsx';
 
 import { ThemeProvider } from './context/ThemeContext.jsx';
 
+import { ErrorBoundary } from './components/ErrorBoundary.jsx';
+
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <ThemeProvider>
-      <AuthProvider>
-        <SocketProvider>
-          <PhaseProvider>
-            <AuctionProvider>
-              <App />
-            </AuctionProvider>
-          </PhaseProvider>
-        </SocketProvider>
-      </AuthProvider>
-    </ThemeProvider>
+    <ErrorBoundary>
+      <ThemeProvider>
+        <AuthProvider>
+          <SocketProvider>
+            <PhaseProvider>
+              <AuctionProvider>
+                <App />
+              </AuctionProvider>
+            </PhaseProvider>
+          </SocketProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    </ErrorBoundary>
   </React.StrictMode>,
 );

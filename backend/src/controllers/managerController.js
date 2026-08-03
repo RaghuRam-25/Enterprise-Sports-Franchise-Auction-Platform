@@ -317,3 +317,165 @@ export const getAuctionHistory = async (req, res, next) => {
     res.json({ success: true, count: history.length, data: history });
   } catch (e) { next(e); }
 };
+
+// ── GET TARGET PLAYERS LIST (Private to Manager) ──────────────────────────────
+export const getTargetPlayers = async (req, res, next) => {
+  try {
+    const managerId = req.user._id || req.user.id;
+    const { ManagerTargetPlayer } = await import('../models/ManagerTargetPlayer.js');
+
+    const targets = await ManagerTargetPlayer.find({ managerId })
+      .sort({ priority: 1 })
+      .populate({
+        path: 'playerId',
+        select: 'name jerseyName studentId primaryPosition positions category basePrice session imageUrl status soldToTeam finalPrice'
+      });
+
+    res.json({ success: true, count: targets.length, data: targets });
+  } catch (e) { next(e); }
+};
+
+// ── ADD PLAYER TO TARGET LIST ──────────────────────────────────────────────────
+export const addTargetPlayer = async (req, res, next) => {
+  try {
+    const managerId = req.user._id || req.user.id;
+    const teamId = req.user.teamId;
+    const { playerId, note, optionalBudgetLimit } = req.body;
+
+    if (!playerId) {
+      return res.status(400).json({ success: false, message: 'Player ID is required' });
+    }
+
+    const { Player } = await import('../models/Player.js');
+    const playerExists = await Player.findById(playerId);
+    if (!playerExists) {
+      return res.status(404).json({ success: false, message: 'Player not found' });
+    }
+
+    const { ManagerTargetPlayer } = await import('../models/ManagerTargetPlayer.js');
+
+    // Check if already in target list
+    const existing = await ManagerTargetPlayer.findOne({ managerId, playerId });
+    if (existing) {
+      return res.status(400).json({ success: false, message: 'Player is already in your target list' });
+    }
+
+    // Determine priority = highest priority + 1
+    const highestPriorityTarget = await ManagerTargetPlayer.findOne({ managerId }).sort({ priority: -1 });
+    const nextPriority = highestPriorityTarget ? highestPriorityTarget.priority + 1 : 1;
+
+    const newTarget = await ManagerTargetPlayer.create({
+      managerId,
+      teamId: teamId || req.user._id,
+      playerId,
+      priority: nextPriority,
+      note: note || '',
+      optionalBudgetLimit: optionalBudgetLimit ? Number(optionalBudgetLimit) : null
+    });
+
+    const populated = await ManagerTargetPlayer.findById(newTarget._id).populate({
+      path: 'playerId',
+      select: 'name jerseyName studentId primaryPosition positions category basePrice session imageUrl status soldToTeam finalPrice'
+    });
+
+    res.status(201).json({ success: true, message: 'Player added to target list', data: populated });
+  } catch (e) { next(e); }
+};
+
+// ── UPDATE TARGET PLAYER DETAILS (Note & Budget Cap) ──────────────────────────
+export const updateTargetPlayer = async (req, res, next) => {
+  try {
+    const managerId = req.user._id || req.user.id;
+    const { id } = req.params;
+    const { note, optionalBudgetLimit, priority } = req.body;
+
+    const { ManagerTargetPlayer } = await import('../models/ManagerTargetPlayer.js');
+
+    const target = await ManagerTargetPlayer.findOne({ _id: id, managerId });
+    if (!target) {
+      return res.status(404).json({ success: false, message: 'Target entry not found' });
+    }
+
+    if (note !== undefined) target.note = note;
+    if (optionalBudgetLimit !== undefined) {
+      target.optionalBudgetLimit = optionalBudgetLimit !== null && optionalBudgetLimit !== '' ? Number(optionalBudgetLimit) : null;
+    }
+    if (priority !== undefined && !isNaN(Number(priority))) {
+      target.priority = Number(priority);
+    }
+
+    await target.save();
+
+    const populated = await ManagerTargetPlayer.findById(target._id).populate({
+      path: 'playerId',
+      select: 'name jerseyName studentId primaryPosition positions category basePrice session imageUrl status soldToTeam finalPrice'
+    });
+
+    res.json({ success: true, message: 'Target details updated', data: populated });
+  } catch (e) { next(e); }
+};
+
+// ── REORDER TARGET PRIORITIES ─────────────────────────────────────────────────
+export const reorderTargetPlayers = async (req, res, next) => {
+  try {
+    const managerId = req.user._id || req.user.id;
+    const { targetOrder } = req.body; // Array of { id, priority }
+
+    if (!Array.isArray(targetOrder)) {
+      return res.status(400).json({ success: false, message: 'targetOrder must be an array of objects' });
+    }
+
+    const { ManagerTargetPlayer } = await import('../models/ManagerTargetPlayer.js');
+
+    const bulkOps = targetOrder.map(item => ({
+      updateOne: {
+        filter: { _id: item.id, managerId },
+        update: { $set: { priority: Number(item.priority) } }
+      }
+    }));
+
+    if (bulkOps.length > 0) {
+      await ManagerTargetPlayer.bulkWrite(bulkOps);
+    }
+
+    const updatedTargets = await ManagerTargetPlayer.find({ managerId })
+      .sort({ priority: 1 })
+      .populate({
+        path: 'playerId',
+        select: 'name jerseyName studentId primaryPosition positions category basePrice session imageUrl status soldToTeam finalPrice'
+      });
+
+    res.json({ success: true, message: 'Target priorities updated', data: updatedTargets });
+  } catch (e) { next(e); }
+};
+
+// ── DELETE PLAYER FROM TARGET LIST ────────────────────────────────────────────
+export const deleteTargetPlayer = async (req, res, next) => {
+  try {
+    const managerId = req.user._id || req.user.id;
+    const { id } = req.params;
+
+    const { ManagerTargetPlayer } = await import('../models/ManagerTargetPlayer.js');
+
+    const deleted = await ManagerTargetPlayer.findOneAndDelete({ _id: id, managerId });
+    if (!deleted) {
+      return res.status(404).json({ success: false, message: 'Target entry not found' });
+    }
+
+    // Re-normalize priorities sequentially (1, 2, 3...)
+    const remainingTargets = await ManagerTargetPlayer.find({ managerId }).sort({ priority: 1 });
+    const bulkOps = remainingTargets.map((item, idx) => ({
+      updateOne: {
+        filter: { _id: item._id },
+        update: { $set: { priority: idx + 1 } }
+      }
+    }));
+
+    if (bulkOps.length > 0) {
+      await ManagerTargetPlayer.bulkWrite(bulkOps);
+    }
+
+    res.json({ success: true, message: 'Player removed from target list' });
+  } catch (e) { next(e); }
+};
+

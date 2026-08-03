@@ -12,3 +12,5 @@ export { soundManager, AUCTION_SOUNDS } from './soundManager';
 export { useAuctionAnimation, ANIM_STATES } from '../../hooks/useAuctionAnimation';
 export { useBidEffects } from '../../hooks/useBidEffects';
 export { useWinnerAnimation } from '../../hooks/useWinnerAnimation';
+export { default as TargetPlayerAlert } from './TargetPlayerAlert';
+

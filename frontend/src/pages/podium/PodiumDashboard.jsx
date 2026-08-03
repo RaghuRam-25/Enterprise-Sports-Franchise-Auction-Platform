@@ -254,12 +254,15 @@ export const PodiumDashboard = () => {
               </div>
             </div>
 
-            {/* Player Details / Podium spotlight area — every cinematic here is
-                confined to THIS section so the admin's Unsold Pool sidebar,
-                Launchpad, and bid log stay visible at all times. */}
+            {/* Unified Player Display panel — the cinematic spotlight, live
+                control deck, and podium bid log all live inside ONE glass card
+                so there is no detached section or empty gap. Every cinematic
+                stays confined here; the admin's Unsold Pool sidebar and
+                Launchpad remain visible at all times. */}
+            <div className="glass-card rounded-2xl border border-slate-800 overflow-hidden bg-gradient-to-b from-slate-900 via-slate-900/90 to-blue-950/20">
             <div className="relative">
             {podiumPlayer ? (
-              <div className="glass-card relative overflow-hidden rounded-2xl p-6 border border-slate-800 space-y-6 bg-gradient-to-b from-slate-900 via-slate-900/90 to-blue-950/20">
+              <div className="relative overflow-hidden p-6 space-y-6 min-h-[460px] sm:min-h-[540px] lg:min-h-[600px]">
 
                 {/* Inline cinematic player intro — replaces the detail section in
                     place during the INTRO phase, then self-dismisses to LIVE
@@ -383,7 +386,7 @@ export const PodiumDashboard = () => {
 
               </div>
             ) : (
-              <div className="glass-card relative overflow-hidden rounded-2xl border border-slate-800 min-h-[420px]">
+              <div className="relative overflow-hidden min-h-[460px] sm:min-h-[540px] lg:min-h-[600px]">
                 {/* Waiting cinematic — confined to THIS Player Details panel only.
                     Navbar + Unsold Player Pool sidebar stay visible; the
                     animation never becomes a full-screen takeover for the admin. */}
@@ -437,8 +440,8 @@ export const PodiumDashboard = () => {
             </div>
             {/* end spotlight area */}
 
-            {/* Live Bid Log History */}
-            <div className="glass-card rounded-2xl p-6 border border-slate-800 space-y-3">
+            {/* Live Bid Log History — same unified card, divider-separated. */}
+            <div className="border-t border-slate-800/80 p-6 space-y-3">
               <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">Live Podium Bid Log</h4>
               <div className="max-h-48 overflow-y-auto space-y-2 text-xs">
                 {bidHistory.length === 0 ? (
@@ -459,6 +462,8 @@ export const PodiumDashboard = () => {
                 )}
               </div>
             </div>
+            </div>
+            {/* end unified Player Display panel */}
 
           </div>
 

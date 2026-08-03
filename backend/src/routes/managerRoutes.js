@@ -10,13 +10,26 @@ import {
   placeBid,
   placeBlindBid,
   changeOwnPassword,
-  getAuctionHistory
+  getAuctionHistory,
+  getTargetPlayers,
+  addTargetPlayer,
+  updateTargetPlayer,
+  reorderTargetPlayers,
+  deleteTargetPlayer
 } from '../controllers/managerController.js';
 
 const router = express.Router();
 
 // All manager routes require authentication
 router.use(protect);
+
+// ── Team Manager Target Players Shortlist ──────────────────────────────────────
+router.get('/targets', authorize('TEAM_MANAGER'), getTargetPlayers);
+router.post('/targets', authorize('TEAM_MANAGER'), addTargetPlayer);
+router.put('/targets/reorder', authorize('TEAM_MANAGER'), reorderTargetPlayers);
+router.put('/targets/:id', authorize('TEAM_MANAGER'), updateTargetPlayer);
+router.delete('/targets/:id', authorize('TEAM_MANAGER'), deleteTargetPlayer);
+
 
 // ── Team Manager + Super Admin access ─────────────────────────────────────────
 

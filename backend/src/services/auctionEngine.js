@@ -220,6 +220,25 @@ class AuctionEngine {
       this.currentBid = winner.amount;
       this.highestBidder = { id: winner.teamId, name: winner.teamName };
     }
+
+    // When the clock expires WITH a winning bid, this is a normal SELL. Emit a
+    // result-shaped payload (same contract as hammerSell) so every client's
+    // animation state machine can trigger the "SOLD" celebration — the plain
+    // broadcastState() shape lacks { player, winner } and was silently ignored.
+    if (this.highestBidder) {
+      const result = {
+        player: this.podiumPlayer,
+        winner: this.highestBidder,
+        soldPrice: this.currentBid,
+      };
+      if (this.io) {
+        this.io.emit('auction:completed', result);
+      }
+      this.podiumPlayer = null;
+      return;
+    }
+
+    // No bids → player goes unsold; broadcast full state (no celebration).
     this.broadcastState('auction:completed');
   }
 

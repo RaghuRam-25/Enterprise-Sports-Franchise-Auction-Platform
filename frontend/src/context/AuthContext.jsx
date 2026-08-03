@@ -175,9 +175,19 @@ export const AuthProvider = ({ children }) => {
     socketRef.current = socket;
   }, []);
 
+  if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-slate-950 text-slate-300">
+        <div className="w-10 h-10 rounded-full border-2 border-slate-700 border-t-emerald-400 animate-spin" />
+        <span className="text-xs font-mono uppercase tracking-widest text-slate-500">Initializing Enterprise Platform</span>
+      </div>
+    );
+  }
+
   return (
     <AuthContext.Provider value={{ user, login, logout, switchRole, updateUser, registerSocket, loading, getDashboardForRole }}>
-      {!loading && children}
+      {children}
     </AuthContext.Provider>
   );
 };
+

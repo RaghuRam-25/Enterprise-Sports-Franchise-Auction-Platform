@@ -85,10 +85,12 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }) {
   // ── TEAM MANAGER NAV CONFIG ─────────────────────────────────────────────
   const teamManagerNav = [
     { type: 'item', path: '/manager/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { type: 'item', path: '/manager/target-players', label: 'Target Players', icon: Crown, highlight: true },
     { type: 'item', path: '/manager/my-team', label: 'My Team', icon: ShieldCheck },
     { type: 'item', path: '/manager/players', label: 'Player Pool', icon: Users },
     { type: 'item', path: '/manager/settings', label: 'Team Settings', icon: Settings }
   ];
+
 
   // ── PLAYER NAV CONFIG ───────────────────────────────────────────────────
   // "Live Auction" sits at the top — it's the most-used link during an active
