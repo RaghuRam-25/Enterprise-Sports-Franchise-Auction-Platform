@@ -122,10 +122,10 @@ export default function SuperAdminDashboard() {
               <div
                 key={p}
                 className={`rounded-xl p-3 border transition ${isCurrent
-                    ? 'border-blue-500 bg-blue-500/15 ring-1 ring-blue-500/40'
-                    : isDone
-                      ? 'border-emerald-600/40 bg-emerald-500/10'
-                      : 'border-slate-800 bg-slate-900/50'
+                  ? 'border-blue-500 bg-blue-500/15 ring-1 ring-blue-500/40'
+                  : isDone
+                    ? 'border-emerald-600/40 bg-emerald-500/10'
+                    : 'border-slate-800 bg-slate-900/50'
                   }`}
               >
                 <div className="flex items-center justify-between">

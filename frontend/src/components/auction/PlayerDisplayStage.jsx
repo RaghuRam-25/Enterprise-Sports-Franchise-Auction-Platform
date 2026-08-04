@@ -3,6 +3,8 @@ import WaitingAnimation from './WaitingAnimation';
 import PlayerRevealAnimation from './PlayerRevealAnimation';
 import WinnerAnimation from './WinnerAnimation';
 import RosterAnimation from './RosterAnimation';
+import LiveAuctionLeaderboard from './LiveAuctionLeaderboard';
+import FullscreenWrapper from './FullscreenWrapper';
 
 /**
  * PlayerDisplayStage — the single, reusable "Player Details" cinematic surface.
@@ -63,68 +65,77 @@ export default function PlayerDisplayStage({
   const cinematicActive = showWaiting || isIntro || isSell || isRoster;
 
   return (
-    <div className={`relative ${className}`}>
-      {/* Cinematic broadcast surface — a positioned, self-contained layer that
-          reserves its full premium height ONLY while a scene is playing. When
-          bidding goes LIVE it collapses to zero height and the live content
-          below rises flush against the player card, eliminating the dead space
-          that used to sit between the animation and the controls. */}
-      <div
-        className={`relative overflow-hidden rounded-2xl ${
-          cinematicActive ? cinematicHeight : 'h-0'
-        }`}
-        aria-hidden={!cinematicActive}
-      >
-        {/* Confined idle / waiting scene */}
-        <WaitingAnimation
-          inline
-          isActive={showWaiting}
-          teamsConnected={waitingStats.teamsConnected || 0}
-          managersReady={waitingStats.managersReady || 0}
-        />
+    <div className={`relative ${className} h-full`}>
+      <FullscreenWrapper>
+        <div className="relative h-full flex flex-col">
+          <div className="flex-1 relative overflow-hidden rounded-t-2xl">
+            {/* Cinematic broadcast surface */}
+            <div
+              className={`relative overflow-hidden rounded-2xl ${cinematicActive ? `${cinematicHeight} h-full` : 'h-0'
+                }`}
+              aria-hidden={!cinematicActive}
+            >
+              {/* Confined idle / waiting scene */}
+              <WaitingAnimation
+                inline
+                isActive={showWaiting}
+                teamsConnected={waitingStats.teamsConnected || 0}
+                managersReady={waitingStats.managersReady || 0}
+              />
 
-        {/* Confined player introduction reveal */}
-        <PlayerRevealAnimation
-          inline
-          isActive={isIntro}
-          player={introPlayer}
-          onComplete={onAnimationComplete}
-        />
+              {/* Confined player introduction reveal */}
+              <PlayerRevealAnimation
+                inline
+                isActive={isIntro}
+                player={introPlayer}
+                onComplete={onAnimationComplete}
+              />
 
-        {/* Confined "SOLD" championship celebration */}
-        <WinnerAnimation
-          inline
-          isActive={isSell}
-          winnerData={winnerData}
-          isManagerWinner={isManagerWinner}
-          onComplete={onAnimationComplete}
-        />
+              {/* Confined "SOLD" championship celebration */}
+              <WinnerAnimation
+                inline
+                isActive={isSell}
+                winnerData={winnerData}
+                isManagerWinner={isManagerWinner}
+                onComplete={onAnimationComplete}
+              />
 
-        {/* Confined roster-update stage */}
-        <RosterAnimation
-          inline
-          isActive={isRoster}
-          rosterUpdate={rosterUpdate}
-          onComplete={onAnimationComplete}
-        />
-      </div>
+              {/* Confined roster-update stage */}
+              <RosterAnimation
+                inline
+                isActive={isRoster}
+                rosterUpdate={rosterUpdate}
+                onComplete={onAnimationComplete}
+              />
+            </div>
 
-      {/* The view's own live-bidding UI. It stays mounted so React/socket state
+            {/* The view's own live-bidding UI. It stays mounted so React/socket state
           is preserved; it is only visually suppressed (overlaid off-screen)
           while a cinematic plays, then smoothly restored in normal flow — no
           layout shift, no remount, and no reserved gap once the scene ends. */}
-      <AnimatePresence>
-        <div
-          className={`transition-opacity duration-500 ease-out ${
-            cinematicActive
-              ? 'pointer-events-none absolute inset-0 select-none opacity-0'
-              : 'relative opacity-100'
-          }`}
-          aria-hidden={cinematicActive}
-        >
-          {children}
+            <AnimatePresence>
+              <div
+                className={`transition-opacity duration-500 ease-out ${cinematicActive && children // This is a manager view with controls
+                    ? 'absolute inset-0 z-10 flex flex-col justify-end bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-[:fullscreen]:opacity-100'
+                    : cinematicActive // This is a spectator view or admin view
+                      ? 'pointer-events-none absolute inset-0 select-none opacity-0'
+                      : 'relative opacity-100' // Not cinematic, normal view
+                  }`}
+                aria-hidden={cinematicActive}
+              >
+                {children}
+              </div>
+            </AnimatePresence>
+          </div>
+
+          {/* Spectator Leaderboard: shown only if cinematic is active AND it's NOT a manager view (no children) */}
+          {cinematicActive && !children && (
+            <div className="h-28 flex-shrink-0">
+              <LiveAuctionLeaderboard />
+            </div>
+          )}
         </div>
-      </AnimatePresence>
+      </FullscreenWrapper>
     </div>
   );
 }

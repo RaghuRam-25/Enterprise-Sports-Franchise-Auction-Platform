@@ -42,6 +42,7 @@ const PodiumDashboard = lazy(() =>
 );
 const PodiumPlayersView = lazy(() => import('./pages/podium/PodiumPlayersView'));
 const PodiumTeamsView = lazy(() => import('./pages/podium/PodiumTeamsView'));
+const PodiumVideoControl = lazy(() => import('./pages/podium/PodiumVideoControl'));
 
 // ── Admin Panel ───────────────────────────────────────────────────────────────
 const SuperAdminDashboard = lazy(() => import('./pages/admin/SuperAdminDashboard'));
@@ -185,6 +186,14 @@ function App() {
                 element={
                   <ProtectedRoute allowedRoles={['PODIUM_ADMIN', 'SUPER_ADMIN']}>
                     <PodiumDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="video-control"
+                element={
+                  <ProtectedRoute allowedRoles={['PODIUM_ADMIN', 'SUPER_ADMIN']}>
+                    <PodiumVideoControl />
                   </ProtectedRoute>
                 }
               />

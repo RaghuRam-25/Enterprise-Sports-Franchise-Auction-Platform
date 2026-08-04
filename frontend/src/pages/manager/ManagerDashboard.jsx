@@ -399,7 +399,7 @@ export const ManagerDashboard = () => {
             </div>
           </div>
         ) : (
-          <form onSubmit={handleBlindBidSubmit} className="space-y-4 bg-slate-950/80 p-5 sm:p-6 rounded-2xl border border-purple-500/20">
+          <form onSubmit={handleBlindBidSubmit} className="space-y-4 bg-slate-950/80 p-5 sm:p-6 rounded-2xl border border-purple-500/20 hidden group-[:fullscreen]:block">
             <div>
               <label className="block text-xs font-bold text-purple-300 uppercase mb-1">Sealed Blind Bid Amount (BDT)</label>
               <input

@@ -15,7 +15,8 @@ import {
   ChevronLeft,
   Crown,
   MapPin,
-  Calendar
+  Calendar,
+  Video
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useAuction } from '../context/AuctionContext';
@@ -82,6 +83,7 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }) {
   // ── PODIUM ADMIN NAV CONFIG ─────────────────────────────────────────────
   const podiumAdminNav = [
     { type: 'item', path: '/podium/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { type: 'item', path: '/podium/video-control', label: 'Video Control', icon: Video },
   ];
 
   // ── TEAM MANAGER NAV CONFIG ─────────────────────────────────────────────

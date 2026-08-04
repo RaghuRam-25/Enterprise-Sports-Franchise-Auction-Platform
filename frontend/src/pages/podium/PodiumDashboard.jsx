@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Play, Pause, RotateCcw, XCircle, Gavel, Search, Settings2, ShieldAlert, Shuffle, SkipForward } from 'lucide-react';
 import { useAuction } from '../../context/AuctionContext';
+import { useSocket } from '../../context/SocketContext';
 import api from '../../services/api';
 import {
   WaitingAnimation,
@@ -8,6 +9,8 @@ import {
   WinnerAnimation,
   RosterAnimation,
 } from '../../components/auction';
+import FullscreenWrapper from '../../components/auction/FullscreenWrapper';
+import EmbeddedVideoPlayer from '../../components/auction/EmbeddedVideoPlayer';
 import { useAuctionAnimation } from '../../hooks/useAuctionAnimation';
 import { playerFallback } from '../../utils/playerFallback';
 import { AnimatePresence } from 'framer-motion';
@@ -39,6 +42,125 @@ export const PodiumDashboard = () => {
     ANIM_STATES,
     onAnimationComplete,
   } = useAuctionAnimation();
+
+  const { socket } = useSocket();
+  const [displayVideoUrl, setDisplayVideoUrl] = useState(null);
+  const [isIntroLoopActive, setIsIntroLoopActive] = useState(false);
+  const introLoopIntervalRef = useRef(null);
+  const introLoopTimeoutRef = useRef(null);
+
+  // Derived unsold-player list — memoized on `players` so the array reference
+  // stays STABLE across renders. Without this, `unsoldPlayers` was a brand
+  // new array every render, which made the intro-loop effect below (whose
+  // dependency array includes `unsoldPlayers`) tear down and re-run on every
+  // unrelated re-render (e.g. every timer tick), repeatedly re-triggering
+  // `showNextPlayer()` and restarting the on-screen animation.
+  // This is also computed BEFORE any effect references it — previously
+  // `unsoldPlayers` was declared far below the intro-loop effect that used
+  // it, which threw "Cannot access 'unsoldPlayers' before initialization"
+  // (temporal dead zone) and crashed the component on mount.
+  const safePlayers = Array.isArray(players) ? players : [];
+  const unsoldPlayers = useMemo(
+    () =>
+      safePlayers.filter((p) => {
+        const st = (p.status || '').toLowerCase();
+        return st === 'approved' || st === 'unsold';
+      }),
+    [safePlayers]
+  );
+
+  const handleIntroLoopAnimationComplete = useCallback(() => {
+    // When an intro animation finishes during the loop, we cancel it
+    // to clear the podium for the next player in the sequence.
+    if (isIntroLoopActive) {
+      cancelAuction();
+    }
+  }, [isIntroLoopActive, cancelAuction]);
+
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleSetVideo = (data) => {
+      setDisplayVideoUrl(data.url);
+      // Stop intro loop if a video is played
+      if (data.url && isIntroLoopActive) {
+        setIsIntroLoopActive(false);
+      }
+    };
+
+    const handleIntroLoopControl = ({ action, durationMinutes }) => {
+      if (action === 'start') {
+        if (!isIntroLoopActive) {
+          setIsIntroLoopActive(true);
+          // Set a timeout to stop the loop
+          if (durationMinutes) {
+            if (introLoopTimeoutRef.current) clearTimeout(introLoopTimeoutRef.current);
+            introLoopTimeoutRef.current = setTimeout(() => {
+              setIsIntroLoopActive(false);
+              socket.emit('podium:intro-loop-status', { isLooping: false });
+            }, durationMinutes * 60 * 1000);
+          }
+          socket.emit('podium:intro-loop-status', { isLooping: true });
+        }
+      } else { // stop
+        setIsIntroLoopActive(false);
+        socket.emit('podium:intro-loop-status', { isLooping: false });
+      }
+    };
+
+    const handleGetIntroLoopStatus = () => {
+      socket.emit('podium:intro-loop-status', { isLooping: isIntroLoopActive });
+    };
+
+    socket.on('podium:video-control', handleSetVideo);
+    socket.on('podium:intro-loop-control', handleIntroLoopControl);
+    socket.on('podium:get-intro-loop-status', handleGetIntroLoopStatus);
+
+    return () => {
+      socket.off('podium:video-control', handleSetVideo);
+      socket.off('podium:intro-loop-control', handleIntroLoopControl);
+      socket.off('podium:get-intro-loop-status', handleGetIntroLoopStatus);
+    };
+  }, [socket, isIntroLoopActive]);
+
+  // Effect for managing the intro loop
+  useEffect(() => {
+    const cleanup = () => {
+      if (introLoopIntervalRef.current) clearInterval(introLoopIntervalRef.current);
+      if (introLoopTimeoutRef.current) clearTimeout(introLoopTimeoutRef.current);
+      introLoopIntervalRef.current = null;
+      introLoopTimeoutRef.current = null;
+    };
+
+    if (isIntroLoopActive) {
+      const categoryOrder = ['Icon Category', 'A Grade', 'B Grade', 'Emerging Youth'];
+      const sortedUnsold = [...unsoldPlayers].sort((a, b) => (categoryOrder.indexOf(a.category) - categoryOrder.indexOf(b.category)));
+
+      if (sortedUnsold.length === 0) {
+        triggerToast('No unsold players to start intro loop.', 'warning');
+        setIsIntroLoopActive(false);
+        if (socket) socket.emit('podium:intro-loop-status', { isLooping: false });
+        return cleanup;
+      }
+
+      let currentPlayerIndex = 0;
+      const showNextPlayer = () => {
+        if (podiumPlayer || displayVideoUrl) return;
+        const playerToShow = sortedUnsold[currentPlayerIndex];
+        // Use a duration longer than the animation. It will be cancelled by onComplete anyway.
+        pushToPodium(playerToShow, 20, 'normal');
+        currentPlayerIndex = (currentPlayerIndex + 1) % sortedUnsold.length;
+      };
+
+      const animationCycleTime = 16000; // PlayerRevealAnimation is ~15s. This provides a 1s buffer.
+      if (!podiumPlayer && !displayVideoUrl) showNextPlayer();
+      introLoopIntervalRef.current = setInterval(showNextPlayer, animationCycleTime);
+    } else {
+      cleanup();
+    }
+
+    return cleanup;
+  }, [isIntroLoopActive, unsoldPlayers, pushToPodium, podiumPlayer, displayVideoUrl, triggerToast, socket]);
 
   const getCategoryStyles = (category) => {
     switch (category) {
@@ -77,12 +199,6 @@ export const PodiumDashboard = () => {
   // Config settings for Launchpad
   const [customDuration, setCustomDuration] = useState(60);
   const [targetMode, setTargetMode] = useState('normal');
-
-  const safePlayers = Array.isArray(players) ? players : [];
-  const unsoldPlayers = safePlayers.filter(p => {
-    const st = (p.status || '').toLowerCase();
-    return st === 'approved' || st === 'unsold';
-  });
 
   const filteredUnsold = unsoldPlayers.filter(p => {
     const pName = p.name || '';
@@ -292,185 +408,213 @@ export const PodiumDashboard = () => {
                 so there is no detached section or empty gap. Every cinematic
                 stays confined here; the admin's Unsold Pool sidebar and
                 Launchpad remain visible at all times. */}
-          <div className="glass-card rounded-2xl border border-slate-800 overflow-hidden bg-gradient-to-b from-slate-900 via-slate-900/90 to-blue-950/20">
-            <div className="relative">
-              {podiumPlayer ? (
-                <div className="relative overflow-hidden p-6 space-y-6 min-h-[460px] sm:min-h-[540px] lg:min-h-[600px]">
+          <div className="glass-card rounded-2xl border border-slate-800 overflow-hidden bg-gradient-to-b from-slate-900 via-slate-900/90 to-blue-950/20 min-h-[460px] sm:min-h-[540px] lg:min-h-[600px]">
+            <FullscreenWrapper>
+              <div className="relative h-full">
+                {displayVideoUrl ? (
+                  <EmbeddedVideoPlayer url={displayVideoUrl} />
+                ) : isIntroLoopActive ? (
+                  <div className="relative h-full overflow-hidden rounded-2xl">
+                    <AnimatePresence>
+                      {introPlayer && animState === ANIM_STATES.INTRO ? (
+                        <PlayerRevealAnimation
+                          key="podium-intro-loop"
+                          inline
+                          player={introPlayer}
+                          onComplete={handleIntroLoopAnimationComplete}
+                          isActive={true}
+                        />
+                      ) : (
+                        <WaitingAnimation
+                          key="podium-intro-wait"
+                          inline
+                          isActive={true}
+                        />
+                      )}
+                    </AnimatePresence>
+                  </div>
+                ) : (
+                  <>
+                    {podiumPlayer ? (
+                      <div className="relative overflow-hidden p-6 space-y-6 h-full flex flex-col justify-center min-h-[460px] sm:min-h-[540px] lg:min-h-[600px]">
 
-                  {/* Inline cinematic player intro — replaces the detail section in
+                        {/* Inline cinematic player intro — replaces the detail section in
                     place during the INTRO phase, then self-dismisses to LIVE
                     (socket handler advances the state machine after ~3.5s), at
                     which point the admin control deck below becomes visible. */}
-                  <AnimatePresence>
-                    {animState === ANIM_STATES.INTRO && introPlayer && (
-                      <PlayerRevealAnimation
-                        key="podium-inline-reveal"
-                        inline
-                        player={introPlayer}
-                        onComplete={onAnimationComplete}
-                        isActive={animState === ANIM_STATES.INTRO}
-                      />
-                    )}
-                  </AnimatePresence>
+                        <AnimatePresence>
+                          {animState === ANIM_STATES.INTRO && introPlayer && (
+                            <PlayerRevealAnimation
+                              key="podium-inline-reveal"
+                              inline
+                              player={introPlayer}
+                              onComplete={isIntroLoopActive ? handleIntroLoopAnimationComplete : onAnimationComplete}
+                              isActive={animState === ANIM_STATES.INTRO}
+                            />
+                          )}
+                        </AnimatePresence>
 
-                  <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
+                        <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
 
-                    {/* Player Info & Photo */}
-                    <div className="flex items-center gap-4">
-                      <div className="relative">
-                        <img
-                          src={podiumPlayer.imageUrl || playerFallback('slate')}
-                          alt=""
-                          className="w-24 h-24 rounded-2xl object-cover border-2 border-emerald-500/40 shadow-xl"
-                        />
-                        <span className="absolute -bottom-2 -right-2 px-2 py-0.5 bg-emerald-500 text-slate-950 font-bold text-[10px] rounded-md">
-                          {podiumPlayer.category}
-                        </span>
+                          {/* Player Info & Photo */}
+                          <div className="flex items-center gap-4">
+                            <div className="relative">
+                              <img
+                                src={podiumPlayer.imageUrl || playerFallback('slate')}
+                                alt=""
+                                className="w-24 h-24 rounded-2xl object-cover border-2 border-emerald-500/40 shadow-xl"
+                              />
+                              <span className="absolute -bottom-2 -right-2 px-2 py-0.5 bg-emerald-500 text-slate-950 font-bold text-[10px] rounded-md">
+                                {podiumPlayer.category}
+                              </span>
+                            </div>
+
+                            <div className="space-y-1">
+                              <span className="text-[11px] font-bold text-blue-400 uppercase tracking-widest">ON THE PODIUM</span>
+                              <h2 className="text-2xl font-black font-heading text-white">{podiumPlayer.name}</h2>
+                              <p className="text-xs text-slate-300">
+                                {podiumPlayer.jerseyName} &bull; <span className="font-mono text-emerald-400">Base: {formatCurrency(podiumPlayer.basePrice)}</span>
+                              </p>
+                              <p className="text-[11px] text-slate-400 font-mono">ID: {podiumPlayer.studentId} &bull; {podiumPlayer.session}</p>
+                            </div>
+                          </div>
+
+                          {/* Countdown Timer Display */}
+                          <div className="flex flex-col items-center">
+                            <div className={`relative w-24 h-24 rounded-full flex items-center justify-center border-4 shadow-xl ${timerRemaining <= 10 ? 'border-rose-500 text-rose-400 animate-pulse' : 'border-emerald-500 text-emerald-400'
+                              }`}>
+                              <span className="text-3xl font-black font-mono">{timerRemaining}s</span>
+                            </div>
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
+                              Mode: <strong className="text-white">{biddingMode}</strong>
+                            </span>
+                          </div>
+
+                        </div>
+
+                        {/* Current Highest Bidder Banner */}
+                        <div className="bg-slate-950/90 border border-slate-800 p-4 rounded-xl flex items-center justify-between">
+                          <div>
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Current Leading Bid</span>
+                            <h3 className="text-2xl font-black font-mono text-emerald-400">{formatCurrency(currentBid)}</h3>
+                          </div>
+
+                          <div className="text-right">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Highest Bidder Team</span>
+                            <p className="text-sm font-extrabold text-white flex items-center gap-1.5 justify-end">
+                              <span>{highestBidder ? highestBidder.logo : '—'}</span>
+                              <span>{highestBidder ? highestBidder.name : 'Opening / Base Price'}</span>
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Dispute Resolution Control Deck (PRD Section 3.B) */}
+                        <div className="space-y-2">
+                          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                            <ShieldAlert className="w-3.5 h-3.5 text-rose-400" /> Admin Dispute Controls
+                          </span>
+
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                            {/* Pause/Resume */}
+                            {timerStatus === 'running' ? (
+                              <button
+                                onClick={pauseTimer}
+                                className="py-3 px-4 bg-amber-600/20 hover:bg-amber-600 text-amber-300 hover:text-white border border-amber-500/40 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow"
+                              >
+                                <Pause className="w-4 h-4" /> Pause Clock
+                              </button>
+                            ) : (
+                              <button
+                                onClick={resumeTimer}
+                                className="py-3 px-4 bg-emerald-600/20 hover:bg-emerald-600 text-emerald-300 hover:text-white border border-emerald-500/40 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow"
+                              >
+                                <Play className="w-4 h-4" /> Resume Clock
+                              </button>
+                            )}
+
+                            {/* Rollback Bid */}
+                            <button
+                              onClick={rollbackBid}
+                              className="py-3 px-4 bg-blue-600/20 hover:bg-blue-600 text-blue-300 hover:text-white border border-blue-500/40 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow"
+                            >
+                              <RotateCcw className="w-4 h-4" /> Rollback Bid
+                            </button>
+
+                            {/* Hammer / Force Sell */}
+                            <button
+                              onClick={hammerSell}
+                              className="py-3 px-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-black transition flex items-center justify-center gap-2 shadow-lg"
+                            >
+                              <Gavel className="w-4 h-4" /> HAMMER / SELL
+                            </button>
+
+                            {/* Cancel Auction */}
+                            <button
+                              onClick={cancelAuction}
+                              className="py-3 px-4 bg-rose-600/20 hover:bg-rose-600 text-rose-300 hover:text-white border border-rose-500/40 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow"
+                            >
+                              <XCircle className="w-4 h-4" /> Cancel Auction
+                            </button>
+                          </div>
+                        </div>
+
                       </div>
-
-                      <div className="space-y-1">
-                        <span className="text-[11px] font-bold text-blue-400 uppercase tracking-widest">ON THE PODIUM</span>
-                        <h2 className="text-2xl font-black font-heading text-white">{podiumPlayer.name}</h2>
-                        <p className="text-xs text-slate-300">
-                          {podiumPlayer.jerseyName} &bull; <span className="font-mono text-emerald-400">Base: {formatCurrency(podiumPlayer.basePrice)}</span>
-                        </p>
-                        <p className="text-[11px] text-slate-400 font-mono">ID: {podiumPlayer.studentId} &bull; {podiumPlayer.session}</p>
-                      </div>
-                    </div>
-
-                    {/* Countdown Timer Display */}
-                    <div className="flex flex-col items-center">
-                      <div className={`relative w-24 h-24 rounded-full flex items-center justify-center border-4 shadow-xl ${timerRemaining <= 10 ? 'border-rose-500 text-rose-400 animate-pulse' : 'border-emerald-500 text-emerald-400'
-                        }`}>
-                        <span className="text-3xl font-black font-mono">{timerRemaining}s</span>
-                      </div>
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
-                        Mode: <strong className="text-white">{biddingMode}</strong>
-                      </span>
-                    </div>
-
-                  </div>
-
-                  {/* Current Highest Bidder Banner */}
-                  <div className="bg-slate-950/90 border border-slate-800 p-4 rounded-xl flex items-center justify-between">
-                    <div>
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Current Leading Bid</span>
-                      <h3 className="text-2xl font-black font-mono text-emerald-400">{formatCurrency(currentBid)}</h3>
-                    </div>
-
-                    <div className="text-right">
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Highest Bidder Team</span>
-                      <p className="text-sm font-extrabold text-white flex items-center gap-1.5 justify-end">
-                        <span>{highestBidder ? highestBidder.logo : '—'}</span>
-                        <span>{highestBidder ? highestBidder.name : 'Opening / Base Price'}</span>
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Dispute Resolution Control Deck (PRD Section 3.B) */}
-                  <div className="space-y-2">
-                    <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
-                      <ShieldAlert className="w-3.5 h-3.5 text-rose-400" /> Admin Dispute Controls
-                    </span>
-
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                      {/* Pause/Resume */}
-                      {timerStatus === 'running' ? (
-                        <button
-                          onClick={pauseTimer}
-                          className="py-3 px-4 bg-amber-600/20 hover:bg-amber-600 text-amber-300 hover:text-white border border-amber-500/40 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow"
-                        >
-                          <Pause className="w-4 h-4" /> Pause Clock
-                        </button>
-                      ) : (
-                        <button
-                          onClick={resumeTimer}
-                          className="py-3 px-4 bg-emerald-600/20 hover:bg-emerald-600 text-emerald-300 hover:text-white border border-emerald-500/40 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow"
-                        >
-                          <Play className="w-4 h-4" /> Resume Clock
-                        </button>
-                      )}
-
-                      {/* Rollback Bid */}
-                      <button
-                        onClick={rollbackBid}
-                        className="py-3 px-4 bg-blue-600/20 hover:bg-blue-600 text-blue-300 hover:text-white border border-blue-500/40 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow"
-                      >
-                        <RotateCcw className="w-4 h-4" /> Rollback Bid
-                      </button>
-
-                      {/* Hammer / Force Sell */}
-                      <button
-                        onClick={hammerSell}
-                        className="py-3 px-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-black transition flex items-center justify-center gap-2 shadow-lg"
-                      >
-                        <Gavel className="w-4 h-4" /> HAMMER / SELL
-                      </button>
-
-                      {/* Cancel Auction */}
-                      <button
-                        onClick={cancelAuction}
-                        className="py-3 px-4 bg-rose-600/20 hover:bg-rose-600 text-rose-300 hover:text-white border border-rose-500/40 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow"
-                      >
-                        <XCircle className="w-4 h-4" /> Cancel Auction
-                      </button>
-                    </div>
-                  </div>
-
-                </div>
-              ) : (
-                <div className="relative overflow-hidden min-h-[460px] sm:min-h-[540px] lg:min-h-[600px]">
-                  {/* Waiting cinematic — confined to THIS Player Details panel only.
+                    ) : (
+                      <div className="relative overflow-hidden h-full flex items-center justify-center min-h-[460px] sm:min-h-[540px] lg:min-h-[600px]">
+                        {/* Waiting cinematic — confined to THIS Player Details panel only.
                     Navbar + Unsold Player Pool sidebar stay visible; the
                     animation never becomes a full-screen takeover for the admin. */}
-                  {timerStatus === 'idle' && animState === 'idle' ? (
-                    <WaitingAnimation
-                      inline
-                      teamsConnected={0}
-                      managersReady={0}
-                      isActive
-                    />
-                  ) : (
-                    <div className="p-12 text-center space-y-3">
-                      <Gavel className="w-12 h-12 text-slate-600 mx-auto" />
-                      <h3 className="text-base font-bold text-slate-300">Podium is currently empty</h3>
-                      <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                        Select an unsold player from the left panel and click "Push to Podium" to start the live bidding timer.
-                      </p>
-                    </div>
-                  )}
-                </div>
-              )}
+                        {timerStatus === 'idle' && animState === 'idle' ? (
+                          <WaitingAnimation
+                            inline
+                            teamsConnected={0}
+                            managersReady={0}
+                            isActive
+                          />
+                        ) : (
+                          <div className="p-12 text-center space-y-3">
+                            <Gavel className="w-12 h-12 text-slate-600 mx-auto" />
+                            <h3 className="text-base font-bold text-slate-300">Podium is currently empty</h3>
+                            <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                              Select an unsold player from the left panel and click "Push to Podium" to start the live bidding timer.
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    )}
 
-              {/* Inline "SOLD" celebration + roster update — confined to this
+                    {/* Inline "SOLD" celebration + roster update — confined to this
                 spotlight section (absolute inset-0). Rendered at the section
                 level so they remain visible even after podiumPlayer clears on
                 sell. The admin's sidebar, launchpad, and bid log stay visible. */}
-              <AnimatePresence>
-                {winnerData && (
-                  <WinnerAnimation
-                    key="podium-inline-winner"
-                    inline
-                    winnerData={winnerData}
-                    isManagerWinner={false}
-                    onComplete={() => { }}
-                    isActive={!!winnerData}
-                  />
-                )}
-              </AnimatePresence>
+                    <AnimatePresence>
+                      {winnerData && (
+                        <WinnerAnimation
+                          key="podium-inline-winner"
+                          inline
+                          winnerData={winnerData}
+                          isManagerWinner={false}
+                          onComplete={() => { }}
+                          isActive={!!winnerData}
+                        />
+                      )}
+                    </AnimatePresence>
 
-              <AnimatePresence>
-                {rosterUpdate && (
-                  <RosterAnimation
-                    key="podium-inline-roster"
-                    inline
-                    rosterUpdate={rosterUpdate}
-                    onComplete={() => { }}
-                    isActive={!!rosterUpdate}
-                  />
+                    <AnimatePresence>
+                      {rosterUpdate && (
+                        <RosterAnimation
+                          key="podium-inline-roster"
+                          inline
+                          rosterUpdate={rosterUpdate}
+                          onComplete={() => { }}
+                          isActive={!!rosterUpdate}
+                        />
+                      )}
+                    </AnimatePresence>
+                  </>
                 )}
-              </AnimatePresence>
-            </div>
+              </div>
+            </FullscreenWrapper>
             {/* end spotlight area */}
 
             {/* Live Bid Log History — same unified card, divider-separated. */}
