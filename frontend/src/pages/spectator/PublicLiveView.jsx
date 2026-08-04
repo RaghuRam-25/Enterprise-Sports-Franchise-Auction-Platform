@@ -196,12 +196,8 @@ export default function PublicLiveView() {
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 1.04, filter: 'blur(6px)' }}
                 transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-              >
-                <Trophy className="w-16 h-16 text-slate-600 mx-auto animate-pulse" />
-                <h2 className="text-xl font-black text-slate-300">Podium Standing By</h2>
-                <p className="text-xs text-slate-400 max-w-sm mx-auto">
-                  The auctioneer is preparing the next player for the live draft. Stand by for real-time bid updates.
-                </p>
+              >         
+                
               </motion.div>
             )}
             </AnimatePresence>

@@ -21,6 +21,7 @@ export const usePhase = () => useContext(PhaseContext);
 export const PhaseProvider = ({ children }) => {
   const { socket } = useSocket();
   const [phase, setPhase] = useState(null); // null = still loading / unknown
+  const [isLocked, setIsLocked] = useState(false);
   const [rosterSizing, setRosterSizing] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -32,6 +33,9 @@ export const PhaseProvider = ({ children }) => {
     }
     if (payload.rosterSizing) {
       setRosterSizing(payload.rosterSizing);
+    }
+    if (typeof payload.locked === 'boolean') {
+      setIsLocked(payload.locked);
     }
   }, []);
 
@@ -63,9 +67,19 @@ export const PhaseProvider = ({ children }) => {
       console.log('[PhaseContext] phase:changed', payload);
       applyPhasePayload(payload);
     };
+    const onLockToggle = (payload) => {
+      console.log('[PhaseContext] phase:lock-toggled', payload);
+      if (typeof payload?.locked === 'boolean') {
+        setIsLocked(payload.locked);
+      }
+    };
+
     socket.on('phase:changed', onChange);
+    socket.on('phase:lock-toggled', onLockToggle);
+
     return () => {
       socket.off('phase:changed', onChange);
+      socket.off('phase:lock-toggled', onLockToggle);
     };
   }, [socket, applyPhasePayload]);
 
@@ -75,12 +89,14 @@ export const PhaseProvider = ({ children }) => {
     loading,
     error,
     rosterSizing,
+    isLocked,
     isRegistrationOpen: phase === 'REGISTRATION',
     isAuctionActive: phase === 'AUCTION',
     isTournamentActive: phase === 'TOURNAMENT',
     // index helpers for ordering/UI
     phaseIndex: phase ? PHASES.indexOf(phase) : -1,
   };
+
 
   return <PhaseContext.Provider value={value}>{children}</PhaseContext.Provider>;
 };

@@ -27,35 +27,69 @@ export default function SuperAdminDashboard() {
   } = useAuction();
 
   // ── Phase state machine (global lifecycle) ─────────────────────────────────
-  const { phase, phases, loading: phaseLoading, rosterSizing } = usePhase();
-  const [advancing, setAdvancing] = useState(false);
+  const { phase, phases, loading: phaseLoading, isLocked } = usePhase();
+  const [activeSection, setActiveSection] = useState('SETUP'); // Top nav section: Setup | Registration | Auction | Results
+  const [transitioning, setTransitioning] = useState(false);
+  const [togglingLock, setTogglingLock] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [resetting, setResetting] = useState(false);
 
   const totalRegistered = players.length;
   // GAP-15 FIX: status values are uppercase in DB
   const soldPlayers = players.filter(p => (p.status || '').toUpperCase() === 'SOLD').length;
-
   const unsoldPlayers = players.filter(p => (p.status || '').toUpperCase() === 'UNSOLD').length;
   const totalPurse = teams.reduce((acc, t) => acc + (t.totalBudget || 0), 0);
 
-  // ── Advance the state machine (Super Admin only; backend validates legality) ─
-  const advancePhase = async () => {
-    if (!phase || advancing) return;
-    const idx = phases.indexOf(phase);
-    const next = phases[idx + 1];
-    if (!next) return;
+  // Sync activeSection with current phase if not manually overridden by user click
+  const currentPhaseIndex = phase ? phases.indexOf(phase) : 0;
 
-    setAdvancing(true);
+  // ── Bi-directional Phase Transition (Next / Previous / Direct Click) ───────────
+  const handlePhaseChange = async (targetPhase) => {
+    if (!targetPhase || targetPhase === phase || transitioning) return;
+    if (isLocked) {
+      triggerToast(`Stage ${phase} is locked. Unlock it first to move stages.`, 'warning');
+      return;
+    }
+
+    setTransitioning(true);
     try {
-      const res = await api.patch('/phase', { phase: next });
+      const res = await api.patch('/phase', { phase: targetPhase });
       if (res?.data) {
-        triggerToast(`Phase advanced → ${next}`, 'success');
+        triggerToast(`Stage changed → ${targetPhase}`, 'success');
+        setActiveSection(targetPhase === 'TOURNAMENT' ? 'RESULTS' : targetPhase);
       }
     } catch (err) {
-      triggerToast(err?.response?.data?.message || `Could not advance to ${next}`, 'error');
+      triggerToast(err?.response?.data?.message || `Could not transition to ${targetPhase}`, 'error');
     } finally {
-      setAdvancing(false);
+      setTransitioning(false);
+    }
+  };
+
+  const advancePhase = () => {
+    const nextIdx = currentPhaseIndex + 1;
+    if (nextIdx < phases.length) {
+      handlePhaseChange(phases[nextIdx]);
+    }
+  };
+
+  const regressedPhase = () => {
+    const prevIdx = currentPhaseIndex - 1;
+    if (prevIdx >= 0) {
+      handlePhaseChange(phases[prevIdx]);
+    }
+  };
+
+  const toggleStageLock = async () => {
+    setTogglingLock(true);
+    try {
+      const res = await api.patch('/phase', { action: 'TOGGLE_LOCK' });
+      if (res?.data) {
+        triggerToast(res.data.message, 'info');
+      }
+    } catch (err) {
+      triggerToast(err?.response?.data?.message || 'Failed to toggle lock state.', 'error');
+    } finally {
+      setTogglingLock(false);
     }
   };
 
@@ -64,55 +98,111 @@ export default function SuperAdminDashboard() {
     try {
       const res = await api.patch('/phase', { phase: 'SETUP' });
       if (res?.data) {
-        triggerToast('Event has been reset to SETUP phase.', 'success');
+        triggerToast('Current stage has been safely reset to SETUP.', 'success');
+        setActiveSection('SETUP');
       }
     } catch (err) {
-      triggerToast(err?.response?.data?.message || 'Failed to reset event.', 'error');
+      triggerToast(err?.response?.data?.message || 'Failed to reset stage.', 'error');
     } finally {
       setResetting(false);
       setShowResetConfirm(false);
     }
   };
 
+  // Map top nav tabs
+  const topNavTabs = [
+    { key: 'SETUP', label: 'Setup', targetPhase: 'SETUP' },
+    { key: 'REGISTRATION', label: 'Registration', targetPhase: 'REGISTRATION' },
+    { key: 'AUCTION', label: 'Auction', targetPhase: 'AUCTION' },
+    { key: 'RESULTS', label: 'Results', targetPhase: 'TOURNAMENT' },
+  ];
+
   return (
     <div className="space-y-6">
+
+      {/* Top Navigation Tabs: Setup, Registration, Auction, Results */}
+      <div className="glass-card rounded-2xl p-2 border border-slate-800 bg-slate-900/90 flex flex-wrap items-center justify-between gap-2">
+        <div className="flex items-center space-x-1 sm:space-x-2 overflow-x-auto w-full sm:w-auto">
+          {topNavTabs.map((tab) => {
+            const isTabActive = activeSection === tab.key;
+            const isStageCurrent = phase === tab.targetPhase;
+            return (
+              <button
+                key={tab.key}
+                onClick={() => {
+                  setActiveSection(tab.key);
+                  if (tab.targetPhase === 'REGISTRATION' && phase === 'SETUP' && !isLocked) {
+                    handlePhaseChange('REGISTRATION');
+                  }
+                }}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 whitespace-nowrap ${
+                  isTabActive
+                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/30'
+                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                }`}
+              >
+                <span>{tab.label}</span>
+                {isStageCurrent && (
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" title="Active Platform Stage" />
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Action Controls: Lock & Reset */}
+        <div className="flex items-center gap-2 w-full sm:w-auto justify-end px-2">
+          <button
+            onClick={toggleStageLock}
+            disabled={togglingLock}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold text-xs transition border ${
+              isLocked
+                ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 hover:bg-amber-500/30'
+                : 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700'
+            }`}
+          >
+            <Lock className={`w-3.5 h-3.5 ${isLocked ? 'text-amber-400' : 'text-slate-400'}`} />
+            <span>{isLocked ? 'Stage Locked' : 'Stage Unlocked'}</span>
+          </button>
+          <button
+            onClick={() => setShowResetConfirm(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold text-xs transition bg-rose-600/20 text-rose-300 border border-rose-500/30 hover:bg-rose-600 hover:text-white"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+            <span>Reset Stage</span>
+          </button>
+        </div>
+      </div>
 
       {/* Top Banner — Global Phase Control */}
       <div className="glass-card rounded-2xl p-6 border border-slate-800 bg-gradient-to-r from-slate-900 via-slate-900/90 to-blue-950/40 space-y-5">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div>
-            <span className="text-xs font-bold uppercase tracking-widest text-blue-400">Architect Dashboard</span>
+            <span className="text-xs font-bold uppercase tracking-widest text-blue-400">Architect Dashboard &bull; {activeSection} Section</span>
             <h1 className="text-2xl font-black font-heading text-white">Global Event Control</h1>
           </div>
 
-          {/* Advance-phase action */}
-          {phase && phases.indexOf(phase) < phases.length - 1 ? (
+          {/* Bi-directional Stage Stepper Controls */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={regressedPhase}
+              disabled={currentPhaseIndex === 0 || transitioning || phaseLoading || isLocked}
+              className="flex items-center gap-2 px-3.5 py-2 rounded-xl font-bold text-xs transition shadow-lg bg-slate-800 text-slate-200 border border-slate-700 hover:bg-slate-700 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <span>&larr; Previous Stage</span>
+            </button>
             <button
               onClick={advancePhase}
-              disabled={advancing || phaseLoading}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs transition shadow-lg bg-blue-600/20 text-blue-200 border border-blue-500/40 hover:bg-blue-600 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={currentPhaseIndex === phases.length - 1 || transitioning || phaseLoading || isLocked}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-xs transition shadow-lg bg-blue-600 text-white hover:bg-blue-500 disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              {advancing ? <Loader className="w-4 h-4 animate-spin" /> : <ChevronRight className="w-4 h-4" />}
-              <span>
-                Advance to {PHASE_META[phases[phases.indexOf(phase) + 1]]?.label || phases[phases.indexOf(phase) + 1]}
-              </span>
+              {transitioning ? <Loader className="w-4 h-4 animate-spin" /> : null}
+              <span>Next Stage &rarr;</span>
             </button>
-          ) : (
-            <div className="flex items-center gap-2">
-              <span className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs bg-slate-800/60 text-slate-400 border border-slate-700">
-                <Lock className="w-4 h-4" /> Final phase
-              </span>
-              <button
-                onClick={() => setShowResetConfirm(true)}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs transition shadow-lg bg-rose-600/20 text-rose-200 border border-rose-500/40 hover:bg-rose-600 hover:text-white"
-              >
-                <RotateCcw className="w-4 h-4" /> Reset Event
-              </button>
-            </div>
-          )}
+          </div>
         </div>
 
-        {/* Phase stepper */}
+        {/* Phase stepper with direct bi-directional clicking */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {phases.map((p, i) => {
             const currentIdx = phase ? phases.indexOf(phase) : -1;
@@ -121,19 +211,21 @@ export default function SuperAdminDashboard() {
             return (
               <div
                 key={p}
-                className={`rounded-xl p-3 border transition ${isCurrent
-                  ? 'border-blue-500 bg-blue-500/15 ring-1 ring-blue-500/40'
-                  : isDone
-                    ? 'border-emerald-600/40 bg-emerald-500/10'
-                    : 'border-slate-800 bg-slate-900/50'
-                  }`}
+                onClick={() => !isLocked && handlePhaseChange(p)}
+                className={`rounded-xl p-3 border transition cursor-pointer ${
+                  isCurrent
+                    ? 'border-blue-500 bg-blue-500/15 ring-1 ring-blue-500/40'
+                    : isDone
+                    ? 'border-emerald-600/40 bg-emerald-500/10 hover:border-emerald-500'
+                    : 'border-slate-800 bg-slate-900/50 hover:border-slate-700'
+                }`}
               >
                 <div className="flex items-center justify-between">
                   <span className={`text-[10px] font-mono font-bold ${isCurrent ? 'text-blue-300' : isDone ? 'text-emerald-400' : 'text-slate-500'}`}>
                     {String(i + 1).padStart(2, '0')}
                   </span>
                   {isCurrent && <span className="text-[9px] font-bold uppercase text-blue-300 tracking-wider">Active</span>}
-                  {isDone && <span className="text-[9px] font-bold uppercase text-emerald-400 tracking-wider">Done</span>}
+                  {isDone && <span className="text-[9px] font-bold uppercase text-emerald-400 tracking-wider">Passed</span>}
                 </div>
                 <p className={`text-sm font-extrabold mt-1 ${isCurrent ? 'text-white' : 'text-slate-300'}`}>
                   {PHASE_META[p]?.label || p}
@@ -143,7 +235,37 @@ export default function SuperAdminDashboard() {
             );
           })}
         </div>
+
+        {/* Quick Registration Status Toggle Box */}
+        <div className="pt-2 border-t border-slate-800/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-slate-950/40 p-3.5 rounded-xl">
+          <div className="flex items-center gap-3">
+            <span className={`w-3 h-3 rounded-full ${phase === 'REGISTRATION' ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
+            <div>
+              <p className="text-xs font-extrabold text-white uppercase tracking-wider">
+                Player Registration Status: <span className={phase === 'REGISTRATION' ? 'text-emerald-400' : 'text-rose-400'}>{phase === 'REGISTRATION' ? 'OPEN & ACTIVE' : 'CLOSED / FROZEN'}</span>
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => handlePhaseChange(phase === 'REGISTRATION' ? 'SETUP' : 'REGISTRATION')}
+            disabled={transitioning || phaseLoading || isLocked}
+            className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition shadow-md whitespace-nowrap ${
+              phase === 'REGISTRATION'
+                ? 'bg-rose-600/20 text-rose-300 border border-rose-500/40 hover:bg-rose-600 hover:text-white'
+                : 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-emerald-500/20'
+            }`}
+          >
+            {transitioning ? (
+              <span className="flex items-center gap-1.5"><Loader className="w-3.5 h-3.5 animate-spin" /> Updating...</span>
+            ) : phase === 'REGISTRATION' ? (
+              'Close Registration'
+            ) : (
+              'Enable Player Registration'
+            )}
+          </button>
+        </div>
       </div>
+
 
       {/* Overview Stat Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

@@ -29,6 +29,8 @@ export const PodiumDashboard = () => {
     resumeTimer,
     rollbackBid,
     hammerSell,
+    broadcastVideoUrl,
+    introLoopState,
     cancelAuction,
     formatCurrency,
     triggerToast
@@ -48,6 +50,14 @@ export const PodiumDashboard = () => {
   const [isIntroLoopActive, setIsIntroLoopActive] = useState(false);
   const introLoopIntervalRef = useRef(null);
   const introLoopTimeoutRef = useRef(null);
+
+  // Refs to hold the current value of podiumPlayer and displayVideoUrl for use
+  // inside the intro loop's setInterval callback, preventing stale closures
+  // without adding them to the useEffect dependency array.
+  const podiumPlayerRef = useRef(podiumPlayer);
+  podiumPlayerRef.current = podiumPlayer;
+  const displayVideoUrlRef = useRef(displayVideoUrl);
+  displayVideoUrlRef.current = displayVideoUrl;
 
   // Derived unsold-player list — memoized on `players` so the array reference
   // stays STABLE across renders. Without this, `unsoldPlayers` was a brand
@@ -145,7 +155,8 @@ export const PodiumDashboard = () => {
 
       let currentPlayerIndex = 0;
       const showNextPlayer = () => {
-        if (podiumPlayer || displayVideoUrl) return;
+        // Use refs to get the latest values inside the interval callback
+        if (podiumPlayerRef.current || displayVideoUrlRef.current) return;
         const playerToShow = sortedUnsold[currentPlayerIndex];
         // Use a duration longer than the animation. It will be cancelled by onComplete anyway.
         pushToPodium(playerToShow, 20, 'normal');
@@ -153,14 +164,17 @@ export const PodiumDashboard = () => {
       };
 
       const animationCycleTime = 16000; // PlayerRevealAnimation is ~15s. This provides a 1s buffer.
-      if (!podiumPlayer && !displayVideoUrl) showNextPlayer();
+      // Immediately show the first player if the podium is clear
+      if (!podiumPlayerRef.current && !displayVideoUrlRef.current) {
+        showNextPlayer();
+      }
       introLoopIntervalRef.current = setInterval(showNextPlayer, animationCycleTime);
     } else {
       cleanup();
     }
 
     return cleanup;
-  }, [isIntroLoopActive, unsoldPlayers, pushToPodium, podiumPlayer, displayVideoUrl, triggerToast, socket]);
+  }, [isIntroLoopActive, unsoldPlayers, pushToPodium, triggerToast, socket]);
 
   const getCategoryStyles = (category) => {
     switch (category) {
@@ -411,27 +425,39 @@ export const PodiumDashboard = () => {
           <div className="glass-card rounded-2xl border border-slate-800 overflow-hidden bg-gradient-to-b from-slate-900 via-slate-900/90 to-blue-950/20 min-h-[460px] sm:min-h-[540px] lg:min-h-[600px]">
             <FullscreenWrapper>
               <div className="relative h-full">
-                {displayVideoUrl ? (
-                  <EmbeddedVideoPlayer url={displayVideoUrl} />
-                ) : isIntroLoopActive ? (
-                  <div className="relative h-full overflow-hidden rounded-2xl">
-                    <AnimatePresence>
-                      {introPlayer && animState === ANIM_STATES.INTRO ? (
-                        <PlayerRevealAnimation
-                          key="podium-intro-loop"
-                          inline
-                          player={introPlayer}
-                          onComplete={handleIntroLoopAnimationComplete}
-                          isActive={true}
-                        />
-                      ) : (
-                        <WaitingAnimation
-                          key="podium-intro-wait"
-                          inline
-                          isActive={true}
-                        />
-                      )}
-                    </AnimatePresence>
+                {(broadcastVideoUrl || displayVideoUrl) ? (
+                  <EmbeddedVideoPlayer url={broadcastVideoUrl || displayVideoUrl} />
+                ) : (introLoopState?.isPlaying || isIntroLoopActive) ? (
+                  <div className="relative h-full overflow-hidden rounded-2xl flex items-center justify-center bg-slate-950 p-6">
+                    {(() => {
+                      const curPlayer = introLoopState?.players?.[introLoopState?.currentIndex] || introPlayer;
+                      if (!curPlayer) {
+                        return <WaitingAnimation key="podium-intro-wait" inline isActive={true} />;
+                      }
+                      return (
+                        <div key={`podium-intro-${curPlayer._id || curPlayer.id}`} className="text-center space-y-4 max-w-lg mx-auto animate-fade-in">
+                          <span className="px-3 py-1 bg-purple-500/20 text-purple-300 border border-purple-500/40 rounded-full text-xs font-bold uppercase tracking-widest">
+                            Player Presentation ({ (introLoopState?.currentIndex || 0) + 1 } / { introLoopState?.players?.length || 1 })
+                          </span>
+                          <div className="relative w-36 h-36 mx-auto rounded-2xl overflow-hidden border-2 border-purple-500/50 shadow-2xl shadow-purple-900/50">
+                            <img
+                              src={curPlayer.imageUrl || curPlayer.image || playerFallback(curPlayer.name, curPlayer.role)}
+                              alt={curPlayer.name}
+                              className="w-full h-full object-cover object-top"
+                            />
+                          </div>
+                          <div>
+                            <h2 className="text-2xl font-black text-white">{curPlayer.name}</h2>
+                            <p className="text-xs font-bold text-purple-300 uppercase tracking-wider mt-0.5">{curPlayer.category || curPlayer.role || 'DRAFT PLAYER'}</p>
+                          </div>
+                          <div className="flex justify-center gap-4 text-xs font-mono bg-slate-900/90 p-3 rounded-xl border border-slate-800">
+                            <div><span className="text-slate-500 block text-[10px]">ROLE</span><span className="text-white font-bold">{curPlayer.role || curPlayer.primaryRole || 'N/A'}</span></div>
+                            <div className="w-px bg-slate-800" />
+                            <div><span className="text-slate-500 block text-[10px]">BASE PRICE</span><span className="text-emerald-400 font-bold">{formatCurrency(curPlayer.basePrice || 1000000)}</span></div>
+                          </div>
+                        </div>
+                      );
+                    })()}
                   </div>
                 ) : (
                   <>

@@ -78,48 +78,83 @@ export const getPhase = async (req, res, next) => {
   } catch (e) { next(e); }
 };
 
-// ── PATCH /api/phase — Super Admin only; validated forward transition ─────────
+// ── PATCH /api/phase — Super Admin only; supports forward/backward transition, lock & reset ─────────
 export const setPhase = async (req, res, next) => {
   try {
-    const { phase: target } = req.body;
-    if (!PHASES.includes(target)) {
-      return res.status(400).json({
-        success: false,
-        message: `Invalid target phase '${target}'. Must be one of: ${PHASES.join(', ')}`,
+    const { phase: target, action, lock } = req.body;
+
+    const performedBy = req.user?.email || req.user?.name || 'super_admin';
+    const currentPhase = await getCurrentPhase();
+
+    // Check stage locking if attempting to change phase
+    const isLocked = await getConfig('event_phase_locked', false);
+
+    if (action === 'TOGGLE_LOCK') {
+      const nextLockState = lock !== undefined ? Boolean(lock) : !isLocked;
+      await setConfig('event_phase_locked', nextLockState, performedBy);
+
+      const io = req.app.get('io');
+      if (io) {
+        io.emit('phase:lock-toggled', { locked: nextLockState, phase: currentPhase });
+      }
+
+      return res.json({
+        success: true,
+        message: `Stage ${currentPhase} ${nextLockState ? 'LOCKED' : 'UNLOCKED'} successfully.`,
+        data: { phase: currentPhase, locked: nextLockState }
       });
     }
 
-    const performedBy = req.user?.email || req.user?.name || 'super_admin';
-    const result = await transitionPhase(target, performedBy);
-
-    if (!result.ok) {
-      // 409: legal-role request, but the state machine forbids this move now.
-      return res.status(409).json({ success: false, message: result.message, currentPhase: result.phase });
+    if (isLocked && target && target !== currentPhase) {
+      return res.status(423).json({
+        success: false,
+        message: `Stage '${currentPhase}' is currently LOCKED. Unlock it before changing stages.`,
+        currentPhase,
+        locked: true
+      });
     }
 
-    // ── Side-effect: freeze registration & size rosters on entering AUCTION ──
-    let rosterSizing = null;
-    if (result.from === 'REGISTRATION' && result.phase === 'AUCTION') {
-      rosterSizing = await computeAndStoreRosterSizes(performedBy);
+    if (target) {
+      if (!PHASES.includes(target)) {
+        return res.status(400).json({
+          success: false,
+          message: `Invalid target phase '${target}'. Must be one of: ${PHASES.join(', ')}`,
+        });
+      }
+
+      const result = await transitionPhase(target, performedBy);
+
+      if (!result.ok) {
+        return res.status(409).json({ success: false, message: result.message, currentPhase: result.phase });
+      }
+
+      // ── Side-effect: freeze registration & size rosters on entering AUCTION ──
+      let rosterSizing = null;
+      if (result.phase === 'AUCTION') {
+        rosterSizing = await computeAndStoreRosterSizes(performedBy);
+      }
+
+      await logPhaseAction('PHASE_TRANSITION', performedBy, {
+        from: result.from,
+        to: result.phase,
+        rosterSizing,
+        action: action || 'DIRECT_TRANSITION'
+      });
+
+      // Broadcast so every connected client re-renders
+      const io = req.app.get('io');
+      if (io) {
+        io.emit('phase:changed', { phase: result.phase, rosterSizing, locked: isLocked });
+      }
+
+      return res.json({
+        success: true,
+        message: result.message,
+        data: { phase: result.phase, rosterSizing, locked: isLocked },
+      });
     }
 
-    await logPhaseAction('PHASE_TRANSITION', performedBy, {
-      from: result.from,
-      to: result.phase,
-      rosterSizing,
-    });
-
-    // Broadcast so every connected client (dashboards, landing, live views)
-    // re-renders to the new phase without polling.
-    const io = req.app.get('io');
-    if (io) {
-      io.emit('phase:changed', { phase: result.phase, rosterSizing });
-    }
-
-    res.json({
-      success: true,
-      message: result.message,
-      data: { phase: result.phase, rosterSizing },
-    });
+    return res.status(400).json({ success: false, message: 'No target phase or action provided.' });
   } catch (e) { next(e); }
 };
+

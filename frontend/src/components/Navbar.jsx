@@ -3,11 +3,13 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Trophy, Radio, LogOut, Sun, Moon, Info, Shield } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useAuction } from '../context/AuctionContext';
+import { usePhase } from '../context/PhaseContext';
 import { useTheme } from '../context/ThemeContext';
 
 export default function Navbar() {
   const { user, logout } = useAuth();
   const {  timerStatus, podiumPlayer, currentBid, formatCurrency, isRegistrationFrozen } = useAuction();
+  const { phase } = usePhase();
   const { isDark, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
@@ -110,7 +112,7 @@ export default function Navbar() {
 
                 {/* Auth Actions */}
                 <div className="flex items-center gap-2">
-                  {!isRegistrationFrozen && (
+                  {phase === 'REGISTRATION' && !isRegistrationFrozen && (
                     <Link
                       to="/player/register"
                       className="px-3.5 py-1.5 text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800 rounded-xl transition border border-slate-800 ui-focus"

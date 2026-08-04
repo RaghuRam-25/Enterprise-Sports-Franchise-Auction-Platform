@@ -14,10 +14,154 @@ class AuctionEngine {
     this.bidQueue = Promise.resolve(); // Serialized Queue Lock
     // GAP 13 FIX: Dynamic tiers loaded from DB at launch time
     this.activeTiers = [];
+
+    // Video Broadcast State (Synchronized across all clients)
+    this.videoUrl = null;
+
+    // Player Intro Animation State (Synchronized across all clients)
+    this.introLoopState = {
+      isPlaying: false,
+      isPaused: false,
+      players: [],
+      currentIndex: 0,
+      durationPerPlayer: 4, // 4 seconds default per player
+      repeat: false
+    };
+    this.introTimer = null;
   }
 
   init(ioInstance) {
     this.io = ioInstance;
+  }
+
+  // Set & Broadcast Video URL (Null = Stopped)
+  setVideoUrl(url) {
+    this.videoUrl = url ? String(url).trim() : null;
+    if (this.videoUrl) {
+      // Pause intro loop if video starts
+      this.stopIntroLoop(false);
+    }
+    if (this.io) {
+      this.io.emit('podium:video-control', { url: this.videoUrl });
+    }
+    return this.videoUrl;
+  }
+
+  // Player Intro Loop Control Methods
+  startIntroLoop(playersList = [], durationSeconds = 4, repeat = false) {
+    this.clearIntroTimer();
+    this.videoUrl = null; // clear custom video if intro starts
+    if (this.io) {
+      this.io.emit('podium:video-control', { url: null });
+    }
+
+    this.introLoopState = {
+      isPlaying: true,
+      isPaused: false,
+      players: playersList,
+      currentIndex: 0,
+      durationPerPlayer: Math.max(3, Math.min(10, durationSeconds || 4)),
+      repeat: Boolean(repeat)
+    };
+
+    if (playersList.length > 0) {
+      this.scheduleNextIntroStep();
+    }
+
+    this.broadcastIntroState();
+  }
+
+  pauseIntroLoop() {
+    if (!this.introLoopState.isPlaying) return;
+    this.introLoopState.isPaused = true;
+    this.clearIntroTimer();
+    this.broadcastIntroState();
+  }
+
+  resumeIntroLoop() {
+    if (!this.introLoopState.isPlaying || !this.introLoopState.isPaused) return;
+    this.introLoopState.isPaused = false;
+    this.scheduleNextIntroStep();
+    this.broadcastIntroState();
+  }
+
+  stopIntroLoop(broadcast = true) {
+    this.clearIntroTimer();
+    this.introLoopState = {
+      isPlaying: false,
+      isPaused: false,
+      players: [],
+      currentIndex: 0,
+      durationPerPlayer: 4,
+      repeat: false
+    };
+    if (broadcast && this.io) {
+      this.broadcastIntroState();
+    }
+  }
+
+  skipIntroPlayer(direction = 1) {
+    if (!this.introLoopState.isPlaying || this.introLoopState.players.length === 0) return;
+    this.clearIntroTimer();
+    const count = this.introLoopState.players.length;
+    let nextIdx = this.introLoopState.currentIndex + direction;
+
+    if (nextIdx >= count) {
+      nextIdx = this.introLoopState.repeat ? 0 : count - 1;
+    } else if (nextIdx < 0) {
+      nextIdx = this.introLoopState.repeat ? count - 1 : 0;
+    }
+
+    this.introLoopState.currentIndex = nextIdx;
+    if (!this.introLoopState.isPaused) {
+      this.scheduleNextIntroStep();
+    }
+    this.broadcastIntroState();
+  }
+
+  restartIntroLoop() {
+    if (!this.introLoopState.isPlaying) return;
+    this.clearIntroTimer();
+    this.introLoopState.currentIndex = 0;
+    this.introLoopState.isPaused = false;
+    this.scheduleNextIntroStep();
+    this.broadcastIntroState();
+  }
+
+  scheduleNextIntroStep() {
+    this.clearIntroTimer();
+    const delayMs = (this.introLoopState.durationPerPlayer || 4) * 1000;
+
+    this.introTimer = setTimeout(() => {
+      if (!this.introLoopState.isPlaying || this.introLoopState.isPaused) return;
+
+      const nextIdx = this.introLoopState.currentIndex + 1;
+      if (nextIdx < this.introLoopState.players.length) {
+        this.introLoopState.currentIndex = nextIdx;
+        this.broadcastIntroState();
+        this.scheduleNextIntroStep();
+      } else if (this.introLoopState.repeat) {
+        this.introLoopState.currentIndex = 0;
+        this.broadcastIntroState();
+        this.scheduleNextIntroStep();
+      } else {
+        // Reached end of intro playlist
+        this.stopIntroLoop(true);
+      }
+    }, delayMs);
+  }
+
+  clearIntroTimer() {
+    if (this.introTimer) {
+      clearTimeout(this.introTimer);
+      this.introTimer = null;
+    }
+  }
+
+  broadcastIntroState() {
+    if (this.io) {
+      this.io.emit('podium:intro-loop-state', this.introLoopState);
+    }
   }
 
   // GAP 13 FIX: Load bidding tiers from DB before calculating bids
@@ -62,6 +206,10 @@ class AuctionEngine {
 
   // --- PODIUM ADMIN CONTROLS ---
   async launchPlayer(playerData, durationSeconds = 60, mode = 'NORMAL') {
+    // Stop custom video / intro loop if a player is launched to podium
+    this.setVideoUrl(null);
+    this.stopIntroLoop(true);
+
     // GAP 13 FIX: refresh tiers from DB every time a player is launched
     await this.loadTiers();
 
@@ -221,10 +369,6 @@ class AuctionEngine {
       this.highestBidder = { id: winner.teamId, name: winner.teamName };
     }
 
-    // When the clock expires WITH a winning bid, this is a normal SELL. Emit a
-    // result-shaped payload (same contract as hammerSell) so every client's
-    // animation state machine can trigger the "SOLD" celebration — the plain
-    // broadcastState() shape lacks { player, winner } and was silently ignored.
     if (this.highestBidder) {
       const result = {
         player: this.podiumPlayer,
@@ -255,9 +399,12 @@ class AuctionEngine {
       highestBidder: this.highestBidder,
       mode: this.mode,
       timer: timerService.getState(),
-      bidHistory: this.bidHistory
+      bidHistory: this.bidHistory,
+      videoUrl: this.videoUrl,
+      introLoopState: this.introLoopState
     };
   }
 }
+
 
 export const auctionEngine = new AuctionEngine();

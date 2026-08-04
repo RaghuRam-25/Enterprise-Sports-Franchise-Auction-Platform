@@ -37,25 +37,23 @@ export const isLegalTransition = (from, to) => {
   return (LEGAL_TRANSITIONS[from] || []).includes(to);
 };
 
-// ── Perform a validated forward transition (used by the admin endpoint) ───────
-// Returns { ok, phase, message }. Does NOT itself run side-effects like roster
-// sizing — the controller owns those so it can pass request context.
+// ── Perform a phase transition (forward or backward) ───────
 export const transitionPhase = async (to, updatedBy = 'system') => {
   const from = await getCurrentPhase();
   if (from === to) {
     return { ok: false, phase: from, message: `Already in ${to} phase` };
   }
-  if (!isLegalTransition(from, to)) {
+  if (!PHASES.includes(to)) {
     return {
       ok: false,
       phase: from,
-      message: `Illegal phase transition: ${from} → ${to}. ` +
-        `Allowed next: ${(LEGAL_TRANSITIONS[from] || []).join(', ') || 'none'}`,
+      message: `Invalid target phase: ${to}`,
     };
   }
   await setConfig(PHASE_CONFIG_KEY, to, updatedBy);
-  return { ok: true, phase: to, from, message: `Phase advanced ${from} → ${to}` };
+  return { ok: true, phase: to, from, message: `Phase changed ${from} → ${to}` };
 };
+
 
 // ── Force-set phase, bypassing transition rules (Nuke reset → SETUP only) ──────
 export const forceSetPhase = async (to, updatedBy = 'system') => {

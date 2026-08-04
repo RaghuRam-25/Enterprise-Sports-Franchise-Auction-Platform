@@ -30,6 +30,17 @@ export const AuctionProvider = ({ children }) => {
   const [timerStatus, setTimerStatus] = useState('idle');
   const [bidHistory, setBidHistory] = useState([]);
 
+  // Broadcast Video & Player Intro State (synchronized via Socket.IO from backend auctionEngine)
+  const [broadcastVideoUrl, setBroadcastVideoUrl] = useState(null);
+  const [introLoopState, setIntroLoopState] = useState({
+    isPlaying: false,
+    isPaused: false,
+    players: [],
+    currentIndex: 0,
+    durationPerPlayer: 4,
+    repeat: false
+  });
+
   const [lastActionToast, setLastActionToast] = useState(null);
 
   const triggerToast = (msg, type = 'info') => {
@@ -200,6 +211,17 @@ export const AuctionProvider = ({ children }) => {
         setTimerStatus(state.timer.status?.toLowerCase() || 'idle');
       }
       if (Array.isArray(state.bidHistory)) setBidHistory(state.bidHistory);
+      // Sync broadcast state from full auction state snapshot
+      if (state.videoUrl !== undefined) setBroadcastVideoUrl(state.videoUrl ?? null);
+      if (state.introLoopState) setIntroLoopState(state.introLoopState);
+    };
+
+    const handleVideoBroadcast = (data) => {
+      setBroadcastVideoUrl(data?.url ?? null);
+    };
+
+    const handleIntroLoopState = (state) => {
+      if (state) setIntroLoopState(state);
     };
 
     const handlePlayerLaunched = (state) => {
@@ -276,6 +298,8 @@ export const AuctionProvider = ({ children }) => {
     socket.on('team:updated', handleTeamUpdate);
     socket.on('teams:updated', handleSingleTeamUpdate);
     socket.on('registration:freeze-toggled', handleFreezeToggle);
+    socket.on('podium:video-control', handleVideoBroadcast);
+    socket.on('podium:intro-loop-state', handleIntroLoopState);
 
     socket.on('bid:error', (data) => {
       triggerToast(data.error || 'Bid rejected by server guardrail', 'error');
@@ -297,8 +321,10 @@ export const AuctionProvider = ({ children }) => {
       socket.off('auction:timer-update', handleTimerUpdate);
       socket.off('player:updated', handlePlayerUpdate);
       socket.off('team:updated', handleTeamUpdate);
-    socket.off('teams:updated', handleSingleTeamUpdate);
+      socket.off('teams:updated', handleSingleTeamUpdate);
       socket.off('registration:freeze-toggled', handleFreezeToggle);
+      socket.off('podium:video-control', handleVideoBroadcast);
+      socket.off('podium:intro-loop-state', handleIntroLoopState);
       socket.off('bid:error');
       socket.off('bid:blind-success');
     };
@@ -503,6 +529,7 @@ export const AuctionProvider = ({ children }) => {
         addSession, deleteSession, addPosition, deletePosition, addCategory, deleteCategory, updateBiddingTier,
         teams, setTeams, players, setPlayers, managers, setManagers, isDataLoading, loadManagers, refetchPlayers, refetchTeams, loadAllData,
         podiumPlayer, currentBid, highestBidder, biddingMode, timerDuration, timerRemaining, timerStatus, bidHistory, lastActionToast,
+        broadcastVideoUrl, introLoopState,
         formatCurrency, calculateNextBidAmount, getLowestCategoryBasePrice,
         pushToPodium, pauseTimer, resumeTimer, rollbackBid, hammerSell, cancelAuction, placeNormalBid, placeBlindBid, triggerToast
       }}
