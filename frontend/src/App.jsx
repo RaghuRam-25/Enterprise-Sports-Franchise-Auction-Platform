@@ -51,7 +51,7 @@ const AdminConfigurations = lazy(() => import('./pages/admin/AdminConfigurations
 const AdminTeams = lazy(() => import('./pages/admin/AdminTeams'));
 const AdminPlayers = lazy(() => import('./pages/admin/AdminPlayers'));
 const AdminManagerRequests = lazy(() => import('./pages/admin/AdminManagerRequests'));
-const AdminFixtures = lazy(() => import('./pages/admin/adminfixtures'));
+const AdminFixtures = lazy(() => import('./pages/admin/AdminFixtures'));
 
 // ── Error Pages ───────────────────────────────────────────────────────────────
 const AccessDenied = lazy(() => import('./pages/AccessDenied'));
