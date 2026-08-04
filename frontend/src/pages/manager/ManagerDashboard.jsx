@@ -303,7 +303,7 @@ export const ManagerDashboard = () => {
           onAnimationComplete={onAnimationComplete}
           isManagerWinner={Boolean(
             highestBidder &&
-              (highestBidder.id === activeTeam.id || highestBidder._id === activeTeam._id)
+            (highestBidder.id === activeTeam.id || highestBidder._id === activeTeam._id)
           )}
           showWaiting={!podiumPlayer && timerStatus === 'idle' && (animState === ANIM_STATES_HOOK?.IDLE || !animState)}
           waitingStats={{
@@ -311,56 +311,56 @@ export const ManagerDashboard = () => {
             managersReady: safeTeams.filter((t) => t.managerId).length,
           }}
         >
-        {podiumPlayer ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center bg-gradient-to-br from-slate-950/90 to-slate-900/60 p-6 rounded-2xl border border-white/5 shadow-inner">
-            <div className="relative mx-auto md:mx-0">
-              <div className="absolute -inset-1.5 rounded-2xl bg-gradient-to-br from-emerald-500/30 to-transparent blur-md" />
-              <img
-                src={podiumPlayer.imageUrl || playerFallback('emerald')}
-                alt={podiumPlayer.name}
-                className="relative w-36 h-36 rounded-2xl object-cover border-2 border-emerald-500/40 shadow-2xl"
-              />
-              <span className="absolute -bottom-2 -right-2 px-2.5 py-0.5 bg-emerald-500 text-slate-950 font-black text-[10px] rounded-lg uppercase tracking-wider shadow-lg">
-                {podiumPlayer.category}
-              </span>
-            </div>
-
-            <div className="md:col-span-2 space-y-3 text-center md:text-left">
-              <div>
-                <h3 className="text-2xl font-black text-white tracking-tight">{podiumPlayer.name}</h3>
-                <p className="text-xs text-slate-400 mt-0.5">
-                  Jersey: <strong className="text-slate-200">{podiumPlayer.jerseyName}</strong> &bull; Student ID: <span className="font-mono">{podiumPlayer.studentId}</span>
-                </p>
-              </div>
-
-              <div className="flex flex-wrap gap-1.5 justify-center md:justify-start text-[11px]">
-                <span className="px-2.5 py-1 bg-slate-800/80 text-slate-300 rounded-lg font-semibold border border-white/5">
-                  Primary: {podiumPlayer.primaryPosition}
-                </span>
-                <span className="px-2.5 py-1 bg-slate-800/80 text-slate-300 rounded-lg font-semibold border border-white/5">
-                  Session: {podiumPlayer.session}
+          {podiumPlayer ? (
+            <div className="grid grid-cols-1 md:grid-cols-6 gap-4 items-center bg-gradient-to-br from-slate-950/90 to-slate-900/60 p-6 rounded-2xl border border-white/5 shadow-inner">
+              <div className="relative mx-auto md:mx-0">
+                <div className="absolute -inset-1.5 rounded-2xl bg-gradient-to-br from-emerald-500/30 to-transparent blur-md" />
+                <img
+                  src={podiumPlayer.imageUrl || playerFallback('emerald')}
+                  alt={podiumPlayer.name}
+                  className="relative w-36 h-36 rounded-2xl object-cover border-2 border-emerald-500/40 shadow-2xl"
+                />
+                <span className="absolute -bottom-2 -right-2 px-2.5 py-0.5 bg-emerald-500 text-slate-950 font-black text-[10px] rounded-lg uppercase tracking-wider shadow-lg">
+                  {podiumPlayer.category}
                 </span>
               </div>
 
-              <div className="pt-3 border-t border-white/5 grid grid-cols-2 gap-4 text-xs">
-                <div className="rounded-xl bg-slate-900/60 border border-white/5 px-3 py-2">
-                  <span className="text-[10px] text-slate-500 uppercase tracking-widest">Base Price</span>
-                  <p className="font-mono font-bold text-slate-200 mt-0.5">{formatCurrency(podiumPlayer.basePrice)}</p>
+              <div className="md:col-span-2 space-y-3 text-center md:text-left">
+                <div>
+                  <h3 className="text-2xl font-black text-white tracking-tight">{podiumPlayer.name}</h3>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    Jersey: <strong className="text-slate-200">{podiumPlayer.jerseyName}</strong> &bull; Student ID: <span className="font-mono">{podiumPlayer.studentId}</span>
+                  </p>
                 </div>
-                <div className="rounded-xl bg-emerald-500/5 border border-emerald-500/20 px-3 py-2">
-                  <span className="text-[10px] text-slate-500 uppercase tracking-widest">Current High Bid</span>
-                  <p className="font-mono font-bold text-xl text-emerald-400 mt-0.5">{formatCurrency(safeCurrentBid)}</p>
+
+                <div className="flex flex-wrap gap-1.5 justify-center md:justify-start text-[11px]">
+                  <span className="px-2.5 py-1 bg-slate-800/80 text-slate-300 rounded-lg font-semibold border border-white/5">
+                    Primary: {podiumPlayer.primaryPosition}
+                  </span>
+                  <span className="px-2.5 py-1 bg-slate-800/80 text-slate-300 rounded-lg font-semibold border border-white/5">
+                    Session: {podiumPlayer.session}
+                  </span>
+                </div>
+
+                <div className="pt-3 border-t border-white/5 grid grid-cols-2 gap-4 text-xs">
+                  <div className="rounded-xl bg-slate-900/60 border border-white/5 px-3 py-2">
+                    <span className="text-[10px] text-slate-500 uppercase tracking-widest">Base Price</span>
+                    <p className="font-mono font-bold text-slate-200 mt-0.5">{formatCurrency(podiumPlayer.basePrice)}</p>
+                  </div>
+                  <div className="rounded-xl bg-emerald-500/5 border border-emerald-500/20 px-3 py-2">
+                    <span className="text-[10px] text-slate-500 uppercase tracking-widest">Current High Bid</span>
+                    <p className="font-mono font-bold text-xl text-emerald-400 mt-0.5">{formatCurrency(safeCurrentBid)}</p>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        ) : (
-          <div className="py-16 text-center text-slate-500 bg-gradient-to-b from-slate-950/60 to-transparent rounded-2xl border border-white/5 space-y-2">
-            <Gavel className="w-12 h-12 mx-auto text-slate-700 animate-pulse" />
-            <p className="font-bold text-slate-400">Podium is currently empty</p>
-            <p className="text-xs text-slate-600">Waiting for Podium Admin to launch the next player.</p>
-          </div>
-        )}
+          ) : (
+            <div className="py-16 text-center text-slate-500 bg-gradient-to-b from-slate-950/60 to-transparent rounded-2xl border border-white/5 space-y-2">
+              <Gavel className="w-12 h-12 mx-auto text-slate-700 animate-pulse" />
+              <p className="font-bold text-slate-400">Podium is currently empty</p>
+              <p className="text-xs text-slate-600">Waiting for Podium Admin to launch the next player.</p>
+            </div>
+          )}
         </PlayerDisplayStage>
 
         {/* Bid Action Card */}

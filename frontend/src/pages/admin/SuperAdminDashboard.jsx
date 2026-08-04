@@ -1,5 +1,5 @@
-import  { useState } from 'react';
-import { Users, ShieldCheck, Trophy, Lock, DollarSign, Settings, Layers, ChevronRight, Loader } from 'lucide-react';
+import { useState } from 'react';
+import { Users, ShieldCheck, Trophy, Lock, DollarSign, Settings, Layers, ChevronRight, Loader, RotateCcw, AlertTriangle } from 'lucide-react';
 import { useAuction } from '../../context/AuctionContext';
 import { usePhase } from '../../context/PhaseContext';
 import { Link } from 'react-router-dom';
@@ -7,10 +7,10 @@ import api from '../../services/api';
 
 // Visual label per phase for the control stepper
 const PHASE_META = {
-  SETUP:        { label: 'Setup',        desc: 'Configure rules & teams' },
+  SETUP: { label: 'Setup', desc: 'Configure rules & teams' },
   REGISTRATION: { label: 'Registration', desc: 'Players sign up' },
-  AUCTION:      { label: 'Auction',      desc: 'Live bidding on podium' },
-  TOURNAMENT:   { label: 'Tournament',   desc: 'Matches, stats & awards' },
+  AUCTION: { label: 'Auction', desc: 'Live bidding on podium' },
+  TOURNAMENT: { label: 'Tournament', desc: 'Matches, stats & awards' },
 };
 
 export default function SuperAdminDashboard() {
@@ -29,13 +29,15 @@ export default function SuperAdminDashboard() {
   // ── Phase state machine (global lifecycle) ─────────────────────────────────
   const { phase, phases, loading: phaseLoading, rosterSizing } = usePhase();
   const [advancing, setAdvancing] = useState(false);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [resetting, setResetting] = useState(false);
 
   const totalRegistered = players.length;
   // GAP-15 FIX: status values are uppercase in DB
-  const soldPlayers     = players.filter(p => (p.status || '').toUpperCase() === 'SOLD').length;
+  const soldPlayers = players.filter(p => (p.status || '').toUpperCase() === 'SOLD').length;
 
-  const unsoldPlayers   = players.filter(p => (p.status || '').toUpperCase() === 'UNSOLD').length;
-  const totalPurse      = teams.reduce((acc, t) => acc + (t.totalBudget || 0), 0);
+  const unsoldPlayers = players.filter(p => (p.status || '').toUpperCase() === 'UNSOLD').length;
+  const totalPurse = teams.reduce((acc, t) => acc + (t.totalBudget || 0), 0);
 
   // ── Advance the state machine (Super Admin only; backend validates legality) ─
   const advancePhase = async () => {
@@ -57,21 +59,30 @@ export default function SuperAdminDashboard() {
     }
   };
 
+  const executeReset = async () => {
+    setResetting(true);
+    try {
+      const res = await api.patch('/phase', { phase: 'SETUP' });
+      if (res?.data) {
+        triggerToast('Event has been reset to SETUP phase.', 'success');
+      }
+    } catch (err) {
+      triggerToast(err?.response?.data?.message || 'Failed to reset event.', 'error');
+    } finally {
+      setResetting(false);
+      setShowResetConfirm(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
-      
+
       {/* Top Banner — Global Phase Control */}
       <div className="glass-card rounded-2xl p-6 border border-slate-800 bg-gradient-to-r from-slate-900 via-slate-900/90 to-blue-950/40 space-y-5">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div>
             <span className="text-xs font-bold uppercase tracking-widest text-blue-400">Architect Dashboard</span>
             <h1 className="text-2xl font-black font-heading text-white">Global Event Control</h1>
-            <p className="text-[11px] text-slate-400 mt-1">
-              Lifecycle: SETUP → REGISTRATION → AUCTION → TOURNAMENT.
-              {isRegistrationFrozen
-                ? ' Registration is currently CLOSED.'
-                : ' Registration is currently OPEN.'}
-            </p>
           </div>
 
           {/* Advance-phase action */}
@@ -87,9 +98,17 @@ export default function SuperAdminDashboard() {
               </span>
             </button>
           ) : (
-            <span className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs bg-slate-800/60 text-slate-400 border border-slate-700">
-              <Lock className="w-4 h-4" /> Final phase — reset via Nuke protocol
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs bg-slate-800/60 text-slate-400 border border-slate-700">
+                <Lock className="w-4 h-4" /> Final phase
+              </span>
+              <button
+                onClick={() => setShowResetConfirm(true)}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs transition shadow-lg bg-rose-600/20 text-rose-200 border border-rose-500/40 hover:bg-rose-600 hover:text-white"
+              >
+                <RotateCcw className="w-4 h-4" /> Reset Event
+              </button>
+            </div>
           )}
         </div>
 
@@ -102,13 +121,12 @@ export default function SuperAdminDashboard() {
             return (
               <div
                 key={p}
-                className={`rounded-xl p-3 border transition ${
-                  isCurrent
+                className={`rounded-xl p-3 border transition ${isCurrent
                     ? 'border-blue-500 bg-blue-500/15 ring-1 ring-blue-500/40'
                     : isDone
                       ? 'border-emerald-600/40 bg-emerald-500/10'
                       : 'border-slate-800 bg-slate-900/50'
-                }`}
+                  }`}
               >
                 <div className="flex items-center justify-between">
                   <span className={`text-[10px] font-mono font-bold ${isCurrent ? 'text-blue-300' : isDone ? 'text-emerald-400' : 'text-slate-500'}`}>
@@ -125,16 +143,6 @@ export default function SuperAdminDashboard() {
             );
           })}
         </div>
-
-        {rosterSizing?.minRosterSize != null && (
-          <p className="text-[11px] text-slate-400">
-            Roster range locked at registration freeze:{' '}
-            <span className="font-mono font-bold text-slate-200">
-              {rosterSizing.minRosterSize}–{rosterSizing.maxRosterSize}
-            </span>{' '}
-            players/team.
-          </p>
-        )}
       </div>
 
       {/* Overview Stat Cards */}
@@ -192,63 +200,6 @@ export default function SuperAdminDashboard() {
         </div>
       </div>
 
-      {/* Config Quick Links Grid */}
-      <div className="glass-card rounded-2xl p-6 border border-slate-800 space-y-4">
-        <h3 className="text-sm font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
-          <Layers className="w-4 h-4 text-blue-400" /> Dynamic Enum Configurations (PRD Section 2.A)
-        </h3>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Link
-            to="/admin/configurations/sessions"
-            className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 hover:border-blue-500/50 hover:bg-slate-800/50 transition group"
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold uppercase text-slate-400">Sessions / Batches</span>
-              <span className="text-xs px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 font-mono font-bold">{sessions.length} Active</span>
-            </div>
-            <p className="text-sm font-extrabold text-white mt-2 group-hover:text-blue-400 transition">Academic Batches</p>
-            <p className="text-[11px] text-slate-400 mt-1">Manage e.g. "22-23", "23-24"</p>
-          </Link>
-
-          <Link
-            to="/admin/configurations/positions"
-            className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 hover:border-emerald-500/50 hover:bg-slate-800/50 transition group"
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold uppercase text-slate-400">Sports Positions</span>
-              <span className="text-xs px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono font-bold">{positions.length} Active</span>
-            </div>
-            <p className="text-sm font-extrabold text-white mt-2 group-hover:text-emerald-400 transition">Position Codes</p>
-            <p className="text-[11px] text-slate-400 mt-1">Manage e.g. "ST", "GK", "RW"</p>
-          </Link>
-
-          <Link
-            to="/admin/configurations/categories"
-            className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 hover:border-amber-500/50 hover:bg-slate-800/50 transition group"
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold uppercase text-slate-400">Player Categories</span>
-              <span className="text-xs px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-mono font-bold">{categories.length} Defined</span>
-            </div>
-            <p className="text-sm font-extrabold text-white mt-2 group-hover:text-amber-400 transition">Priorities & Base Prices</p>
-            <p className="text-[11px] text-slate-400 mt-1">Base prices from {formatCurrency(categories[categories.length - 1]?.basePrice)}</p>
-          </Link>
-
-          <Link
-            to="/admin/configurations/bidding-tiers"
-            className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 hover:border-purple-500/50 hover:bg-slate-800/50 transition group"
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold uppercase text-slate-400">Dynamic Bid Ranges</span>
-              <span className="text-xs px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 font-mono font-bold">{biddingTiers.length} Tiers</span>
-            </div>
-            <p className="text-sm font-extrabold text-white mt-2 group-hover:text-purple-400 transition">Purse Percentage Logic</p>
-            <p className="text-[11px] text-slate-400 mt-1">Automatic backend monetary raises</p>
-          </Link>
-        </div>
-      </div>
-
       {/* Franchise Team Summary Table */}
       <div className="glass-card rounded-2xl p-6 border border-slate-800 space-y-4">
         <div className="flex justify-between items-center">
@@ -292,6 +243,32 @@ export default function SuperAdminDashboard() {
         </div>
       </div>
 
+      {/* Reset Confirmation Modal */}
+      {showResetConfirm && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="glass-card w-full max-w-md rounded-2xl p-6 border border-rose-500/30 space-y-5 shadow-2xl">
+            <h2 className="text-lg font-black text-white flex items-center gap-2"><AlertTriangle className="w-5 h-5 text-rose-400" /> Confirm Event Reset</h2>
+            <p className="text-sm text-slate-300">
+              This will reset the entire event lifecycle back to the <strong>SETUP</strong> phase.
+              This is a destructive action and should only be used to start a new season.
+              Are you absolutely sure you want to proceed?
+            </p>
+            <div className="flex gap-3">
+              <button onClick={() => setShowResetConfirm(false)} className="flex-1 py-2.5 border border-slate-700 text-slate-300 hover:bg-slate-800 rounded-xl text-xs font-semibold transition">
+                Cancel
+              </button>
+              <button
+                onClick={executeReset}
+                disabled={resetting}
+                className="flex-1 py-2.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-2"
+              >
+                {resetting ? <Loader className="w-4 h-4 animate-spin" /> : <RotateCcw className="w-4 h-4" />}
+                Yes, Reset Event
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

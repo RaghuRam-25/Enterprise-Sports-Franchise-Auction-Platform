@@ -32,15 +32,15 @@ const PLAYER_FALLBACK_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="320"
 //   0.2–2.0s  cinematic opening — lights, particles, player image
 //   2.2s      letter-by-letter name reveal (~1.8s to finish typing)
 //   4.0s      player info revealed one item at a time (~1.6s cascade)
-//   6.2–8.2s  complete presentation held fully visible for reading
+//   6.2–15s  complete presentation held fully visible for reading
 const STEP_TIMINGS = [
   { step: 1, at: 200 },   // lights / stadium
-  { step: 2, at: 900 },   // image reveal (held)
+  { step: 2, at: 1000 },   // image reveal (held)
   { step: 3, at: 2200 },  // name typing
   { step: 4, at: 4000 },  // stat cascade
   { step: 5, at: 6200 },  // final hold
 ];
-const COMPLETE_AT = 8200;
+const COMPLETE_AT = 15100;
 
 export default function PlayerRevealAnimation({ player, onComplete, isActive = true, inline = false }) {
   const reduceMotion = useReducedMotion();
@@ -84,8 +84,7 @@ export default function PlayerRevealAnimation({ player, onComplete, isActive = t
     { icon: Calendar, label: 'Session', value: player.session || 'N/A' },
     { icon: Coins, label: 'Base Price', value: `৳${(player.basePrice || 0).toLocaleString('en-IN')}`, highlight: true },
     { icon: Globe, label: 'Country', value: player.country || 'N/A' },
-    { icon: Hash, label: 'Student ID', value: player.studentId || 'N/A' },
-    { icon: Clock, label: 'Experience', value: player.experience || 'Pro' },
+    { icon: Hash, label: 'Student ID', value: player.studentId || 'N/A' }
   ].filter((item) => item.highlight || (item.value && item.value !== 'N/A'));
 
   const showLights = step >= 1;

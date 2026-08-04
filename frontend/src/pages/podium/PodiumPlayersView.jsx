@@ -8,6 +8,21 @@ const STATUS_STYLES = {
     UNSOLD: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
 };
 
+const getCategoryRowStyle = (category) => {
+    switch (category) {
+        case 'Icon Category':
+            return 'bg-amber-950/20 hover:bg-amber-950/40 border-l-4 border-amber-500';
+        case 'A Grade':
+            return 'bg-blue-950/20 hover:bg-blue-950/40 border-l-4 border-blue-500';
+        case 'B Grade':
+            return 'bg-teal-950/20 hover:bg-teal-950/40 border-l-4 border-teal-500';
+        case 'Emerging Youth':
+            return 'bg-purple-950/20 hover:bg-purple-950/40 border-l-4 border-purple-500';
+        default:
+            return 'hover:bg-slate-800/30 border-l-4 border-slate-700';
+    }
+};
+
 export default function PodiumPlayersView() {
     const { filter } = useParams(); // 'sold' or 'unsold'
     const { players, formatCurrency } = useAuction();
@@ -46,8 +61,9 @@ export default function PodiumPlayersView() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-800/60">
-                            {filteredPlayers.map(player => (
-                                <tr key={player._id || player.id} className="hover:bg-slate-800/30">
+                            {filteredPlayers.map(player => {
+                                const rowStyle = getCategoryRowStyle(player.category);
+                                return (<tr key={player._id || player.id} className={`transition-colors ${rowStyle}`}>
                                     <td className="py-3 px-4">
                                         <div className="flex items-center gap-3">
                                             <img
@@ -74,8 +90,8 @@ export default function PodiumPlayersView() {
                                             {player.status}
                                         </span>
                                     </td>
-                                </tr>
-                            ))}
+                                </tr>);
+                            })}
                             {filteredPlayers.length === 0 && (
                                 <tr>
                                     <td colSpan={statusFilter === 'SOLD' ? 6 : 4} className="py-12 text-center text-slate-500">

@@ -5,16 +5,16 @@ import confetti from 'canvas-confetti';
 import { soundManager, AUCTION_SOUNDS } from './soundManager';
 
 /**
- * WinnerAnimation — Stage 7: "SOLD" championship celebration.
+ * WinnerAnimation — "SOLD" championship celebration.
  *
- * Sequence (~5s):
+ * Sequence (~20s):
  *   0.0s → Gold flash + hammer sound, SOLD headline drops in
  *   0.3s → Trophy spins in, winner card scales up (elastic)
  *   0.5s → Player image rotates in
  *   0.9s → Team logo pops, winning price counter rolls up
  *   1.5s → Confetti cannons + fireworks + crowd cheer, gold particles rise
  *   2.5s → "Auction Complete" stamp
- *   5.0s → onComplete (safety fallback also fires at 5.5s)
+ *   20.0s → onComplete fires to end the scene.
  *
  * GPU-friendly transform/opacity/filter, honors prefers-reduced-motion.
  *
@@ -138,7 +138,7 @@ export default function WinnerAnimation({
     } else {
       setCelebrated(true);
     }
-    timers.push(setTimeout(() => onComplete?.(), reduceMotion ? 800 : 5500));
+    timers.push(setTimeout(() => onComplete?.(), reduceMotion ? 800 : 20000));
 
     return () => timers.forEach(clearTimeout);
   }, [isActive, winnerData, onComplete, reduceMotion, inline]);

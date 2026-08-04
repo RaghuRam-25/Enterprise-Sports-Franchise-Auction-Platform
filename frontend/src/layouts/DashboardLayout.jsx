@@ -1,4 +1,4 @@
-import  { useState } from 'react';
+import { useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Sidebar from '../components/Sidebar';
@@ -8,7 +8,7 @@ export default function DashboardLayout() {
   const location = useLocation();
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100 font-sans antialiased overflow-x-hidden">
+    <div className="h-screen flex flex-col bg-slate-950 text-slate-100 font-sans antialiased overflow-hidden">
       {/* Top Navbar */}
       <Navbar />
 

@@ -159,60 +159,7 @@ export default function LandingPage() {
         <div className="absolute -bottom-40 left-1/3 w-[600px] h-[600px] bg-purple-600/15 rounded-full blur-[140px]" />
       </div>
 
-      <main className="flex-1 relative z-10 space-y-16 pb-20">
-
-        {/* ── EVENT PHASE RIBBON (conditional per event_phase) ─────────────── */}
-        {!phaseLoading && phase && (
-          <section className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto pt-6">
-            <div className={`rounded-2xl border px-5 py-3 flex flex-wrap items-center justify-between gap-3 backdrop-blur-md ${
-              isAuctionActive
-                ? 'border-emerald-500/40 bg-emerald-500/10'
-                : isTournamentActive
-                  ? 'border-amber-500/40 bg-amber-500/10'
-                  : phase === 'REGISTRATION'
-                    ? 'border-purple-500/40 bg-purple-500/10'
-                    : 'border-slate-700 bg-slate-900/60'
-            }`}>
-              <div className="flex items-center gap-3">
-                <Radio className={`w-4 h-4 ${isAuctionActive ? 'animate-pulse text-emerald-400' : isTournamentActive ? 'text-amber-400' : phase === 'REGISTRATION' ? 'text-purple-400' : 'text-slate-400'}`} />
-                <div>
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Current Event Phase</span>
-                  <p className="text-sm font-black uppercase tracking-wide text-white">
-                    {phase === 'SETUP' && 'Setup — configuring the league'}
-                    {phase === 'REGISTRATION' && 'Registration — players signing up'}
-                    {phase === 'AUCTION' && 'Live Auction — bidding in progress'}
-                    {phase === 'TOURNAMENT' && 'Tournament — matches underway'}
-                  </p>
-                </div>
-              </div>
-              {isAuctionActive && (
-                <Link
-                  to="/live"
-                  className="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs uppercase tracking-wider flex items-center gap-2 transition"
-                >
-                  <Radio className="w-4 h-4" /> Watch Live
-                </Link>
-              )}
-              {isTournamentActive && (
-                <Link
-                  to="/teams"
-                  className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs uppercase tracking-wider flex items-center gap-2 transition"
-                >
-                  <Trophy className="w-4 h-4" /> View Standings
-                </Link>
-              )}
-              {registrationOpen && (
-                <Link
-                  to="/player/register"
-                  className="px-4 py-2 rounded-xl bg-purple-500 hover:bg-purple-400 text-white font-black text-xs uppercase tracking-wider flex items-center gap-2 transition"
-                >
-                  Register Now <ArrowRight className="w-4 h-4" />
-                </Link>
-              )}
-            </div>
-          </section>
-        )}
-
+      <main className="flex-1 relative z-10 space-y-16 pb-20"> 
         {/* ── HERO SECTION ─────────────────────────────────────────────────── */}
         <section className="relative pt-12 lg:pt-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
           <div className="text-center space-y-8">

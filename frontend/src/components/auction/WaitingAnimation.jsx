@@ -9,16 +9,21 @@ import { soundManager, AUCTION_SOUNDS } from './soundManager';
  * WaitingAnimation — broadcast-quality "waiting for next player" sequence shown
  * when no player is currently on the podium.
  *
- * A looping, TV-style 5-scene cinematic:
+ * A looping, TV-style 5-scene cinematic (no human figure — everything reads
+ * through the ball, light, and motion):
  *   Scene 1 (LIGHTS) → Dark arena, floodlights snap on tier by tier, crowd
  *                      camera-flashes swell, the camera slowly pushes in.
- *   Scene 2 (RUN)    → A professional footballer sprints across the pitch with
- *                      a bob/stride cadence, speed streaks, ground dust; camera pans.
- *   Scene 3 (KICK)   → The player plants and strikes; the ball launches on a
- *                      glowing, motion-blurred arc — screen shake for impact.
- *   Scene 4 (BALL)   → The ball rockets straight at the viewer, fills the frame
- *                      with motion blur + a light trail, then bursts into a
- *                      radial storm of glowing particles.
+ *   Scene 2 (RUN)    → A glowing match ball rolls and bounces across the pitch,
+ *                      trailing speed streaks and ground dust, converging on
+ *                      dead-center screen (never off to one side).
+ *   Scene 3 (KICK)   → The ball plants dead-center, spins up, and charges with
+ *                      energy — a shockwave ring pulses outward — screen shake
+ *                      for impact.
+ *   Scene 4 (BALL)   → The ball (still dead-center) rockets straight at the
+ *                      viewer, fills the frame with motion blur + a light
+ *                      trail, then bursts into a radial storm of glowing
+ *                      particles — all from the same center point, so nothing
+ *                      ever reads as entering from a side.
  *   Scene 5 (TEXT)   → Those particles converge and resolve into the headline
  *                      "WAITING FOR NEXT PLAYER" / "Preparing the Next Auction",
  *                      then the loop restarts.
@@ -392,60 +397,66 @@ function CrowdAtmosphere() {
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
- * RunScene — a professional footballer sprints across the pitch. Forward
- * momentum comes from a horizontal translate; the run cadence from a subtle
- * vertical bob + stride pulse, sold with speed streaks and ground dust.
+ * RunScene — no human figure. A glowing match ball rolls and bounces toward
+ * dead-center screen by itself, spinning continuously, trailing speed streaks
+ * and kicking up ground dust on every bounce. It now converges exactly on
+ * the same center point where KickScene and BallScene live, so the ball
+ * never appears to "teleport" in from a side — it's one continuous body
+ * settling into the middle of the frame.
  * ──────────────────────────────────────────────────────────────────────── */
 function RunScene({ compact }) {
-  const scale = compact ? 0.7 : 1;
+  const size = compact ? 40 : 56;
   return (
     <motion.div
-      className="absolute bottom-[16%] left-0 w-full"
+      className="absolute bottom-[28%] left-1/2 w-full -translate-x-1/2"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.4 }}
     >
       <motion.div
-        className="absolute bottom-0"
+        className="absolute bottom-0 left-1/2"
         style={{ willChange: 'transform' }}
-        initial={{ left: '-18%' }}
-        animate={{ left: '54%' }}
+        initial={{ x: '-160%' }}
+        animate={{ x: '-50%' }}
         transition={{ duration: 1.8, ease: 'easeIn' }}
       >
-        {/* Speed streaks trailing the runner */}
+        {/* Speed streaks trailing the ball */}
         {[0, 1, 2].map((i) => (
           <motion.div
             key={i}
             className="absolute top-1/2 h-1 rounded-full"
             style={{
               right: '70%',
-              width: 90 - i * 20,
-              marginTop: -18 + i * 16,
+              width: 110 - i * 24,
+              marginTop: -14 + i * 14,
               background:
-                'linear-gradient(to left, rgba(56,189,248,0.7), transparent)',
+                'linear-gradient(to left, rgba(56,189,248,0.75), transparent)',
               filter: 'blur(2px)',
               willChange: 'transform, opacity',
             }}
-            animate={{ opacity: [0.2, 0.7, 0.2], scaleX: [0.8, 1.2, 0.8] }}
-            transition={{ duration: 0.3, repeat: Infinity, delay: i * 0.05 }}
+            animate={{ opacity: [0.2, 0.75, 0.2], scaleX: [0.8, 1.25, 0.8] }}
+            transition={{ duration: 0.28, repeat: Infinity, delay: i * 0.05 }}
           />
         ))}
 
-        {/* Vertical bob = running cadence */}
+        {/* Bounce arc + continuous spin = ball rolling under its own energy */}
         <motion.div
-          animate={{ y: [0, -8, 0] }}
-          transition={{ duration: 0.32, repeat: Infinity, ease: 'easeInOut' }}
-          style={{ willChange: 'transform', transform: `scale(${scale})` }}
+          animate={{ y: [0, -34, 0, -18, 0], rotate: [0, 360] }}
+          transition={{
+            y: { duration: 0.9, repeat: Infinity, ease: 'easeOut', times: [0, 0.4, 0.6, 0.85, 1] },
+            rotate: { duration: 0.5, repeat: Infinity, ease: 'linear' },
+          }}
+          style={{ willChange: 'transform' }}
         >
-          <Footballer pose="run" />
+          <SoccerBall size={size} />
         </motion.div>
 
-        {/* Ground contact dust */}
+        {/* Ground contact dust pulses each time the ball lands */}
         <motion.div
-          className="absolute -bottom-2 left-1/2 h-3 w-20 -translate-x-1/2 rounded-full bg-emerald-400/25 blur-md"
-          animate={{ opacity: [0.2, 0.55, 0.2], scaleX: [0.8, 1.25, 0.8] }}
-          transition={{ duration: 0.32, repeat: Infinity }}
+          className="absolute -bottom-1 left-1/2 h-3 w-16 -translate-x-1/2 rounded-full bg-emerald-400/25 blur-md"
+          animate={{ opacity: [0, 0.6, 0, 0.4, 0], scaleX: [0.6, 1.3, 0.6, 1.1, 0.6] }}
+          transition={{ duration: 0.9, repeat: Infinity, ease: 'easeOut' }}
         />
       </motion.div>
     </motion.div>
@@ -453,11 +464,13 @@ function RunScene({ compact }) {
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
- * KickScene — the player plants and strikes; the ball launches on a glowing,
- * motion-blurred trajectory toward the foreground.
+ * KickScene — no human figure. The ball plants dead-center (same point where
+ * RunScene ended and where BallScene will launch from), spins up and charges
+ * with energy, then a shockwave ring pulses outward for the "impact" beat
+ * before handing off into the BallScene charge.
  * ──────────────────────────────────────────────────────────────────────── */
 function KickScene({ compact }) {
-  const scale = compact ? 0.7 : 1;
+  const size = compact ? 44 : 60;
   return (
     <motion.div
       className="absolute inset-0"
@@ -466,60 +479,46 @@ function KickScene({ compact }) {
       exit={{ opacity: 0 }}
       transition={{ duration: 0.25 }}
     >
-      {/* Planted player striking the ball */}
-      <div
-        className="absolute bottom-[16%] left-[52%]"
-        style={{ willChange: 'transform', transform: `scale(${scale})`, transformOrigin: 'bottom center' }}
-      >
+      <div className="absolute bottom-[28%] left-1/2 -translate-x-1/2">
+        {/* Shockwave rings pulsing outward from the charged ball */}
+        {[0, 1].map((i) => (
+          <motion.div
+            key={i}
+            className="absolute left-1/2 top-1/2 rounded-full border-2 border-cyan-300/70"
+            style={{ width: 20, height: 20, marginLeft: -10, marginTop: -10 }}
+            initial={{ scale: 0.6, opacity: 0.9 }}
+            animate={{ scale: 6 + i * 2, opacity: 0 }}
+            transition={{ duration: 0.55, delay: 0.1 + i * 0.15, ease: 'easeOut' }}
+          />
+        ))}
+
+        {/* Charging glow behind the ball */}
         <motion.div
-          initial={{ rotate: -3 }}
-          animate={{ rotate: [-3, 8, 3] }}
+          className="absolute left-1/2 top-1/2 -z-10 rounded-full bg-cyan-300/60 blur-xl"
+          style={{ width: size, height: size, marginLeft: -size / 2, marginTop: -size / 2 }}
+          animate={{ scale: [0.8, 1.6], opacity: [0.5, 0.9] }}
           transition={{ duration: 0.45, ease: 'easeOut' }}
-          style={{ transformOrigin: 'bottom center' }}
+        />
+
+        {/* Ball spinning up in place before it launches */}
+        <motion.div
+          initial={{ scale: 1 }}
+          animate={{ scale: [1, 1.15, 1], rotate: [0, 540] }}
+          transition={{ duration: 0.45, ease: 'easeOut' }}
+          style={{ willChange: 'transform' }}
         >
-          <Footballer pose="kick" />
+          <SoccerBall size={size} />
         </motion.div>
       </div>
-
-      {/* Launching ball with glow trail + motion blur */}
-      <motion.div
-        className="absolute"
-        style={{ willChange: 'transform', bottom: '22%', left: '60%' }}
-        initial={{ x: 0, y: 0, scale: 0.7, opacity: 0, filter: 'blur(0px)' }}
-        animate={{ x: -170, y: -150, scale: 0.95, opacity: 1, filter: 'blur(1.5px)' }}
-        transition={{ duration: 0.6, ease: 'easeOut', delay: 0.12 }}
-      >
-        <div className="relative">
-          <motion.div
-            className="absolute inset-0 -z-10 rounded-full bg-white/70 blur-md"
-            style={{ width: 36, height: 36 }}
-            animate={{ opacity: [0.8, 0.3] }}
-            transition={{ duration: 0.6 }}
-          />
-          {/* Comet trail */}
-          <motion.div
-            className="absolute right-3 top-1/2 -z-10 h-2 origin-right -translate-y-1/2 rounded-full"
-            style={{
-              width: 130,
-              background:
-                'linear-gradient(to left, rgba(255,255,255,0.9), rgba(56,189,248,0.55), transparent)',
-              filter: 'blur(3px)',
-            }}
-            initial={{ scaleX: 0, opacity: 0 }}
-            animate={{ scaleX: 1, opacity: [0, 1, 0.4] }}
-            transition={{ duration: 0.6, delay: 0.12 }}
-          />
-          <SoccerBall size={36} />
-        </div>
-      </motion.div>
     </motion.div>
   );
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
- * BallScene — the ball rushes the camera, fills the frame with motion blur and
- * a light trail, then bursts into a radial explosion of glowing particles that
- * seeds the text reveal.
+ * BallScene — the ball, still dead-center, rushes the camera, fills the frame
+ * with motion blur and a light trail, then bursts into a radial explosion of
+ * glowing particles that seeds the text reveal. Everything originates from
+ * and returns to the same center point — nothing enters from a side.
  * ──────────────────────────────────────────────────────────────────────── */
 function BallScene() {
   const shards = Array.from({ length: 26 }).map((_, i) => {
@@ -553,7 +552,8 @@ function BallScene() {
         transition={{ duration: 0.7, ease: 'easeIn' }}
       />
 
-      {/* Ball rushing toward camera with motion blur */}
+      {/* Ball rushing toward camera with motion blur — grows outward from
+          center rather than approaching from any side */}
       <motion.div
         style={{ willChange: 'transform, filter' }}
         initial={{ scale: 0.5, filter: 'blur(4px)', opacity: 0 }}
@@ -575,7 +575,7 @@ function BallScene() {
         transition={{ duration: 0.5, delay: 0.6, times: [0, 0.2, 1] }}
       />
 
-      {/* Radial particle explosion */}
+      {/* Radial particle explosion, seeded from the exact center point */}
       {shards.map((s) => (
         <motion.div
           key={s.id}
@@ -656,152 +656,6 @@ function HeadlineBlock({ compact }) {
         Preparing the Next Auction
       </motion.p>
     </div>
-  );
-}
-
-/* ─────────────────────────────────────────────────────────────────────────
- * Footballer — a stylized, higher-fidelity professional footballer rendered as
- * inline SVG (no external / copyrighted assets, crisp at any resolution). It
- * presents as a pro athlete in a generic modern kit — deliberately not modeled
- * on any real person's likeness. `pose` switches between a running stance and a
- * planted kicking stance.
- * ──────────────────────────────────────────────────────────────────────── */
-function Footballer({ pose = 'run' }) {
-  const kicking = pose === 'kick';
-  return (
-    <svg
-      width="120"
-      height="200"
-      viewBox="0 0 120 200"
-      fill="none"
-      style={{ filter: 'drop-shadow(0 14px 22px rgba(0,0,0,0.65))' }}
-    >
-      <defs>
-        <linearGradient id="fb-skin" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#e8b58a" />
-          <stop offset="100%" stopColor="#b9835a" />
-        </linearGradient>
-        <linearGradient id="fb-jersey" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#60a5fa" />
-          <stop offset="55%" stopColor="#4f46e5" />
-          <stop offset="100%" stopColor="#312e81" />
-        </linearGradient>
-        <linearGradient id="fb-jersey-hi" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="rgba(255,255,255,0.45)" />
-          <stop offset="60%" stopColor="rgba(255,255,255,0)" />
-        </linearGradient>
-        <linearGradient id="fb-shorts" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#1e293b" />
-          <stop offset="100%" stopColor="#0f172a" />
-        </linearGradient>
-        <linearGradient id="fb-boot" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0%" stopColor="#22d3ee" />
-          <stop offset="100%" stopColor="#0891b2" />
-        </linearGradient>
-        <linearGradient id="fb-hair" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#3b2b21" />
-          <stop offset="100%" stopColor="#1c1410" />
-        </linearGradient>
-      </defs>
-
-      {/* ── Back arm (behind torso) ── */}
-      <g
-        transform={
-          kicking
-            ? 'rotate(-26 40 74)'
-            : 'rotate(34 40 74)'
-        }
-      >
-        <rect x="34" y="70" width="12" height="34" rx="6" fill="url(#fb-skin)" />
-        <rect x="34" y="70" width="12" height="16" rx="6" fill="url(#fb-jersey)" />
-      </g>
-
-      {/* ── Back leg ── */}
-      <g
-        transform={
-          kicking
-            ? 'rotate(30 56 128)'
-            : 'rotate(26 56 128)'
-        }
-      >
-        {/* thigh */}
-        <rect x="50" y="118" width="15" height="34" rx="7" fill="url(#fb-shorts)" />
-        {/* shin */}
-        <rect x="51" y="148" width="12" height="34" rx="6" fill="url(#fb-skin)" />
-        {/* sock */}
-        <rect x="51" y="168" width="12" height="16" rx="5" fill="#1e293b" />
-        {/* boot */}
-        <path d="M49 182 h16 a5 5 0 0 1 5 5 v3 h-24 a3 3 0 0 1 -3 -3 z" fill="url(#fb-boot)" />
-      </g>
-
-      {/* ── Head + hair + neck ── */}
-      <rect x="55" y="42" width="10" height="14" rx="4" fill="url(#fb-skin)" />
-      <circle cx="60" cy="30" r="13" fill="url(#fb-skin)" />
-      {/* hair */}
-      <path
-        d="M47 28 a13 13 0 0 1 26 -2 c0 -2 -3 -12 -13 -12 s-13 9 -13 14 z"
-        fill="url(#fb-hair)"
-      />
-      {/* ear */}
-      <circle cx="49" cy="31" r="2.4" fill="url(#fb-skin)" />
-
-      {/* ── Torso (jersey) ── */}
-      <path
-        d="M44 56 q16 -8 32 0 l4 46 q-20 8 -40 0 z"
-        fill="url(#fb-jersey)"
-      />
-      {/* jersey sheen */}
-      <path d="M44 56 q16 -8 32 0 l2 20 q-18 6 -36 0 z" fill="url(#fb-jersey-hi)" opacity="0.5" />
-      {/* collar */}
-      <path d="M53 55 q7 5 14 0 l-3 6 q-4 2 -8 0 z" fill="#e2e8f0" opacity="0.85" />
-      {/* jersey number */}
-      <text
-        x="60"
-        y="88"
-        textAnchor="middle"
-        fontSize="20"
-        fontWeight="900"
-        fontFamily="Arial, sans-serif"
-        fill="#e2e8f0"
-        opacity="0.9"
-      >
-        10
-      </text>
-
-      {/* ── Shorts ── */}
-      <path d="M42 100 q18 8 36 0 l3 20 q-21 7 -42 0 z" fill="url(#fb-shorts)" />
-
-      {/* ── Front leg ── */}
-      <g
-        transform={
-          kicking
-            ? 'rotate(-52 62 128)'
-            : 'rotate(-24 62 128)'
-        }
-        style={{ transformOrigin: '62px 122px' }}
-      >
-        {/* thigh */}
-        <rect x="57" y="118" width="15" height="34" rx="7" fill="url(#fb-shorts)" />
-        {/* shin */}
-        <rect x="58" y="148" width="12" height="36" rx="6" fill="url(#fb-skin)" />
-        {/* sock */}
-        <rect x="58" y="170" width="12" height="16" rx="5" fill="#334155" />
-        {/* boot */}
-        <path d="M56 184 h16 a5 5 0 0 1 5 5 v3 h-24 a3 3 0 0 1 -3 -3 z" fill="url(#fb-boot)" />
-      </g>
-
-      {/* ── Front arm (over torso) ── */}
-      <g
-        transform={
-          kicking
-            ? 'rotate(40 78 74)'
-            : 'rotate(-38 78 74)'
-        }
-      >
-        <rect x="72" y="70" width="12" height="34" rx="6" fill="url(#fb-skin)" />
-        <rect x="72" y="70" width="12" height="16" rx="6" fill="url(#fb-jersey)" />
-      </g>
-    </svg>
   );
 }
 

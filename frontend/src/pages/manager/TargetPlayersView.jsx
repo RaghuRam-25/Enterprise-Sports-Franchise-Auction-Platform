@@ -23,10 +23,26 @@ import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 import { playerFallback } from '../../utils/playerFallback';
 
+const getCategoryCardStyle = (category) => {
+  switch (category) {
+    case 'Icon Category':
+      return 'border-amber-700/50 bg-amber-950/50 hover:border-amber-500/70';
+    case 'A Grade':
+      return 'border-blue-800/60 bg-blue-950/50 hover:border-blue-600/70';
+    case 'B Grade':
+      return 'border-teal-800/50 bg-teal-950/50 hover:border-teal-600/70';
+    case 'Emerging Youth':
+      return 'border-purple-800/50 bg-purple-950/50 hover:border-purple-600/70';
+    default:
+      return 'border-white/5 bg-slate-900/60 hover:border-slate-700';
+  }
+};
+
 export default function TargetPlayersView() {
   const { user } = useAuth();
   const {
     players = [],
+    teams = [],
     positions = [],
     categories = [],
     sessions = [],
@@ -207,21 +223,19 @@ export default function TargetPlayersView() {
           <div className="flex items-center gap-2 bg-slate-950/70 p-1.5 rounded-2xl border border-slate-800 self-stretch sm:self-auto">
             <button
               onClick={() => setActiveTab('MY_TARGETS')}
-              className={`flex-1 sm:flex-initial px-4 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 ${
-                activeTab === 'MY_TARGETS'
-                  ? 'bg-amber-500 text-slate-950 shadow-lg font-black'
-                  : 'text-slate-400 hover:text-white'
-              }`}
+              className={`flex-1 sm:flex-initial px-4 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 ${activeTab === 'MY_TARGETS'
+                ? 'bg-amber-500 text-slate-950 shadow-lg font-black'
+                : 'text-slate-400 hover:text-white'
+                }`}
             >
               <Star className="w-3.5 h-3.5 fill-current" /> My Target List ({targetList.length})
             </button>
             <button
               onClick={() => setActiveTab('PLAYER_POOL')}
-              className={`flex-1 sm:flex-initial px-4 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 ${
-                activeTab === 'PLAYER_POOL'
-                  ? 'bg-amber-500 text-slate-950 shadow-lg font-black'
-                  : 'text-slate-400 hover:text-white'
-              }`}
+              className={`flex-1 sm:flex-initial px-4 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 ${activeTab === 'PLAYER_POOL'
+                ? 'bg-amber-500 text-slate-950 shadow-lg font-black'
+                : 'text-slate-400 hover:text-white'
+                }`}
             >
               <Users className="w-3.5 h-3.5" /> Player Pool ({players.length})
             </button>
@@ -330,6 +344,8 @@ export default function TargetPlayersView() {
               {targetList.map((target, idx) => {
                 const player = target.playerId || {};
                 const pId = player._id || player.id;
+                const isSold = player.status === 'SOLD';
+                const soldToTeam = isSold ? teams.find(t => (t._id || t.id) === player.soldToTeam) : null;
                 if (!pId) return null;
 
                 return (
@@ -375,15 +391,22 @@ export default function TargetPlayersView() {
                           <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                             {player.category || 'Category'}
                           </span>
-                          <span className="text-xs font-mono text-slate-400">{player.studentId}</span>
                         </div>
 
                         <div className="flex items-center gap-3 text-xs text-slate-300 flex-wrap">
                           <span>Pos: <strong className="text-white">{player.primaryPosition}</strong></span>
-                          <span>&bull;</span>
-                          <span>Session: <strong className="text-white">{player.session}</strong></span>
-                          <span>&bull;</span>
-                          <span className="font-mono text-emerald-400">Base: {formatCurrency(player.basePrice)}</span>
+                          {isSold ? (
+                            <>
+                              <span className="text-slate-500">&bull;</span>
+                              <span className="font-mono text-amber-400">Sold: {formatCurrency(player.finalPrice || player.soldPrice || 0)}</span>
+                              <span className="text-slate-500">&bull;</span>
+                              <span className="text-slate-400">To: <strong className="text-white">{soldToTeam?.name || 'N/A'}</strong></span>
+                            </>
+                          ) : (
+                            <>
+                              <span className="text-slate-500">&bull;</span><span className="font-mono text-emerald-400">Base: {formatCurrency(player.basePrice)}</span>
+                            </>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -445,15 +468,19 @@ export default function TargetPlayersView() {
             {filteredPlayers.map((player) => {
               const pId = player._id || player.id;
               const isTargeted = targetPlayerIds.has(pId);
+              const isSold = player.status === 'SOLD';
+              const soldToTeam = isSold ? teams.find(t => (t._id || t.id) === player.soldToTeam) : null;
+              const categoryCardStyle = getCategoryCardStyle(player.category);
 
               return (
                 <div
                   key={pId}
-                  className={`glass-card rounded-2xl p-4 border transition-all duration-300 flex flex-col justify-between space-y-4 ${
-                    isTargeted
-                      ? 'border-amber-500/40 bg-gradient-to-br from-amber-950/20 via-slate-900 to-slate-950'
-                      : 'border-white/5 bg-slate-900/60 hover:border-slate-700'
-                  }`}
+                  className={`glass-card rounded-2xl p-4 border transition-all duration-300 flex flex-col justify-between space-y-4 ${isTargeted
+                    ? 'border-amber-500/40 bg-gradient-to-br from-amber-950/20 via-slate-900 to-slate-950'
+                    : isSold
+                      ? 'bg-slate-900/50 border-slate-800 opacity-60'
+                      : categoryCardStyle
+                    }`}
                 >
                   <div className="flex items-start gap-3">
                     <img
@@ -465,14 +492,17 @@ export default function TargetPlayersView() {
                     <div className="space-y-1 min-w-0 flex-1">
                       <div className="flex items-center justify-between gap-1">
                         <h3 className="text-sm font-extrabold text-white truncate">{player.name}</h3>
-                        {isTargeted && (
+                        {isTargeted && !isSold && (
                           <span className="px-2 py-0.5 bg-amber-500/20 text-amber-300 font-extrabold text-[9px] rounded-full border border-amber-500/30 flex items-center gap-1 uppercase">
                             <Star className="w-2.5 h-2.5 fill-current" /> Targeted
                           </span>
                         )}
+                        {isSold && (
+                          <span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-400 font-bold text-[9px] rounded-full border border-emerald-500/20 flex items-center gap-1 uppercase">
+                            <Check className="w-2.5 h-2.5" /> SOLD
+                          </span>
+                        )}
                       </div>
-
-                      <p className="text-[11px] text-slate-400 truncate">{player.jerseyName}</p>
 
                       <div className="flex items-center gap-1.5 flex-wrap pt-1">
                         <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-800 text-slate-300">
@@ -486,22 +516,31 @@ export default function TargetPlayersView() {
                   </div>
 
                   <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs">
-                    <div>
-                      <span className="text-[10px] text-slate-500 uppercase tracking-widest block">Base Price</span>
-                      <span className="font-mono font-bold text-emerald-400">{formatCurrency(player.basePrice)}</span>
-                    </div>
-
-                    {!isTargeted ? (
-                      <button
-                        onClick={() => handleAddTarget(player)}
-                        className="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs rounded-xl transition shadow-md flex items-center gap-1.5"
-                      >
-                        <Plus className="w-3.5 h-3.5" /> Add Target
-                      </button>
+                    {isSold ? (
+                      <>
+                        <div>
+                          <span className="text-[10px] text-slate-500 uppercase tracking-widest block">Sold For</span>
+                          <span className="font-mono font-bold text-amber-400">{formatCurrency(player.finalPrice || player.soldPrice || 0)}</span>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-[10px] text-slate-500 uppercase tracking-widest block">Acquired By</span>
+                          <span className="font-semibold text-white truncate">{soldToTeam?.name || 'N/A'}</span>
+                        </div>
+                      </>
                     ) : (
-                      <span className="text-xs font-bold text-amber-400 flex items-center gap-1">
-                        <Check className="w-4 h-4 text-amber-400" /> Added
-                      </span>
+                      <>
+                        <div>
+                          <span className="text-[10px] text-slate-500 uppercase tracking-widest block">Base Price</span>
+                          <span className="font-mono font-bold text-emerald-400">{formatCurrency(player.basePrice)}</span>
+                        </div>
+                        {!isTargeted ? (
+                          <button onClick={() => handleAddTarget(player)} className="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs rounded-xl transition shadow-md flex items-center gap-1.5">
+                            <Plus className="w-3.5 h-3.5" /> Add Target
+                          </button>
+                        ) : (
+                          <span className="text-xs font-bold text-amber-400 flex items-center gap-1"><Check className="w-4 h-4 text-amber-400" /> Added</span>
+                        )}
+                      </>
                     )}
                   </div>
                 </div>

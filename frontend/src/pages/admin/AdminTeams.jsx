@@ -1,12 +1,29 @@
-import  { useState, useEffect, useMemo } from 'react';
-import { Plus, Trash2, Edit3, X, Save, Eye, Copy, CheckCircle, AlertTriangle, Lock } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { Plus, Trash2, Edit3, X, Save, Eye, Copy, CheckCircle, AlertTriangle, Lock, Users } from 'lucide-react';
 import { useAuction } from '../../context/AuctionContext';
 import { useAuth } from '../../context/AuthContext';
 import { adminAPI } from '../../services/api';
+import Navbar from '../../components/Navbar';
+
+const getCategoryStyles = (category) => {
+  switch (category) {
+    case 'Icon Category':
+      return 'bg-amber-950/50 border-amber-700/50';
+    case 'A Grade':
+      return 'bg-blue-950/50 border-blue-800/60';
+    case 'B Grade':
+      return 'bg-teal-950/50 border-teal-800/50';
+    case 'Emerging Youth':
+      return 'bg-purple-950/50 border-purple-800/50';
+    default:
+      return 'bg-slate-900/60 border-slate-800';
+  }
+};
+
 
 export default function AdminTeams() {
   const {
-    teams, setTeams, managers, loadManagers, formatCurrency, triggerToast,
+    teams, setTeams, managers, loadManagers, formatCurrency, triggerToast, players, refetchTeams,
     // Optional, only used if your AuctionContext exposes them — falls back gracefully if not.
     eventPhase, eventConfig,
   } = useAuction();
@@ -18,11 +35,14 @@ export default function AdminTeams() {
   // phase-gating middleware described earlier lands on the backend.
   const isSetupPhase = !eventPhase || eventPhase === 'SETUP';
 
+  // Load dependent data on mount
   useEffect(() => {
-    if (isSuperAdmin) {
-      loadManagers();
+    // Ensure teams are loaded. If context hasn't loaded them yet, fetch them.
+    if (!teams || teams.length === 0) {
+      refetchTeams();
     }
-  }, [isSuperAdmin, loadManagers]);
+    loadManagers(); // Also load managers for all roles (context handles permissions)
+  }, [loadManagers, refetchTeams, teams]);
 
   // ── Create Franchise form state ──────────────────────────────────────────
   const [name, setName] = useState('');
@@ -46,6 +66,9 @@ export default function AdminTeams() {
   // ── Delete confirm modal state (replaces window.confirm) ─────────────────
   const [deleteTarget, setDeleteTarget] = useState(null); // { id, name }
   const [deletingId, setDeletingId] = useState(null); // guards double-click / race condition
+
+  // ── Roster view modal state ──────────────────────────────────────────────
+  const [viewingRoster, setViewingRoster] = useState(null);
 
   // ── Search state ──────────────────────────────────────────────────────────
   const [search] = useState('');
@@ -262,290 +285,360 @@ export default function AdminTeams() {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Read-Only Notice for Podium Admin */}
-      {!isSuperAdmin && (
-        <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-2xl flex items-center gap-3 text-amber-300 text-xs font-semibold">
-          <Eye className="w-5 h-5 flex-shrink-0 text-amber-400" />
-          <div>
-            <p className="font-bold">Read-Only Mode Active (Podium Admin)</p>
-            <p className="text-[11px] text-amber-400/80 font-normal">
-              You are viewing franchise team details. Creating, editing, or deleting teams is restricted to Super Admin.
-            </p>
+    <div className={!user ? "min-h-screen flex flex-col bg-darkBg text-slate-100" : ""}>
+      {!user && <Navbar />}
+      <main className={`space-y-6 ${!user ? 'max-w-5xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8' : ''}`}>
+
+        {!isSuperAdmin && (
+          <div className="mb-6 border-b border-gray-700 pb-3">
+            <h1 className="text-2xl font-bold text-white">All Teams</h1>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Phase lock notice */}
-      {isSuperAdmin && !isSetupPhase && (
-        <div className="p-4 bg-rose-500/10 border border-rose-500/30 rounded-2xl flex items-center gap-3 text-rose-300 text-xs font-semibold">
-          <Lock className="w-5 h-5 flex-shrink-0 text-rose-400" />
-          <div>
-            <p className="font-bold">Franchise Creation Locked</p>
-            <p className="text-[11px] text-rose-400/80 font-normal">
-              Teams can only be created or have their budget changed during the SETUP phase. Current phase: {eventPhase}.
-            </p>
-          </div>
-        </div>
-      )}
-
-      {/* Create Team Form (SUPER_ADMIN ONLY) */}
-      {isSuperAdmin && (
-        <div className={`glass-card rounded-2xl p-6 border border-slate-800 space-y-4 ${!isSetupPhase ? 'opacity-60 pointer-events-none' : ''}`}>
-          <h3 className="text-sm font-bold uppercase tracking-wider text-slate-300">Create New Franchise</h3>
-
-          <form onSubmit={handleCreateFranchise} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <input type="text" placeholder="Team Name*" value={name} onChange={e => setName(e.target.value)} className="glass-input rounded-xl px-4 py-2 text-xs" required disabled={!isSetupPhase} />
-              <input type="text" placeholder="Short Code (e.g. DHD)*" maxLength={4} value={code} onChange={e => setCode(e.target.value.toUpperCase())} className="glass-input rounded-xl px-4 py-2 text-xs font-mono uppercase" required disabled={!isSetupPhase} />
-              <input type="number" min="1" placeholder="Total Budget (BDT)*" value={budget} onChange={e => setBudget(e.target.value)} className="glass-input rounded-xl px-4 py-2 text-xs" required disabled={!isSetupPhase} />
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <input type="text" placeholder="Manager Full Name*" value={managerName} onChange={e => setManagerName(e.target.value)} className="glass-input rounded-xl px-4 py-2 text-xs md:col-span-1" required disabled={!isSetupPhase} />
-              <input type="email" placeholder="Manager Email / Login ID*" value={managerEmail} onChange={e => setManagerEmail(e.target.value)} className="glass-input rounded-xl px-4 py-2 text-xs md:col-span-1" required disabled={!isSetupPhase} />
-              <button type="submit" id="create-team-btn" disabled={creating || !isSetupPhase} className="px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-60 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1 shadow-md transition md:col-span-1">
-                <Plus className="w-4 h-4" />
-                {creating ? 'Creating Franchise...' : 'Create Franchise'}
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
-
-      {/* Generated Credentials Modal */}
-      {isSuperAdmin && selectedManager && (
-        <div className="bg-emerald-950/90 border border-emerald-500/40 rounded-2xl p-5 space-y-3">
-          <div className="flex justify-between items-center text-emerald-300 font-bold text-xs">
-            <span className="flex items-center gap-1.5"><CheckCircle className="w-4 h-4" /> Credentials Created</span>
-            <button onClick={() => setSelectedManager(null)} className="text-xs text-slate-400 hover:text-white">Dismiss</button>
-          </div>
-          <div className="bg-slate-950 p-4 rounded-xl font-mono text-xs text-slate-200 flex items-center justify-between">
+        {/* Phase lock notice (for Super Admin) */}
+        {isSuperAdmin && !isSetupPhase && (
+          <div className="p-4 bg-rose-500/10 border border-rose-500/30 rounded-2xl flex items-center gap-3 text-rose-300 text-xs font-semibold">
+            <Lock className="w-5 h-5 flex-shrink-0 text-rose-400" />
             <div>
-              <p><strong className="text-slate-400">Account Name:</strong> {selectedManager.name}</p>
-              <p><strong className="text-slate-400">Username/Email:</strong> {selectedManager.email || selectedManager.username}</p>
-              <p><strong className="text-emerald-400">Generated Password:</strong> {tempPass}</p>
+              <p className="font-bold">Franchise Creation Locked</p>
+              <p className="text-[11px] text-rose-400/80 font-normal">
+                Teams can only be created or have their budget changed during the SETUP phase. Current phase: {eventPhase}.
+              </p>
             </div>
-            <button
-              onClick={() => copyCredentials(`Username: ${selectedManager.email || selectedManager.username}\nPassword: ${tempPass}`)}
-              className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-bold flex items-center gap-1"
-            >
-              <Copy className="w-3.5 h-3.5" /> Copy
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Franchise List Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {filteredTeams.map(team => {
-          const id = team._id || team.id;
-          const rosterCount = team.currentRosterCount ?? (team.currentRoster?.length || 0);
-          const manager = managers.find(m => {
-            const mTeamId = m.teamId?._id || m.teamId;
-            return mTeamId != null && String(mTeamId) === String(id);
-          });
-          const isDeleting = deletingId === id;
-
-          return (
-            <div key={id} className="glass-card rounded-2xl p-5 border border-slate-800 space-y-4 group">
-              <div className="flex justify-between items-start">
-                <div className="flex items-center gap-3">
-                  <span className="text-3xl">{team.logo || '🏆'}</span>
-                  <div>
-                    <h3 className="font-extrabold text-base text-white">{team.name}</h3>
-                    <span className="font-mono text-xs text-blue-400 font-bold bg-blue-500/10 px-2 py-0.5 rounded border border-blue-500/20">
-                      {team.shortCode || team.code}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Action Buttons (SUPER_ADMIN ONLY) */}
-                {isSuperAdmin && (
-                  <div className="flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button
-                      id={`edit-team-${id}`}
-                      onClick={() => openEdit(team)}
-                      title="Edit Team"
-                      className="p-2 text-slate-400 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition"
-                    >
-                      <Edit3 className="w-4 h-4" />
-                    </button>
-                    <button
-                      id={`delete-team-${id}`}
-                      onClick={() => confirmDeleteTeam(id, team.name)}
-                      disabled={isDeleting}
-                      title="Delete Team"
-                      className="p-2 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition disabled:opacity-50"
-                    >
-                      {isDeleting
-                        ? <span className="w-4 h-4 border-2 border-rose-400 border-t-transparent rounded-full animate-spin block" />
-                        : <Trash2 className="w-4 h-4" />}
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              <div className="grid grid-cols-2 gap-3 pt-2 text-xs">
-                <div className="bg-slate-900/60 p-3 rounded-xl border border-slate-800">
-                  <span className="text-[11px] text-slate-400 uppercase">Total Purse:</span>
-                  <p className="font-mono font-bold text-white mt-0.5">{formatCurrency(team.totalBudget)}</p>
-                </div>
-                <div className="bg-slate-900/60 p-3 rounded-xl border border-slate-800">
-                  <span className="text-[11px] text-slate-400 uppercase">Remaining Purse:</span>
-                  <p className="font-mono font-bold text-emerald-400 mt-0.5">{formatCurrency(team.remainingBudget)}</p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3 text-xs">
-                <div className={`p-3 rounded-xl border ${manager ? 'bg-slate-900/60 border-slate-800' : 'bg-amber-500/10 border-amber-500/30'}`}>
-                  <span className={`text-[11px] uppercase flex items-center gap-1 ${manager ? 'text-slate-400' : 'text-amber-400 font-bold'}`}>
-                    {!manager && <AlertTriangle className="w-3 h-3" />} Manager:
-                  </span>
-                  <p className={`font-bold mt-0.5 truncate ${manager ? 'text-white' : 'text-amber-300'}`}>
-                    {manager ? manager.name : 'Unassigned'}
-                  </p>
-                </div>
-                <div className="bg-slate-900/60 p-3 rounded-xl border border-slate-800">
-                  <span className="text-[11px] text-slate-400 uppercase">Roster:</span>
-                  <p className="font-bold text-white mt-0.5">{rosterCount} / {team.minRoster ?? '—'} min</p>
-                </div>
-              </div>
-            </div>
-          );
-        })}
-
-        {teams.length === 0 && (
-          <div className="col-span-2 py-12 text-center text-slate-500 glass-card rounded-2xl border border-slate-800">
-            No teams created yet
           </div>
         )}
 
-        {teams.length > 0 && filteredTeams.length === 0 && (
-          <div className="col-span-2 py-12 text-center text-slate-500 glass-card rounded-2xl border border-slate-800">
-            No teams match "{search}"
+        {/* Create Team Form (SUPER_ADMIN ONLY) */}
+        {isSuperAdmin && isSetupPhase && (
+          <div className="glass-card rounded-2xl p-6 border border-slate-800 space-y-4">
+            <h3 className="text-sm font-bold uppercase tracking-wider text-slate-300">Create New Franchise</h3>
+
+            <form onSubmit={handleCreateFranchise} className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <input type="text" placeholder="Team Name*" value={name} onChange={e => setName(e.target.value)} className="glass-input rounded-xl px-4 py-2 text-xs" required disabled={!isSetupPhase} />
+                <input type="text" placeholder="Short Code (e.g. DHD)*" maxLength={4} value={code} onChange={e => setCode(e.target.value.toUpperCase())} className="glass-input rounded-xl px-4 py-2 text-xs font-mono uppercase" required disabled={!isSetupPhase} />
+                <input type="number" min="1" placeholder="Total Budget (BDT)*" value={budget} onChange={e => setBudget(e.target.value)} className="glass-input rounded-xl px-4 py-2 text-xs" required disabled={!isSetupPhase} />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <input type="text" placeholder="Manager Full Name*" value={managerName} onChange={e => setManagerName(e.target.value)} className="glass-input rounded-xl px-4 py-2 text-xs md:col-span-1" required disabled={!isSetupPhase} />
+                <input type="email" placeholder="Manager Email / Login ID*" value={managerEmail} onChange={e => setManagerEmail(e.target.value)} className="glass-input rounded-xl px-4 py-2 text-xs md:col-span-1" required disabled={!isSetupPhase} />
+                <button type="submit" id="create-team-btn" disabled={creating || !isSetupPhase} className="px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-60 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1 shadow-md transition md:col-span-1">
+                  <Plus className="w-4 h-4" />
+                  {creating ? 'Creating Franchise...' : 'Create Franchise'}
+                </button>
+              </div>
+            </form>
           </div>
         )}
-      </div>
 
-      {/* Edit Team Modal (SUPER_ADMIN ONLY) */}
-      {isSuperAdmin && editingTeam && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="glass-card w-full max-w-md rounded-2xl p-6 border border-slate-700 space-y-5 shadow-2xl">
-            <div className="flex justify-between items-center">
+        {/* Generated Credentials Modal */}
+        {isSuperAdmin && selectedManager && (
+          <div className="bg-emerald-950/90 border border-emerald-500/40 rounded-2xl p-5 space-y-3">
+            <div className="flex justify-between items-center text-emerald-300 font-bold text-xs">
+              <span className="flex items-center gap-1.5"><CheckCircle className="w-4 h-4" /> Credentials Created</span>
+              <button onClick={() => setSelectedManager(null)} className="text-xs text-slate-400 hover:text-white">Dismiss</button>
+            </div>
+            <div className="bg-slate-950 p-4 rounded-xl font-mono text-xs text-slate-200 flex items-center justify-between">
               <div>
-                <h2 className="text-lg font-black text-white">Edit Team</h2>
-                <p className="text-xs text-slate-400">{editingTeam.name}</p>
+                <p><strong className="text-slate-400">Account Name:</strong> {selectedManager.name}</p>
+                <p><strong className="text-slate-400">Username/Email:</strong> {selectedManager.email || selectedManager.username}</p>
+                <p><strong className="text-emerald-400">Generated Password:</strong> {tempPass}</p>
               </div>
-              <button onClick={() => setEditingTeam(null)} className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition">
-                <X className="w-4 h-4" />
+              <button
+                onClick={() => copyCredentials(`Username: ${selectedManager.email || selectedManager.username}\nPassword: ${tempPass}`)}
+                className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-bold flex items-center gap-1"
+              >
+                <Copy className="w-3.5 h-3.5" /> Copy
               </button>
             </div>
+          </div>
+        )}
 
-            <div className="space-y-3">
-              <div>
-                <label className="block text-[11px] font-semibold text-slate-400 mb-1">Team Name</label>
-                <input
-                  type="text"
-                  value={editForm.name ?? ''}
-                  onChange={e => setEditForm(prev => ({ ...prev, name: e.target.value }))}
-                  className="glass-input w-full px-3 py-2 rounded-xl text-xs"
-                />
-              </div>
-              <div>
-                <label className="block text-[11px] font-semibold text-slate-400 mb-1">Short Code (max 4 chars)</label>
-                <input
-                  type="text"
-                  maxLength={4}
-                  value={editForm.shortCode ?? ''}
-                  onChange={e => setEditForm(prev => ({ ...prev, shortCode: e.target.value.toUpperCase() }))}
-                  className="glass-input w-full px-3 py-2 rounded-xl text-xs font-mono uppercase"
-                />
-              </div>
-              <div>
-                <label className="block text-[11px] font-semibold text-slate-400 mb-1">Total Budget</label>
-                <input
-                  type="number"
-                  min="1"
-                  value={editForm.totalBudget ?? ''}
-                  onChange={e => setEditForm(prev => ({ ...prev, totalBudget: Number(e.target.value) }))}
-                  className="glass-input w-full px-3 py-2 rounded-xl text-xs"
-                />
-              </div>
-              <div>
-                <label className="block text-[11px] font-semibold text-slate-400 mb-1">Assign Manager</label>
-                <select
-                  value={editForm.managerId || ''}
-                  onChange={e => setEditForm(prev => ({ ...prev, managerId: e.target.value }))}
-                  className="glass-input w-full px-3 py-2 rounded-xl text-xs"
-                >
-                  <option value="">Unassigned</option>
-                  {editingTeam?.managerId && !unassignedManagers.some(m => m._id === editingTeam.managerId) && (
-                    <option value={editingTeam.managerId}>
-                      {managers.find(m => m._id === editingTeam.managerId)?.name || 'Current'}
-                    </option>
+        {/* Franchise List Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {filteredTeams.map(team => {
+            const id = team._id || team.id;
+            const rosterCount = team.currentRosterCount ?? (team.currentRoster?.length || 0);
+            const manager = managers.find(m => {
+              const mTeamId = m.teamId?._id || m.teamId;
+              return mTeamId != null && String(mTeamId) === String(id);
+            });
+            const isDeleting = deletingId === id;
+
+            return (
+              <div key={id} className="glass-card rounded-2xl p-5 border border-slate-800 space-y-4 group cursor-pointer hover:border-blue-500/30 transition-colors" onClick={() => setViewingRoster(team)}>
+                <div className="flex justify-between items-start">
+                  <div className="flex items-center gap-3">
+                    <span className="text-3xl">{team.logo || '🏆'}</span>
+                    <div>
+                      <h3 className="font-extrabold text-base text-white">{team.name}</h3>
+                      <span className="font-mono text-xs text-blue-400 font-bold bg-blue-500/10 px-2 py-0.5 rounded border border-blue-500/20">
+                        {team.shortCode || team.code}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Action Buttons (SUPER_ADMIN ONLY) */}
+                  {isSuperAdmin && (
+                    <div className="flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button
+                        id={`edit-team-${id}`}
+                        onClick={(e) => { e.stopPropagation(); openEdit(team); }}
+                        title="Edit Team"
+                        className="p-2 text-slate-400 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition"
+                      >
+                        <Edit3 className="w-4 h-4" />
+                      </button>
+                      <button
+                        id={`delete-team-${id}`}
+                        onClick={(e) => { e.stopPropagation(); confirmDeleteTeam(id, team.name); }}
+                        disabled={isDeleting}
+                        title="Delete Team"
+                        className="p-2 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition disabled:opacity-50"
+                      >
+                        {isDeleting
+                          ? <span className="w-4 h-4 border-2 border-rose-400 border-t-transparent rounded-full animate-spin block" />
+                          : <Trash2 className="w-4 h-4" />}
+                      </button>
+                    </div>
                   )}
-                  {unassignedManagers.map(m => <option key={m._id} value={m._id}>{m.name}</option>)}
-                </select>
-              </div>
-            </div>
+                </div>
 
-            <div className="flex gap-3 pt-2">
-              <button onClick={() => setEditingTeam(null)} className="flex-1 py-2.5 border border-slate-700 text-slate-300 hover:bg-slate-800 rounded-xl text-xs font-semibold transition">
-                Cancel
-              </button>
-              <button
-                id="save-team-edit"
-                onClick={handleSaveEdit}
-                disabled={saving}
-                className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-60 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition"
-              >
-                {saving ? <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Save className="w-3.5 h-3.5" />}
-                Save Changes
-              </button>
+                <div className="grid grid-cols-2 gap-3 pt-2 text-xs">
+                  <div className="bg-slate-900/60 p-3 rounded-xl border border-slate-800">
+                    <span className="text-[11px] text-slate-400 uppercase">Total Purse:</span>
+                    <p className="font-mono font-bold text-white mt-0.5">{formatCurrency(team.totalBudget)}</p>
+                  </div>
+                  <div className="bg-slate-900/60 p-3 rounded-xl border border-slate-800">
+                    <span className="text-[11px] text-slate-400 uppercase">Remaining Purse:</span>
+                    <p className="font-mono font-bold text-emerald-400 mt-0.5">{formatCurrency(team.remainingBudget)}</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 text-xs">
+                  <div className={`p-3 rounded-xl border ${manager ? 'bg-slate-900/60 border-slate-800' : 'bg-amber-500/10 border-amber-500/30'}`}>
+                    <span className={`text-[11px] uppercase flex items-center gap-1 ${manager ? 'text-slate-400' : 'text-amber-400 font-bold'}`}>
+                      {!manager && <AlertTriangle className="w-3 h-3" />} Manager:
+                    </span>
+                    <p className={`font-bold mt-0.5 truncate ${manager ? 'text-white' : 'text-amber-300'}`}>
+                      {manager ? manager.name : 'Unassigned'}
+                    </p>
+                  </div>
+                  <div className="bg-slate-900/60 p-3 rounded-xl border border-slate-800">
+                    <span className="text-[11px] text-slate-400 uppercase">Roster:</span>
+                    <p className="font-bold text-white mt-0.5">{rosterCount} / {team.minRoster ?? '—'} min</p>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+
+          {teams.length === 0 && (
+            <div className="col-span-2 py-12 text-center text-slate-500 glass-card rounded-2xl border border-slate-800">
+              No teams created yet
+            </div>
+          )}
+
+          {teams.length > 0 && filteredTeams.length === 0 && (
+            <div className="col-span-2 py-12 text-center text-slate-500 glass-card rounded-2xl border border-slate-800">
+              No teams match "{search}"
+            </div>
+          )}
+        </div>
+
+        {/* Roster View Modal */}
+        {viewingRoster && (
+          <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="glass-card w-full max-w-lg rounded-2xl p-6 border border-slate-700 space-y-5 shadow-2xl flex flex-col">
+              <div className="flex justify-between items-center flex-shrink-0">
+                <div>
+                  <h2 className="text-lg font-black text-white flex items-center gap-2">
+                    <span className="text-2xl">{viewingRoster.logo || '🏆'}</span>
+                    {viewingRoster.name} Roster
+                  </h2>
+                  <p className="text-xs text-slate-400">Players acquired in the auction.</p>
+                </div>
+                <button onClick={() => setViewingRoster(null)} className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <RosterModalContent team={viewingRoster} />
+
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Custom Delete Confirmation Modal (replaces window.confirm for visual consistency) */}
-      {deleteTarget && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="glass-card w-full max-w-sm rounded-2xl p-6 border border-rose-500/30 space-y-5 shadow-2xl">
-            <div className="flex items-center gap-3 text-rose-400">
-              <div className="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-center flex-shrink-0">
-                <Trash2 className="w-5 h-5" />
+        {/* Edit Team Modal (SUPER_ADMIN ONLY) */}
+        {isSuperAdmin && editingTeam && (
+          <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="glass-card w-full max-w-md rounded-2xl p-6 border border-slate-700 space-y-5 shadow-2xl">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h2 className="text-lg font-black text-white">Edit Team</h2>
+                  <p className="text-xs text-slate-400">{editingTeam.name}</p>
+                </div>
+                <button onClick={() => setEditingTeam(null)} className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition">
+                  <X className="w-4 h-4" />
+                </button>
               </div>
-              <div>
-                <h2 className="text-base font-black text-white">Delete Franchise?</h2>
-                <p className="text-xs text-slate-400">This cannot be undone.</p>
+
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-400 mb-1">Team Name</label>
+                  <input
+                    type="text"
+                    value={editForm.name ?? ''}
+                    onChange={e => setEditForm(prev => ({ ...prev, name: e.target.value }))}
+                    className="glass-input w-full px-3 py-2 rounded-xl text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-400 mb-1">Short Code (max 4 chars)</label>
+                  <input
+                    type="text"
+                    maxLength={4}
+                    value={editForm.shortCode ?? ''}
+                    onChange={e => setEditForm(prev => ({ ...prev, shortCode: e.target.value.toUpperCase() }))}
+                    className="glass-input w-full px-3 py-2 rounded-xl text-xs font-mono uppercase"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-400 mb-1">Total Budget</label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={editForm.totalBudget ?? ''}
+                    onChange={e => setEditForm(prev => ({ ...prev, totalBudget: Number(e.target.value) }))}
+                    className="glass-input w-full px-3 py-2 rounded-xl text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-400 mb-1">Assign Manager</label>
+                  <select
+                    value={editForm.managerId || ''}
+                    onChange={e => setEditForm(prev => ({ ...prev, managerId: e.target.value }))}
+                    className="glass-input w-full px-3 py-2 rounded-xl text-xs"
+                  >
+                    <option value="">Unassigned</option>
+                    {editingTeam?.managerId && !unassignedManagers.some(m => m._id === editingTeam.managerId) && (
+                      <option value={editingTeam.managerId}>
+                        {managers.find(m => m._id === editingTeam.managerId)?.name || 'Current'}
+                      </option>
+                    )}
+                    {unassignedManagers.map(m => <option key={m._id} value={m._id}>{m.name}</option>)}
+                  </select>
+                </div>
               </div>
-            </div>
-            <p className="text-sm text-slate-300">
-              Are you sure you want to permanently delete <span className="font-bold text-white">"{deleteTarget.name}"</span>? All roster and bidding history tied to this team may be affected.
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setDeleteTarget(null)}
-                disabled={deletingId === deleteTarget.id}
-                className="flex-1 py-2.5 border border-slate-700 text-slate-300 hover:bg-slate-800 rounded-xl text-xs font-semibold transition disabled:opacity-60"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={executeDeleteTeam}
-                disabled={deletingId === deleteTarget.id}
-                className="flex-1 py-2.5 bg-rose-600 hover:bg-rose-500 disabled:opacity-60 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition"
-              >
-                {deletingId === deleteTarget.id
-                  ? <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  : <Trash2 className="w-3.5 h-3.5" />}
-                Delete
-              </button>
+
+              <div className="flex gap-3 pt-2">
+                <button onClick={() => setEditingTeam(null)} className="flex-1 py-2.5 border border-slate-700 text-slate-300 hover:bg-slate-800 rounded-xl text-xs font-semibold transition">
+                  Cancel
+                </button>
+                <button
+                  id="save-team-edit"
+                  onClick={handleSaveEdit}
+                  disabled={saving}
+                  className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-60 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition"
+                >
+                  {saving ? <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+                  Save Changes
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
+        {/* Custom Delete Confirmation Modal (replaces window.confirm for visual consistency) */}
+        {deleteTarget && (
+          <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="glass-card w-full max-w-sm rounded-2xl p-6 border border-rose-500/30 space-y-5 shadow-2xl">
+              <div className="flex items-center gap-3 text-rose-400">
+                <div className="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-center flex-shrink-0">
+                  <Trash2 className="w-5 h-5" />
+                </div>
+                <div>
+                  <h2 className="text-base font-black text-white">Delete Franchise?</h2>
+                  <p className="text-xs text-slate-400">This cannot be undone.</p>
+                </div>
+              </div>
+              <p className="text-sm text-slate-300">
+                Are you sure you want to permanently delete <span className="font-bold text-white">"{deleteTarget.name}"</span>? All roster and bidding history tied to this team may be affected.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setDeleteTarget(null)}
+                  disabled={deletingId === deleteTarget.id}
+                  className="flex-1 py-2.5 border border-slate-700 text-slate-300 hover:bg-slate-800 rounded-xl text-xs font-semibold transition disabled:opacity-60"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={executeDeleteTeam}
+                  disabled={deletingId === deleteTarget.id}
+                  className="flex-1 py-2.5 bg-rose-600 hover:bg-rose-500 disabled:opacity-60 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition"
+                >
+                  {deletingId === deleteTarget.id
+                    ? <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    : <Trash2 className="w-3.5 h-3.5" />}
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </main>
+    </div>
+  );
+}
+
+function RosterModalContent({ team }) {
+  const { players, formatCurrency } = useAuction();
+
+  // currentRoster can be an array of IDs or partial player objects.
+  // We create a Set of IDs for efficient lookup.
+  const rosterPlayerIds = useMemo(() => {
+    if (!team.currentRoster || !Array.isArray(team.currentRoster)) return new Set();
+    return new Set(team.currentRoster.map(p => typeof p === 'string' ? p : (p._id || p.id)));
+  }, [team.currentRoster]);
+
+  // We find the full player objects from the global players list.
+  const rosterPlayers = useMemo(() => {
+    if (!Array.isArray(players)) return [];
+    return players.filter(p => rosterPlayerIds.has(p._id || p.id));
+  }, [players, rosterPlayerIds]);
+
+  if (rosterPlayers.length === 0) {
+    return (
+      <div className="text-center py-12 text-slate-500 text-sm flex flex-col items-center gap-3">
+        <Users className="w-10 h-10 text-slate-600" />
+        This team has not acquired any players yet.
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-h-[60vh] overflow-y-auto space-y-2 pr-1 custom-scrollbar">
+      {rosterPlayers.map(player => {
+        const categoryStyle = getCategoryStyles(player.category);
+        return (<div key={player._id || player.id} className={`border p-3 rounded-xl flex items-center justify-between gap-3 ${categoryStyle}`}>
+          <div className="flex items-center gap-3 min-w-0">
+            <img
+              src={player.imageUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(player.name || 'P')}&background=1e293b&color=94a3b8`}
+              alt={player.name}
+              className="w-10 h-10 rounded-full object-cover border-2 border-slate-700 flex-shrink-0"
+            />
+            <div className="min-w-0">
+              <p className="font-bold text-sm text-white truncate">{player.name}</p>
+              <p className="text-xs text-slate-400">{player.primaryPosition || 'N/A'}</p>
+            </div>
+          </div>
+          <div className="text-right flex-shrink-0">
+            <p className="font-mono font-bold text-sm text-emerald-400">{formatCurrency(player.finalPrice || player.soldPrice || 0)}</p>
+            <p className="text-[10px] text-slate-500">Sold Price</p>
+          </div>
+        </div>);
+      })}
     </div>
   );
 }

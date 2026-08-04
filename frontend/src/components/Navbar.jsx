@@ -89,7 +89,7 @@ export default function Navbar() {
                     <Radio className="w-3.5 h-3.5" />
                     Live Auction
                   </Link>
-                  <Link to="/teams" className={`flex items-center gap-1 px-3 py-1.5 rounded-lg transition font-semibold ${location.pathname === '/teams' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'}`}>
+                  <Link to="/matches" className={`flex items-center gap-1 px-3 py-1.5 rounded-lg transition font-semibold ${location.pathname === '/matches' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'}`}>
                     <Shield className="w-3.5 h-3.5" />
                     Matches
                   </Link>

@@ -1,4 +1,4 @@
-import  { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   Users, Search, X, ChevronDown, Star, Shield,
   Trophy, Zap, Eye, UserCheck, UserX, Clock, SlidersHorizontal,
@@ -27,6 +27,31 @@ const ROLE_BADGE = {
   null: { label: 'Spectator', color: 'text-slate-300', bg: 'bg-slate-800/60', border: 'border-slate-700' },
 };
 
+const getCategoryCardStyle = (category) => {
+  switch (category) {
+    case 'Icon Category':
+      return 'border-amber-700/50 bg-amber-950/50 hover:border-amber-500/70';
+    case 'A Grade':
+      return 'border-blue-800/60 bg-blue-950/50 hover:border-blue-600/70';
+    case 'B Grade':
+      return 'border-teal-800/50 bg-teal-950/50 hover:border-teal-600/70';
+    case 'Emerging Youth':
+      return 'border-purple-800/50 bg-purple-950/50 hover:border-purple-600/70';
+    default:
+      return 'border-slate-800 bg-slate-900/60 hover:border-blue-500/40';
+  }
+};
+
+const getCategoryRowStyle = (category) => {
+  switch (category) {
+    case 'Icon Category': return 'bg-amber-950/20 hover:bg-amber-950/40 border-l-4 border-amber-500';
+    case 'A Grade': return 'bg-blue-950/20 hover:bg-blue-950/40 border-l-4 border-blue-500';
+    case 'B Grade': return 'bg-teal-950/20 hover:bg-teal-950/40 border-l-4 border-teal-500';
+    case 'Emerging Youth': return 'bg-purple-950/20 hover:bg-purple-950/40 border-l-4 border-purple-500';
+    default: return 'hover:bg-slate-800/30 border-l-4 border-slate-700';
+  }
+};
+
 function StatusBadge({ status }) {
   const cfg = STATUS_CONFIG[status?.toUpperCase()] || STATUS_CONFIG.PENDING;
   const Icon = cfg.icon;
@@ -38,15 +63,15 @@ function StatusBadge({ status }) {
   );
 }
 
-function PlayerCard({ player, isPrivileged, formatCurrency }) {
+function PlayerCard({ player, isPrivileged, formatCurrency, teams = [] }) {
   const [imgError, setImgError] = useState(false);
   const positions = Array.isArray(player.positions) ? player.positions : [];
+  const isSold = player.status === 'SOLD';
+  const soldToTeam = isSold ? teams.find(t => (t._id || t.id) === player.soldToTeam) : null;
+  const categoryStyle = getCategoryCardStyle(player.category);
 
   return (
-    <div className="glass-card glass-card-hover rounded-2xl border border-slate-800 overflow-hidden group transition-all duration-300 hover:border-blue-500/40 hover:shadow-blue-500/10 hover:shadow-xl">
-      {/* Top gradient accent */}
-      <div className="h-1 w-full bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 opacity-60 group-hover:opacity-100 transition-opacity" />
-
+    <div className={`glass-card rounded-2xl border overflow-hidden group transition-all duration-300 ${isSold ? 'opacity-60' : ''} ${categoryStyle}`}>
       <div className="p-5">
         {/* Header Row */}
         <div className="flex items-start gap-3 mb-4">
@@ -66,20 +91,15 @@ function PlayerCard({ player, isPrivileged, formatCurrency }) {
             )}
             {/* Status dot */}
             <span className={`absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full border-2 border-slate-900 ${player.status === 'SOLD' ? 'bg-emerald-400' :
-                player.status === 'WITHDRAWN' ? 'bg-rose-400' :
-                  player.status === 'UNSOLD' ? 'bg-amber-400' :
-                    'bg-blue-400'
+              player.status === 'WITHDRAWN' ? 'bg-rose-400' :
+                player.status === 'UNSOLD' ? 'bg-amber-400' :
+                  'bg-blue-400'
               }`} />
           </div>
 
           {/* Name + Jersey */}
           <div className="flex-1 min-w-0">
             <h3 className="font-black text-white text-base leading-tight truncate">{player.name}</h3>
-            {player.jerseyName && (
-              <p className="text-xs font-mono font-bold text-indigo-400 tracking-widest uppercase mt-0.5">
-                # {player.jerseyName}
-              </p>
-            )}
             <div className="mt-1.5">
               <StatusBadge status={player.status} />
             </div>
@@ -92,8 +112,8 @@ function PlayerCard({ player, isPrivileged, formatCurrency }) {
             <span
               key={pos}
               className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide border ${pos === player.primaryPosition
-                  ? 'bg-amber-500/15 text-amber-400 border-amber-500/30'
-                  : 'bg-slate-800/80 text-slate-400 border-slate-700'
+                ? 'bg-amber-500/15 text-amber-400 border-amber-500/30'
+                : 'bg-slate-800/80 text-slate-400 border-slate-700'
                 }`}
             >
               {pos === player.primaryPosition && <Star className="w-2.5 h-2.5 inline mr-0.5 -mt-0.5" />}
@@ -107,65 +127,46 @@ function PlayerCard({ player, isPrivileged, formatCurrency }) {
           <div className="flex items-center gap-1">
             <Tag className="w-3 h-3 text-slate-500" />
             <span className={`font-semibold ${player.category?.includes('A') ? 'text-amber-400' :
-                player.category?.includes('S') ? 'text-purple-400' :
-                  'text-slate-400'
+              player.category?.includes('S') ? 'text-purple-400' :
+                'text-slate-400'
               }`}>{player.category || 'B Grade'}</span>
           </div>
-
-          {player.session && (
-            <div className="flex items-center gap-1">
-              <Hash className="w-3 h-3 text-slate-500" />
-              <span className="text-slate-400">{player.session}</span>
-            </div>
-          )}
         </div>
 
         {/* Privileged-only Details */}
-        {isPrivileged && (
-          <div className="mt-3 pt-3 border-t border-slate-800/50 space-y-1.5">
-            {player.studentId && (
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-slate-500 font-medium">Student ID</span>
-                <span className="font-mono text-slate-300">{player.studentId}</span>
-              </div>
-            )}
-            {player.email && (
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-slate-500 font-medium">Email</span>
-                <span className="font-mono text-slate-300 truncate ml-2 text-right">{player.email}</span>
-              </div>
-            )}
-            {player.tShirtSize && (
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-slate-500 font-medium">T-Shirt</span>
-                <span className="font-mono text-slate-300">{player.tShirtSize} {player.tShirtNumber ? `— #${player.tShirtNumber}` : ''}</span>
-              </div>
-            )}
-            {player.basePrice !== undefined && formatCurrency && (
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-slate-500 font-medium">Base Price</span>
-                <span className="font-mono font-bold text-emerald-400">{formatCurrency(player.basePrice)}</span>
-              </div>
-            )}
-            {(player.status === 'SOLD' || player.finalPrice) && player.finalPrice && formatCurrency && (
+        <div className="mt-3 pt-3 border-t border-slate-800/50 space-y-1.5">
+          {!isSold && formatCurrency && (
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-slate-500 font-medium">Base Price</span>
+              <span className="font-mono font-bold text-emerald-400">{formatCurrency(player.basePrice)}</span>
+            </div>
+          )}
+          {isSold && (
+            <>
               <div className="flex items-center justify-between text-xs">
                 <span className="text-slate-500 font-medium">Sold For</span>
-                <span className="font-mono font-bold text-amber-400">{formatCurrency(player.finalPrice)}</span>
+                <span className="font-mono font-bold text-amber-400">{formatCurrency(player.finalPrice || 0)}</span>
               </div>
-            )}
-          </div>
-        )}
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-slate-500 font-medium">Acquired By</span>
+                <span className="font-semibold text-white truncate">{soldToTeam?.name || 'N/A'}</span>
+              </div>
+            </>
+          )}
+        </div>
       </div>
     </div>
   );
 }
 
-function PlayerListRow({ player, isPrivileged, formatCurrency }) {
+function PlayerListRow({ player, isPrivileged, formatCurrency, teams = [] }) {
   const [imgErr, setImgErr] = useState(false);
   const positions = Array.isArray(player.positions) ? player.positions : [];
-
+  const isSold = player.status === 'SOLD';
+  const soldToTeam = isSold ? teams.find(t => (t._id || t.id) === player.soldToTeam) : null;
+  const rowStyle = getCategoryRowStyle(player.category);
   return (
-    <div className="grid grid-cols-12 gap-3 px-4 py-3 hover:bg-slate-800/40 transition items-center text-sm">
+    <div className={`grid grid-cols-12 gap-3 px-4 py-3 items-center text-sm transition-colors ${rowStyle} ${isSold ? 'opacity-60' : ''}`}>
       <div className="col-span-1">
         {player.imageUrl && !imgErr ? (
           <img
@@ -183,12 +184,6 @@ function PlayerListRow({ player, isPrivileged, formatCurrency }) {
 
       <div className="col-span-3">
         <p className="font-bold text-white truncate">{player.name}</p>
-        {player.jerseyName && (
-          <p className="text-[10px] text-indigo-400 font-mono font-bold"># {player.jerseyName}</p>
-        )}
-        {isPrivileged && player.studentId && (
-          <p className="text-[10px] text-slate-500 font-mono">{player.studentId}</p>
-        )}
       </div>
 
       <div className="col-span-2 flex flex-wrap gap-1">
@@ -196,8 +191,8 @@ function PlayerListRow({ player, isPrivileged, formatCurrency }) {
           <span
             key={pos}
             className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase ${pos === player.primaryPosition
-                ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30'
-                : 'bg-slate-800 text-slate-400 border border-slate-700'
+              ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30'
+              : 'bg-slate-800 text-slate-400 border border-slate-700'
               }`}
           >
             {pos === player.primaryPosition && '* '}{pos}
@@ -212,17 +207,24 @@ function PlayerListRow({ player, isPrivileged, formatCurrency }) {
 
       <div className="col-span-2">
         <span className={`text-xs font-semibold ${player.category?.includes('A') ? 'text-amber-400' :
-            player.category?.includes('S') ? 'text-purple-400' :
-              'text-slate-400'
+          player.category?.includes('S') ? 'text-purple-400' :
+            'text-slate-400'
           }`}>{player.category || '--'}</span>
-        {isPrivileged && player.basePrice !== undefined && (
-          <p className="text-[10px] font-mono text-emerald-400">{formatCurrency(player.basePrice)}</p>
+      </div>
+
+      <div className="col-span-2 text-xs">
+        {isSold ? (
+          <>
+            <p className="font-mono font-bold text-amber-400">{formatCurrency(player.finalPrice || 0)}</p>
+            <p className="text-[10px] text-slate-400">to {soldToTeam?.name || 'N/A'}</p>
+          </>
+        ) : (
+          <p className="font-mono font-bold text-emerald-400">{formatCurrency(player.basePrice)}</p>
         )}
       </div>
 
-      <div className="col-span-2 text-xs text-slate-400 font-mono">{player.session || '--'}</div>
 
-      <div className="col-span-2">
+      <div className="col-span-2 text-center">
         <StatusBadge status={player.status} />
       </div>
     </div>
@@ -230,7 +232,7 @@ function PlayerListRow({ player, isPrivileged, formatCurrency }) {
 }
 
 export default function PublicPlayersView() {
-  const { players: ctxPlayers, positions, categories, formatCurrency, isDataLoading, refetchPlayers } = useAuction();
+  const { players: ctxPlayers, teams, positions, categories, formatCurrency, isDataLoading, refetchPlayers } = useAuction();
   const { user } = useAuth();
 
   const role = user?.role || null;
@@ -314,8 +316,8 @@ export default function PublicPlayersView() {
       {!user && <Navbar />}
 
       <main className={`flex-1 space-y-6 ${!user
-          ? 'max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8'
-          : ''
+        ? 'max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8'
+        : ''
         }`}>
 
         {/* ── Page Header ─────────────────────────────────────────────────── */}
@@ -403,8 +405,8 @@ export default function PublicPlayersView() {
             <button
               onClick={() => setShowFilters(v => !v)}
               className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-semibold transition ${showFilters || activeFiltersCount > 0
-                  ? 'bg-blue-600 border-blue-500 text-white'
-                  : 'glass-input border-slate-700 text-slate-300 hover:text-white hover:border-slate-600'
+                ? 'bg-blue-600 border-blue-500 text-white'
+                : 'glass-input border-slate-700 text-slate-300 hover:text-white hover:border-slate-600'
                 }`}
             >
               <SlidersHorizontal className="w-4 h-4" />
@@ -441,8 +443,8 @@ export default function PublicPlayersView() {
                       key={s}
                       onClick={() => setFilterStatus(s)}
                       className={`px-2.5 py-1 rounded-lg text-xs font-semibold border transition ${filterStatus === s
-                          ? 'bg-blue-600 border-blue-500 text-white'
-                          : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-white hover:border-slate-500'
+                        ? 'bg-blue-600 border-blue-500 text-white'
+                        : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-white hover:border-slate-500'
                         }`}
                     >
                       {s === 'ALL' ? 'All' : s}
@@ -460,8 +462,8 @@ export default function PublicPlayersView() {
                       key={c}
                       onClick={() => setFilterCategory(c)}
                       className={`px-2.5 py-1 rounded-lg text-xs font-semibold border transition ${filterCategory === c
-                          ? 'bg-amber-600 border-amber-500 text-white'
-                          : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-white hover:border-slate-500'
+                        ? 'bg-amber-600 border-amber-500 text-white'
+                        : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-white hover:border-slate-500'
                         }`}
                     >
                       {c}
@@ -479,8 +481,8 @@ export default function PublicPlayersView() {
                       key={p}
                       onClick={() => setFilterPosition(p)}
                       className={`px-2.5 py-1 rounded-lg text-xs font-semibold border transition ${filterPosition === p
-                          ? 'bg-purple-600 border-purple-500 text-white'
-                          : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-white hover:border-slate-500'
+                        ? 'bg-purple-600 border-purple-500 text-white'
+                        : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-white hover:border-slate-500'
                         }`}
                     >
                       {p}
@@ -544,6 +546,7 @@ export default function PublicPlayersView() {
                 player={player}
                 isPrivileged={isPrivileged}
                 formatCurrency={formatCurrency}
+                teams={teams}
               />
             ))}
           </div>
@@ -556,8 +559,8 @@ export default function PublicPlayersView() {
               <div className="col-span-3">Player</div>
               <div className="col-span-2">Positions</div>
               <div className="col-span-2">Category</div>
-              <div className="col-span-2">Session</div>
-              <div className="col-span-2">Status</div>
+              <div className="col-span-2">Price</div>
+              <div className="col-span-2 text-center">Status</div>
             </div>
 
             <div className="divide-y divide-slate-800/60">
@@ -567,6 +570,7 @@ export default function PublicPlayersView() {
                   player={player}
                   isPrivileged={isPrivileged}
                   formatCurrency={formatCurrency}
+                  teams={teams}
                 />
               ))}
             </div>

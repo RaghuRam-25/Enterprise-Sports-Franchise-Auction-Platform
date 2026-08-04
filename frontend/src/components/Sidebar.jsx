@@ -1,4 +1,4 @@
-import  { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -14,7 +14,8 @@ import {
   Award,
   ChevronLeft,
   Crown,
-  MapPin
+  MapPin,
+  Calendar
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useAuction } from '../context/AuctionContext';
@@ -34,7 +35,7 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }) {
     );
     return !!me && (me.status === 'SOLD' || !!me.soldToTeam);
   }, [user, players]);
-  
+
 
   // Expanded submenus state
   const [openSubmenus, setOpenSubmenus] = useState({
@@ -74,7 +75,8 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }) {
     },
     { type: 'item', path: '/podium/dashboard', label: 'Podium Control', icon: ShieldCheck },
     { type: 'item', path: '/admin/teams', label: 'Team Management', icon: ShieldCheck },
-    { type: 'item', path: '/admin/players', label: 'Players', icon: UserCheck }
+    { type: 'item', path: '/admin/players', label: 'Players', icon: UserCheck },
+    { type: 'item', path: '/admin/fixtures', label: 'Fixtures & Scheduling', icon: Calendar }
   ];
 
   // ── PODIUM ADMIN NAV CONFIG ─────────────────────────────────────────────
@@ -88,7 +90,8 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }) {
     { type: 'item', path: '/manager/target-players', label: 'Target Players', icon: Crown, highlight: true },
     { type: 'item', path: '/manager/my-team', label: 'My Team', icon: ShieldCheck },
     { type: 'item', path: '/manager/players', label: 'Player Pool', icon: Users },
-    { type: 'item', path: '/manager/settings', label: 'Team Settings', icon: Settings }
+    { type: 'item', path: '/manager/settings', label: 'Team Settings', icon: Settings },
+    { type: 'item', path: '/manager/teams', label: 'All Teams', icon: ShieldCheck }
   ];
 
 
@@ -96,9 +99,10 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }) {
   // "Live Auction" sits at the top — it's the most-used link during an active
   // auction. "Field Reveal" only appears once the player has been sold.
   const playerNav = [
-    { type: 'item', path: '/player/live', label: 'Live Auction', icon: Radio, highlight: true },
     { type: 'item', path: '/player/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { type: 'item', path: '/player/live', label: 'Live Auction', icon: Radio, highlight: true },
     { type: 'item', path: '/player/my-team', label: 'My Team', icon: Users },
+    { type: 'item', path: '/player/teams', label: 'All Teams', icon: ShieldCheck },
     ...(isSoldPlayer
       ? [{ type: 'item', path: '/player/field-position', label: 'Field Reveal', icon: MapPin, highlight: true }]
       : []),

@@ -260,7 +260,7 @@ function MatchCardSkeleton({ index = 0 }) {
 // Page
 // ─────────────────────────────────────────────────────────────────────────
 
-export default function PublicTeamsView() {
+export default function TeamsScudle() {
   const [matches, setMatches] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
