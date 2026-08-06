@@ -1,4 +1,4 @@
-﻿import mongoose from 'mongoose';
+import mongoose from 'mongoose';
 
 const matchSchema = new mongoose.Schema({
   teamA: { type: mongoose.Schema.Types.ObjectId, ref: 'Team', default: null },
@@ -17,7 +17,13 @@ const matchSchema = new mongoose.Schema({
   },
   scoreA: { type: String, default: '0' },
   scoreB: { type: String, default: '0' },
-  winnerNotes: { type: String, default: '' }
+  winnerNotes: { type: String, default: '' },
+  matchNumber: { type: String, default: '' },
+  tournament: { type: String, default: 'Championship' },
+  round: { type: String, default: 'Group Stage' },
+  description: { type: String, default: '' },
+  isPublished: { type: Boolean, default: true },
+  liveScore: { type: String, default: '' }
 }, { timestamps: true });
 
 export const Match = mongoose.model('Match', matchSchema);

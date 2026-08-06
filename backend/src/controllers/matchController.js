@@ -1,4 +1,4 @@
-﻿import { Match } from '../models/Match.js';
+import { Match } from '../models/Match.js';
 import { Team } from '../models/Team.js';
 
 // Helper to broadcast socket events if io is available
@@ -12,49 +12,99 @@ const notifyClients = (req, event, data) => {
 // GET /api/matches — View all matches (Public/All Roles)
 export const getMatches = async (req, res, next) => {
   try {
-    const { status } = req.query;
-    const filter = status ? { status } : {};
-    const matches = await Match.find(filter)
-      .populate('teamA', 'name logo logoUrl code')
-      .populate('teamB', 'name logo logoUrl code')
-      .sort({ matchDate: 1, matchTime: 1 });
-    res.json({ success: true, count: matches.length, data: matches });
+    const { status, tournament, search } = req.query;
+    const filter = { isPublished: { $ne: false } };
+    if (status) filter.status = status;
+    if (tournament) filter.tournament = tournament;
+
+    let matchesFromDb = await Match.find(filter)
+      .populate({
+        path: 'teamA',
+        select: 'name shortCode code logo logoUrl icon primaryColor secondaryColor gradient borderColor glowColor logoSvg logoKey managerId currentRoster',
+        populate: [
+          { path: 'currentRoster', select: 'name primaryPosition imageUrl finalPrice' },
+          { path: 'managerId', select: 'name email' }
+        ]
+      })
+      .populate({
+        path: 'teamB',
+        select: 'name shortCode code logo logoUrl icon primaryColor secondaryColor gradient borderColor glowColor logoSvg logoKey managerId currentRoster',
+        populate: [
+          { path: 'currentRoster', select: 'name primaryPosition imageUrl finalPrice' },
+          { path: 'managerId', select: 'name email' }
+        ]
+      })
+      .sort({ matchDate: 1, matchTime: 1 })
+      .lean();
+
+    // Map to a consistent DTO
+    let data = matchesFromDb.map(m => ({
+      ...m,
+      homeTeam: m.teamAName || m.teamA?.name,
+      awayTeam: m.teamBName || m.teamB?.name,
+      homeTeamLogo: m.teamA?.logoUrl || m.teamA?.logo || m.teamALogo || '',
+      awayTeamLogo: m.teamB?.logoUrl || m.teamB?.logo || m.teamBLogo || '',
+      teamAName: m.teamA?.name || m.teamAName,
+      teamALogo: m.teamA?.logoUrl || m.teamA?.logo || m.teamALogo || '',
+      teamBName: m.teamB?.name || m.teamBName,
+      teamBLogo: m.teamB?.logoUrl || m.teamB?.logo || m.teamBLogo || '',
+    }));
+
+    if (search) {
+      const q = search.trim().toLowerCase();
+      data = data.filter(m =>
+        (m.teamAName || '').toLowerCase().includes(q) ||
+        (m.teamBName || '').toLowerCase().includes(q) ||
+        (m.venue || '').toLowerCase().includes(q) ||
+        (m.matchNumber || '').toLowerCase().includes(q)
+      );
+    }
+
+    res.json({ success: true, count: data.length, data });
   } catch (e) { next(e); }
 };
 
 // POST /api/matches — Create Match (SUPER_ADMIN only)
 export const createMatch = async (req, res, next) => {
   try {
-    const { teamAId, teamBId, teamAName, teamBName, teamALogo, teamBLogo, matchDate, matchTime, venue, status, scoreA, scoreB, winnerNotes } = req.body;
+    const {
+      teamAId, teamBId, teamA, teamB, homeTeam, awayTeam,
+      teamAName, teamBName, teamALogo, teamBLogo, homeTeamLogo, awayTeamLogo,
+      matchDate, matchTime, venue, status, scoreA, scoreB, winnerNotes,
+      matchNumber, tournament, round, description, isPublished, liveScore
+    } = req.body;
 
-    let finalTeamAName = teamAName;
-    let finalTeamALogo = teamALogo || '';
-    let finalTeamBName = teamBName;
-    let finalTeamBLogo = teamBLogo || '';
+    const actualTeamAId = teamAId || teamA;
+    const actualTeamBId = teamBId || teamB;
 
-    if (teamAId) {
-      const tA = await Team.findById(teamAId);
+    let finalTeamAName = teamAName || homeTeam;
+    let finalTeamALogo = teamALogo || homeTeamLogo || '';
+    let finalTeamBName = teamBName || awayTeam;
+    let finalTeamBLogo = teamBLogo || awayTeamLogo || '';
+
+    if (actualTeamAId) {
+      const tA = await Team.findById(actualTeamAId);
       if (tA) {
         finalTeamAName = tA.name;
         finalTeamALogo = tA.logoUrl || tA.logo || '';
       }
     }
 
-    if (teamBId) {
-      const tB = await Team.findById(teamBId);
+    if (actualTeamBId) {
+      const tB = await Team.findById(actualTeamBId);
       if (tB) {
         finalTeamBName = tB.name;
         finalTeamBLogo = tB.logoUrl || tB.logo || '';
       }
     }
 
-    if (!finalTeamAName || !finalTeamBName || !matchDate || !matchTime || !venue) {
-      return res.status(400).json({ success: false, message: 'Please provide Team A, Team B, Date, Time, and Venue.' });
+    if (!finalTeamAName || !finalTeamBName) {
+      return res.status(400).json({ success: false, message: 'Please select both Team A and Team B.' });
     }
 
     const match = await Match.create({
-      teamA: teamAId || null,
-      teamB: teamBId || null,
+      teamA: actualTeamAId || null,
+      teamB: actualTeamBId || null,
       teamAName: finalTeamAName,
       teamALogo: finalTeamALogo,
       teamBName: finalTeamBName,
@@ -65,7 +115,13 @@ export const createMatch = async (req, res, next) => {
       status: status || 'Upcoming',
       scoreA: scoreA || '0',
       scoreB: scoreB || '0',
-      winnerNotes: winnerNotes || ''
+      winnerNotes: winnerNotes || '',
+      matchNumber: matchNumber || '',
+      tournament: tournament || 'Championship',
+      round: round || 'Group Stage',
+      description: description || '',
+      isPublished: isPublished !== undefined ? isPublished : true,
+      liveScore: liveScore || ''
     });
 
     notifyClients(req, 'match_updated', { action: 'create', match });

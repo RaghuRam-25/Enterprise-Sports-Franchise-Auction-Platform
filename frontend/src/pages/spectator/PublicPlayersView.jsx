@@ -8,6 +8,8 @@ import { useAuction } from '../../context/AuctionContext';
 import { useAuth } from '../../context/AuthContext';
 import Navbar from '../../components/Navbar';
 import '../../services/api';
+import { getImageUrl } from '../../utils/imageUrl';
+import PlayerCardCard from '../../components/common/PlayerCardCard';
 
 // ── Status badge config ──────────────────────────────────────────────────────
 const STATUS_CONFIG = {
@@ -79,7 +81,7 @@ function PlayerCard({ player, isPrivileged, formatCurrency, teams = [] }) {
           <div className="relative flex-shrink-0">
             {player.imageUrl && !imgError ? (
               <img
-                src={player.imageUrl}
+                src={getImageUrl(player.imageUrl)}
                 alt={player.name}
                 onError={() => setImgError(true)}
                 className="w-14 h-14 rounded-xl object-cover border-2 border-slate-700 group-hover:border-blue-500/50 transition-colors"
@@ -170,7 +172,7 @@ function PlayerListRow({ player, isPrivileged, formatCurrency, teams = [] }) {
       <div className="col-span-1">
         {player.imageUrl && !imgErr ? (
           <img
-            src={player.imageUrl}
+            src={getImageUrl(player.imageUrl)}
             alt={player.name}
             onError={() => setImgErr(true)}
             className="w-9 h-9 rounded-lg object-cover border border-slate-700"
@@ -541,10 +543,9 @@ export default function PublicPlayersView() {
         ) : viewMode === 'grid' ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
             {filtered.map(player => (
-              <PlayerCard
+              <PlayerCardCard
                 key={player._id || player.id}
                 player={player}
-                isPrivileged={isPrivileged}
                 formatCurrency={formatCurrency}
                 teams={teams}
               />

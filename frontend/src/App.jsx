@@ -10,6 +10,7 @@ const PublicLiveView = lazy(() => import('./pages/spectator/PublicLiveView'));
 const TeamsScudle = lazy(() => import('./pages/spectator/TeamsScudle'));
 const PublicAboutView = lazy(() => import('./pages/spectator/PublicAboutView'));
 const PublicPlayersView = lazy(() => import('./pages/spectator/PublicPlayersView'));
+const PublicTeamsView = lazy(() => import('./pages/spectator/PublicTeamsView'));
 
 
 // ── Auth (Universal) ──────────────────────────────────────────────────────────
@@ -76,7 +77,7 @@ function App() {
           <Route path="/" element={<LandingPage />} />
           <Route path="/live" element={<PublicLiveView />} />
           <Route path="/matches" element={<TeamsScudle />} />
-          <Route path="/teams" element={<AdminTeams />} />
+          <Route path="/teams" element={<PublicTeamsView />} />
           <Route path="/about" element={<PublicAboutView />} />
           <Route path="/players" element={<PublicPlayersView />} />
 
@@ -334,8 +335,8 @@ function App() {
               <Route
                 path="teams"
                 element={
-                  <ProtectedRoute allowedRoles={['TEAM_MANAGER']}>
-                    <AdminTeams />
+                  <ProtectedRoute allowedRoles={['TEAM_MANAGER', 'SUPER_ADMIN', 'PODIUM_ADMIN']}>
+                    <PublicTeamsView />
                   </ProtectedRoute>
                 }
               />
@@ -407,8 +408,8 @@ function App() {
               <Route
                 path="teams"
                 element={
-                  <ProtectedRoute allowedRoles={['PLAYER']}>
-                    <AdminTeams />
+                  <ProtectedRoute allowedRoles={['PLAYER', 'SUPER_ADMIN', 'PODIUM_ADMIN', 'TEAM_MANAGER']}>
+                    <PublicTeamsView />
                   </ProtectedRoute>
                 }
               />

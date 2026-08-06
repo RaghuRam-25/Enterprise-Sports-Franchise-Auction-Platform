@@ -25,7 +25,15 @@ export const handleSocketConnections = (io) => {
 
     // Handle Podium Video Control
     socket.on('podium:video-control', (data) => {
-      auctionEngine.setVideoUrl(data?.url || null);
+      const action = data?.action;
+      if (action === 'pause') {
+        auctionEngine.pauseVideo();
+      } else if (action === 'resume') {
+        auctionEngine.resumeVideo();
+      } else {
+        // Default: set or clear video URL
+        auctionEngine.setVideoUrl(data?.url || null);
+      }
     });
 
     // Handle Podium Intro Loop Control

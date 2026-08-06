@@ -2,6 +2,7 @@ import 'react';
 import { useParams } from 'react-router-dom';
 import { useAuction } from '../../context/AuctionContext';
 import { DollarSign, Users } from 'lucide-react';
+import TeamBadge from '../../components/common/TeamBadge';
 
 export default function PodiumTeamsView() {
     const { filter } = useParams(); // 'budgets' or 'bought'
@@ -53,10 +54,7 @@ function BudgetsView({ teams, formatCurrency }) {
                         {teams.map(team => (
                             <tr key={team._id || team.id} className="hover:bg-slate-800/30">
                                 <td className="py-3 px-4">
-                                    <div className="flex items-center gap-3">
-                                        <span className="text-2xl">{team.logo || '🏆'}</span>
-                                        <span className="font-bold text-white">{team.name}</span>
-                                    </div>
+                                    <TeamBadge team={team} size="sm" showManager={true} />
                                 </td>
                                 <td className="py-3 px-4 font-mono">{formatCurrency(team.totalBudget)}</td>
                                 <td className="py-3 px-4 font-mono text-rose-400">{formatCurrency((team.totalBudget || 0) - (team.remainingBudget || 0))}</td>
@@ -76,14 +74,11 @@ function PurchasesView({ teams, formatCurrency }) {
         <div className="space-y-6">
             {teams.map(team => (
                 <div key={team._id || team.id} className="glass-card rounded-2xl p-6 border border-slate-800">
-                    <div className="flex items-center gap-3 mb-4">
-                        <span className="text-3xl">{team.logo || '🏆'}</span>
-                        <div>
-                            <h2 className="font-bold text-white">{team.name}</h2>
-                            <p className="text-xs text-slate-400">
-                                {team.currentRoster?.length || 0} players bought.
-                            </p>
-                        </div>
+                    <div className="flex items-center justify-between mb-4">
+                        <TeamBadge team={team} size="md" showManager={true} />
+                        <span className="text-xs font-bold text-slate-400">
+                            {team.currentRoster?.length || 0} players bought
+                        </span>
                     </div>
                     {team.currentRoster && team.currentRoster.length > 0 ? (
                         <div className="overflow-x-auto">

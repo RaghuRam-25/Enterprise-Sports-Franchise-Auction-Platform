@@ -1,290 +1,155 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
-import { Calendar, Clock, MapPin, Trophy, Shield, Radio, Search, RefreshCw, Layers, Hourglass } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import {
+  Shield, Search, RefreshCw, Trophy, Users, DollarSign,
+  ChevronLeft, ChevronRight, UserCheck, AlertCircle, X, ExternalLink
+} from 'lucide-react';
 import Navbar from '../../components/Navbar';
+import TeamBadge from '../../components/common/TeamBadge';
+import { getTeamAvatarConfig } from '../../utils/themeConfig';
+import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
+import io from 'socket.io-client';
 
-// ─────────────────────────────────────────────────────────────────────────
-// Helpers
-// ─────────────────────────────────────────────────────────────────────────
-
-const formatDate = (dateString) => {
-  const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-  return new Date(dateString).toLocaleDateString('en-US', options);
-};
-
-const isSameDay = (dateString) => {
-  const d = new Date(dateString);
-  const today = new Date();
-  return d.getFullYear() === today.getFullYear() &&
-    d.getMonth() === today.getMonth() &&
-    d.getDate() === today.getDate();
-};
-
-// Helper to render team logo, which can be an emoji or a URL
-const renderTeamLogo = (logo, fallback = '🏆') => {
-  if (logo && (logo.startsWith('http') || logo.startsWith('/'))) {
-    return <img src={logo} alt="Team Logo" className="w-full h-full object-contain p-1" />;
-  }
-  return <span className="text-4xl font-black">{logo || fallback}</span>;
-};
-
-// Attempts to build a real Date from matchDate + matchTime, safely.
-const getMatchDateTime = (match) => {
-  if (!match.matchDate) return null;
-  try {
-    const base = new Date(match.matchDate);
-    if (isNaN(base.getTime())) return null;
-    if (match.matchTime && /^\d{1,2}:\d{2}/.test(match.matchTime)) {
-      const [h, m] = match.matchTime.split(':').map(Number);
-      base.setHours(h, m, 0, 0);
-    }
-    return base;
-  } catch {
-    return null;
-  }
-};
-
-// Lightweight countdown, refreshes every 30s
-function useCountdown(targetDate) {
-  const [now, setNow] = useState(Date.now());
-  useEffect(() => {
-    if (!targetDate) return;
-    const id = setInterval(() => setNow(Date.now()), 30000);
-    return () => clearInterval(id);
-  }, [targetDate]);
-
-  if (!targetDate) return null;
-  const diffMs = targetDate.getTime() - now;
-  if (diffMs <= 0) return null;
-
-  const hours = Math.floor(diffMs / (1000 * 60 * 60));
-  const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-
-  if (hours >= 24) {
-    const days = Math.floor(hours / 24);
-    return `Starts in ${days}d ${hours % 24}h`;
-  }
-  if (hours > 0) return `Starts in ${hours}h ${minutes}m`;
-  return `Starts in ${minutes}m`;
-}
-
-// Animated count-up for the stat strip — ticks from 0 to value once on mount/change
-function useCountUp(value, duration = 700) {
-  const [display, setDisplay] = useState(0);
-  const startRef = useRef(null);
-  const fromRef = useRef(0);
-
-  useEffect(() => {
-    const prefersReduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-    if (prefersReduced) {
-      setDisplay(value);
-      return;
-    }
-    fromRef.current = display;
-    startRef.current = null;
-    let raf;
-    const step = (ts) => {
-      if (!startRef.current) startRef.current = ts;
-      const progress = Math.min(1, (ts - startRef.current) / duration);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      setDisplay(Math.round(fromRef.current + (value - fromRef.current) * eased));
-      if (progress < 1) raf = requestAnimationFrame(step);
-    };
-    raf = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(raf);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [value]);
-
-  return display;
-}
-
-const STATUS_TABS = [
-  { key: 'all', label: 'All Matches' },
-  { key: 'Live', label: 'Live Now' },
-  { key: 'Upcoming', label: 'Upcoming' },
-  { key: 'Finished', label: 'Completed' },
+/* ---------------------------------------------------------
+   Distinct per-team color themes.
+   Each team gets a stable theme based on a hash of its
+   id/name/code, so colors never change on refresh/reorder.
+---------------------------------------------------------- */
+const TEAM_THEMES = [
+  {
+    name: 'crimson',
+    gradient: 'from-rose-500/15 via-slate-950/60 to-slate-950',
+    border: 'border-rose-500/40',
+    ring: 'hover:shadow-rose-500/20',
+    accent: 'bg-rose-500',
+    badgeBg: 'bg-rose-500/15 text-rose-300 border-rose-500/30',
+    stat: 'text-rose-300',
+  },
+  {
+    name: 'amber',
+    gradient: 'from-amber-500/15 via-slate-950/60 to-slate-950',
+    border: 'border-amber-500/40',
+    ring: 'hover:shadow-amber-500/20',
+    accent: 'bg-amber-500',
+    badgeBg: 'bg-amber-500/15 text-amber-300 border-amber-500/30',
+    stat: 'text-amber-300',
+  },
+  {
+    name: 'emerald',
+    gradient: 'from-emerald-500/15 via-slate-950/60 to-slate-950',
+    border: 'border-emerald-500/40',
+    ring: 'hover:shadow-emerald-500/20',
+    accent: 'bg-emerald-500',
+    badgeBg: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
+    stat: 'text-emerald-300',
+  },
+  {
+    name: 'sky',
+    gradient: 'from-sky-500/15 via-slate-950/60 to-slate-950',
+    border: 'border-sky-500/40',
+    ring: 'hover:shadow-sky-500/20',
+    accent: 'bg-sky-500',
+    badgeBg: 'bg-sky-500/15 text-sky-300 border-sky-500/30',
+    stat: 'text-sky-300',
+  },
+  {
+    name: 'violet',
+    gradient: 'from-violet-500/15 via-slate-950/60 to-slate-950',
+    border: 'border-violet-500/40',
+    ring: 'hover:shadow-violet-500/20',
+    accent: 'bg-violet-500',
+    badgeBg: 'bg-violet-500/15 text-violet-300 border-violet-500/30',
+    stat: 'text-violet-300',
+  },
+  {
+    name: 'fuchsia',
+    gradient: 'from-fuchsia-500/15 via-slate-950/60 to-slate-950',
+    border: 'border-fuchsia-500/40',
+    ring: 'hover:shadow-fuchsia-500/20',
+    accent: 'bg-fuchsia-500',
+    badgeBg: 'bg-fuchsia-500/15 text-fuchsia-300 border-fuchsia-500/30',
+    stat: 'text-fuchsia-300',
+  },
+  {
+    name: 'teal',
+    gradient: 'from-teal-500/15 via-slate-950/60 to-slate-950',
+    border: 'border-teal-500/40',
+    ring: 'hover:shadow-teal-500/20',
+    accent: 'bg-teal-500',
+    badgeBg: 'bg-teal-500/15 text-teal-300 border-teal-500/30',
+    stat: 'text-teal-300',
+  },
+  {
+    name: 'orange',
+    gradient: 'from-orange-500/15 via-slate-950/60 to-slate-950',
+    border: 'border-orange-500/40',
+    ring: 'hover:shadow-orange-500/20',
+    accent: 'bg-orange-500',
+    badgeBg: 'bg-orange-500/15 text-orange-300 border-orange-500/30',
+    stat: 'text-orange-300',
+  },
+  {
+    name: 'indigo',
+    gradient: 'from-indigo-500/15 via-slate-950/60 to-slate-950',
+    border: 'border-indigo-500/40',
+    ring: 'hover:shadow-indigo-500/20',
+    accent: 'bg-indigo-500',
+    badgeBg: 'bg-indigo-500/15 text-indigo-300 border-indigo-500/30',
+    stat: 'text-indigo-300',
+  },
+  {
+    name: 'lime',
+    gradient: 'from-lime-500/15 via-slate-950/60 to-slate-950',
+    border: 'border-lime-500/40',
+    ring: 'hover:shadow-lime-500/20',
+    accent: 'bg-lime-500',
+    badgeBg: 'bg-lime-500/15 text-lime-300 border-lime-500/30',
+    stat: 'text-lime-300',
+  },
 ];
 
-// ─────────────────────────────────────────────────────────────────────────
-// Stat pill with count-up
-// ─────────────────────────────────────────────────────────────────────────
-
-function StatPill({ label, value, tone }) {
-  const count = useCountUp(value);
-  return (
-    <div className={`relative overflow-hidden rounded-xl border p-3 text-center bg-slate-950/60 backdrop-blur-sm ${tone}`}>
-      <p className="text-2xl font-black font-mono tabular-nums">{count}</p>
-      <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 mt-0.5">{label}</p>
-    </div>
-  );
+function hashString(str) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash << 5) - hash + str.charCodeAt(i);
+    hash |= 0;
+  }
+  return Math.abs(hash);
 }
 
-// ─────────────────────────────────────────────────────────────────────────
-// Match Card
-// ─────────────────────────────────────────────────────────────────────────
-
-function MatchCard({ match, featured = false, index = 0 }) {
-  const isFinished = match.status === 'Finished';
-  const isUpcoming = match.status === 'Upcoming';
-  const isLive = match.status === 'Live';
-
-  const getTeamClasses = (isWinner) => isWinner ? 'font-black text-white' : 'font-semibold text-slate-400';
-  const winner = isFinished ? (Number(match.scoreA) > Number(match.scoreB) ? 'A' : (Number(match.scoreB) > Number(match.scoreA) ? 'B' : 'draw')) : null;
-  const countdown = useCountdown(isUpcoming ? getMatchDateTime(match) : null);
-  const roundLabel = match.round || match.stage || match.roundName;
-
-  return (
-    <div
-      className={`group relative rounded-2xl border overflow-hidden transition-all duration-300 will-change-transform hover:-translate-y-1 fixture-card-enter ${isLive
-        ? 'border-rose-500/50 bg-slate-950/80 shadow-xl shadow-rose-900/30'
-        : 'border-slate-800 bg-slate-950/60 hover:border-blue-500/40 hover:shadow-2xl hover:shadow-blue-900/20'
-        }`}
-      style={{ backdropFilter: 'blur(10px)', animationDelay: `${Math.min(index, 8) * 60}ms` }}
-    >
-      {/* Shine sweep on hover — signature micro-interaction */}
-      <span className="pointer-events-none absolute inset-0 overflow-hidden">
-        <span className="absolute -inset-y-full -left-1/2 w-1/3 rotate-12 bg-gradient-to-r from-transparent via-white/[0.06] to-transparent translate-x-[-120%] group-hover:translate-x-[420%] transition-transform duration-[1100ms] ease-out" />
-      </span>
-
-      {/* Round / featured tag row */}
-      {(roundLabel || featured) && (
-        <div className="relative px-4 pt-3 flex items-center justify-between">
-          {roundLabel ? (
-            <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-purple-300 bg-purple-500/10 border border-purple-500/20 px-2 py-0.5 rounded-full">
-              <Layers className="w-3 h-3" /> {roundLabel}
-            </span>
-          ) : <span />}
-          {featured && isLive && (
-            <span className="text-[10px] font-bold uppercase tracking-wider text-rose-400 flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping" />
-              On Podium Now
-            </span>
-          )}
-        </div>
-      )}
-
-      <div className="relative p-5 space-y-4">
-        {/* Teams */}
-        <div className="flex items-center justify-between gap-4">
-          {/* Team A */}
-          <div className="flex flex-col items-center text-center gap-2 w-1/3">
-            <div className={`w-16 h-16 rounded-full bg-slate-900 border-2 flex items-center justify-center transition-colors ${isLive ? 'border-rose-500/50' : winner === 'A' ? 'border-amber-400/60' : 'border-slate-700'}`}>
-              {renderTeamLogo(match.teamALogo, match.teamAName?.[0])}
-            </div>
-            <span className={`text-sm truncate ${getTeamClasses(winner === 'A')}`}>{match.teamAName}</span>
-          </div>
-
-          {/* Score / VS */}
-          <div className="flex flex-col items-center">
-            {isFinished ? (
-              <div className="font-black text-2xl font-mono flex items-center gap-2 tabular-nums">
-                <span className={getTeamClasses(winner === 'A')}>{match.scoreA || 0}</span>
-                <span className="text-slate-600">-</span>
-                <span className={getTeamClasses(winner === 'B')}>{match.scoreB || 0}</span>
-              </div>
-            ) : (
-              <span className="text-xl font-black text-slate-700 tracking-widest [text-shadow:0_1px_0_rgba(255,255,255,0.04)]">VS</span>
-            )}
-            {isLive && (
-              <span className="mt-1.5 flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide border bg-rose-500/10 text-rose-400 border-rose-500/30 animate-pulse">
-                <Radio className="w-2.5 h-2.5" /> LIVE
-              </span>
-            )}
-            {!isLive && countdown && (
-              <span className="mt-1.5 flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide border bg-blue-500/10 text-blue-400 border-blue-500/30">
-                <Hourglass className="w-2.5 h-2.5" /> {countdown}
-              </span>
-            )}
-          </div>
-
-          {/* Team B */}
-          <div className="flex flex-col items-center text-center gap-2 w-1/3">
-            <div className={`w-16 h-16 rounded-full bg-slate-900 border-2 flex items-center justify-center transition-colors ${isLive ? 'border-rose-500/50' : winner === 'B' ? 'border-amber-400/60' : 'border-slate-700'}`}>
-              {renderTeamLogo(match.teamBLogo, match.teamBName?.[0])}
-            </div>
-            <span className={`text-sm truncate ${getTeamClasses(winner === 'B')}`}>{match.teamBName}</span>
-          </div>
-        </div>
-
-        {/* Winner note */}
-        {isFinished && winner !== 'draw' && (
-          <div className="text-center pt-3 border-t border-slate-800">
-            <p className="text-xs text-amber-400 font-semibold flex items-center justify-center gap-1.5">
-              <Trophy className="w-3.5 h-3.5" />
-              Winner: <span className="font-bold text-white">{winner === 'A' ? match.teamAName : match.teamBName}</span>
-            </p>
-            {match.winnerNotes && <p className="text-[11px] text-slate-500 mt-1 italic">"{match.winnerNotes}"</p>}
-          </div>
-        )}
-      </div>
-
-      {/* Footer with time and venue */}
-      <div className="relative bg-slate-900/70 border-t border-slate-800 px-4 py-2 flex items-center justify-between text-xs text-slate-400">
-        <div className="flex items-center gap-1.5">
-          <Clock className="w-3.5 h-3.5" />
-          <span className="font-semibold">{match.matchTime}</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <MapPin className="w-3.5 h-3.5" />
-          <span className="font-semibold">{match.venue}</span>
-        </div>
-      </div>
-    </div>
-  );
+function getTeamTheme(team) {
+  const key = String(team._id || team.id || team.name || team.shortCode || 'team');
+  const idx = hashString(key) % TEAM_THEMES.length;
+  return TEAM_THEMES[idx];
 }
-
-// Shimmer skeleton, matches the card's real proportions
-function MatchCardSkeleton({ index = 0 }) {
-  return (
-    <div
-      className="rounded-2xl border border-slate-800 bg-slate-950/60 overflow-hidden fixture-card-enter"
-      style={{ animationDelay: `${index * 60}ms` }}
-    >
-      <div className="p-5 flex items-center justify-between gap-4">
-        <div className="flex flex-col items-center gap-2 w-1/3">
-          <div className="w-16 h-16 rounded-full shimmer" />
-          <div className="h-3 w-16 rounded shimmer" />
-        </div>
-        <div className="h-5 w-8 rounded shimmer" />
-        <div className="flex flex-col items-center gap-2 w-1/3">
-          <div className="w-16 h-16 rounded-full shimmer" />
-          <div className="h-3 w-16 rounded shimmer" />
-        </div>
-      </div>
-      <div className="bg-slate-900/70 border-t border-slate-800 h-10" />
-    </div>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────────────
-// Page
-// ─────────────────────────────────────────────────────────────────────────
 
 export default function PublicTeamsView() {
-  const [matches, setMatches] = useState([]);
+  const { user } = useAuth();
+  const [teams, setTeams] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
-  const [activeTab, setActiveTab] = useState('all');
-  const [search, setSearch] = useState('');
 
-  const fetchMatches = async ({ silent = false } = {}) => {
+  const [search, setSearch] = useState('');
+  const [sortBy, setSortBy] = useState('name');
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const [selectedTeam, setSelectedTeam] = useState(null);
+
+  const fetchTeams = async ({ silent = false } = {}) => {
     try {
       if (silent) setRefreshing(true); else setLoading(true);
-      const res = await api.get('/matches');
-      // The backend sends { success: true, data: [...] }.
-      // The api client might return the full axios response or just response.data.
-      // This handles both by checking for the nested 'data' array first.
-      const matchData = res?.data?.data || res?.data || [];
-      if (Array.isArray(matchData)) {
-        setMatches(matchData);
+      const res = await api.get('/config/teams');
+      const teamData = res?.data?.data || res?.data || [];
+      if (Array.isArray(teamData)) {
+        setTeams(teamData);
         setError('');
       } else {
-        throw new Error("Invalid data format from API");
+        throw new Error('Invalid response format');
       }
     } catch (err) {
-      console.error("Failed to fetch matches:", err);
-      setError('Could not load match schedule. Please try again later.');
+      console.error('Failed to load teams:', err);
+      setError('Failed to load franchises. Please check connection and try again.');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -292,206 +157,307 @@ export default function PublicTeamsView() {
   };
 
   useEffect(() => {
-    fetchMatches();
-    const id = setInterval(() => fetchMatches({ silent: true }), 45000);
-    return () => clearInterval(id);
+    fetchTeams();
+
+    const socket = io(window.location.origin);
+
+    socket.on('teams:created', (newTeam) => {
+      if (!newTeam) return;
+      setTeams(prev => [newTeam, ...prev.filter(t => (t._id || t.id) !== (newTeam._id || newTeam.id))]);
+    });
+
+    socket.on('teams:updated', (updated) => {
+      if (!updated) return;
+      setTeams(prev => prev.map(t => (t._id || t.id) === (updated._id || updated.id) ? { ...t, ...updated } : t));
+    });
+
+    socket.on('teams:deleted', (deleted) => {
+      if (!deleted?.id) return;
+      setTeams(prev => prev.filter(t => (t._id || t.id) !== deleted.id));
+    });
+
+    return () => socket.disconnect();
   }, []);
 
-  const stats = useMemo(() => ({
-    total: matches.length,
-    live: matches.filter(m => m.status === 'Live').length,
-    upcoming: matches.filter(m => m.status === 'Upcoming').length,
-    finished: matches.filter(m => m.status === 'Finished').length,
-  }), [matches]);
+  const processedTeams = useMemo(() => {
+    let result = [...teams];
 
-  const liveMatches = useMemo(() => matches.filter(m => m.status === 'Live'), [matches]);
-
-  const filteredMatches = useMemo(() => {
-    let list = matches;
-    if (activeTab !== 'all') list = list.filter(m => m.status === activeTab);
     if (search.trim()) {
       const q = search.trim().toLowerCase();
-      list = list.filter(m =>
-        (m.teamAName || '').toLowerCase().includes(q) ||
-        (m.teamBName || '').toLowerCase().includes(q)
+      result = result.filter(t =>
+        (t.name || '').toLowerCase().includes(q) ||
+        (t.shortCode || t.code || '').toLowerCase().includes(q) ||
+        (t.ownerName || t.managerId?.name || '').toLowerCase().includes(q)
       );
     }
-    return list;
-  }, [matches, activeTab, search]);
 
-  const groupedMatches = useMemo(() => {
-    if (!filteredMatches.length) return {};
-    return filteredMatches.reduce((acc, match) => {
-      const date = formatDate(match.matchDate);
-      if (!acc[date]) acc[date] = [];
-      acc[date].push(match);
-      return acc;
-    }, {});
-  }, [filteredMatches]);
+    result.sort((a, b) => {
+      if (sortBy === 'name') return (a.name || '').localeCompare(b.name || '');
+      if (sortBy === 'purse') return (b.remainingBudget || 0) - (a.remainingBudget || 0);
+      if (sortBy === 'roster') {
+        const rA = a.currentRosterCount ?? (a.currentRoster?.length || 0);
+        const rB = b.currentRosterCount ?? (b.currentRoster?.length || 0);
+        return rB - rA;
+      }
+      if (sortBy === 'date') return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+      return 0;
+    });
 
-  const sortedDates = Object.keys(groupedMatches).sort((a, b) => new Date(a) - new Date(b));
+    return result;
+  }, [teams, search, sortBy]);
+
+  const totalPages = Math.max(1, Math.ceil(processedTeams.length / ITEMS_PER_PAGE));
+  const paginatedTeams = useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    return processedTeams.slice(start, start + ITEMS_PER_PAGE);
+  }, [processedTeams, currentPage]);
+
+  const formatCurrency = (val) => {
+    if (val == null || isNaN(val)) return '0 BDT';
+    return `${Number(val).toLocaleString('en-IN')} BDT`;
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-darkBg text-slate-100">
-      {/* Scoped styles for signature motion — respects prefers-reduced-motion */}
-      <style>{`
-        @keyframes fixtureFadeUp {
-          from { opacity: 0; transform: translateY(10px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .fixture-card-enter {
-          animation: fixtureFadeUp 0.5s ease-out both;
-        }
-        @keyframes shimmerSweep {
-          from { background-position: -400px 0; }
-          to { background-position: 400px 0; }
-        }
-        .shimmer {
-          background: linear-gradient(90deg, rgba(30,41,59,0.6) 25%, rgba(51,65,85,0.7) 37%, rgba(30,41,59,0.6) 63%);
-          background-size: 400px 100%;
-          animation: shimmerSweep 1.4s ease-in-out infinite;
-        }
-        @media (prefers-reduced-motion: reduce) {
-          .fixture-card-enter, .shimmer { animation: none !important; }
-        }
-      `}</style>
+      {!user && <Navbar />}
 
-      <Navbar />
+      <main className={`flex-1 space-y-8 ${!user
+        ? 'max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8'
+        : ''
+        }`}>
 
-      <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-        {/* Header */}
-        <div className="relative text-center py-4">
-          <div className="absolute inset-x-0 top-0 h-40 -z-10 opacity-60 pointer-events-none"
-            style={{ background: 'radial-gradient(ellipse at center, rgba(59,130,246,0.12) 0%, transparent 70%)' }}
+        <div className="relative text-center py-0.5 space-y-1">
+          <div
+            className="absolute inset-x-0 top-0 h-24 -z-10 opacity-50 pointer-events-none"
+            style={{
+              background:
+                "radial-gradient(ellipse at center, rgba(59,130,246,0.12) 0%, transparent 70%)",
+            }}
           />
-          <Shield className="w-12 h-12 mx-auto text-blue-400 bg-blue-500/10 p-3 rounded-2xl border border-blue-500/20" />
-          <h1 className="text-3xl md:text-4xl font-black font-heading mt-4 bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent">
-            Match Schedule
-          </h1>
-          <p className="text-sm text-slate-400 mt-1">Official schedule for the tournament.</p>
+          <Shield className="w-10 h-10 mx-auto text-blue-400 bg-blue-500/10 p-2 rounded-xl border border-blue-500/20 shadow-md shadow-blue-500/10" />
+          <h1 className="text-2xl sm:text-3xl font-black font-heading bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent uppercase tracking-wide">All Franchises</h1>
+          <p className="text-xs text-slate-400 max-w-sm mx-auto">
+            Official league franchises competing in the auction platform.
+          </p>
         </div>
 
-        {!loading && !error && matches.length > 0 && (
-          <>
-            {/* Summary stat strip — animated count-up */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <StatPill label="Total Matches" value={stats.total} tone="text-slate-200 border-slate-800" />
-              <StatPill label="Live Now" value={stats.live} tone="text-rose-400 border-rose-500/30" />
-              <StatPill label="Upcoming" value={stats.upcoming} tone="text-blue-400 border-blue-500/30" />
-              <StatPill label="Completed" value={stats.finished} tone="text-emerald-400 border-emerald-500/30" />
+        <div className="sticky top-2 z-20 flex flex-col sm:flex-row gap-3 sm:items-center justify-between rounded-2xl border border-slate-800 bg-slate-950/80 backdrop-blur-xl px-4 py-3 shadow-xl">
+          <div className="relative flex-1 max-w-md">
+            <Search className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              value={search}
+              onChange={e => { setSearch(e.target.value); setCurrentPage(1); }}
+              onChange={e => { setSearch(e.target.value); }}
+              placeholder="Search team name, code or manager..."
+              className="glass-input w-full pl-10 pr-4 py-2 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+            />
+          </div>
+
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-slate-400 font-medium">Sort:</span>
+              <select
+                value={sortBy}
+                onChange={e => setSortBy(e.target.value)}
+                className="glass-input rounded-xl px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+              >
+                <option value="name">Name (A-Z)</option>
+                <option value="purse">Purse Remaining</option>
+                <option value="roster">Squad Size</option>
+                <option value="date">Newly Added</option>
+              </select>
             </div>
 
-            {/* Live spotlight — glowing ambient backdrop is the page's signature moment */}
-            {liveMatches.length > 0 && (
-              <div className="relative space-y-3">
-                <div className="absolute -inset-x-4 -inset-y-2 -z-10 rounded-3xl opacity-70 pointer-events-none"
-                  style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(244,63,94,0.10) 0%, transparent 65%)' }}
-                />
-                <div className="flex items-center gap-2">
-                  <Radio className="w-4 h-4 text-rose-400 animate-pulse" />
-                  <h2 className="text-sm font-bold uppercase tracking-wider text-rose-400">Happening Right Now</h2>
-                  <div className="flex-grow h-px bg-gradient-to-r from-rose-500/40 to-transparent" />
-                </div>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                  {liveMatches.map((match, i) => (
-                    <MatchCard key={`live-${match._id || match.id}`} match={match} featured index={i} />
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Sticky glass filter bar */}
-            <div className="sticky top-2 z-20 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between rounded-2xl border border-slate-800/80 bg-slate-950/70 backdrop-blur-xl px-3 py-3 shadow-lg shadow-black/20">
-              <div className="flex flex-wrap gap-2">
-                {STATUS_TABS.map(tab => (
-                  <button
-                    key={tab.key}
-                    onClick={() => setActiveTab(tab.key)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all duration-200 ${activeTab === tab.key
-                      ? 'bg-gradient-to-r from-blue-600 to-indigo-600 border-blue-500 text-white shadow-md shadow-blue-900/40'
-                      : 'bg-slate-900/60 border-slate-800 text-slate-400 hover:text-white hover:border-slate-700'
-                      }`}
-                  >
-                    {tab.label}
-                  </button>
-                ))}
-              </div>
-
-              <div className="flex items-center gap-2">
-                <div className="relative flex-1 sm:w-56">
-                  <Search className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="text"
-                    value={search}
-                    onChange={e => setSearch(e.target.value)}
-                    placeholder="Search by team..."
-                    className="glass-input w-full pl-8 pr-3 py-2 rounded-lg text-xs text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-                  />
-                </div>
-                <button
-                  onClick={() => fetchMatches({ silent: true })}
-                  className="p-2 rounded-lg bg-slate-900/60 border border-slate-800 text-slate-400 hover:text-white hover:border-slate-700 transition flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-                  title="Refresh fixtures"
-                >
-                  <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
-                </button>
-              </div>
-            </div>
-          </>
-        )}
+            <button
+              onClick={() => fetchTeams({ silent: true })}
+              className="p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-white hover:border-slate-700 transition"
+              title="Refresh Team List"
+            >
+              <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+            </button>
+          </div>
+        </div>
 
         {loading ? (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {Array.from({ length: 4 }).map((_, i) => <MatchCardSkeleton key={i} index={i} />)}
-          </div>
-        ) : error ? (
-          <div className="glass-card rounded-2xl p-8 text-center text-rose-400 border border-rose-500/30">
-            <p className="font-bold">{error}</p>
-          </div>
-        ) : matches.length === 0 ? (
-          <div className="glass-card rounded-2xl p-8 text-center text-slate-500 border border-slate-800">
-            <p className="font-bold">No matches have been scheduled yet.</p>
-            <p className="text-xs mt-1">Please check back later for updates.</p>
-          </div>
-        ) : sortedDates.length === 0 ? (
-          <div className="glass-card rounded-2xl p-8 text-center text-slate-500 border border-slate-800">
-            <p className="font-bold">No matches match your filters.</p>
-            <p className="text-xs mt-1">Try a different tab or clear the search.</p>
-          </div>
-        ) : (
-          <div className="space-y-8">
-            {sortedDates.map(date => (
-              <div key={date} className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <Calendar className="w-4 h-4 text-blue-400" />
-                  <h2 className="text-lg font-bold text-white">{date}</h2>
-                  {isSameDay(groupedMatches[date][0].matchDate) && (
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
-                      Today
-                    </span>
-                  )}
-                  <div className="flex-grow h-px bg-slate-800"></div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="rounded-2xl border border-slate-800/80 bg-slate-950/60 p-6 space-y-4 animate-pulse">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-xl bg-slate-800" />
+                    <div className="space-y-1.5">
+                      <div className="w-24 h-4 rounded bg-slate-800" />
+                      <div className="w-16 h-3 rounded bg-slate-900" />
+                    </div>
+                  </div>
                 </div>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                  {groupedMatches[date].map((match, i) => (
-                    <MatchCard key={match._id || match.id} match={match} index={i} />
-                  ))}
-                </div>
+                <div className="h-16 rounded-xl bg-slate-900" />
               </div>
             ))}
           </div>
+        ) : error ? (
+          <div className="glass-card rounded-2xl p-8 text-center text-rose-400 border border-rose-500/30 max-w-md mx-auto space-y-3">
+            <AlertCircle className="w-10 h-10 mx-auto text-rose-400" />
+            <p className="font-bold">{error}</p>
+            <button
+              onClick={() => fetchTeams()}
+              className="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-bold transition"
+            >
+              Retry Loading
+            </button>
+          </div>
+        ) : teams.length === 0 ? (
+          <div className="glass-card rounded-2xl p-12 text-center text-slate-500 border border-slate-800 max-w-md mx-auto space-y-3">
+            <Shield className="w-12 h-12 mx-auto text-slate-600" />
+            <p className="font-bold text-base text-slate-300">No Teams Found</p>
+            <p className="text-xs">No franchises have been registered in the system yet.</p>
+          </div>
+        ) : processedTeams.length === 0 ? (
+          <div className="glass-card rounded-2xl p-10 text-center text-slate-500 border border-slate-800 max-w-md mx-auto space-y-3">
+            <Search className="w-10 h-10 mx-auto text-slate-600" />
+            <p className="font-bold text-slate-300">No teams match your search</p>
+            <button
+              onClick={() => setSearch('')}
+              className="text-xs text-blue-400 hover:underline font-semibold"
+            >
+              Clear Search Query
+            </button>
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {paginatedTeams.map(team => {
+                const id = team._id || team.id;
+                const avatarConfig = getTeamAvatarConfig(team);
+                const theme = getTeamTheme(team);
+                const rosterCount = team.currentRosterCount ?? (team.currentRoster?.length || 0);
+                const managerName = team.managerId?.name || team.ownerName || 'Unassigned';
+
+                return (
+                  <div
+                    key={id}
+                    onClick={() => setSelectedTeam(team)}
+                    className={`group relative overflow-hidden rounded-2xl border ${theme.border} cursor-pointer transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl ${theme.ring} bg-gradient-to-br ${theme.gradient}`}
+                  >
+                    {/* Colored top accent bar */}
+                    <div className={`h-1 w-full ${theme.accent}`} />
+
+                    <div className="p-5 space-y-4">
+                      {/* Top Team Badge Header */}
+                      <div className="flex items-start justify-between gap-3">
+                        <TeamBadge team={team} size="md" showManager={true} managerName={managerName} />
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold border ${theme.badgeBg}`}>
+                          {team.shortCode || team.code || 'TEAM'}
+                        </span>
+                      </div>
+
+                      {/* Purse & Roster Grid */}
+                      <div className="grid grid-cols-2 gap-3 text-xs pt-1">
+                        <div className="bg-slate-950/70 p-2.5 rounded-xl border border-slate-800/80">
+                          <span className="text-[10px] text-slate-400 font-medium uppercase block">Remaining Purse</span>
+                          <span className={`font-mono font-bold text-xs sm:text-sm mt-0.5 block ${theme.stat}`}>
+                            {formatCurrency(team.remainingBudget)}
+                          </span>
+                        </div>
+
+                        <div className="bg-slate-950/70 p-2.5 rounded-xl border border-slate-800/80">
+                          <span className="text-[10px] text-slate-400 font-medium uppercase block">Squad Count</span>
+                          <span className="font-mono font-bold text-white text-xs sm:text-sm mt-0.5 block">
+                            {rosterCount} / {team.minRoster || 11} min
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Click Card Footer */}
+                      <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400 group-hover:text-white transition">
+                        <span className="font-medium">View Team Profile</span>
+                        <ExternalLink className={`w-3.5 h-3.5 transition ${theme.stat}`} />
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-2 pt-4">
+                <button
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white disabled:opacity-40 transition"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                <span className="text-xs font-mono font-bold text-slate-400 px-3">
+                  Page {currentPage} of {totalPages}
+                </span>
+                <button
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  className="p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white disabled:opacity-40 transition"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            )}
+          </>
         )}
 
-        <div className="text-center pt-8">
-          <h3 className="font-bold text-slate-300">Tournament Structure</h3>
-          <p className="text-xs text-slate-500 mt-1">
-            This is a knockout tournament. Winners from each match will advance to the next round.
-            <br />
-            The full bracket will be updated as results are finalized.
-          </p>
-        </div>
-      </main>
+        {selectedTeam && (() => {
+          const modalTheme = getTeamTheme(selectedTeam);
+          return (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+              <div className={`glass-card rounded-2xl p-6 border ${modalTheme.border} max-w-xl w-full space-y-6 relative max-h-[90vh] overflow-y-auto bg-gradient-to-br ${modalTheme.gradient}`}>
+                <button
+                  onClick={() => setSelectedTeam(null)}
+                  className="absolute top-4 right-4 p-1.5 text-slate-400 hover:text-white rounded-lg bg-slate-900 border border-slate-800"
+                >
+                  <X className="w-4 h-4" />
+                </button>
 
+                <TeamBadge team={selectedTeam} size="lg" showManager={true} managerName={selectedTeam.managerId?.name || selectedTeam.ownerName} />
+
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs font-mono">
+                  <div className="bg-slate-950/70 p-3 rounded-xl border border-slate-800">
+                    <span className="text-[10px] text-slate-400 uppercase block">Total Purse</span>
+                    <span className="font-bold text-white">{formatCurrency(selectedTeam.totalBudget)}</span>
+                  </div>
+                  <div className="bg-slate-950/70 p-3 rounded-xl border border-slate-800">
+                    <span className="text-[10px] text-slate-400 uppercase block">Purse Left</span>
+                    <span className={`font-bold ${modalTheme.stat}`}>{formatCurrency(selectedTeam.remainingBudget)}</span>
+                  </div>
+                  <div className="bg-slate-950/70 p-3 rounded-xl border border-slate-800">
+                    <span className="text-[10px] text-slate-400 uppercase block">Total Players</span>
+                    <span className="font-bold text-white">{selectedTeam.currentRoster?.length || selectedTeam.currentRosterCount || 0}</span>
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-300 mb-3 flex items-center gap-1.5">
+                    <Users className={`w-4 h-4 ${modalTheme.stat}`} /> Acquired Roster
+                  </h4>
+                  {Array.isArray(selectedTeam.currentRoster) && selectedTeam.currentRoster.length > 0 ? (
+                    <div className="space-y-2 max-h-48 overflow-y-auto pr-1 custom-scrollbar">
+                      {selectedTeam.currentRoster.map(player => (
+                        <div key={player._id || player.id} className="bg-slate-950/70 p-2.5 rounded-xl border border-slate-800/80 flex items-center justify-between text-xs">
+                          <span className="font-bold text-white">{player.name} ({player.primaryPosition || 'Player'})</span>
+                          <span className="font-mono text-amber-400 font-bold">{formatCurrency(player.finalPrice || 0)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-slate-500 italic bg-slate-950/50 p-4 rounded-xl text-center border border-slate-800">
+                      No players acquired in auction yet.
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        })()}
+
+      </main>
     </div>
   );
 }

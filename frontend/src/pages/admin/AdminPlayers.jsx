@@ -4,6 +4,8 @@ import { useAuction } from '../../context/AuctionContext';
 import { useAuth } from '../../context/AuthContext';
 import { adminAPI } from '../../services/api';
 import api from '../../services/api';
+import { getImageUrl } from '../../utils/imageUrl';
+import PlayerCardCard from '../../components/common/PlayerCardCard';
 
 const STATUS_STYLES = {
   SOLD: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
@@ -185,106 +187,33 @@ export default function AdminPlayers() {
         </div>
       </div>
 
-      {/* ── Players Table ───────────────────────────────────────────────────────── */}
+      {/* ── Players Card Grid ─────────────────────────────────────────────────────── */}
       <div className="glass-card rounded-2xl p-6 border border-slate-800 space-y-4">
-        <h3 className="text-sm font-bold uppercase tracking-wider text-slate-300">
-          All Registered Players ({filtered.length})
-        </h3>
-
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs text-slate-300">
-            <thead className="bg-slate-900/80 text-slate-400 uppercase font-bold text-[11px] border-b border-slate-800">
-              <tr>
-                <th className="py-3 px-4">Player</th>
-                <th className="py-3 px-4">Student ID</th>
-                <th className="py-3 px-4">Position</th>
-                <th className="py-3 px-4">Session</th>
-                <th className="py-3 px-4">Category</th>
-                <th className="py-3 px-4">Base Price</th>
-                <th className="py-3 px-4">Status</th>
-                {canManage && <th className="py-3 px-4 text-center">Actions</th>}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-800/60">
-              {filtered.map(player => {
-                const id = player._id || player.id;
-                const rowStyle = getCategoryRowStyle(player.category);
-                return (
-                  <tr key={id} className={`transition-colors ${rowStyle}`}>
-                    <td className="py-3 px-4">
-                      <div className="flex items-center gap-3">
-                        <img
-                          src={player.imageUrl || player.picture || `https://ui-avatars.com/api/?name=${encodeURIComponent(player.name || 'P')}&background=1e293b&color=94a3b8`}
-                          alt={player.name}
-                          className="w-8 h-8 rounded-full object-cover border border-slate-700"
-                        />
-                        <div>
-                          <p className="font-extrabold text-white">{player.name}</p>
-                          <p className="text-[10px] text-slate-400 font-mono">{player.jerseyName}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="py-3 px-4 font-mono text-slate-300">{player.studentId}</td>
-                    <td className="py-3 px-4 font-semibold text-blue-400">
-                      <span className="px-2 py-0.5 bg-blue-500/10 rounded border border-blue-500/20 font-mono">
-                        {player.primaryPosition || (Array.isArray(player.positions) ? player.positions[0] : 'ST')}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4 text-slate-400">{player.session}</td>
-                    <td className="py-3 px-4 font-semibold text-amber-400">{player.category}</td>
-                    <td className="py-3 px-4 font-mono text-emerald-400">{formatCurrency(player.basePrice)}</td>
-                    <td className="py-3 px-4">
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase border ${STATUS_STYLES[player.status] || 'bg-slate-800 text-slate-300 border-slate-700'
-                        }`}>
-                        {player.status}
-                      </span>
-                    </td>
-                    {canManage && (
-                      <td className="py-3 px-4">
-                        <div className="flex items-center justify-center gap-1.5">
-                          {player.status === 'REGISTERED' && (
-                            <button
-                              id={`approve-${id}`}
-                              onClick={() => handleApprove(id, player.name)}
-                              title="Approve Player"
-                              className="p-1.5 rounded-lg bg-teal-600/20 text-teal-400 hover:bg-teal-600 hover:text-white transition"
-                            >
-                              <UserCheck className="w-3.5 h-3.5" />
-                            </button>
-                          )}
-                          <button
-                            id={`edit-${id}`}
-                            onClick={() => openEdit(player)}
-                            title="Edit Player Profile"
-                            className="p-1.5 rounded-lg bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white transition"
-                          >
-                            <Edit3 className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            id={`ban-${id}`}
-                            onClick={() => handleToggleBan(id, player.status)}
-                            title={player.status === 'BANNED' ? 'Unban Player' : 'Ban Player'}
-                            className={`p-1.5 rounded-lg text-xs font-bold transition ${player.status === 'BANNED'
-                              ? 'bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600 hover:text-white'
-                              : 'bg-rose-600/20 text-rose-400 hover:bg-rose-600 hover:text-white'
-                              }`}
-                          >
-                            <Ban className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      </td>
-                    )}
-                  </tr>
-                );
-              })}
-              {filtered.length === 0 && (
-                <tr>
-                  <td colSpan={canManage ? 8 : 7} className="py-12 text-center text-slate-500">No players found</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-bold uppercase tracking-wider text-slate-300">
+            All Registered Players ({filtered.length})
+          </h3>
         </div>
+
+        {filtered.length === 0 ? (
+          <div className="py-16 text-center text-slate-500 font-medium">
+            No players found matching current filters.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {filtered.map(player => (
+              <PlayerCardCard
+                key={player._id || player.id}
+                player={player}
+                formatCurrency={formatCurrency}
+                canManage={canManage}
+                onApprove={handleApprove}
+                onEdit={openEdit}
+                onToggleBan={handleToggleBan}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       {/* ── Edit Player Modal (SUPER_ADMIN ONLY) ──────────────────────────────── */}

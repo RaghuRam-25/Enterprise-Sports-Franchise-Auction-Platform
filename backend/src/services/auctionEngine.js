@@ -17,6 +17,14 @@ class AuctionEngine {
 
     // Video Broadcast State (Synchronized across all clients)
     this.videoUrl = null;
+    this.videoStartTime = null;       // epoch ms when video started playing
+    this.videoState = 'STOPPED';      // 'PLAYING' | 'PAUSED' | 'STOPPED'
+    this.pausedAtPosition = 0;        // seconds elapsed when paused
+
+    // Explicit System Auction State Machine
+    // 'WAITING' | 'LIVE_BROADCAST' | 'PLAYER_INTRO' | 'LIVE_AUCTION' | 'CONGRATULATIONS' | 'AUCTION_COMPLETED' | 'CLOSING_BROADCAST'
+    this.systemAuctionState = 'WAITING';
+    this.hasStartedAuction = false;
 
     // Player Intro Animation State (Synchronized across all clients)
     this.introLoopState = {
@@ -34,25 +42,83 @@ class AuctionEngine {
     this.io = ioInstance;
   }
 
+  // Get current video broadcast state payload for socket emission
+  getVideoBroadcastState() {
+    return {
+      url: this.videoUrl,
+      videoStartTime: this.videoStartTime,
+      videoState: this.videoState,
+      pausedAtPosition: this.pausedAtPosition,
+      serverTime: Date.now(),
+      systemAuctionState: this.systemAuctionState
+    };
+  }
+
   // Set & Broadcast Video URL (Null = Stopped)
   setVideoUrl(url) {
+    const prevVideoUrl = this.videoUrl;
     this.videoUrl = url ? String(url).trim() : null;
     if (this.videoUrl) {
       // Pause intro loop if video starts
       this.stopIntroLoop(false);
+      this.videoStartTime = Date.now();
+      this.videoState = 'PLAYING';
+      this.pausedAtPosition = 0;
+
+      if (this.systemAuctionState === 'AUCTION_COMPLETED' || this.isAuctionFinished) {
+        this.systemAuctionState = 'CLOSING_BROADCAST';
+        if (this.io) this.io.emit('closing-broadcast-started', this.getVideoBroadcastState());
+      } else {
+        this.systemAuctionState = 'LIVE_BROADCAST';
+        if (this.io) this.io.emit('broadcast-started', this.getVideoBroadcastState());
+      }
+    } else {
+      this.videoStartTime = null;
+      this.videoState = 'STOPPED';
+      this.pausedAtPosition = 0;
+      if (prevVideoUrl && this.io) {
+        this.io.emit('broadcast-stopped', { systemAuctionState: this.systemAuctionState });
+      }
+      if (this.systemAuctionState === 'LIVE_BROADCAST' || this.systemAuctionState === 'CLOSING_BROADCAST') {
+        this.systemAuctionState = this.hasStartedAuction ? (this.isAuctionFinished ? 'AUCTION_COMPLETED' : 'LIVE_AUCTION') : 'WAITING';
+      }
     }
     if (this.io) {
-      this.io.emit('podium:video-control', { url: this.videoUrl });
+      this.io.emit('podium:video-control', this.getVideoBroadcastState());
     }
     return this.videoUrl;
+  }
+
+  // Pause live video broadcast
+  pauseVideo() {
+    if (this.videoState !== 'PLAYING' || !this.videoStartTime) return;
+    this.pausedAtPosition = (Date.now() - this.videoStartTime) / 1000;
+    this.videoState = 'PAUSED';
+    if (this.io) {
+      this.io.emit('podium:video-control', this.getVideoBroadcastState());
+    }
+  }
+
+  // Resume live video broadcast
+  resumeVideo() {
+    if (this.videoState !== 'PAUSED') return;
+    // Recalculate start time so offset math stays correct
+    this.videoStartTime = Date.now() - (this.pausedAtPosition * 1000);
+    this.videoState = 'PLAYING';
+    if (this.io) {
+      this.io.emit('podium:video-control', this.getVideoBroadcastState());
+    }
   }
 
   // Player Intro Loop Control Methods
   startIntroLoop(playersList = [], durationSeconds = 4, repeat = false) {
     this.clearIntroTimer();
     this.videoUrl = null; // clear custom video if intro starts
+    this.videoStartTime = null;
+    this.videoState = 'STOPPED';
+    this.pausedAtPosition = 0;
     if (this.io) {
-      this.io.emit('podium:video-control', { url: null });
+      this.io.emit('podium:video-control', this.getVideoBroadcastState());
     }
 
     this.introLoopState = {
@@ -206,9 +272,21 @@ class AuctionEngine {
 
   // --- PODIUM ADMIN CONTROLS ---
   async launchPlayer(playerData, durationSeconds = 60, mode = 'NORMAL') {
-    // Stop custom video / intro loop if a player is launched to podium
+    const wasBroadcasting = Boolean(this.videoUrl);
+    // Automatic broadcast stop when first player is pushed
     this.setVideoUrl(null);
     this.stopIntroLoop(true);
+
+    this.hasStartedAuction = true;
+    this.systemAuctionState = 'LIVE_AUCTION';
+
+    if (wasBroadcasting && this.io) {
+      this.io.emit('broadcast-stopped', { systemAuctionState: this.systemAuctionState });
+    }
+    if (this.io) {
+      this.io.emit('auction-started', { systemAuctionState: this.systemAuctionState });
+      this.io.emit('player-pushed', { player: playerData, systemAuctionState: this.systemAuctionState });
+    }
 
     // GAP 13 FIX: refresh tiers from DB every time a player is launched
     await this.loadTiers();
@@ -401,7 +479,13 @@ class AuctionEngine {
       timer: timerService.getState(),
       bidHistory: this.bidHistory,
       videoUrl: this.videoUrl,
-      introLoopState: this.introLoopState
+      videoStartTime: this.videoStartTime,
+      videoState: this.videoState,
+      pausedAtPosition: this.pausedAtPosition,
+      serverTime: Date.now(),
+      introLoopState: this.introLoopState,
+      systemAuctionState: this.systemAuctionState,
+      hasStartedAuction: this.hasStartedAuction
     };
   }
 }

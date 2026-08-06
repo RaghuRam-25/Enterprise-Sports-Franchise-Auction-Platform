@@ -1,8 +1,9 @@
 import React from 'react';
 
-const YouTubeEmbed = ({ videoId }) => {
-    // Parameters used to hide YouTube logo and controls
-    const params = 'autoplay=1&controls=0&rel=0&iv_load_policy=3&loop=1&playlist=' + videoId;
+const YouTubeEmbed = ({ videoId, startOffset = 0 }) => {
+    // Parameters used to hide YouTube logo, controls, and start at synchronized live offset
+    const startSec = Math.max(0, Math.floor(startOffset));
+    const params = `autoplay=1&controls=0&rel=0&iv_load_policy=3&loop=1&playlist=${videoId}${startSec > 0 ? `&start=${startSec}` : ''}`;
     const embedUrl = `https://www.youtube.com/embed/${videoId}?${params}`;
 
     // Top and bottom bars are hidden using a CSS trick
@@ -50,7 +51,7 @@ const GoogleDriveEmbed = ({ fileId }) => {
     );
 };
 
-export default function EmbeddedVideoPlayer({ url }) {
+export default function EmbeddedVideoPlayer({ url, videoStartTime, videoState, pausedAtPosition }) {
     let videoId = null;
     let fileId = null;
 
@@ -72,7 +73,15 @@ export default function EmbeddedVideoPlayer({ url }) {
         return <div className="text-white p-4 flex items-center justify-center h-full">Invalid or unsupported video URL.</div>;
     }
 
-    if (videoId) return <YouTubeEmbed videoId={videoId} />;
+    // Calculate synchronized live start offset in seconds
+    let startOffset = 0;
+    if (videoState === 'PAUSED') {
+        startOffset = pausedAtPosition || 0;
+    } else if (videoStartTime && videoState === 'PLAYING') {
+        startOffset = Math.max(0, (Date.now() - videoStartTime) / 1000);
+    }
+
+    if (videoId) return <YouTubeEmbed videoId={videoId} startOffset={startOffset} />;
     if (fileId) return <GoogleDriveEmbed fileId={fileId} />;
 
     return <div className="text-white p-4 flex items-center justify-center h-full">Please use a YouTube or Google Drive link.</div>;

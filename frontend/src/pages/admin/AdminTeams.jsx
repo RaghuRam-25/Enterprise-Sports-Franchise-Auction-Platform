@@ -4,6 +4,8 @@ import { useAuction } from '../../context/AuctionContext';
 import { useAuth } from '../../context/AuthContext';
 import { adminAPI } from '../../services/api';
 import Navbar from '../../components/Navbar';
+import TeamBadge from '../../components/common/TeamBadge';
+import { getTeamAvatarConfig } from '../../utils/themeConfig';
 
 const getCategoryStyles = (category) => {
   switch (category) {
@@ -20,66 +22,82 @@ const getCategoryStyles = (category) => {
   }
 };
 
+/* ---------------------------------------------------------
+   Distinct per-team color themes — same palette/hash logic
+   as PublicTeamsView so a given team looks identical across
+   both pages (public list + admin management).
+---------------------------------------------------------- */
+const TEAM_THEMES = [
+  { name: 'crimson',  gradient: 'from-rose-500/15 via-slate-950/60 to-slate-950',    border: 'border-rose-500/40',    ring: 'hover:shadow-rose-500/20',    accent: 'bg-rose-500',    badgeBg: 'bg-rose-500/15 text-rose-300 border-rose-500/30',       stat: 'text-rose-300' },
+  { name: 'amber',    gradient: 'from-amber-500/15 via-slate-950/60 to-slate-950',   border: 'border-amber-500/40',   ring: 'hover:shadow-amber-500/20',   accent: 'bg-amber-500',   badgeBg: 'bg-amber-500/15 text-amber-300 border-amber-500/30',    stat: 'text-amber-300' },
+  { name: 'emerald',  gradient: 'from-emerald-500/15 via-slate-950/60 to-slate-950', border: 'border-emerald-500/40', ring: 'hover:shadow-emerald-500/20', accent: 'bg-emerald-500', badgeBg: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30', stat: 'text-emerald-300' },
+  { name: 'sky',      gradient: 'from-sky-500/15 via-slate-950/60 to-slate-950',     border: 'border-sky-500/40',     ring: 'hover:shadow-sky-500/20',     accent: 'bg-sky-500',     badgeBg: 'bg-sky-500/15 text-sky-300 border-sky-500/30',          stat: 'text-sky-300' },
+  { name: 'violet',   gradient: 'from-violet-500/15 via-slate-950/60 to-slate-950',  border: 'border-violet-500/40',  ring: 'hover:shadow-violet-500/20',  accent: 'bg-violet-500',  badgeBg: 'bg-violet-500/15 text-violet-300 border-violet-500/30', stat: 'text-violet-300' },
+  { name: 'fuchsia',  gradient: 'from-fuchsia-500/15 via-slate-950/60 to-slate-950', border: 'border-fuchsia-500/40', ring: 'hover:shadow-fuchsia-500/20', accent: 'bg-fuchsia-500', badgeBg: 'bg-fuchsia-500/15 text-fuchsia-300 border-fuchsia-500/30', stat: 'text-fuchsia-300' },
+  { name: 'teal',     gradient: 'from-teal-500/15 via-slate-950/60 to-slate-950',    border: 'border-teal-500/40',    ring: 'hover:shadow-teal-500/20',    accent: 'bg-teal-500',    badgeBg: 'bg-teal-500/15 text-teal-300 border-teal-500/30',       stat: 'text-teal-300' },
+  { name: 'orange',   gradient: 'from-orange-500/15 via-slate-950/60 to-slate-950',  border: 'border-orange-500/40',  ring: 'hover:shadow-orange-500/20',  accent: 'bg-orange-500',  badgeBg: 'bg-orange-500/15 text-orange-300 border-orange-500/30', stat: 'text-orange-300' },
+  { name: 'indigo',   gradient: 'from-indigo-500/15 via-slate-950/60 to-slate-950',  border: 'border-indigo-500/40',  ring: 'hover:shadow-indigo-500/20',  accent: 'bg-indigo-500',  badgeBg: 'bg-indigo-500/15 text-indigo-300 border-indigo-500/30', stat: 'text-indigo-300' },
+  { name: 'lime',     gradient: 'from-lime-500/15 via-slate-950/60 to-slate-950',    border: 'border-lime-500/40',    ring: 'hover:shadow-lime-500/20',    accent: 'bg-lime-500',    badgeBg: 'bg-lime-500/15 text-lime-300 border-lime-500/30',       stat: 'text-lime-300' },
+];
+
+function hashString(str) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash << 5) - hash + str.charCodeAt(i);
+    hash |= 0;
+  }
+  return Math.abs(hash);
+}
+
+function getTeamTheme(team) {
+  const key = String(team._id || team.id || team.name || team.shortCode || 'team');
+  const idx = hashString(key) % TEAM_THEMES.length;
+  return TEAM_THEMES[idx];
+}
 
 export default function AdminTeams() {
   const {
     teams, setTeams, managers, loadManagers, formatCurrency, triggerToast, players, refetchTeams,
-    // Optional, only used if your AuctionContext exposes them — falls back gracefully if not.
     eventPhase, eventConfig,
   } = useAuction();
   const { user } = useAuth();
   const isSuperAdmin = user?.role === 'SUPER_ADMIN';
 
-  // Team creation should only happen during SETUP. If the context doesn't expose
-  // eventPhase yet, we don't block anything (fail-open) — wire it up when the
-  // phase-gating middleware described earlier lands on the backend.
   const isSetupPhase = !eventPhase || eventPhase === 'SETUP';
 
-  // Load dependent data on mount
   useEffect(() => {
-    // Ensure teams are loaded. If context hasn't loaded them yet, fetch them.
     if (!teams || teams.length === 0) {
       refetchTeams();
     }
-    loadManagers(); // Also load managers for all roles (context handles permissions)
+    loadManagers();
   }, [loadManagers, refetchTeams, teams]);
 
-  // ── Create Franchise form state ──────────────────────────────────────────
   const [name, setName] = useState('');
   const [code, setCode] = useState('');
-  // Default budget/minRoster should come from Super Admin's global event config
-  // (Total Budget / Bidding Tiers setup) rather than being hardcoded here.
   const [budget, setBudget] = useState(eventConfig?.defaultTeamBudget?.toString() || '100000000');
+  const [managerMode, setManagerMode] = useState('new');
+  const [selectedExistingManagerId, setSelectedExistingManagerId] = useState('');
   const [managerName, setManagerName] = useState('');
   const [managerEmail, setManagerEmail] = useState('');
   const [creating, setCreating] = useState(false);
 
-  // ── Post-creation credential display state ───────────────────────────────
   const [selectedManager, setSelectedManager] = useState(null);
   const [tempPass, setTempPass] = useState('');
 
-  // ── Edit modal state ─────────────────────────────────────────────────────
   const [editingTeam, setEditingTeam] = useState(null);
   const [editForm, setEditForm] = useState({});
   const [saving, setSaving] = useState(false);
 
-  // ── Delete confirm modal state (replaces window.confirm) ─────────────────
-  const [deleteTarget, setDeleteTarget] = useState(null); // { id, name }
-  const [deletingId, setDeletingId] = useState(null); // guards double-click / race condition
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deletingId, setDeletingId] = useState(null);
 
-  // ── Roster view modal state ──────────────────────────────────────────────
   const [viewingRoster, setViewingRoster] = useState(null);
 
-  // ── Search state ──────────────────────────────────────────────────────────
   const [search] = useState('');
 
-  // --- Derived Data ---
   const unassignedManagers = managers.filter(m => !m.teamId && m.role === 'TEAM_MANAGER');
 
   const filteredTeams = useMemo(() => {
-    // Defensive de-dupe by id — guards against upstream duplicate records
-    // (e.g. AuctionContext re-fetching/appending teams more than once).
-    // The real fix should happen where `teams` is loaded/set, not here.
     const seen = new Set();
     const deduped = teams.filter(t => {
       const tid = String(t._id || t.id);
@@ -96,7 +114,6 @@ export default function AdminTeams() {
     );
   }, [teams, search]);
 
-  // ── Create Franchise (Team + Manager) ────────────────────────────────────
   const handleCreateFranchise = async (e) => {
     e.preventDefault();
     if (!isSuperAdmin) {
@@ -107,8 +124,16 @@ export default function AdminTeams() {
       triggerToast('Teams can only be created during the SETUP phase.', 'error');
       return;
     }
-    if (!name || !code || !managerName || !managerEmail) {
-      triggerToast('All fields are required to create a new franchise.', 'error');
+    if (!name || !code) {
+      triggerToast('Team Name and Short Code are required.', 'error');
+      return;
+    }
+    if (managerMode === 'new' && (!managerName || !managerEmail)) {
+      triggerToast('Manager Full Name and Email are required for new manager.', 'error');
+      return;
+    }
+    if (managerMode === 'existing' && !selectedExistingManagerId) {
+      triggerToast('Please select an unassigned existing manager.', 'error');
       return;
     }
     if (code.trim().length > 4) {
@@ -124,10 +149,10 @@ export default function AdminTeams() {
     setCreating(true);
     const generatedPass = `Pass#${Math.floor(1000 + Math.random() * 9000)}`;
     let createdTeam = null;
-    let createdManager = null;
+    let assignedManager = null;
+    let newlyCreatedManager = false;
 
     try {
-      // Step 1: Create the team
       const teamRes = await adminAPI.createTeam({
         name,
         shortCode: code.toUpperCase(),
@@ -138,44 +163,49 @@ export default function AdminTeams() {
       if (!createdTeam?._id) throw new Error("Team creation failed.");
       triggerToast(`Team '${name}' created.`, 'info');
 
-      // Step 2: Create the manager and assign the new team's ID
-      const managerRes = await adminAPI.createManager({
-        name: managerName,
-        email: managerEmail.toLowerCase(),
-        password: generatedPass,
-        role: 'TEAM_MANAGER',
-        teamId: createdTeam._id,
-      });
-      createdManager = managerRes.data;
-      if (!createdManager?._id) throw new Error("Manager creation failed.");
-      triggerToast(`Manager '${managerName}' created.`, 'info');
+      if (managerMode === 'new') {
+        const managerRes = await adminAPI.createManager({
+          name: managerName,
+          email: managerEmail.toLowerCase(),
+          password: generatedPass,
+          role: 'TEAM_MANAGER',
+          teamId: createdTeam._id,
+        });
+        assignedManager = managerRes.data;
+        newlyCreatedManager = true;
+        if (!assignedManager?._id) throw new Error("Manager creation failed.");
+        triggerToast(`Manager '${managerName}' created and assigned.`, 'info');
+      } else {
+        const existingMgr = managers.find(m => m._id === selectedExistingManagerId);
+        if (!existingMgr) throw new Error("Selected manager not found.");
+        const updatedMgrRes = await adminAPI.editManager(existingMgr._id, { teamId: createdTeam._id });
+        assignedManager = updatedMgrRes.data || existingMgr;
+        triggerToast(`Assigned manager '${assignedManager.name}' to ${name}.`, 'info');
+      }
 
-      // Step 3: Update the team with the new manager's ID
-      const finalTeamRes = await adminAPI.editTeam(createdTeam._id, { managerId: createdManager._id });
+      const finalTeamRes = await adminAPI.editTeam(createdTeam._id, { managerId: assignedManager._id });
       const finalTeam = finalTeamRes.data;
 
-      // Update local state
       loadManagers();
       setTeams(prev => [...prev, finalTeam]);
 
-      // Reset form & show credentials
       setName(''); setCode(''); setBudget(eventConfig?.defaultTeamBudget?.toString() || '100000000');
-      setManagerName(''); setManagerEmail('');
-      setTempPass(generatedPass);
-      setSelectedManager(createdManager);
+      setManagerName(''); setManagerEmail(''); setSelectedExistingManagerId('');
+      if (newlyCreatedManager) {
+        setTempPass(generatedPass);
+        setSelectedManager(assignedManager);
+      }
       triggerToast(`Franchise "${name}" created successfully!`, 'success');
 
     } catch (err) {
       triggerToast(err.message || 'Franchise creation failed.', 'error');
-      // Rollback logic
-      if (createdManager?._id) await adminAPI.deleteManager(createdManager._id).catch(() => { });
+      if (newlyCreatedManager && assignedManager?._id) await adminAPI.deleteManager(assignedManager._id).catch(() => { });
       if (createdTeam?._id) await adminAPI.deleteTeam(createdTeam._id).catch(() => { });
     } finally {
       setCreating(false);
     }
   };
 
-  // ── Delete Team ────────────────────────────────────────────────────────────
   const confirmDeleteTeam = (id, teamName) => {
     if (!isSuperAdmin) {
       triggerToast('Permission Denied: Only Super Admin can manage teams.', 'error');
@@ -190,9 +220,6 @@ export default function AdminTeams() {
     setDeletingId(id);
     try {
       await adminAPI.deleteTeam(id);
-      // Only remove from local state once the backend confirms deletion —
-      // never remove optimistically, or a failed delete silently "un-deletes"
-      // itself on next refresh while the UI already claimed success.
       setTeams(prev => prev.filter(t => (t._id || t.id) !== id));
       triggerToast(`Deleted team: ${teamName}`, 'warning');
     } catch (err) {
@@ -203,7 +230,6 @@ export default function AdminTeams() {
     }
   };
 
-  // ── Open Edit Modal ────────────────────────────────────────────────────────
   const openEdit = (team) => {
     if (!isSuperAdmin) {
       triggerToast('Permission Denied: Only Super Admin can manage teams.', 'error');
@@ -218,7 +244,6 @@ export default function AdminTeams() {
     });
   };
 
-  // ── Save Edit ──────────────────────────────────────────────────────────────
   const handleSaveEdit = async () => {
     if (!editingTeam || !isSuperAdmin) return;
     if (!editForm.shortCode || editForm.shortCode.length > 4) {
@@ -256,7 +281,6 @@ export default function AdminTeams() {
     }
   };
 
-  // ── Clipboard copy with fallback for non-HTTPS / older browsers ─────────
   const copyCredentials = (text) => {
     if (navigator.clipboard?.writeText) {
       navigator.clipboard.writeText(text)
@@ -295,7 +319,6 @@ export default function AdminTeams() {
           </div>
         )}
 
-        {/* Phase lock notice (for Super Admin) */}
         {isSuperAdmin && !isSetupPhase && (
           <div className="p-4 bg-rose-500/10 border border-rose-500/30 rounded-2xl flex items-center gap-3 text-rose-300 text-xs font-semibold">
             <Lock className="w-5 h-5 flex-shrink-0 text-rose-400" />
@@ -308,10 +331,27 @@ export default function AdminTeams() {
           </div>
         )}
 
-        {/* Create Team Form (SUPER_ADMIN ONLY) */}
         {isSuperAdmin && isSetupPhase && (
           <div className="glass-card rounded-2xl p-6 border border-slate-800 space-y-4">
-            <h3 className="text-sm font-bold uppercase tracking-wider text-slate-300">Create New Franchise</h3>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h3 className="text-sm font-bold uppercase tracking-wider text-slate-300">Create New Franchise</h3>
+              <div className="flex items-center gap-1 bg-slate-900/80 p-1 rounded-xl border border-slate-800 text-[11px] font-semibold">
+                <button
+                  type="button"
+                  onClick={() => setManagerMode('new')}
+                  className={`px-3 py-1 rounded-lg transition ${managerMode === 'new' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'}`}
+                >
+                  Create New Manager
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setManagerMode('existing')}
+                  className={`px-3 py-1 rounded-lg transition ${managerMode === 'existing' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'}`}
+                >
+                  Select Existing ({unassignedManagers.length})
+                </button>
+              </div>
+            </div>
 
             <form onSubmit={handleCreateFranchise} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -319,9 +359,31 @@ export default function AdminTeams() {
                 <input type="text" placeholder="Short Code (e.g. DHD)*" maxLength={4} value={code} onChange={e => setCode(e.target.value.toUpperCase())} className="glass-input rounded-xl px-4 py-2 text-xs font-mono uppercase" required disabled={!isSetupPhase} />
                 <input type="number" min="1" placeholder="Total Budget (BDT)*" value={budget} onChange={e => setBudget(e.target.value)} className="glass-input rounded-xl px-4 py-2 text-xs" required disabled={!isSetupPhase} />
               </div>
+
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <input type="text" placeholder="Manager Full Name*" value={managerName} onChange={e => setManagerName(e.target.value)} className="glass-input rounded-xl px-4 py-2 text-xs md:col-span-1" required disabled={!isSetupPhase} />
-                <input type="email" placeholder="Manager Email / Login ID*" value={managerEmail} onChange={e => setManagerEmail(e.target.value)} className="glass-input rounded-xl px-4 py-2 text-xs md:col-span-1" required disabled={!isSetupPhase} />
+                {managerMode === 'new' ? (
+                  <>
+                    <input type="text" placeholder="Manager Full Name*" value={managerName} onChange={e => setManagerName(e.target.value)} className="glass-input rounded-xl px-4 py-2 text-xs md:col-span-1" required disabled={!isSetupPhase} />
+                    <input type="email" placeholder="Manager Email / Login ID*" value={managerEmail} onChange={e => setManagerEmail(e.target.value)} className="glass-input rounded-xl px-4 py-2 text-xs md:col-span-1" required disabled={!isSetupPhase} />
+                  </>
+                ) : (
+                  <div className="md:col-span-2">
+                    <select
+                      value={selectedExistingManagerId}
+                      onChange={e => setSelectedExistingManagerId(e.target.value)}
+                      className="glass-input w-full rounded-xl px-4 py-2 text-xs"
+                      required
+                      disabled={!isSetupPhase}
+                    >
+                      <option value="">-- Select Unassigned Manager --</option>
+                      {unassignedManagers.map(m => (
+                        <option key={m._id} value={m._id}>
+                          {m.name} ({m.email || m.username})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
                 <button type="submit" id="create-team-btn" disabled={creating || !isSetupPhase} className="px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-60 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1 shadow-md transition md:col-span-1">
                   <Plus className="w-4 h-4" />
                   {creating ? 'Creating Franchise...' : 'Create Franchise'}
@@ -331,7 +393,6 @@ export default function AdminTeams() {
           </div>
         )}
 
-        {/* Generated Credentials Modal */}
         {isSuperAdmin && selectedManager && (
           <div className="bg-emerald-950/90 border border-emerald-500/40 rounded-2xl p-5 space-y-3">
             <div className="flex justify-between items-center text-emerald-300 font-bold text-xs">
@@ -354,7 +415,7 @@ export default function AdminTeams() {
           </div>
         )}
 
-        {/* Franchise List Grid */}
+        {/* Franchise List Grid — now with distinct per-team color themes */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {filteredTeams.map(team => {
             const id = team._id || team.id;
@@ -364,69 +425,75 @@ export default function AdminTeams() {
               return mTeamId != null && String(mTeamId) === String(id);
             });
             const isDeleting = deletingId === id;
+            const theme = getTeamTheme(team);
 
             return (
-              <div key={id} className="glass-card rounded-2xl p-5 border border-slate-800 space-y-4 group cursor-pointer hover:border-blue-500/30 transition-colors" onClick={() => setViewingRoster(team)}>
-                <div className="flex justify-between items-start">
-                  <div className="flex items-center gap-3">
-                    <span className="text-3xl">{team.logo || '🏆'}</span>
-                    <div>
-                      <h3 className="font-extrabold text-base text-white">{team.name}</h3>
-                      <span className="font-mono text-xs text-blue-400 font-bold bg-blue-500/10 px-2 py-0.5 rounded border border-blue-500/20">
-                        {team.shortCode || team.code}
+              <div 
+                key={id} 
+                className={`relative overflow-hidden rounded-2xl border ${theme.border} space-y-0 group cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${theme.ring} bg-gradient-to-br ${theme.gradient}`}
+                onClick={() => setViewingRoster(team)}
+              >
+                {/* Colored top accent bar */}
+                <div className={`h-1 w-full ${theme.accent}`} />
+
+                <div className="p-5 space-y-4">
+                  <div className="flex justify-between items-start">
+                    <div className="flex items-center gap-2">
+                      <TeamBadge team={team} managerName={manager?.name} size="md" showManager={true} />
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold border ${theme.badgeBg}`}>
+                        {team.shortCode || team.code || 'TEAM'}
                       </span>
                     </div>
+
+                    {isSuperAdmin && (
+                      <div className="flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          id={`edit-team-${id}`}
+                          onClick={(e) => { e.stopPropagation(); openEdit(team); }}
+                          title="Edit Team"
+                          className="p-2 text-slate-400 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition"
+                        >
+                          <Edit3 className="w-4 h-4" />
+                        </button>
+                        <button
+                          id={`delete-team-${id}`}
+                          onClick={(e) => { e.stopPropagation(); confirmDeleteTeam(id, team.name); }}
+                          disabled={isDeleting}
+                          title="Delete Team"
+                          className="p-2 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition disabled:opacity-50"
+                        >
+                          {isDeleting
+                            ? <span className="w-4 h-4 border-2 border-rose-400 border-t-transparent rounded-full animate-spin block" />
+                            : <Trash2 className="w-4 h-4" />}
+                        </button>
+                      </div>
+                    )}
                   </div>
 
-                  {/* Action Buttons (SUPER_ADMIN ONLY) */}
-                  {isSuperAdmin && (
-                    <div className="flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button
-                        id={`edit-team-${id}`}
-                        onClick={(e) => { e.stopPropagation(); openEdit(team); }}
-                        title="Edit Team"
-                        className="p-2 text-slate-400 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition"
-                      >
-                        <Edit3 className="w-4 h-4" />
-                      </button>
-                      <button
-                        id={`delete-team-${id}`}
-                        onClick={(e) => { e.stopPropagation(); confirmDeleteTeam(id, team.name); }}
-                        disabled={isDeleting}
-                        title="Delete Team"
-                        className="p-2 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition disabled:opacity-50"
-                      >
-                        {isDeleting
-                          ? <span className="w-4 h-4 border-2 border-rose-400 border-t-transparent rounded-full animate-spin block" />
-                          : <Trash2 className="w-4 h-4" />}
-                      </button>
+                  <div className="grid grid-cols-2 gap-3 pt-2 text-xs">
+                    <div className="bg-slate-950/70 p-3 rounded-xl border border-slate-800">
+                      <span className="text-[11px] text-slate-400 uppercase">Total Purse:</span>
+                      <p className="font-mono font-bold text-white mt-0.5">{formatCurrency(team.totalBudget)}</p>
                     </div>
-                  )}
-                </div>
+                    <div className="bg-slate-950/70 p-3 rounded-xl border border-slate-800">
+                      <span className="text-[11px] text-slate-400 uppercase">Remaining Purse:</span>
+                      <p className={`font-mono font-bold mt-0.5 ${theme.stat}`}>{formatCurrency(team.remainingBudget)}</p>
+                    </div>
+                  </div>
 
-                <div className="grid grid-cols-2 gap-3 pt-2 text-xs">
-                  <div className="bg-slate-900/60 p-3 rounded-xl border border-slate-800">
-                    <span className="text-[11px] text-slate-400 uppercase">Total Purse:</span>
-                    <p className="font-mono font-bold text-white mt-0.5">{formatCurrency(team.totalBudget)}</p>
-                  </div>
-                  <div className="bg-slate-900/60 p-3 rounded-xl border border-slate-800">
-                    <span className="text-[11px] text-slate-400 uppercase">Remaining Purse:</span>
-                    <p className="font-mono font-bold text-emerald-400 mt-0.5">{formatCurrency(team.remainingBudget)}</p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3 text-xs">
-                  <div className={`p-3 rounded-xl border ${manager ? 'bg-slate-900/60 border-slate-800' : 'bg-amber-500/10 border-amber-500/30'}`}>
-                    <span className={`text-[11px] uppercase flex items-center gap-1 ${manager ? 'text-slate-400' : 'text-amber-400 font-bold'}`}>
-                      {!manager && <AlertTriangle className="w-3 h-3" />} Manager:
-                    </span>
-                    <p className={`font-bold mt-0.5 truncate ${manager ? 'text-white' : 'text-amber-300'}`}>
-                      {manager ? manager.name : 'Unassigned'}
-                    </p>
-                  </div>
-                  <div className="bg-slate-900/60 p-3 rounded-xl border border-slate-800">
-                    <span className="text-[11px] text-slate-400 uppercase">Roster:</span>
-                    <p className="font-bold text-white mt-0.5">{rosterCount} / {team.minRoster ?? '—'} min</p>
+                  <div className="grid grid-cols-2 gap-3 text-xs">
+                    <div className={`p-3 rounded-xl border ${manager ? 'bg-slate-950/70 border-slate-800' : 'bg-amber-500/10 border-amber-500/30'}`}>
+                      <span className={`text-[11px] uppercase flex items-center gap-1 ${manager ? 'text-slate-400' : 'text-amber-400 font-bold'}`}>
+                        {!manager && <AlertTriangle className="w-3 h-3" />} Manager:
+                      </span>
+                      <p className={`font-bold mt-0.5 truncate ${manager ? 'text-white' : 'text-amber-300'}`}>
+                        {manager ? manager.name : 'Unassigned'}
+                      </p>
+                    </div>
+                    <div className="bg-slate-950/70 p-3 rounded-xl border border-slate-800">
+                      <span className="text-[11px] text-slate-400 uppercase">Roster:</span>
+                      <p className="font-bold text-white mt-0.5">{rosterCount} / {team.minRoster ?? '—'} min</p>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -447,27 +514,30 @@ export default function AdminTeams() {
         </div>
 
         {/* Roster View Modal */}
-        {viewingRoster && (
-          <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="glass-card w-full max-w-lg rounded-2xl p-6 border border-slate-700 space-y-5 shadow-2xl flex flex-col">
-              <div className="flex justify-between items-center flex-shrink-0">
-                <div>
-                  <h2 className="text-lg font-black text-white flex items-center gap-2">
-                    <span className="text-2xl">{viewingRoster.logo || '🏆'}</span>
-                    {viewingRoster.name} Roster
-                  </h2>
-                  <p className="text-xs text-slate-400">Players acquired in the auction.</p>
+        {viewingRoster && (() => {
+          const modalTheme = getTeamTheme(viewingRoster);
+          return (
+            <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+              <div className={`glass-card w-full max-w-lg rounded-2xl p-6 border ${modalTheme.border} space-y-5 shadow-2xl flex flex-col bg-gradient-to-br ${modalTheme.gradient}`}>
+                <div className="flex justify-between items-center flex-shrink-0">
+                  <div>
+                    <h2 className="text-lg font-black text-white flex items-center gap-2">
+                      <span className="text-2xl">{viewingRoster.logo || '🏆'}</span>
+                      {viewingRoster.name} Roster
+                    </h2>
+                    <p className="text-xs text-slate-400">Players acquired in the auction.</p>
+                  </div>
+                  <button onClick={() => setViewingRoster(null)} className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition">
+                    <X className="w-4 h-4" />
+                  </button>
                 </div>
-                <button onClick={() => setViewingRoster(null)} className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition">
-                  <X className="w-4 h-4" />
-                </button>
+
+                <RosterModalContent team={viewingRoster} />
+
               </div>
-
-              <RosterModalContent team={viewingRoster} />
-
             </div>
-          </div>
-        )}
+          );
+        })()}
 
         {/* Edit Team Modal (SUPER_ADMIN ONLY) */}
         {isSuperAdmin && editingTeam && (
@@ -595,14 +665,11 @@ export default function AdminTeams() {
 function RosterModalContent({ team }) {
   const { players, formatCurrency } = useAuction();
 
-  // currentRoster can be an array of IDs or partial player objects.
-  // We create a Set of IDs for efficient lookup.
   const rosterPlayerIds = useMemo(() => {
     if (!team.currentRoster || !Array.isArray(team.currentRoster)) return new Set();
     return new Set(team.currentRoster.map(p => typeof p === 'string' ? p : (p._id || p.id)));
   }, [team.currentRoster]);
 
-  // We find the full player objects from the global players list.
   const rosterPlayers = useMemo(() => {
     if (!Array.isArray(players)) return [];
     return players.filter(p => rosterPlayerIds.has(p._id || p.id));

@@ -1,4 +1,4 @@
-import  { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 import {
   ShieldCheck, Save, Loader2, DollarSign, Users, Award, Edit3, X,
@@ -8,6 +8,7 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import { useAuction } from '../../context/AuctionContext';
 import api, { managerAPI } from '../../services/api';
+import TeamBadge from '../../components/common/TeamBadge';
 
 export default function ManagerMyTeam() {
   const { user } = useAuth();
@@ -217,15 +218,8 @@ export default function ManagerMyTeam() {
         {/* Identity row */}
         <div className="px-6 pb-6">
           <div className="flex flex-col md:flex-row md:items-end gap-5 -mt-16 md:-mt-14">
-            {/* Avatar */}
-            <div className="relative w-32 h-32 flex-shrink-0 mx-auto md:mx-0">
-              <div className="w-full h-full rounded-2xl bg-slate-950 border-4 border-slate-900 flex items-center justify-center overflow-hidden shadow-lg">
-                {team.logoUrl ? (
-                  <img src={team.logoUrl} alt={team.name} className="w-full h-full object-contain" />
-                ) : (
-                  <span className="text-5xl">{team.logo || '🏆'}</span>
-                )}
-              </div>
+            <div className="relative flex-shrink-0 mx-auto md:mx-0">
+              <TeamBadge team={team} size="xl" showName={false} showCode={false} />
               <button
                 onClick={openEditModal}
                 className="absolute -bottom-2 -right-2 w-9 h-9 rounded-xl bg-emerald-500 hover:bg-emerald-400 border-4 border-slate-900 flex items-center justify-center shadow-lg transition"

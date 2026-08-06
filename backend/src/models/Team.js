@@ -14,7 +14,17 @@ const teamSchema = new mongoose.Schema({
   managerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
   currentRosterCount: { type: Number, default: 0 },
   // GAP 7 FIX: Store references to acquired players
-  currentRoster: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Player' }]
+  currentRoster: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Player' }],
+  // Dynamic Auto-Theme & Branding Fields
+  icon: { type: String, default: 'Shield' },
+  primaryColor: { type: String, default: '#3b82f6' },
+  secondaryColor: { type: String, default: '#1d4ed8' },
+  gradient: { type: String, default: 'from-blue-600 to-indigo-800' },
+  textColor: { type: String, default: '#ffffff' },
+  borderColor: { type: String, default: 'border-blue-500/40' },
+  glowColor: { type: String, default: 'rgba(59,130,246,0.3)' },
+  logoSvg: { type: String, default: '' },
+  logoKey: { type: String, default: '' }
 }, { timestamps: true });
 
 export const Team = mongoose.model('Team', teamSchema);

@@ -5,6 +5,7 @@ import { BiddingTier } from '../models/BiddingTier.js';
 import { Team } from '../models/Team.js';
 import { User } from '../models/User.js';
 import { AuditLog } from '../models/AuditLog.js';
+import { buildCompleteTeamTheme, buildCategoryTheme } from '../services/ThemeGenerator.js';
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 
@@ -120,16 +121,32 @@ export const createCategory = async (req, res, next) => {
     const exists = await PlayerCategory.findOne({ name: parsed.name });
     if (exists) return res.status(400).json({ success: false, message: 'Category name already exists' });
 
-    const category = await PlayerCategory.create(parsed);
+    const existingCategories = await PlayerCategory.find().lean();
+    const categoryTheme = buildCategoryTheme(parsed.name, existingCategories);
+
+    const category = await PlayerCategory.create({
+      ...parsed,
+      ...categoryTheme
+    });
     await logAdminAction('CREATE_CATEGORY', req.user?.email || 'admin', category);
+
+    // Broadcast WebSocket event
+    const io = req.app?.get('io');
+    if (io) io.emit('category:created', category);
+
     res.status(201).json({ success: true, data: category });
   } catch (e) { next(e); }
 };
 
 export const deleteCategory = async (req, res, next) => {
   try {
-    await PlayerCategory.findByIdAndDelete(req.params.id);
+    const category = await PlayerCategory.findByIdAndDelete(req.params.id);
     await logAdminAction('DELETE_CATEGORY', req.user?.email || 'admin', { id: req.params.id });
+
+    // Broadcast WebSocket event
+    const io = req.app?.get('io');
+    if (io) io.emit('category:deleted', { id: req.params.id });
+
     res.json({ success: true, message: 'Category deleted' });
   } catch (e) { next(e); }
 };
@@ -186,12 +203,22 @@ export const createTeam = async (req, res, next) => {
     const exists = await Team.findOne({ name: parsed.name });
     if (exists) return res.status(400).json({ success: false, message: 'Team name already exists' });
 
+    // Auto theme calculation (Colors, Icon, Logo SVG)
+    const existingTeams = await Team.find().lean();
+    const teamTheme = buildCompleteTeamTheme(parsed.name, existingTeams);
+
     const team = await Team.create({
       ...parsed,
       shortCode: parsed.shortCode.toUpperCase(),
-      remainingBudget: parsed.totalBudget
+      remainingBudget: parsed.totalBudget,
+      ...teamTheme
     });
     await logAdminAction('CREATE_TEAM', req.user?.email || 'admin', team);
+
+    // Broadcast real-time creation to all connected clients
+    const io = req.app?.get('io');
+    if (io) io.emit('teams:created', team);
+
     res.status(201).json({ success: true, data: team });
   } catch (e) { next(e); }
 };
@@ -220,6 +247,11 @@ export const deleteTeam = async (req, res, next) => {
     if (!team) return res.status(404).json({ success: false, message: 'Team not found' });
 
     await logAdminAction('DELETE_TEAM', req.user?.email || 'admin', { id: req.params.id, name: team.name });
+
+    // Broadcast real-time deletion to all clients
+    const io = req.app?.get('io');
+    if (io) io.emit('teams:deleted', { id: req.params.id });
+
     res.json({ success: true, message: `Team '${team.name}' deleted` });
   } catch (e) { next(e); }
 };
@@ -462,6 +494,10 @@ export const editPlayer = async (req, res, next) => {
     if (!player) return res.status(404).json({ success: false, message: 'Player not found' });
 
     await logAdminAction('EDIT_PLAYER', req.user?.email || 'admin', { id: req.params.id, changes: parsed });
+
+    const io = req.app?.get('io');
+    if (io) io.emit('player:updated', player);
+
     res.json({ success: true, data: player });
   } catch (e) { next(e); }
 };
@@ -477,6 +513,10 @@ export const approvePlayer = async (req, res, next) => {
     if (!player) return res.status(404).json({ success: false, message: 'Player not found' });
 
     await logAdminAction('APPROVE_PLAYER', req.user?.email || 'admin', { playerId: req.params.id, name: player.name });
+
+    const io = req.app?.get('io');
+    if (io) io.emit('player:updated', player);
+
     res.json({ success: true, message: `Player '${player.name}' approved`, data: player });
   } catch (e) { next(e); }
 };
@@ -492,6 +532,10 @@ export const banPlayer = async (req, res, next) => {
     await player.save();
 
     await logAdminAction('TOGGLE_BAN_PLAYER', req.user?.email || 'admin', { playerId: req.params.id, newStatus });
+
+    const io = req.app?.get('io');
+    if (io) io.emit('player:updated', player);
+
     res.json({ success: true, data: player, message: `Player ${newStatus === 'BANNED' ? 'banned' : 'unbanned'} successfully` });
   } catch (e) { next(e); }
 };

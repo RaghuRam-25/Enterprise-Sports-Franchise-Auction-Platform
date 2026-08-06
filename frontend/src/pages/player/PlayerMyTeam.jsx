@@ -1,7 +1,8 @@
-import  { useEffect, useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { Shield, User, Users, Mail, Loader2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useAuction } from '../../context/AuctionContext';
+import TeamBadge from '../../components/common/TeamBadge';
 
 export default function PlayerMyTeam() {
     const { user } = useAuth();
@@ -62,15 +63,8 @@ export default function PlayerMyTeam() {
     return (
         <div className="space-y-6">
             {/* Team Header */}
-            <div className="glass-card rounded-2xl p-6 border border-slate-800 flex items-center gap-4 bg-gradient-to-r from-slate-900 via-slate-900/90 to-purple-950/20">
-                <div className="w-16 h-16 rounded-2xl bg-slate-950 border border-slate-800 flex items-center justify-center text-4xl shadow-lg">
-                    {myTeam.logo || '🏆'}
-                </div>
-                <div>
-                    <span className="text-xs font-bold uppercase tracking-widest text-purple-400">My Franchise</span>
-                    <h1 className="text-2xl font-black font-heading text-white">{myTeam.name}</h1>
-                    <p className="text-xs text-slate-400 font-mono">{myTeam.shortCode || myTeam.code}</p>
-                </div>
+            <div className="glass-card rounded-2xl p-6 border border-slate-800 flex items-center justify-between bg-gradient-to-r from-slate-900 via-slate-900/90 to-purple-950/20">
+                <TeamBadge team={myTeam} size="lg" showManager={true} managerName={teamManager?.name} />
             </div>
 
             {/* Manager Card */}

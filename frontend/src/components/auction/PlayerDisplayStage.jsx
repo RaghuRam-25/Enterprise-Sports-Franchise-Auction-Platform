@@ -61,7 +61,7 @@ export default function PlayerDisplayStage({
   cinematicHeight = 'min-h-[440px] sm:min-h-[520px] lg:min-h-[600px]',
 }) {
   // Pull global broadcast state so every view renders the same overlay simultaneously
-  const { broadcastVideoUrl, introLoopState } = useAuction();
+  const { broadcastVideoUrl, videoBroadcastState, introLoopState, systemAuctionState, hasStartedAuction } = useAuction();
 
   const isIntro = animState === ANIM_STATES?.INTRO && !!introPlayer;
   const isSell = animState === ANIM_STATES?.SELL && !!winnerData;
@@ -70,9 +70,14 @@ export default function PlayerDisplayStage({
   // A cinematic owns the surface whenever one of the confined scenes is active.
   const cinematicActive = showWaiting || isIntro || isSell || isRoster;
 
-  // Broadcast overlay takes highest priority — video or intro loop from Podium Admin
-  const isBroadcastingVideo = Boolean(broadcastVideoUrl);
-  const isBroadcastingIntro = introLoopState?.isPlaying && introLoopState?.players?.length > 0;
+  // Broadcast overlay takes priority ONLY when in LIVE_BROADCAST or CLOSING_BROADCAST state,
+  // or when no player has been pushed to the auction yet. During an active auction, broadcast video is hidden.
+  const isBroadcastingVideo = Boolean(broadcastVideoUrl) && (
+    systemAuctionState === 'LIVE_BROADCAST' ||
+    systemAuctionState === 'CLOSING_BROADCAST' ||
+    !hasStartedAuction
+  );
+  const isBroadcastingIntro = introLoopState?.isPlaying && introLoopState?.players?.length > 0 && !isBroadcastingVideo;
   const hasBroadcastOverlay = isBroadcastingVideo || isBroadcastingIntro;
 
   const currentIntroPlayer = isBroadcastingIntro
@@ -136,7 +141,12 @@ export default function PlayerDisplayStage({
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.5 }}
                   >
-                    <EmbeddedVideoPlayer url={broadcastVideoUrl} />
+                    <EmbeddedVideoPlayer
+                      url={broadcastVideoUrl}
+                      videoStartTime={videoBroadcastState?.videoStartTime}
+                      videoState={videoBroadcastState?.videoState}
+                      pausedAtPosition={videoBroadcastState?.pausedAtPosition}
+                    />
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -183,7 +193,7 @@ export default function PlayerDisplayStage({
                       >
                         <div className="absolute -inset-3 rounded-full bg-gradient-to-tr from-indigo-500/30 via-purple-500/20 to-transparent blur-xl" />
                         <img
-                          src={currentIntroPlayer.imageUrl || playerFallback('indigo')}
+                          src={getImageUrl(currentIntroPlayer.imageUrl, playerFallback('indigo'))}
                           alt={currentIntroPlayer.name}
                           className="relative w-32 h-32 sm:w-40 sm:h-40 rounded-2xl object-cover border-2 border-purple-400/60 shadow-2xl"
                         />

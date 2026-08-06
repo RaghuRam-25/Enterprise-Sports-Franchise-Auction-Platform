@@ -3,6 +3,7 @@ import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { Trophy, Crown, Star, CheckCircle2 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { soundManager, AUCTION_SOUNDS } from './soundManager';
+import { getImageUrl } from '../../utils/imageUrl';
 
 /**
  * WinnerAnimation — "SOLD" championship celebration.
@@ -147,11 +148,10 @@ export default function WinnerAnimation({
 
   // Fallback artwork: neutral stylized footballer crest (original SVG, not a
   // copyrighted photo of any real athlete). Player-provided imageUrl still wins.
-  const imageSrc =
-    player?.imageUrl ||
-    player?.image ||
-    'data:image/svg+xml;utf8,' +
-      encodeURIComponent(PLAYER_FALLBACK_SVG);
+  const rawImage = player?.imageUrl || player?.image;
+  const imageSrc = rawImage
+    ? getImageUrl(rawImage)
+    : 'data:image/svg+xml;utf8,' + encodeURIComponent(PLAYER_FALLBACK_SVG);
 
   return (
     <AnimatePresence>

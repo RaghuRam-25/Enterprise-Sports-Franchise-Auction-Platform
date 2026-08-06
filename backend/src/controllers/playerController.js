@@ -94,7 +94,7 @@ const updateProfileSchema = z.object({
 }).partial();
 
 // ── Public player fields (visible to Spectators / unauthenticated) ────────────
-const PUBLIC_PLAYER_FIELDS = 'name jerseyName positions primaryPosition category session imageUrl status';
+const PUBLIC_PLAYER_FIELDS = 'name jerseyName studentId basePrice positions primaryPosition category session imageUrl status';
 
 // ── REGISTER PLAYER ───────────────────────────────────────────────────────────
 export const registerPlayer = async (req, res, next) => {
@@ -182,6 +182,12 @@ export const registerPlayer = async (req, res, next) => {
       status: 'REGISTERED'
     });
 
+    // Real-time Socket.IO emission to update all connected clients instantly
+    const io = req.app?.get('io');
+    if (io) {
+      io.emit('player:updated', player);
+    }
+
     res.status(201).json({
       success: true,
       message: 'Player registered successfully',
@@ -242,6 +248,11 @@ export const withdrawPlayer = async (req, res, next) => {
       { status: 'WITHDRAWN' },
       { new: true }
     );
+
+    const io = req.app?.get('io');
+    if (io) {
+      io.emit('player:updated', player);
+    }
 
     res.json({ success: true, message: 'Participation withdrawn successfully', data: player });
   } catch (e) { next(e); }
@@ -380,6 +391,11 @@ export const updatePlayerProfile = async (req, res, next) => {
     // Synchronize User collection name if player name was updated
     if (update.name && player.userId) {
       await User.findByIdAndUpdate(player.userId, { name: update.name });
+    }
+
+    const io = req.app?.get('io');
+    if (io) {
+      io.emit('player:updated', updatedPlayer);
     }
 
     res.json({ success: true, message: 'Profile updated successfully', data: updatedPlayer });

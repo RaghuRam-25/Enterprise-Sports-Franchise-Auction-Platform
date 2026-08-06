@@ -13,6 +13,7 @@ import FullscreenWrapper from '../../components/auction/FullscreenWrapper';
 import EmbeddedVideoPlayer from '../../components/auction/EmbeddedVideoPlayer';
 import { useAuctionAnimation } from '../../hooks/useAuctionAnimation';
 import { playerFallback } from '../../utils/playerFallback';
+import { getImageUrl } from '../../utils/imageUrl';
 import { AnimatePresence } from 'framer-motion';
 export const PodiumDashboard = () => {
   const {
@@ -30,6 +31,7 @@ export const PodiumDashboard = () => {
     rollbackBid,
     hammerSell,
     broadcastVideoUrl,
+    videoBroadcastState,
     introLoopState,
     cancelAuction,
     formatCurrency,
@@ -426,7 +428,12 @@ export const PodiumDashboard = () => {
             <FullscreenWrapper>
               <div className="relative h-full">
                 {(broadcastVideoUrl || displayVideoUrl) ? (
-                  <EmbeddedVideoPlayer url={broadcastVideoUrl || displayVideoUrl} />
+                  <EmbeddedVideoPlayer
+                    url={broadcastVideoUrl || displayVideoUrl}
+                    videoStartTime={videoBroadcastState?.videoStartTime}
+                    videoState={videoBroadcastState?.videoState}
+                    pausedAtPosition={videoBroadcastState?.pausedAtPosition}
+                  />
                 ) : (introLoopState?.isPlaying || isIntroLoopActive) ? (
                   <div className="relative h-full overflow-hidden rounded-2xl flex items-center justify-center bg-slate-950 p-6">
                     {(() => {
@@ -441,7 +448,7 @@ export const PodiumDashboard = () => {
                           </span>
                           <div className="relative w-36 h-36 mx-auto rounded-2xl overflow-hidden border-2 border-purple-500/50 shadow-2xl shadow-purple-900/50">
                             <img
-                              src={curPlayer.imageUrl || curPlayer.image || playerFallback(curPlayer.name, curPlayer.role)}
+                              src={getImageUrl(curPlayer.imageUrl || curPlayer.image, playerFallback('indigo'))}
                               alt={curPlayer.name}
                               className="w-full h-full object-cover object-top"
                             />

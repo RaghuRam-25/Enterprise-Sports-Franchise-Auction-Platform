@@ -4,6 +4,7 @@ import { Calendar, Shield, Clock, Tag, Hash, Globe, Coins } from 'lucide-react';
 import SpotlightBackground from './SpotlightBackground';
 import FloatingParticles from './FloatingParticles';
 import { soundManager, AUCTION_SOUNDS } from './soundManager';
+import { getImageUrl } from '../../utils/imageUrl';
 
 const PLAYER_FALLBACK_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="320" height="320" viewBox="0 0 320 320">
   <defs>
@@ -71,10 +72,10 @@ export default function PlayerRevealAnimation({ player, onComplete, isActive = t
 
   // Fallback artwork: a neutral, stylized footballer crest (original SVG, not a
   // copyrighted photo of any real athlete). Player-provided imageUrl still wins.
-  const imageSrc =
-    player.imageUrl ||
-    player.image ||
-    'data:image/svg+xml;utf8,' + encodeURIComponent(PLAYER_FALLBACK_SVG);
+  const rawImage = player.imageUrl || player.image;
+  const imageSrc = rawImage
+    ? getImageUrl(rawImage)
+    : 'data:image/svg+xml;utf8,' + encodeURIComponent(PLAYER_FALLBACK_SVG);
 
   // Reveal order per spec: Position → Category → Session → Base Price → rest.
   // Base Price is flagged so it renders as the highlighted broadcast stat.

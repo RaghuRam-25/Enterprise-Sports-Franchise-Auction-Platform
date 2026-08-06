@@ -75,6 +75,20 @@ export default function PodiumVideoControl() {
     setInputUrl('');
   };
 
+  const handlePauseVideo = () => {
+    if (socket) {
+      socket.emit('podium:video-control', { action: 'pause' });
+      triggerToast('Video broadcast paused.', 'info');
+    }
+  };
+
+  const handleResumeVideo = () => {
+    if (socket) {
+      socket.emit('podium:video-control', { action: 'resume' });
+      triggerToast('Video broadcast resumed.', 'success');
+    }
+  };
+
   // Intro Sequence Action Handlers
   const handleStartIntro = () => {
     if (socket) {
@@ -172,15 +186,32 @@ export default function PodiumVideoControl() {
             <button
               onClick={handlePlayVideo}
               disabled={!inputUrl.trim()}
-              className="flex-1 min-w-[140px] flex items-center justify-center gap-2 px-4 py-3 bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl transition disabled:opacity-40 shadow-lg"
+              className="flex-1 min-w-[120px] flex items-center justify-center gap-2 px-4 py-3 bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl transition disabled:opacity-40 shadow-lg"
             >
               <Play className="w-4 h-4 fill-current" /> Play Everywhere
             </button>
 
+            {activeVideoUrl && (
+              <>
+                <button
+                  onClick={handlePauseVideo}
+                  className="flex-1 min-w-[120px] flex items-center justify-center gap-2 px-4 py-3 bg-amber-600 hover:bg-amber-500 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl transition shadow-lg"
+                >
+                  <Pause className="w-4 h-4 fill-current" /> Pause
+                </button>
+                <button
+                  onClick={handleResumeVideo}
+                  className="flex-1 min-w-[120px] flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 hover:bg-blue-500 text-white font-black text-xs uppercase tracking-wider rounded-xl transition shadow-lg"
+                >
+                  <Play className="w-4 h-4 fill-current" /> Resume
+                </button>
+              </>
+            )}
+
             <button
               onClick={handleStopVideo}
               disabled={!activeVideoUrl && !inputUrl.trim()}
-              className="flex-1 min-w-[140px] flex items-center justify-center gap-2 px-4 py-3 bg-rose-600 hover:bg-rose-500 text-white font-black text-xs uppercase tracking-wider rounded-xl transition disabled:opacity-40 shadow-lg"
+              className="flex-1 min-w-[120px] flex items-center justify-center gap-2 px-4 py-3 bg-rose-600 hover:bg-rose-500 text-white font-black text-xs uppercase tracking-wider rounded-xl transition disabled:opacity-40 shadow-lg"
             >
               <StopCircle className="w-4 h-4" /> Stop Broadcast
             </button>

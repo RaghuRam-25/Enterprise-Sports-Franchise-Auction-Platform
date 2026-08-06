@@ -19,6 +19,8 @@ const THEMES = {
   emerald: { a: '#022c22', b: '#064e3b', ring: 'rgba(52,211,153,0.10)', jersey: '#059669', num: '#d1fae5' },
 };
 
+import { getImageUrl } from './imageUrl.js';
+
 export function playerFallback(theme = 'slate') {
   const t = THEMES[theme] || THEMES.slate;
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400">
@@ -35,4 +37,12 @@ export function playerFallback(theme = 'slate') {
   return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
 }
 
+/**
+ * Resolves player image URL using getImageUrl with fallback image
+ */
+export function resolvePlayerImage(url, theme = 'slate') {
+  return getImageUrl(url, playerFallback(theme));
+}
+
 export default playerFallback;
+

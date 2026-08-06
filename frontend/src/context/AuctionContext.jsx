@@ -30,8 +30,19 @@ export const AuctionProvider = ({ children }) => {
   const [timerStatus, setTimerStatus] = useState('idle');
   const [bidHistory, setBidHistory] = useState([]);
 
+  // System State Machine State
+  const [systemAuctionState, setSystemAuctionState] = useState('WAITING');
+  const [hasStartedAuction, setHasStartedAuction] = useState(false);
+
   // Broadcast Video & Player Intro State (synchronized via Socket.IO from backend auctionEngine)
   const [broadcastVideoUrl, setBroadcastVideoUrl] = useState(null);
+  const [videoBroadcastState, setVideoBroadcastState] = useState({
+    url: null,
+    videoStartTime: null,
+    videoState: 'STOPPED',
+    pausedAtPosition: 0,
+    serverTime: Date.now()
+  });
   const [introLoopState, setIntroLoopState] = useState({
     isPlaying: false,
     isPaused: false,
@@ -204,6 +215,8 @@ export const AuctionProvider = ({ children }) => {
       setPodiumPlayer(state.podiumPlayer ?? null);
       setCurrentBid(state.currentBid ?? 0);
       setHighestBidder(state.highestBidder ?? null);
+      if (state.systemAuctionState) setSystemAuctionState(state.systemAuctionState);
+      if (state.hasStartedAuction !== undefined) setHasStartedAuction(state.hasStartedAuction);
       if (state.mode) setBiddingMode(state.mode.toLowerCase());
       if (state.timer) {
         setTimerRemaining(state.timer.remainingSeconds ?? 0);
@@ -212,12 +225,49 @@ export const AuctionProvider = ({ children }) => {
       }
       if (Array.isArray(state.bidHistory)) setBidHistory(state.bidHistory);
       // Sync broadcast state from full auction state snapshot
-      if (state.videoUrl !== undefined) setBroadcastVideoUrl(state.videoUrl ?? null);
+      if (state.videoUrl !== undefined) {
+        setBroadcastVideoUrl(state.videoUrl ?? null);
+        setVideoBroadcastState({
+          url: state.videoUrl ?? null,
+          videoStartTime: state.videoStartTime ?? null,
+          videoState: state.videoState ?? (state.videoUrl ? 'PLAYING' : 'STOPPED'),
+          pausedAtPosition: state.pausedAtPosition ?? 0,
+          serverTime: state.serverTime ?? Date.now()
+        });
+      }
       if (state.introLoopState) setIntroLoopState(state.introLoopState);
     };
 
     const handleVideoBroadcast = (data) => {
       setBroadcastVideoUrl(data?.url ?? null);
+      if (data?.systemAuctionState) setSystemAuctionState(data.systemAuctionState);
+      setVideoBroadcastState({
+        url: data?.url ?? null,
+        videoStartTime: data?.videoStartTime ?? null,
+        videoState: data?.videoState ?? (data?.url ? 'PLAYING' : 'STOPPED'),
+        pausedAtPosition: data?.pausedAtPosition ?? 0,
+        serverTime: data?.serverTime ?? Date.now()
+      });
+    };
+
+    const handleBroadcastStarted = (data) => {
+      if (data?.systemAuctionState) setSystemAuctionState(data.systemAuctionState);
+      handleVideoBroadcast(data);
+    };
+
+    const handleBroadcastStopped = (data) => {
+      setBroadcastVideoUrl(null);
+      if (data?.systemAuctionState) setSystemAuctionState(data.systemAuctionState);
+    };
+
+    const handleAuctionStarted = (data) => {
+      setHasStartedAuction(true);
+      if (data?.systemAuctionState) setSystemAuctionState(data.systemAuctionState);
+    };
+
+    const handlePlayerPushed = (data) => {
+      setHasStartedAuction(true);
+      if (data?.systemAuctionState) setSystemAuctionState(data.systemAuctionState);
     };
 
     const handleIntroLoopState = (state) => {
@@ -285,6 +335,31 @@ export const AuctionProvider = ({ children }) => {
       }
     };
 
+    const handleTeamCreated = (newTeam) => {
+      if (!newTeam) { refetchTeams(); return; }
+      setTeams(prev => {
+        const withId = { ...newTeam, id: newTeam._id || newTeam.id };
+        const exists = prev.some(t => String(t._id || t.id) === String(withId._id || withId.id));
+        return exists ? prev : [withId, ...prev];
+      });
+    };
+
+    const handleTeamDeleted = (data) => {
+      const deletedId = data?.id;
+      if (deletedId) {
+        setTeams(prev => prev.filter(t => String(t._id || t.id) !== String(deletedId)));
+      } else {
+        refetchTeams();
+      }
+    };
+
+    const handleCategoryChange = () => {
+      api.get('/config/categories').then(res => {
+        const raw = Array.isArray(res?.data) ? res.data : Array.isArray(res) ? res : [];
+        if (Array.isArray(raw)) setCategories(raw.map(c => ({ ...c, id: c._id || c.id })));
+      }).catch(() => {});
+    };
+
     socket.on('auction:state', handleState);
     socket.on('auction:player-launched', handlePlayerLaunched);
     socket.on('auction:completed', handleCompleted);
@@ -296,10 +371,19 @@ export const AuctionProvider = ({ children }) => {
     socket.on('auction:timer-update', handleTimerUpdate);
     socket.on('player:updated', handlePlayerUpdate);
     socket.on('team:updated', handleTeamUpdate);
+    socket.on('teams:created', handleTeamCreated);
     socket.on('teams:updated', handleSingleTeamUpdate);
+    socket.on('teams:deleted', handleTeamDeleted);
+    socket.on('category:created', handleCategoryChange);
+    socket.on('category:deleted', handleCategoryChange);
     socket.on('registration:freeze-toggled', handleFreezeToggle);
     socket.on('podium:video-control', handleVideoBroadcast);
     socket.on('podium:intro-loop-state', handleIntroLoopState);
+    socket.on('broadcast-started', handleBroadcastStarted);
+    socket.on('broadcast-stopped', handleBroadcastStopped);
+    socket.on('auction-started', handleAuctionStarted);
+    socket.on('player-pushed', handlePlayerPushed);
+    socket.on('closing-broadcast-started', handleBroadcastStarted);
 
     socket.on('bid:error', (data) => {
       triggerToast(data.error || 'Bid rejected by server guardrail', 'error');
@@ -325,6 +409,11 @@ export const AuctionProvider = ({ children }) => {
       socket.off('registration:freeze-toggled', handleFreezeToggle);
       socket.off('podium:video-control', handleVideoBroadcast);
       socket.off('podium:intro-loop-state', handleIntroLoopState);
+      socket.off('broadcast-started', handleBroadcastStarted);
+      socket.off('broadcast-stopped', handleBroadcastStopped);
+      socket.off('auction-started', handleAuctionStarted);
+      socket.off('player-pushed', handlePlayerPushed);
+      socket.off('closing-broadcast-started', handleBroadcastStarted);
       socket.off('bid:error');
       socket.off('bid:blind-success');
     };
@@ -529,7 +618,8 @@ export const AuctionProvider = ({ children }) => {
         addSession, deleteSession, addPosition, deletePosition, addCategory, deleteCategory, updateBiddingTier,
         teams, setTeams, players, setPlayers, managers, setManagers, isDataLoading, loadManagers, refetchPlayers, refetchTeams, loadAllData,
         podiumPlayer, currentBid, highestBidder, biddingMode, timerDuration, timerRemaining, timerStatus, bidHistory, lastActionToast,
-        broadcastVideoUrl, introLoopState,
+        systemAuctionState, hasStartedAuction,
+        broadcastVideoUrl, videoBroadcastState, introLoopState,
         formatCurrency, calculateNextBidAmount, getLowestCategoryBasePrice,
         pushToPodium, pauseTimer, resumeTimer, rollbackBid, hammerSell, cancelAuction, placeNormalBid, placeBlindBid, triggerToast
       }}

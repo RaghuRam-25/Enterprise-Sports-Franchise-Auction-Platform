@@ -1,8 +1,9 @@
-import  { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
-  Trophy, Radio, ArrowRight, Zap, Activity, ChevronRight, Lock
+  Trophy, Radio, ArrowRight, Zap, Activity, ChevronRight, Lock, ExternalLink, Users, X,
+  ArrowUp, ArrowDown, ChevronsUpDown
 } from 'lucide-react';
 import { useAuction } from '../../context/AuctionContext';
 import { usePhase } from '../../context/PhaseContext';
@@ -10,6 +11,10 @@ import { useAuth, getDashboardForRole } from '../../context/AuthContext';
 import { useSocket } from '../../context/SocketContext';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
+import TeamBadge from '../../components/common/TeamBadge';
+import PlayerCardCard from '../../components/common/PlayerCardCard';
+import EmbeddedVideoPlayer from '../../components/auction/EmbeddedVideoPlayer';
+import { getImageUrl } from '../../utils/imageUrl';
 import { playerFallback } from '../../utils/playerFallback';
 import '../../services/api';
 
@@ -28,6 +33,180 @@ function AnimatedCounter({ value, prefix = '', suffix = '' }) {
   );
 }
 
+const TEAM_THEMES = [
+  {
+    name: 'crimson',
+    gradient: 'from-rose-500/15 via-slate-950/60 to-slate-950',
+    border: 'border-rose-500/40',
+    ring: 'hover:shadow-rose-500/20',
+    accent: 'bg-rose-500',
+    badgeBg: 'bg-rose-500/15 text-rose-300 border-rose-500/30',
+    stat: 'text-rose-300',
+  },
+  {
+    name: 'amber',
+    gradient: 'from-amber-500/15 via-slate-950/60 to-slate-950',
+    border: 'border-amber-500/40',
+    ring: 'hover:shadow-amber-500/20',
+    accent: 'bg-amber-500',
+    badgeBg: 'bg-amber-500/15 text-amber-300 border-amber-500/30',
+    stat: 'text-amber-300',
+  },
+  {
+    name: 'emerald',
+    gradient: 'from-emerald-500/15 via-slate-950/60 to-slate-950',
+    border: 'border-emerald-500/40',
+    ring: 'hover:shadow-emerald-500/20',
+    accent: 'bg-emerald-500',
+    badgeBg: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
+    stat: 'text-emerald-300',
+  },
+  {
+    name: 'sky',
+    gradient: 'from-sky-500/15 via-slate-950/60 to-slate-950',
+    border: 'border-sky-500/40',
+    ring: 'hover:shadow-sky-500/20',
+    accent: 'bg-sky-500',
+    badgeBg: 'bg-sky-500/15 text-sky-300 border-sky-500/30',
+    stat: 'text-sky-300',
+  },
+  {
+    name: 'violet',
+    gradient: 'from-violet-500/15 via-slate-950/60 to-slate-950',
+    border: 'border-violet-500/40',
+    ring: 'hover:shadow-violet-500/20',
+    accent: 'bg-violet-500',
+    badgeBg: 'bg-violet-500/15 text-violet-300 border-violet-500/30',
+    stat: 'text-violet-300',
+  },
+  {
+    name: 'fuchsia',
+    gradient: 'from-fuchsia-500/15 via-slate-950/60 to-slate-950',
+    border: 'border-fuchsia-500/40',
+    ring: 'hover:shadow-fuchsia-500/20',
+    accent: 'bg-fuchsia-500',
+    badgeBg: 'bg-fuchsia-500/15 text-fuchsia-300 border-fuchsia-500/30',
+    stat: 'text-fuchsia-300',
+  },
+  {
+    name: 'teal',
+    gradient: 'from-teal-500/15 via-slate-950/60 to-slate-950',
+    border: 'border-teal-500/40',
+    ring: 'hover:shadow-teal-500/20',
+    accent: 'bg-teal-500',
+    badgeBg: 'bg-teal-500/15 text-teal-300 border-teal-500/30',
+    stat: 'text-teal-300',
+  },
+  {
+    name: 'orange',
+    gradient: 'from-orange-500/15 via-slate-950/60 to-slate-950',
+    border: 'border-orange-500/40',
+    ring: 'hover:shadow-orange-500/20',
+    accent: 'bg-orange-500',
+    badgeBg: 'bg-orange-500/15 text-orange-300 border-orange-500/30',
+    stat: 'text-orange-300',
+  },
+  {
+    name: 'indigo',
+    gradient: 'from-indigo-500/15 via-slate-950/60 to-slate-950',
+    border: 'border-indigo-500/40',
+    ring: 'hover:shadow-indigo-500/20',
+    accent: 'bg-indigo-500',
+    badgeBg: 'bg-indigo-500/15 text-indigo-300 border-indigo-500/30',
+    stat: 'text-indigo-300',
+  },
+  {
+    name: 'lime',
+    gradient: 'from-lime-500/15 via-slate-950/60 to-slate-950',
+    border: 'border-lime-500/40',
+    ring: 'hover:shadow-lime-500/20',
+    accent: 'bg-lime-500',
+    badgeBg: 'bg-lime-500/15 text-lime-300 border-lime-500/30',
+    stat: 'text-lime-300',
+  },
+];
+
+function hashString(str) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash << 5) - hash + str.charCodeAt(i);
+    hash |= 0;
+  }
+  return Math.abs(hash);
+}
+
+function getTeamTheme(team) {
+  const key = String(team._id || team.id || team.name || team.shortCode || 'team');
+  const idx = hashString(key) % TEAM_THEMES.length;
+  return TEAM_THEMES[idx];
+}
+
+function TeamDetailModal({ team, onClose, players, formatCurrency }) {
+  const modalTheme = useMemo(() => (team ? getTeamTheme(team) : null), [team]);
+
+  const rosterPlayerIds = useMemo(() => {
+    if (!team?.currentRoster || !Array.isArray(team.currentRoster)) return new Set();
+    return new Set(team.currentRoster.map(p => typeof p === 'string' ? p : (p._id || p.id)));
+  }, [team]);
+
+  const rosterPlayers = useMemo(() => {
+    if (!Array.isArray(players)) return [];
+    return players.filter(p => rosterPlayerIds.has(p._id || p.id));
+  }, [players, rosterPlayerIds]);
+
+  if (!team) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+      <div className={`glass-card rounded-2xl p-6 border ${modalTheme.border} max-w-xl w-full space-y-6 relative max-h-[90vh] overflow-y-auto bg-gradient-to-br ${modalTheme.gradient}`}>
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 p-1.5 text-slate-400 hover:text-white rounded-lg bg-slate-900 border border-slate-800"
+        >
+          <X className="w-4 h-4" />
+        </button>
+
+        <TeamBadge team={team} size="lg" showManager={true} managerName={team.managerId?.name || team.ownerName} />
+
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs font-mono">
+          <div className="bg-slate-950/70 p-3 rounded-xl border border-slate-800">
+            <span className="text-[10px] text-slate-400 uppercase block">Total Purse</span>
+            <span className="font-bold text-white">{formatCurrency(team.totalBudget)}</span>
+          </div>
+          <div className="bg-slate-950/70 p-3 rounded-xl border border-slate-800">
+            <span className="text-[10px] text-slate-400 uppercase block">Purse Left</span>
+            <span className={`font-bold ${modalTheme.stat}`}>{formatCurrency(team.remainingBudget)}</span>
+          </div>
+          <div className="bg-slate-950/70 p-3 rounded-xl border border-slate-800">
+            <span className="text-[10px] text-slate-400 uppercase block">Total Players</span>
+            <span className="font-bold text-white">{team.currentRoster?.length || team.currentRosterCount || 0}</span>
+          </div>
+        </div>
+
+        <div>
+          <h4 className="text-xs font-bold uppercase tracking-wider text-slate-300 mb-3 flex items-center gap-1.5">
+            <Users className={`w-4 h-4 ${modalTheme.stat}`} /> Acquired Roster
+          </h4>
+          {rosterPlayers.length > 0 ? (
+            <div className="space-y-2 max-h-48 overflow-y-auto pr-1 custom-scrollbar">
+              {rosterPlayers.map(player => (
+                <div key={player._id || player.id} className="bg-slate-950/70 p-2.5 rounded-xl border border-slate-800/80 flex items-center justify-between text-xs">
+                  <span className="font-bold text-white">{player.name} ({player.primaryPosition || 'Player'})</span>
+                  <span className="font-mono text-amber-400 font-bold">{formatCurrency(player.finalPrice || 0)}</span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-xs text-slate-500 italic bg-slate-950/50 p-4 rounded-xl text-center border border-slate-800">
+              No players acquired in auction yet.
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function LandingPage() {
   const {
     players,
@@ -38,6 +217,11 @@ export default function LandingPage() {
     biddingMode,
     timerRemaining,
     timerStatus,
+    broadcastVideoUrl,
+    videoBroadcastState,
+    introLoopState,
+    systemAuctionState,
+    hasStartedAuction,
     isRegistrationFrozen,
     formatCurrency
   } = useAuction();
@@ -46,6 +230,66 @@ export default function LandingPage() {
   const { socket, isConnected } = useSocket();
   const { phase, loading: phaseLoading, isAuctionActive, isTournamentActive } = usePhase();
   const navigate = useNavigate();
+  const [selectedTeam, setSelectedTeam] = useState(null);
+
+  // ── Leaderboard sort state ────────────────────────────────────────────────
+  const [sortConfig, setSortConfig] = useState({ key: 'purse', direction: 'desc' });
+
+  const handleSort = (key) => {
+    setSortConfig(prev => {
+      if (prev.key === key) {
+        return { key, direction: prev.direction === 'asc' ? 'desc' : 'asc' };
+      }
+      // Sensible default direction per column: text ascending, numbers descending
+      return { key, direction: key === 'name' ? 'asc' : 'desc' };
+    });
+  };
+
+  const sortedTeamsForLeaderboard = useMemo(() => {
+    const list = [...teams];
+    const { key, direction } = sortConfig;
+    const dir = direction === 'asc' ? 1 : -1;
+
+    list.sort((a, b) => {
+      switch (key) {
+        case 'name':
+          return (a.name || '').localeCompare(b.name || '') * dir;
+        case 'purse':
+          return ((a.remainingBudget || 0) - (b.remainingBudget || 0)) * dir;
+        case 'squad': {
+          const sa = a.currentRoster?.length || a.currentRosterCount || 0;
+          const sb = b.currentRoster?.length || b.currentRosterCount || 0;
+          return (sa - sb) * dir;
+        }
+        case 'spent': {
+          const spentA = (a.totalBudget || 0) - (a.remainingBudget || 0);
+          const spentB = (b.totalBudget || 0) - (b.remainingBudget || 0);
+          return (spentA - spentB) * dir;
+        }
+        default:
+          return 0;
+      }
+    });
+
+    return list;
+  }, [teams, sortConfig]);
+
+  function SortableHeader({ sortKey, label, className = '' }) {
+    const isActive = sortConfig.key === sortKey;
+    const Icon = isActive
+      ? (sortConfig.direction === 'asc' ? ArrowUp : ArrowDown)
+      : ChevronsUpDown;
+
+    return (
+      <button
+        onClick={() => handleSort(sortKey)}
+        className={`flex items-center gap-1 text-slate-500 hover:text-white transition ${isActive ? 'text-slate-200' : ''} ${className}`}
+      >
+        <span>{label}</span>
+        <Icon className="w-3 h-3" />
+      </button>
+    );
+  }
 
   // Phase is the authoritative source of truth (backend re-verifies on every write).
   // Registration is only truly open in the REGISTRATION phase; the config-store
@@ -59,80 +303,17 @@ export default function LandingPage() {
     }
   }, [user, navigate]);
 
-  // ── Live Activity Stream state ──────────────────────────────────────────────
-  const [activities, setActivities] = useState([
-    { id: 1, type: 'SYSTEM', text: 'Real-time Socket.io Draft Engine Initialized', time: 'Just now', icon: Activity, color: 'text-blue-400' },
-    { id: 2, type: 'AUCTION', text: 'Auction Session #2026 Ready', time: '1m ago', icon: Trophy, color: 'text-amber-400' }
-  ]);
-
-  // Synchronize WebSocket activity feed
+  // Request initial state sync on mount, so if auction is live, we see it.
   useEffect(() => {
-    if (!socket) return;
-
-    const handleNewBid = (data) => {
-      const teamName = data.highestBidder?.name || 'Franchise';
-      const amount = data.currentBid ? formatCurrency(data.currentBid) : '';
-      setActivities(prev => [
-        {
-          id: Date.now(),
-          type: 'BID',
-          text: `New ${data.mode || 'Normal'} Bid: ${amount} by ${teamName}`,
-          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
-          icon: Zap,
-          color: 'text-emerald-400'
-        },
-        ...prev.slice(0, 7)
-      ]);
-    };
-
-    const handlePlayerLaunched = (state) => {
-      const playerName = state.podiumPlayer?.name || 'Player';
-      setActivities(prev => [
-        {
-          id: Date.now(),
-          type: 'LAUNCH',
-          text: `Player Pushed to Podium: ${playerName}`,
-          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
-          icon: Radio,
-          color: 'text-blue-400'
-        },
-        ...prev.slice(0, 7)
-      ]);
-    };
-
-    const handleCompleted = (data) => {
-      setActivities(prev => [
-        {
-          id: Date.now(),
-          type: 'SOLD',
-          text: `Hammer Down! ${data.player?.name || 'Player'} Sold to ${data.winner?.name || 'Franchise'}`,
-          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
-          icon: Trophy,
-          color: 'text-amber-400'
-        },
-        ...prev.slice(0, 7)
-      ]);
-    };
-
-    socket.on('auction:new-bid', handleNewBid);
-    socket.on('auction:player-launched', handlePlayerLaunched);
-    socket.on('auction:completed', handleCompleted);
-
-    return () => {
-      socket.off('auction:new-bid', handleNewBid);
-      socket.off('auction:player-launched', handlePlayerLaunched);
-      socket.off('auction:completed', handleCompleted);
-    };
-  }, [socket, formatCurrency]);
+    if (socket && isConnected) {
+      socket.emit('auction:sync-request');
+    }
+  }, [socket, isConnected]);
 
   // ── Derived Statistics ──────────────────────────────────────────────────────
-  
-  
-  
+
   const soldCount = useMemo(() => players.filter(p => p.status === 'SOLD').length, [players]);
   const unsoldCount = useMemo(() => players.filter(p => p.status === 'UNSOLD').length, [players]);
-
-  
 
   // Top players showcase (highest base price or sold)
   const topPlayersShowcase = useMemo(() => {
@@ -150,7 +331,9 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-darkBg text-slate-100 relative overflow-hidden font-sans selection:bg-emerald-500 selection:text-slate-950">
-      <Navbar />
+      <header className="sticky top-0 z-50">
+        <Navbar />
+      </header>
 
       {/* ── Ambient Background Glow & Particles ────────────────────────────── */}
       <div className="fixed inset-0 pointer-events-none z-0">
@@ -159,11 +342,11 @@ export default function LandingPage() {
         <div className="absolute -bottom-40 left-1/3 w-[600px] h-[600px] bg-purple-600/15 rounded-full blur-[140px]" />
       </div>
 
-      <main className="flex-1 relative z-10 space-y-16 pb-20"> 
+      <main className="flex-1 relative z-10 space-y-16 pb-20">
         {/* ── HERO SECTION ─────────────────────────────────────────────────── */}
         <section className="relative pt-12 lg:pt-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
           <div className="text-center space-y-8">
-            
+
             {/* Enterprise Platform Badge */}
             <motion.div
               initial={{ opacity: 0, y: -20 }}
@@ -171,12 +354,10 @@ export default function LandingPage() {
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-900/90 border border-slate-800 text-xs font-bold text-emerald-400 shadow-2xl backdrop-blur-md"
             >
               <span className="relative flex h-2 w-2">
-                <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${
-                  timerStatus === 'running' ? 'bg-emerald-400' : 'bg-blue-400'
-                }`} />
-                <span className={`relative inline-flex rounded-full h-2 w-2 ${
-                  timerStatus === 'running' ? 'bg-emerald-500' : 'bg-blue-500'
-                }`} />
+                <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${timerStatus === 'running' ? 'bg-emerald-400' : 'bg-blue-400'
+                  }`} />
+                <span className={`relative inline-flex rounded-full h-2 w-2 ${timerStatus === 'running' ? 'bg-emerald-500' : 'bg-blue-500'
+                  }`} />
               </span>
               <span className="tracking-widest uppercase font-mono">ENTERPRISE SPORTS FRANCHISE AUCTION PLATFORM 2026</span>
             </motion.div>
@@ -247,13 +428,12 @@ export default function LandingPage() {
         <section className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
           <div className="glass-card rounded-2xl border border-slate-800 p-4 shadow-2xl backdrop-blur-xl">
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 divide-y md:divide-y-0 md:divide-x divide-slate-800 text-center">
-              
+
               {/* Registration Status */}
               <div className="p-2 flex flex-col justify-center">
                 <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Registration</span>
-                <span className={`text-sm font-black uppercase mt-1 flex items-center justify-center gap-1.5 ${
-                  registrationOpen ? 'text-emerald-400' : 'text-rose-400'
-                }`}>
+                <span className={`text-sm font-black uppercase mt-1 flex items-center justify-center gap-1.5 ${registrationOpen ? 'text-emerald-400' : 'text-rose-400'
+                  }`}>
                   <span className={`w-2 h-2 rounded-full ${registrationOpen ? 'bg-emerald-500' : 'bg-rose-500'}`} />
                   {registrationOpen ? 'OPEN' : 'CLOSED'}
                 </span>
@@ -262,13 +442,12 @@ export default function LandingPage() {
               {/* Auction Status */}
               <div className="p-2 flex flex-col justify-center pt-3 md:pt-2">
                 <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Auction Engine</span>
-                <span className={`text-sm font-black uppercase mt-1 flex items-center justify-center gap-1.5 ${
-                  timerStatus === 'running' ? 'text-emerald-400' :
-                  timerStatus === 'paused'  ? 'text-amber-400' :
-                  'text-blue-400'
-                }`}>
+                <span className={`text-sm font-black uppercase mt-1 flex items-center justify-center gap-1.5 ${timerStatus === 'running' ? 'text-emerald-400' :
+                  timerStatus === 'paused' ? 'text-amber-400' :
+                    'text-blue-400'
+                  }`}>
                   <Radio className="w-3.5 h-3.5 animate-pulse" />
-                  {timerStatus === 'running' ? 'LIVE' : timerStatus.toUpperCase()}
+                  {timerStatus === 'running' ? 'LIVE' : (timerStatus || 'IDLE').toUpperCase()}
                 </span>
               </div>
 
@@ -307,9 +486,8 @@ export default function LandingPage() {
               {/* Spectator Sync */}
               <div className="p-2 flex flex-col justify-center col-span-2 md:col-span-1 pt-3 lg:pt-2">
                 <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">WebSocket Sync</span>
-                <span className={`text-sm font-black uppercase mt-1 flex items-center justify-center gap-1.5 ${
-                  isConnected ? 'text-emerald-400' : 'text-slate-500'
-                }`}>
+                <span className={`text-sm font-black uppercase mt-1 flex items-center justify-center gap-1.5 ${isConnected ? 'text-emerald-400' : 'text-slate-500'
+                  }`}>
                   <Activity className="w-3.5 h-3.5" />
                   {isConnected ? 'ONLINE' : 'POLLING'}
                 </span>
@@ -322,11 +500,11 @@ export default function LandingPage() {
         {/* ── LIVE AUCTION PREVIEW & FEED SECTION ──────────────────────────── */}
         <section className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            
+
             {/* Live Podium Preview Card (8 cols) */}
             <div className="lg:col-span-8">
               <div className="glass-card rounded-3xl border border-slate-800 p-6 lg:p-8 space-y-6 relative overflow-hidden shadow-2xl">
-                
+
                 {/* Header banner */}
                 <div className="flex items-center justify-between pb-4 border-b border-slate-800">
                   <div className="flex items-center gap-3">
@@ -335,26 +513,63 @@ export default function LandingPage() {
                     </div>
                     <div>
                       <h2 className="text-lg font-black font-heading text-white">LIVE PODIUM STAGE</h2>
-                      <p className="text-xs text-slate-400">Real-time auctioneer broadcast &amp; synchronized bidding status</p>
                     </div>
                   </div>
 
-                  <span className={`px-3 py-1 rounded-full text-xs font-mono font-bold uppercase tracking-wider border ${
-                    biddingMode === 'blind'
-                      ? 'bg-purple-500/10 text-purple-400 border-purple-500/30'
-                      : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
-                  }`}>
+                  <span className={`px-3 py-1 rounded-full text-xs font-mono font-bold uppercase tracking-wider border ${biddingMode === 'blind'
+                    ? 'bg-purple-500/10 text-purple-400 border-purple-500/30'
+                    : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                    }`}>
                     {biddingMode?.toUpperCase()} MODE
                   </span>
                 </div>
 
-                {podiumPlayer ? (
+                {broadcastVideoUrl && (systemAuctionState === 'LIVE_BROADCAST' || systemAuctionState === 'CLOSING_BROADCAST' || !hasStartedAuction) ? (
+                  <div className="rounded-2xl overflow-hidden min-h-[300px] sm:min-h-[400px] border border-slate-800 bg-slate-950">
+                    <EmbeddedVideoPlayer
+                      url={broadcastVideoUrl}
+                      videoStartTime={videoBroadcastState?.videoStartTime}
+                      videoState={videoBroadcastState?.videoState}
+                      pausedAtPosition={videoBroadcastState?.pausedAtPosition}
+                    />
+                  </div>
+                ) : (introLoopState?.isPlaying && introLoopState?.players?.length > 0) ? (
+                  (() => {
+                    const curPlayer = introLoopState.players[introLoopState.currentIndex];
+                    if (!curPlayer) return null;
+                    return (
+                      <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center bg-purple-950/20 p-6 rounded-2xl border border-purple-500/30">
+                        <div className="md:col-span-5 text-center">
+                          <img
+                            src={getImageUrl(curPlayer.imageUrl, playerFallback('indigo'))}
+                            alt={curPlayer.name}
+                            className="w-44 h-44 md:w-52 md:h-52 rounded-2xl object-cover border-4 border-purple-500/50 shadow-2xl mx-auto"
+                          />
+                        </div>
+                        <div className="md:col-span-7 space-y-3">
+                          <span className="text-[10px] font-mono font-bold tracking-widest text-purple-400 uppercase bg-purple-500/10 px-2.5 py-1 rounded border border-purple-500/30">
+                            PLAYER INTRO PRESENTATION
+                          </span>
+                          <h3 className="text-2xl sm:text-3xl font-black text-white">{curPlayer.name}</h3>
+                          <div className="flex flex-wrap gap-2 text-xs font-mono">
+                            <span className="bg-slate-900 text-slate-300 px-3 py-1 rounded-lg border border-slate-800">
+                              Category: {curPlayer.category || 'Standard'}
+                            </span>
+                            <span className="bg-slate-900 text-emerald-400 px-3 py-1 rounded-lg border border-slate-800">
+                              Base: {formatCurrency(curPlayer.basePrice || 1000000)}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()
+                ) : podiumPlayer ? (
                   <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
                     {/* Player Image */}
                     <div className="md:col-span-5 text-center">
                       <div className="relative inline-block group">
                         <img
-                          src={podiumPlayer.imageUrl || playerFallback('slate')}
+                          src={getImageUrl(podiumPlayer.imageUrl, playerFallback('slate'))}
                           alt={podiumPlayer.name}
                           className="w-48 h-48 md:w-56 md:h-56 rounded-2xl object-cover border-4 border-slate-700 shadow-2xl mx-auto"
                         />
@@ -405,12 +620,12 @@ export default function LandingPage() {
                   /* Podium Standing By View */
                   <div className="py-12 text-center space-y-4">
                     <div className="w-16 h-16 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center mx-auto text-slate-600">
-                      <Trophy className="w-8 h-8 opacity-40" />
+                      <Trophy className="w-8 h-8 opacity-40 text-amber-500 animate-pulse" />
                     </div>
                     <div>
                       <h3 className="text-lg font-black text-slate-300 uppercase tracking-wide">PODIUM STANDING BY</h3>
                       <p className="text-xs text-slate-500 mt-1 max-w-md mx-auto">
-                        The auctioneer has not pushed a player onto the active bidding table yet. Live updates will stream automatically.
+                        The auctioneer has not pushed a player onto the active bidding table yet. Live video broadcasts &amp; player updates will stream automatically.
                       </p>
                     </div>
                   </div>
@@ -429,45 +644,113 @@ export default function LandingPage() {
               </div>
             </div>
 
-            {/* Live Activity Feed (4 cols) */}
+            {/* Highest Bidder / Stats Panel (4 cols) */}
             <div className="lg:col-span-4">
-              <div className="glass-card rounded-3xl border border-slate-800 p-6 h-full flex flex-col justify-between shadow-2xl">
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-                    <h3 className="text-sm font-black font-heading text-white flex items-center gap-2">
-                      <Activity className="w-4 h-4 text-blue-400" />
-                      LIVE FEED STREAM
-                    </h3>
-                    <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
-                      SYNC
-                    </span>
-                  </div>
-
-                  {/* Feed Items */}
-                  <div className="space-y-2.5 max-h-[320px] overflow-y-auto pr-1">
-                    {activities.map(item => {
-                      
-                      return (
-                        <div key={item.id} className="p-3 bg-slate-900/60 rounded-xl border border-slate-800/80 text-xs space-y-1">
-                          <div className="flex items-center justify-between text-[10px] text-slate-500">
-                            <span className={`font-mono font-bold uppercase ${item.color}`}>{item.type}</span>
-                            <span>{item.time}</span>
-                          </div>
-                          <p className="text-slate-300 font-medium text-xs leading-snug">{item.text}</p>
-                        </div>
-                      );
-                    })}
-                  </div>
+              <div className="glass-card rounded-3xl border border-slate-800 p-6 h-full flex flex-col shadow-2xl">
+                <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+                  <h3 className="text-sm font-black font-heading text-white flex items-center gap-2">
+                    <Trophy className="w-4 h-4 text-amber-400" />
+                    LEADING FRANCHISE
+                  </h3>
                 </div>
 
-                <div className="pt-4 border-t border-slate-800 text-[11px] text-slate-500 text-center">
-                  Socket.io real-time broadcast active
+                <div className="flex-1 flex flex-col justify-center">
+                  {highestBidder ? (() => {
+                    const theme = getTeamTheme(highestBidder);
+                    const rosterCount = highestBidder.currentRosterCount ?? (highestBidder.currentRoster?.length || 0);
+                    return (
+                      <div className={`space-y-4 rounded-2xl border p-5 bg-gradient-to-br ${theme.gradient} ${theme.border}`}>
+                        <TeamBadge team={highestBidder} size="lg" showManager={false} />
+                        <div className="grid grid-cols-2 gap-3 text-xs pt-2">
+                          <div className="bg-slate-950/70 p-2.5 rounded-xl border border-slate-800/80">
+                            <span className="text-[10px] text-slate-400 uppercase block">Purse Left</span>
+                            <span className={`font-mono font-bold text-sm mt-0.5 block ${theme.stat}`}>{formatCurrency(highestBidder.remainingBudget)}</span>
+                          </div>
+                          <div className="bg-slate-950/70 p-2.5 rounded-xl border border-slate-800/80">
+                            <span className="text-[10px] text-slate-400 uppercase block">Squad</span>
+                            <span className="font-mono font-bold text-white text-sm mt-0.5 block">{rosterCount} / {highestBidder.minRoster || 11}</span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })() : (
+                    <div className="text-center text-slate-500 space-y-3 py-10">
+                      <Trophy className="w-10 h-10 mx-auto opacity-30" />
+                      <p className="font-bold text-slate-400">
+                        {podiumPlayer ? 'Awaiting first bid' : 'Podium is standing by'}
+                      </p>
+                      <p className="text-xs">
+                        {podiumPlayer ? `Base price is ${formatCurrency(podiumPlayer.basePrice)}` : 'The leading team will be shown here.'}
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
 
           </div>
         </section>
+
+        {/* ── PUBLIC LEADERBOARD ───────────────────────────────────────────── */}
+        <section className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-6">
+          <div>
+            <span className="text-xs font-bold uppercase tracking-widest text-blue-400">Franchise Standing</span>
+            <h2 className="text-2xl font-black font-heading text-white">PUBLIC LEADERBOARD</h2>
+          </div>
+
+          <div className="glass-card rounded-2xl border border-slate-800 overflow-hidden">
+            <div className="grid grid-cols-12 gap-4 px-6 py-3 bg-slate-900/80 border-b border-slate-800 text-[10px] font-bold uppercase tracking-widest">
+              <div className="col-span-1 text-slate-500">Rank</div>
+              <div className="col-span-4">
+                <SortableHeader sortKey="name" label="Franchise Team" />
+              </div>
+              <div className="col-span-5">
+                <SortableHeader sortKey="spent" label="Budget Status" />
+              </div>
+              <div className="col-span-2 text-right">
+                <SortableHeader sortKey="squad" label="Squad Size" />
+              </div>
+            </div>
+
+            <div className="divide-y divide-slate-800/60">
+              {teams.length === 0 ? (
+                <div className="p-8 text-center text-xs text-slate-500">No teams registered in system yet.</div>
+              ) : (
+                sortedTeamsForLeaderboard.map((team, idx) => {
+                  const rank = idx + 1;
+                  const spent = (team.totalBudget || 0) - (team.remainingBudget || 0);
+                  const rosterCount = team.currentRoster?.length || team.currentRosterCount || 0;
+                  const spentPercentage = team.totalBudget > 0 ? (spent / team.totalBudget) * 100 : 0;
+                  const theme = getTeamTheme(team);
+                  const rankColor = rank === 1 ? 'text-amber-400' : rank === 2 ? 'text-slate-300' : rank === 3 ? 'text-yellow-600' : 'text-slate-500';
+
+                  return (
+                    <div key={team.id || team._id || idx} onClick={() => setSelectedTeam(team)} className="grid grid-cols-12 gap-4 px-6 py-4 items-center hover:bg-slate-800/40 transition text-xs cursor-pointer">
+                      <div className={`col-span-1 font-mono font-black text-lg flex items-center gap-2 ${rankColor}`}>
+                        {rank <= 3 && <Trophy className="w-4 h-4" />}
+                        <span>#{rank}</span>
+                      </div>
+                      <div className="col-span-4">
+                        <TeamBadge team={team} size="sm" showManager={false} />
+                      </div>
+                      <div className="col-span-5">
+                        <div className="w-full bg-slate-800/50 rounded-full h-2 border border-slate-700/50 overflow-hidden">
+                          <div className={`${theme.accent} h-full rounded-full transition-all duration-500`} style={{ width: `${spentPercentage}%` }}></div>
+                        </div>
+                        <div className="flex justify-between mt-1.5 text-[10px] font-mono">
+                          <span className="text-emerald-400 font-bold">{formatCurrency(team.remainingBudget)} Left</span>
+                          <span className="text-slate-500">{formatCurrency(spent)} Spent</span>
+                        </div>
+                      </div>
+                      <div className="col-span-2 text-right font-mono text-slate-300">{rosterCount} Players</div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+        </section>
+
 
         {/* ── FRANCHISE TEAM SHOWCASE ──────────────────────────────────────── */}
         <section className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-6">
@@ -483,49 +766,52 @@ export default function LandingPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {teams.slice(0, 6).map(team => {
-              const spent = (team.totalBudget || 0) - (team.remainingBudget || 0);
-              const roster = Array.isArray(team.currentRoster) ? team.currentRoster : [];
+            {teams.slice(0, 3).map(team => {
+              const id = team._id || team.id;
+              const theme = getTeamTheme(team);
+              const rosterCount = team.currentRosterCount ?? (team.currentRoster?.length || 0);
+              const managerName = team.managerId?.name || team.ownerName || 'Unassigned';
+
               return (
                 <motion.div
-                  key={team.id || team._id}
-                  whileHover={{ y: -4 }}
-                  className="glass-card glass-card-hover rounded-2xl p-6 border border-slate-800 space-y-4"
+                  key={id}
+                  onClick={() => setSelectedTeam(team)}
+                  whileHover={{ y: -6 }}
+                  className={`group relative overflow-hidden rounded-2xl border ${theme.border} cursor-pointer h-full transition-all duration-300 hover:shadow-2xl ${theme.ring} bg-gradient-to-br ${theme.gradient}`}
                 >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      {team.logoUrl ? (
-                        <img src={team.logoUrl} alt={team.name} className="w-12 h-12 rounded-xl object-cover border border-slate-700" />
-                      ) : (
-                        <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center text-white font-black text-lg">
-                          {(team.shortCode || team.name || 'T')[0]}
-                        </div>
-                      )}
-                      <div>
-                        <h3 className="font-black text-white text-lg">{team.name}</h3>
-                        <span className="text-[10px] font-mono font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
-                          {team.shortCode}
+                  {/* Colored top accent bar */}
+                  <div className={`h-1 w-full ${theme.accent}`} />
+
+                  <div className="p-5 space-y-4 flex flex-col h-full">
+                    {/* Top Team Badge Header */}
+                    <div className="flex items-start justify-between gap-3">
+                      <TeamBadge team={team} size="md" showManager={true} managerName={managerName} />
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold border ${theme.badgeBg}`}>
+                        {team.shortCode || team.code || 'TEAM'}
+                      </span>
+                    </div>
+
+                    {/* Purse & Roster Grid */}
+                    <div className="grid grid-cols-2 gap-3 text-xs pt-1 flex-grow">
+                      <div className="bg-slate-950/70 p-2.5 rounded-xl border border-slate-800/80">
+                        <span className="text-[10px] text-slate-400 font-medium uppercase block">Remaining Purse</span>
+                        <span className={`font-mono font-bold text-xs sm:text-sm mt-0.5 block ${theme.stat}`}>
+                          {formatCurrency(team.remainingBudget)}
+                        </span>
+                      </div>
+
+                      <div className="bg-slate-950/70 p-2.5 rounded-xl border border-slate-800/80">
+                        <span className="text-[10px] text-slate-400 font-medium uppercase block">Squad Count</span>
+                        <span className="font-mono font-bold text-white text-xs sm:text-sm mt-0.5 block">
+                          {rosterCount} / {team.minRoster || 11} min
                         </span>
                       </div>
                     </div>
 
-                    <div className="text-right">
-                      <span className="text-[10px] font-bold text-slate-500 uppercase">Purse Left</span>
-                      <p className="font-mono font-bold text-emerald-400 text-sm">{formatCurrency(team.remainingBudget)}</p>
-                    </div>
-                  </div>
-
-                  {/* Budget bar */}
-                  <div className="space-y-1">
-                    <div className="w-full bg-slate-900 h-2 rounded-full overflow-hidden border border-slate-800">
-                      <div
-                        className="bg-gradient-to-r from-emerald-500 to-teal-400 h-full"
-                        style={{ width: `${Math.min(100, (spent / (team.totalBudget || 1)) * 100)}%` }}
-                      />
-                    </div>
-                    <div className="flex justify-between text-[10px] text-slate-500 font-mono">
-                      <span>Spent: {formatCurrency(spent)}</span>
-                      <span>Squad: {roster.length}</span>
+                    {/* Click Card Footer */}
+                    <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400 group-hover:text-white transition">
+                      <span className="font-medium">View Team Profile</span>
+                      <ExternalLink className={`w-3.5 h-3.5 transition ${theme.stat}`} />
                     </div>
                   </div>
                 </motion.div>
@@ -534,47 +820,6 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* ── PUBLIC LEADERBOARD ───────────────────────────────────────────── */}
-        <section className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-6">
-          <div>
-            <span className="text-xs font-bold uppercase tracking-widest text-blue-400">Franchise Standing</span>
-            <h2 className="text-2xl font-black font-heading text-white">PUBLIC LEADERBOARD</h2>
-          </div>
-
-          <div className="glass-card rounded-2xl border border-slate-800 overflow-hidden">
-            <div className="grid grid-cols-12 gap-4 px-6 py-3.5 bg-slate-900/80 border-b border-slate-800 text-[10px] font-bold uppercase tracking-widest text-slate-500">
-              <div className="col-span-1">Rank</div>
-              <div className="col-span-4">Franchise Team</div>
-              <div className="col-span-3">Purse Remaining</div>
-              <div className="col-span-2">Squad Size</div>
-              <div className="col-span-2 text-right">Spent</div>
-            </div>
-
-            <div className="divide-y divide-slate-800/60">
-              {teams.length === 0 ? (
-                <div className="p-8 text-center text-xs text-slate-500">No teams registered in system yet.</div>
-              ) : (
-                [...teams]
-                  .sort((a, b) => (b.currentRoster?.length || 0) - (a.currentRoster?.length || 0))
-                  .map((team, idx) => {
-                    const spent = (team.totalBudget || 0) - (team.remainingBudget || 0);
-                    return (
-                      <div key={team.id || team._id || idx} className="grid grid-cols-12 gap-4 px-6 py-4 items-center hover:bg-slate-800/30 transition text-xs">
-                        <div className="col-span-1 font-mono font-black text-slate-400">#{idx + 1}</div>
-                        <div className="col-span-4 font-bold text-white flex items-center gap-2">
-                          <span className="w-2 h-2 rounded-full bg-emerald-400" />
-                          {team.name}
-                        </div>
-                        <div className="col-span-3 font-mono font-bold text-emerald-400">{formatCurrency(team.remainingBudget)}</div>
-                        <div className="col-span-2 font-mono text-slate-300">{team.currentRoster?.length || 0} Players</div>
-                        <div className="col-span-2 text-right font-mono text-slate-400">{formatCurrency(spent)}</div>
-                      </div>
-                    );
-                  })
-              )}
-            </div>
-          </div>
-        </section>
 
         {/* ── PLAYER SHOWCASE ─────────────────────────────────────────────── */}
         <section className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-6">
@@ -591,28 +836,12 @@ export default function LandingPage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {topPlayersShowcase.map(player => (
-              <div key={player.id || player._id} className="glass-card glass-card-hover rounded-2xl border border-slate-800 p-5 space-y-3">
-                <div className="flex items-center gap-3">
-                  {player.imageUrl ? (
-                    <img src={player.imageUrl} alt={player.name} className="w-12 h-12 rounded-xl object-cover border border-slate-700" />
-                  ) : (
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-500 flex items-center justify-center text-white font-black text-base">
-                      {(player.name || 'P')[0]}
-                    </div>
-                  )}
-                  <div className="min-w-0 flex-1">
-                    <h3 className="font-bold text-white text-sm truncate">{player.name}</h3>
-                    <p className="text-[10px] text-slate-400">{player.primaryPosition || 'Player'}</p>
-                  </div>
-                </div>
-
-                <div className="flex justify-between items-center text-xs pt-2 border-t border-slate-800">
-                  <span className="text-slate-500 font-medium">{player.category || 'B Grade'}</span>
-                  <span className="font-mono font-bold text-amber-400">
-                    {formatCurrency(player.soldPrice || player.basePrice || 2000000)}
-                  </span>
-                </div>
-              </div>
+              <PlayerCardCard
+                key={player.id || player._id}
+                player={player}
+                formatCurrency={formatCurrency}
+                teams={teams}
+              />
             ))}
           </div>
         </section>
@@ -621,6 +850,15 @@ export default function LandingPage() {
 
       {/* ── PROFESSIONAL ENTERPRISE FOOTER ───────────────────────────────── */}
       <Footer />
+
+      {selectedTeam && (
+        <TeamDetailModal
+          team={selectedTeam}
+          onClose={() => setSelectedTeam(null)}
+          players={players}
+          formatCurrency={formatCurrency}
+        />
+      )}
     </div>
   );
 }

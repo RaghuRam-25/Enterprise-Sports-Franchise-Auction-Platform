@@ -22,6 +22,7 @@ import { useAuction } from '../../context/AuctionContext';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 import { playerFallback } from '../../utils/playerFallback';
+import PlayerCardCard from '../../components/common/PlayerCardCard';
 
 const getCategoryCardStyle = (category) => {
   switch (category) {
@@ -464,86 +465,35 @@ export default function TargetPlayersView() {
             </h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {filteredPlayers.map((player) => {
               const pId = player._id || player.id;
               const isTargeted = targetPlayerIds.has(pId);
-              const isSold = player.status === 'SOLD';
-              const soldToTeam = isSold ? teams.find(t => (t._id || t.id) === player.soldToTeam) : null;
-              const categoryCardStyle = getCategoryCardStyle(player.category);
-
               return (
-                <div
+                <PlayerCardCard
                   key={pId}
-                  className={`glass-card rounded-2xl p-4 border transition-all duration-300 flex flex-col justify-between space-y-4 ${isTargeted
-                    ? 'border-amber-500/40 bg-gradient-to-br from-amber-950/20 via-slate-900 to-slate-950'
-                    : isSold
-                      ? 'bg-slate-900/50 border-slate-800 opacity-60'
-                      : categoryCardStyle
-                    }`}
-                >
-                  <div className="flex items-start gap-3">
-                    <img
-                      src={player.imageUrl || playerFallback('slate')}
-                      alt={player.name}
-                      className="w-14 h-14 rounded-2xl object-cover border border-slate-700 shadow-md flex-shrink-0"
-                    />
-
-                    <div className="space-y-1 min-w-0 flex-1">
-                      <div className="flex items-center justify-between gap-1">
-                        <h3 className="text-sm font-extrabold text-white truncate">{player.name}</h3>
-                        {isTargeted && !isSold && (
-                          <span className="px-2 py-0.5 bg-amber-500/20 text-amber-300 font-extrabold text-[9px] rounded-full border border-amber-500/30 flex items-center gap-1 uppercase">
-                            <Star className="w-2.5 h-2.5 fill-current" /> Targeted
-                          </span>
-                        )}
-                        {isSold && (
-                          <span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-400 font-bold text-[9px] rounded-full border border-emerald-500/20 flex items-center gap-1 uppercase">
-                            <Check className="w-2.5 h-2.5" /> SOLD
-                          </span>
-                        )}
-                      </div>
-
-                      <div className="flex items-center gap-1.5 flex-wrap pt-1">
-                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-800 text-slate-300">
-                          {player.primaryPosition}
-                        </span>
-                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-400">
-                          {player.category}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs">
-                    {isSold ? (
-                      <>
-                        <div>
-                          <span className="text-[10px] text-slate-500 uppercase tracking-widest block">Sold For</span>
-                          <span className="font-mono font-bold text-amber-400">{formatCurrency(player.finalPrice || player.soldPrice || 0)}</span>
-                        </div>
-                        <div className="text-right">
-                          <span className="text-[10px] text-slate-500 uppercase tracking-widest block">Acquired By</span>
-                          <span className="font-semibold text-white truncate">{soldToTeam?.name || 'N/A'}</span>
-                        </div>
-                      </>
+                  player={player}
+                  formatCurrency={formatCurrency}
+                  teams={teams}
+                  customActions={
+                    isTargeted ? (
+                      <button
+                        onClick={() => handleRemoveTarget(pId, player.name)}
+                        className="px-2.5 py-1 bg-amber-500/20 text-amber-300 border border-amber-500/40 rounded-lg text-xs font-bold flex items-center gap-1 hover:bg-rose-500/20 hover:text-rose-300 hover:border-rose-500/40 transition"
+                      >
+                        <Check className="w-3.5 h-3.5 text-amber-400" /> Targeted
+                      </button>
                     ) : (
-                      <>
-                        <div>
-                          <span className="text-[10px] text-slate-500 uppercase tracking-widest block">Base Price</span>
-                          <span className="font-mono font-bold text-emerald-400">{formatCurrency(player.basePrice)}</span>
-                        </div>
-                        {!isTargeted ? (
-                          <button onClick={() => handleAddTarget(player)} className="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs rounded-xl transition shadow-md flex items-center gap-1.5">
-                            <Plus className="w-3.5 h-3.5" /> Add Target
-                          </button>
-                        ) : (
-                          <span className="text-xs font-bold text-amber-400 flex items-center gap-1"><Check className="w-4 h-4 text-amber-400" /> Added</span>
-                        )}
-                      </>
-                    )}
-                  </div>
-                </div>
+                      <button
+                        onClick={() => handleAddTarget(player)}
+                        disabled={player.status === 'SOLD'}
+                        className="px-2.5 py-1 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white rounded-lg text-xs font-bold flex items-center gap-1 transition shadow"
+                      >
+                        <Plus className="w-3.5 h-3.5" /> Target
+                      </button>
+                    )
+                  }
+                />
               );
             })}
           </div>

@@ -1,9 +1,10 @@
-import  { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { ShieldCheck, Loader2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useAuction } from '../../context/AuctionContext';
 import api from '../../services/api';
 import TeamRosterList from './TeamRosterList';
+import TeamBadge from '../../components/common/TeamBadge';
 
 export default function ManagerMyTeamView() {
     const { user } = useAuth();
@@ -55,20 +56,8 @@ export default function ManagerMyTeamView() {
         <div className="space-y-6">
             {/* Team Header */}
             <div className="glass-card rounded-2xl p-6 border border-slate-800 flex flex-col md:flex-row items-start md:items-center gap-6">
-                <div className="w-24 h-24 rounded-2xl bg-slate-900 border-2 border-slate-700 flex items-center justify-center overflow-hidden p-2 flex-shrink-0">
-                    {team.logoUrl ? (
-                        <img src={team.logoUrl} alt={team.name} className="w-full h-full object-contain" />
-                    ) : (
-                        <span className="text-5xl">{team.logo || '🏆'}</span>
-                    )}
-                </div>
-                <div className="flex-1">
-                    <h1 className="text-2xl font-black font-heading text-white flex items-center gap-2">
-                        <ShieldCheck className="w-6 h-6 text-emerald-400" /> {team.name || 'Franchise Team'}
-                    </h1>
-                    {team.motto && <p className="text-sm text-emerald-400/80 italic mt-1">"{team.motto}"</p>}
-                    {team.description && <p className="text-xs text-slate-400 mt-2">{team.description}</p>}
-                </div>
+                <TeamBadge team={team} size="xl" showManager={true} />
+                {team.motto && <p className="text-sm text-emerald-400/80 italic mt-1">"{team.motto}"</p>}
             </div>
 
             {/* Budget Summary */}
