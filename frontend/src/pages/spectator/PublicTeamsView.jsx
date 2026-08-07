@@ -136,6 +136,8 @@ export default function PublicTeamsView() {
 
   const [selectedTeam, setSelectedTeam] = useState(null);
 
+  const ITEMS_PER_PAGE = 6;
+
   const fetchTeams = async ({ silent = false } = {}) => {
     try {
       if (silent) setRefreshing(true); else setLoading(true);
@@ -159,7 +161,7 @@ export default function PublicTeamsView() {
   useEffect(() => {
     fetchTeams();
 
-    const socket = io(window.location.origin);
+    const socket = io(import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000');
 
     socket.on('teams:created', (newTeam) => {
       if (!newTeam) return;
@@ -248,7 +250,6 @@ export default function PublicTeamsView() {
               type="text"
               value={search}
               onChange={e => { setSearch(e.target.value); setCurrentPage(1); }}
-              onChange={e => { setSearch(e.target.value); }}
               placeholder="Search team name, code or manager..."
               className="glass-input w-full pl-10 pr-4 py-2 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
             />
