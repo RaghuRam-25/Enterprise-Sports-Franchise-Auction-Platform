@@ -260,6 +260,15 @@ export default function AdminConfigurations() {
               
               {/* Tiers List */}
               <div className="space-y-3">
+                {biddingTiers.length === 0 && (
+                  <div className="bg-slate-900/60 border border-dashed border-slate-700 p-6 rounded-xl text-center space-y-2">
+                    <Calculator className="w-8 h-8 mx-auto text-slate-600" />
+                    <p className="text-sm font-bold text-slate-300">No Bidding Tiers configured yet</p>
+                    <p className="text-xs text-slate-500 max-w-xs mx-auto">
+                      Run <code className="text-emerald-400 font-mono">npm run seed</code> in the backend to load the default 4 tiers, or check the database.
+                    </p>
+                  </div>
+                )}
                 {biddingTiers.map((tier, idx) => (
                   <div key={tier.id} className="bg-slate-900/60 border border-slate-800 p-4 rounded-xl space-y-3">
                     <div className="flex justify-between items-center">
