@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   Trophy, Radio, ArrowRight, Zap, Activity, ChevronRight, Lock, ExternalLink, Users, X,
-  ArrowUp, ArrowDown, ChevronsUpDown
+  ArrowUp, ArrowDown, ChevronsUpDown, ShoppingBag
 } from 'lucide-react';
 import { useAuction } from '../../context/AuctionContext';
 import { usePhase } from '../../context/PhaseContext';
@@ -13,7 +13,8 @@ import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
 import TeamBadge from '../../components/common/TeamBadge';
 import PlayerCardCard from '../../components/common/PlayerCardCard';
-import EmbeddedVideoPlayer from '../../components/auction/EmbeddedVideoPlayer';
+import PlayerDisplayStage from '../../components/auction/PlayerDisplayStage';
+import { useAuctionAnimation } from '../../hooks/useAuctionAnimation';
 import { getImageUrl } from '../../utils/imageUrl';
 import { playerFallback } from '../../utils/playerFallback';
 import '../../services/api';
@@ -217,20 +218,37 @@ export default function LandingPage() {
     biddingMode,
     timerRemaining,
     timerStatus,
-    broadcastVideoUrl,
-    videoBroadcastState,
-    introLoopState,
-    systemAuctionState,
-    hasStartedAuction,
     isRegistrationFrozen,
     formatCurrency
   } = useAuction();
+
+  const {
+    animState,
+    introPlayer,
+    winnerData,
+    rosterUpdate,
+    ANIM_STATES,
+    onAnimationComplete,
+  } = useAuctionAnimation();
 
   const { user } = useAuth();
   const { socket, isConnected } = useSocket();
   const { phase, loading: phaseLoading, isAuctionActive, isTournamentActive } = usePhase();
   const navigate = useNavigate();
   const [selectedTeam, setSelectedTeam] = useState(null);
+
+  // Ready-managers estimate + recent purchases for the live side panel.
+  const managersReady = (Array.isArray(teams) ? teams : []).filter(t => !!t.managerId).length;
+  const soldPlayers = (Array.isArray(players) ? players : [])
+    .filter(p => (p.status || '').toUpperCase() === 'SOLD' && p.soldToTeam)
+    .slice()
+    .sort((a, b) => new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0))
+    .slice(0, 8);
+  const teamNameOf = (soldToTeam) => {
+    const tid = soldToTeam?._id || soldToTeam;
+    const t = (Array.isArray(teams) ? teams : []).find(x => String(x._id || x.id) === String(tid));
+    return t ? t.name : 'Unknown';
+  };
 
   // ── Leaderboard sort state ────────────────────────────────────────────────
   const [sortConfig, setSortConfig] = useState({ key: 'purse', direction: 'desc' });
@@ -498,138 +516,111 @@ export default function LandingPage() {
         </section>
 
         {/* ── LIVE AUCTION PREVIEW & FEED SECTION ──────────────────────────── */}
-        <section className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <section className="px-3 sm:px-4 lg:px-6 max-w-7xl mx-auto">
+          <div className="grid grid-cols-3 lg:grid-cols-12 gap-8 items-stretch">
 
             {/* Live Podium Preview Card (8 cols) */}
-            <div className="lg:col-span-8">
-              <div className="glass-card rounded-3xl border border-slate-800 p-6 lg:p-8 space-y-6 relative overflow-hidden shadow-2xl">
+            <div className="lg:col-span-8 h-full">
+              <div className="glass-card rounded-3xl border border-slate-800 p-5 lg:p-6 space-y-4 relative overflow-hidden shadow-2xl h-full flex flex-col">
 
                 {/* Header banner */}
-                <div className="flex items-center justify-between pb-4 border-b border-slate-800">
+                <div className="flex items-center justify-between pb-3 border-b border-slate-600">
                   <div className="flex items-center gap-3">
-                    <div className="p-2.5 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 text-slate-950 font-bold">
-                      <Radio className="w-5 h-5 animate-spin" />
+                    <div className="p-2 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 text-slate-950 font-bold">
+                      <Radio className="w-4 h-4 animate-spin" />
                     </div>
                     <div>
-                      <h2 className="text-lg font-black font-heading text-white">LIVE PODIUM STAGE</h2>
+                      <h2 className="text-base font-black font-heading text-white">LIVE PODIUM STAGE</h2>
                     </div>
                   </div>
 
                   <span className={`px-3 py-1 rounded-full text-xs font-mono font-bold uppercase tracking-wider border ${biddingMode === 'blind'
-                    ? 'bg-purple-500/10 text-purple-400 border-purple-500/30'
-                    : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                      ? 'bg-purple-500/10 text-purple-400 border-purple-500/30'
+                      : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
                     }`}>
                     {biddingMode?.toUpperCase()} MODE
                   </span>
                 </div>
 
-                {broadcastVideoUrl && (systemAuctionState === 'LIVE_BROADCAST' || systemAuctionState === 'CLOSING_BROADCAST' || !hasStartedAuction) ? (
-                  <div className="rounded-2xl overflow-hidden min-h-[300px] sm:min-h-[400px] border border-slate-800 bg-slate-950">
-                    <EmbeddedVideoPlayer
-                      url={broadcastVideoUrl}
-                      videoStartTime={videoBroadcastState?.videoStartTime}
-                      videoState={videoBroadcastState?.videoState}
-                      pausedAtPosition={videoBroadcastState?.pausedAtPosition}
-                    />
-                  </div>
-                ) : (introLoopState?.isPlaying && introLoopState?.players?.length > 0) ? (
-                  (() => {
-                    const curPlayer = introLoopState.players[introLoopState.currentIndex];
-                    if (!curPlayer) return null;
-                    return (
-                      <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center bg-purple-950/20 p-6 rounded-2xl border border-purple-500/30">
-                        <div className="md:col-span-5 text-center">
+                <PlayerDisplayStage
+                  className="rounded-2xl overflow-hidden min-h-[140px] sm:min-h-[175px] border border-slate-800 bg-slate-950"
+                  animState={animState}
+                  ANIM_STATES={ANIM_STATES}
+                  introPlayer={introPlayer}
+                  winnerData={winnerData}
+                  rosterUpdate={rosterUpdate}
+                  onAnimationComplete={onAnimationComplete}
+                  showWaiting={!podiumPlayer && animState === ANIM_STATES.IDLE}
+                  waitingStats={{ teamsConnected: (Array.isArray(teams) ? teams : []).length, managersReady }}
+                >
+                  {podiumPlayer ? (
+                    <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+                      {/* Player Image */}
+                      <div className="md:col-span-5 text-center">
+                        <div className="relative inline-block group">
                           <img
-                            src={getImageUrl(curPlayer.imageUrl, playerFallback('indigo'))}
-                            alt={curPlayer.name}
-                            className="w-44 h-44 md:w-52 md:h-52 rounded-2xl object-cover border-4 border-purple-500/50 shadow-2xl mx-auto"
+                            src={getImageUrl(podiumPlayer.imageUrl, playerFallback('slate'))}
+                            alt={podiumPlayer.name}
+                            className="w-40 h-40 md:w-44 md:h-44 rounded-2xl object-cover border-4 border-slate-700 shadow-2xl mx-auto"
                           />
-                        </div>
-                        <div className="md:col-span-7 space-y-3">
-                          <span className="text-[10px] font-mono font-bold tracking-widest text-purple-400 uppercase bg-purple-500/10 px-2.5 py-1 rounded border border-purple-500/30">
-                            PLAYER INTRO PRESENTATION
-                          </span>
-                          <h3 className="text-2xl sm:text-3xl font-black text-white">{curPlayer.name}</h3>
-                          <div className="flex flex-wrap gap-2 text-xs font-mono">
-                            <span className="bg-slate-900 text-slate-300 px-3 py-1 rounded-lg border border-slate-800">
-                              Category: {curPlayer.category || 'Standard'}
-                            </span>
-                            <span className="bg-slate-900 text-emerald-400 px-3 py-1 rounded-lg border border-slate-800">
-                              Base: {formatCurrency(curPlayer.basePrice || 1000000)}
+                          <div className="absolute -bottom-3 inset-x-0 flex justify-center">
+                            <span className="bg-slate-950/90 text-amber-400 border border-amber-500/40 text-xs font-extrabold px-3 py-1 rounded-full shadow-lg">
+                              {podiumPlayer.category || 'B Grade'}
                             </span>
                           </div>
                         </div>
                       </div>
-                    );
-                  })()
-                ) : podiumPlayer ? (
-                  <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
-                    {/* Player Image */}
-                    <div className="md:col-span-5 text-center">
-                      <div className="relative inline-block group">
-                        <img
-                          src={getImageUrl(podiumPlayer.imageUrl, playerFallback('slate'))}
-                          alt={podiumPlayer.name}
-                          className="w-48 h-48 md:w-56 md:h-56 rounded-2xl object-cover border-4 border-slate-700 shadow-2xl mx-auto"
-                        />
-                        <div className="absolute -bottom-3 inset-x-0 flex justify-center">
-                          <span className="bg-slate-950/90 text-amber-400 border border-amber-500/40 text-xs font-extrabold px-3 py-1 rounded-full shadow-lg">
-                            {podiumPlayer.category || 'B Grade'}
+
+                      {/* Player Details & Current Bid */}
+                      <div className="md:col-span-7 space-y-3">
+                        <div>
+                          <h3 className="text-xl sm:text-2xl font-black text-white">{podiumPlayer.name}</h3>
+                          <p className="text-xs font-mono font-bold text-indigo-400 tracking-wider uppercase mt-0.5">
+                            {podiumPlayer.jerseyName ? `# ${podiumPlayer.jerseyName}` : 'DRAFT PARTICIPANT'}
+                          </p>
+                        </div>
+
+                        {/* Timer & Bid stats */}
+                        <div className="grid grid-cols-2 gap-3 bg-slate-900/80 p-3 rounded-2xl border border-slate-800">
+                          <div>
+                            <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Current High Bid</span>
+                            <p className="text-lg sm:text-xl font-black font-mono text-emerald-400">
+                              {formatCurrency(currentBid)}
+                            </p>
+                          </div>
+
+                          <div>
+                            <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Clock</span>
+                            <p className={`text-lg sm:text-xl font-black font-mono ${timerRemaining <= 10 ? 'text-rose-400 animate-pulse' : 'text-amber-400'}`}>
+                              {formatTimer(timerRemaining)}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Highest Bidder Franchise */}
+                        <div className="flex items-center justify-between text-xs p-2.5 bg-slate-900/50 rounded-xl border border-slate-800">
+                          <span className="text-slate-400 font-medium">Leading Franchise:</span>
+                          <span className="font-bold text-white font-mono">
+                            {highestBidder ? highestBidder.name : 'No bids yet'}
                           </span>
                         </div>
                       </div>
                     </div>
-
-                    {/* Player Details & Current Bid */}
-                    <div className="md:col-span-7 space-y-4">
+                  ) : (
+                    /* Podium Standing By View */
+                    <div className="py-8 text-center space-y-3">
+                      <div className="w-14 h-14 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center mx-auto text-slate-600">
+                        <Trophy className="w-7 h-7 opacity-40 text-amber-500 animate-pulse" />
+                      </div>
                       <div>
-                        <h3 className="text-2xl sm:text-3xl font-black text-white">{podiumPlayer.name}</h3>
-                        <p className="text-xs font-mono font-bold text-indigo-400 tracking-wider uppercase mt-0.5">
-                          {podiumPlayer.jerseyName ? `# ${podiumPlayer.jerseyName}` : 'DRAFT PARTICIPANT'}
+                        <h3 className="text-base font-black text-slate-300 uppercase tracking-wide">PODIUM STANDING BY</h3>
+                        <p className="text-xs text-slate-500 mt-1 max-w-md mx-auto">
+                          The auctioneer has not pushed a player onto the active bidding table yet. Live video broadcasts &amp; player updates will stream automatically.
                         </p>
                       </div>
-
-                      {/* Timer & Bid stats */}
-                      <div className="grid grid-cols-2 gap-3 bg-slate-900/80 p-4 rounded-2xl border border-slate-800">
-                        <div>
-                          <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Current High Bid</span>
-                          <p className="text-xl sm:text-2xl font-black font-mono text-emerald-400">
-                            {formatCurrency(currentBid)}
-                          </p>
-                        </div>
-
-                        <div>
-                          <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Clock</span>
-                          <p className={`text-xl sm:text-2xl font-black font-mono ${timerRemaining <= 10 ? 'text-rose-400 animate-pulse' : 'text-amber-400'}`}>
-                            {formatTimer(timerRemaining)}
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Highest Bidder Franchise */}
-                      <div className="flex items-center justify-between text-xs p-3 bg-slate-900/50 rounded-xl border border-slate-800">
-                        <span className="text-slate-400 font-medium">Leading Franchise:</span>
-                        <span className="font-bold text-white font-mono">
-                          {highestBidder ? highestBidder.name : 'No bids yet'}
-                        </span>
-                      </div>
                     </div>
-                  </div>
-                ) : (
-                  /* Podium Standing By View */
-                  <div className="py-12 text-center space-y-4">
-                    <div className="w-16 h-16 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center mx-auto text-slate-600">
-                      <Trophy className="w-8 h-8 opacity-40 text-amber-500 animate-pulse" />
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-black text-slate-300 uppercase tracking-wide">PODIUM STANDING BY</h3>
-                      <p className="text-xs text-slate-500 mt-1 max-w-md mx-auto">
-                        The auctioneer has not pushed a player onto the active bidding table yet. Live video broadcasts &amp; player updates will stream automatically.
-                      </p>
-                    </div>
-                  </div>
-                )}
+                  )}
+                </PlayerDisplayStage>
 
                 {/* Footer action button */}
                 <div className="pt-2 flex justify-end">
@@ -645,8 +636,8 @@ export default function LandingPage() {
             </div>
 
             {/* Highest Bidder / Stats Panel (4 cols) */}
-            <div className="lg:col-span-4">
-              <div className="glass-card rounded-3xl border border-slate-800 p-6 h-full flex flex-col shadow-2xl">
+            <div className="lg:col-span-4 h-full">
+              <div className="glass-card rounded-3xl border border-slate-800 p-4 flex flex-col shadow-2xl h-full">
                 <div className="flex items-center justify-between pb-3 border-b border-slate-800">
                   <h3 className="text-sm font-black font-heading text-white flex items-center gap-2">
                     <Trophy className="w-4 h-4 text-amber-400" />
@@ -659,14 +650,14 @@ export default function LandingPage() {
                     const theme = getTeamTheme(highestBidder);
                     const rosterCount = highestBidder.currentRosterCount ?? (highestBidder.currentRoster?.length || 0);
                     return (
-                      <div className={`space-y-4 rounded-2xl border p-5 bg-gradient-to-br ${theme.gradient} ${theme.border}`}>
-                        <TeamBadge team={highestBidder} size="lg" showManager={false} />
-                        <div className="grid grid-cols-2 gap-3 text-xs pt-2">
-                          <div className="bg-slate-950/70 p-2.5 rounded-xl border border-slate-800/80">
+                      <div className={`space-y-3 rounded-2xl border p-3.5 bg-gradient-to-br ${theme.gradient} ${theme.border}`}>
+                        <TeamBadge team={highestBidder} size="sm" showManager={false} />
+                        <div className="grid grid-cols-1 gap-2 text-xs">
+                          <div className="bg-slate-950/70 p-2 rounded-xl border border-slate-800/80">
                             <span className="text-[10px] text-slate-400 uppercase block">Purse Left</span>
                             <span className={`font-mono font-bold text-sm mt-0.5 block ${theme.stat}`}>{formatCurrency(highestBidder.remainingBudget)}</span>
                           </div>
-                          <div className="bg-slate-950/70 p-2.5 rounded-xl border border-slate-800/80">
+                          <div className="bg-slate-950/70 p-2 rounded-xl border border-slate-800/80">
                             <span className="text-[10px] text-slate-400 uppercase block">Squad</span>
                             <span className="font-mono font-bold text-white text-sm mt-0.5 block">{rosterCount} / {highestBidder.minRoster || 11}</span>
                           </div>
@@ -674,9 +665,9 @@ export default function LandingPage() {
                       </div>
                     );
                   })() : (
-                    <div className="text-center text-slate-500 space-y-3 py-10">
-                      <Trophy className="w-10 h-10 mx-auto opacity-30" />
-                      <p className="font-bold text-slate-400">
+                    <div className="text-center text-slate-500 space-y-2 py-8">
+                      <Trophy className="w-8 h-8 mx-auto opacity-30" />
+                      <p className="font-bold text-slate-400 text-sm">
                         {podiumPlayer ? 'Awaiting first bid' : 'Podium is standing by'}
                       </p>
                       <p className="text-xs">
@@ -685,9 +676,36 @@ export default function LandingPage() {
                     </div>
                   )}
                 </div>
+
+                {/* Recent Purchases */}
+                <div className="mt-4 pt-3 border-t border-slate-800 flex-1 flex flex-col min-h-0">
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="text-[11px] font-black font-heading text-white uppercase tracking-wider flex items-center gap-2">
+                      <ShoppingBag className="w-3.5 h-3.5 text-emerald-400" />
+                      Recent Purchases
+                    </h4>
+                  </div>
+                  {soldPlayers.length === 0 ? (
+                    <p className="text-xs text-slate-500">No players sold yet.</p>
+                  ) : (
+                    <ul className="space-y-2 overflow-y-auto pr-1 flex-1">
+                      {soldPlayers.map((p, idx) => (
+                        <li key={p._id || p.id || idx} className="flex items-center justify-between gap-2 text-xs bg-slate-900/60 border border-slate-800/60 rounded-lg px-3 py-2">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <img src={getImageUrl(p.imageUrl, playerFallback('emerald'))} alt={p.name} className="w-7 h-7 rounded-md object-cover border border-slate-700 shrink-0" />
+                            <span className="font-bold text-white truncate">{p.name}</span>
+                          </div>
+                          <div className="text-right shrink-0">
+                            <span className="text-emerald-400 font-mono font-bold block">→ {teamNameOf(p.soldToTeam)}</span>
+                            <span className="text-[10px] text-slate-400 font-mono block">{formatCurrency(p.finalPrice || p.basePrice || 0)}</span>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
               </div>
             </div>
-
           </div>
         </section>
 
