@@ -1,4 +1,5 @@
 import { Player } from '../models/Player.js';
+import { PlayerCategory } from '../models/PlayerCategory.js';
 import { Session } from '../models/Session.js';
 import { Position } from '../models/Position.js';
 import { Team } from '../models/Team.js';
@@ -102,10 +103,13 @@ const PUBLIC_PLAYER_FIELDS = 'name jerseyName studentId basePrice positions prim
 export const registerPlayer = async (req, res, next) => {
   try {
     // Registration freeze is derived from the event phase (single source of truth).
-    const isRegistrationFrozen = await isRegFrozenByPhase();
+    // It stays OPEN during SETUP (pre-launch onboarding) and REGISTRATION, and is
+    // only frozen once the AUCTION/TOURNAMENT phases begin.
+    const currentPhase = await getCurrentPhase();
+    const registrationOpen = currentPhase === 'SETUP' || currentPhase === 'REGISTRATION';
 
-    if (isRegistrationFrozen && req.user?.role !== 'SUPER_ADMIN') {
-      return res.status(403).json({ success: false, message: 'Registration is currently frozen by Super Admin' });
+    if (!registrationOpen && req.user?.role !== 'SUPER_ADMIN') {
+      return res.status(403).json({ success: false, message: 'Registration is currently closed. It will open again during the registration phase.' });
     }
 
     const body = req.body;
@@ -167,6 +171,19 @@ export const registerPlayer = async (req, res, next) => {
       imageUrl = await processAndUploadImage(req.file.buffer, parsed.studentId);
     }
 
+    // 5. Default the player to the LAST category in the list (the one with the
+    //    highest priorityLevel). The admin assigns the real category later via
+    //    approvePlayer / editPlayer. basePrice follows the default category too.
+    let category = parsed.category || 'B Grade';
+    let basePrice = 2000000;
+    if (!parsed.category) {
+      const defaultCategoryDoc = await PlayerCategory.findOne({ isActive: true }).sort({ priorityLevel: -1 });
+      if (defaultCategoryDoc) {
+        category = defaultCategoryDoc.name;
+        basePrice = defaultCategoryDoc.basePrice;
+      }
+    }
+
     const player = await Player.create({
       name: parsed.name,
       email: parsed.email.toLowerCase(),
@@ -179,8 +196,8 @@ export const registerPlayer = async (req, res, next) => {
       positions: positionsArr,
       primaryPosition: parsed.primaryPosition,
       imageUrl,
-      category: parsed.category || 'B Grade',
-      basePrice: 2000000,
+      category,
+      basePrice,
       status: 'REGISTERED'
     });
 

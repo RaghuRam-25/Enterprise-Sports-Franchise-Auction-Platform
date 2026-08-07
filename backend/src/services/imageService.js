@@ -39,29 +39,38 @@ export const processAndUploadImage = async (fileBuffer, fileNameHint = 'player')
       .toFormat('webp', { quality: 80 })
       .toBuffer();
 
-    // 2. If Cloudinary configured, stream to Cloudinary
+    // 2. If Cloudinary configured, try streaming to Cloudinary
+    let cloudinaryUrl = null;
     if (ENV.CLOUDINARY_CLOUD_NAME && ENV.CLOUDINARY_CLOUD_NAME !== 'mock_cloud') {
-      return new Promise((resolve, reject) => {
-        const stream = cloudinary.uploader.upload_stream(
-          {
-            folder: 'franchise_auction_players',
-            format: 'webp',
-            public_id: `${fileNameHint}_${Date.now()}`
-          },
-          (error, result) => {
-            if (error) return reject(error);
-            resolve(result.secure_url);
-          }
-        );
-        stream.end(processedWebpBuffer);
-      });
+      try {
+        cloudinaryUrl = await new Promise((resolve, reject) => {
+          const stream = cloudinary.uploader.upload_stream(
+            {
+              folder: 'franchise_auction_players',
+              format: 'webp',
+              public_id: `${fileNameHint}_${Date.now()}`
+            },
+            (error, result) => {
+              if (error) return reject(error);
+              resolve(result.secure_url);
+            }
+          );
+          stream.end(processedWebpBuffer);
+        });
+      } catch (clErr) {
+        // Cloudinary unavailable/failed (bad keys, offline, etc.) — fall through
+        // to local storage so the player's image is still saved.
+        console.warn('[imageService] Cloudinary upload failed, using local storage:', clErr.message);
+      }
     }
 
-    // 3. Fallback: Store locally in public uploads directory
+    // 3. Fallback: if Cloudinary failed or isn't configured, store locally
     const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
     if (!fs.existsSync(uploadsDir)) {
       fs.mkdirSync(uploadsDir, { recursive: true });
     }
+
+    if (cloudinaryUrl) return cloudinaryUrl;
 
     const fileName = `${fileNameHint}_${Date.now()}.webp`;
     const filePath = path.join(uploadsDir, fileName);
