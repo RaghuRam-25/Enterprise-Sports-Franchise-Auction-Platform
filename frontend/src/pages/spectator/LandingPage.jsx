@@ -517,10 +517,10 @@ export default function LandingPage() {
 
         {/* ── LIVE AUCTION PREVIEW & FEED SECTION ──────────────────────────── */}
         <section className="px-3 sm:px-4 lg:px-6 max-w-7xl mx-auto">
-          <div className="grid grid-cols-3 lg:grid-cols-12 gap-8 items-stretch">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
 
             {/* Live Podium Preview Card (8 cols) */}
-            <div className="lg:col-span-8 h-full">
+            <div className="col-span-1 lg:col-span-8 h-full">
               <div className="glass-card rounded-3xl border border-slate-800 p-5 lg:p-6 space-y-4 relative overflow-hidden shadow-2xl h-full flex flex-col">
 
                 {/* Header banner */}
@@ -636,7 +636,7 @@ export default function LandingPage() {
             </div>
 
             {/* Highest Bidder / Stats Panel (4 cols) */}
-            <div className="lg:col-span-4 h-full">
+            <div className="col-span-1 lg:col-span-4 h-full">
               <div className="glass-card rounded-3xl border border-slate-800 p-4 flex flex-col shadow-2xl h-full">
                 <div className="flex items-center justify-between pb-3 border-b border-slate-800">
                   <h3 className="text-sm font-black font-heading text-white flex items-center gap-2">
