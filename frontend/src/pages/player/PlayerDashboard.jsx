@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import {
   User, Settings, Trophy, CheckCircle2, Edit3, X, Save, Loader2,
   Camera, Shield, Hash, Shirt, List, Star, Mail, GraduationCap, BadgeCheck,
-  Lock, Upload, Trash2, Phone, MapPin, Calendar, Award, Zap
+  Lock, Upload, Trash2, Phone, MapPin, Award
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useAuction } from "../../context/AuctionContext";
@@ -184,10 +184,22 @@ export default function PlayerDashboard() {
   const pitchDot = POSITION_PITCH_MAP[myPlayer.primaryPosition] || null;
   const isSold = myPlayer.status === "SOLD";
 
+  // Consolidated info list — every field appears exactly once across the page.
+  const infoFields = [
+    { label: "Student ID", value: myPlayer.studentId, icon: Hash, mono: true },
+    { label: "Session", value: myPlayer.session, icon: GraduationCap },
+    { label: "Email", value: myPlayer.email, icon: Mail },
+    { label: "Phone", value: myPlayer.phone, icon: Phone },
+    { label: "Jersey Name", value: myPlayer.jerseyName, icon: BadgeCheck, mono: true },
+    { label: "Jersey No.", value: myPlayer.tShirtNumber ? `#${myPlayer.tShirtNumber}` : null, icon: Hash, mono: true },
+    { label: "Kit Size", value: myPlayer.tShirtSize, icon: Shirt },
+    { label: "Base Price", value: myPlayer.basePrice != null ? formatCurrency(myPlayer.basePrice) : null, icon: Award },
+  ];
+
   return (
     <div className="max-w-6xl mx-auto space-y-6">
 
-      {/* ── Player ID Card (dark hero, matches app theme) ─────────────── */}
+      {/* ── Player ID Card (photo floats centered, name below) ─────────── */}
       <div className="relative overflow-hidden rounded-3xl shadow-2xl border border-slate-800 bg-gradient-to-br from-slate-950 via-purple-950/20 to-slate-900">
         {/* Ambient glow + faint dot texture */}
         <div
@@ -200,108 +212,88 @@ export default function PlayerDashboard() {
         <div className="absolute -top-24 -right-16 w-72 h-72 bg-purple-600/20 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute -bottom-24 -left-16 w-72 h-72 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="relative px-6 sm:px-10 pt-8 sm:pt-10 pb-0 flex flex-col sm:flex-row items-center sm:items-start justify-between gap-6">
-          {/* Left: Name / Position / Session */}
-          <div className="text-center sm:text-left order-2 sm:order-1">
-            <span className="text-[10px] font-bold text-purple-400 uppercase tracking-widest">Player Portal</span>
-            <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-white leading-none uppercase mt-1">
-              {myPlayer.name}
-            </h1>
-            <p className="text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest mt-2">
-              {myPlayer.primaryPosition || "Position Not Set"}
-            </p>
-            {myPlayer.session && (
-              <div className="inline-flex items-center gap-1.5 mt-3 text-xs font-semibold text-slate-500">
-                <GraduationCap className="w-3.5 h-3.5 text-slate-500" />
-                Session {myPlayer.session}
-              </div>
-            )}
-          </div>
-
-          {/* Right: Category badge */}
-          <div className="flex flex-col items-center sm:items-end gap-2 order-1 sm:order-2">
-            <div className={`w-16 h-16 rounded-2xl ${catTone.bg} border ${catTone.border} flex flex-col items-center justify-center shadow-lg`}>
-              <Award className={`w-6 h-6 ${catTone.text}`} />
-            </div>
-            <p className={`text-[11px] font-black uppercase tracking-wider ${catTone.text}`}>{myPlayer.category || 'Unranked'}</p>
-            <p className="text-[10px] text-slate-500 font-semibold">
-              {isSold ? "Auction Status: Sold" : "Auction Status: Registered"}
-            </p>
-          </div>
-        </div>
-
-        {/* Center: Player Photo + ghost jersey number */}
-        <div className="relative flex items-end justify-center px-6 -mt-4 sm:-mt-10">
-          <span className="absolute bottom-0 left-1/2 -translate-x-1/2 text-[9rem] sm:text-[11rem] font-black text-white/[0.04] leading-none select-none pointer-events-none">
-            {myPlayer.tShirtNumber || "00"}
+        {/* Top-right corner: subtle status/edit controls only */}
+        <div className="relative z-20 flex items-center justify-between px-5 pt-5">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] font-bold tracking-wider uppercase text-purple-300 backdrop-blur-sm">
+            Player Portal
           </span>
-          <img
-            src={myPlayer.imageUrl || `${DEFAULT_AVATAR}${encodeURIComponent(myPlayer.name)}`}
-            alt={myPlayer.name}
-            className="relative w-44 h-44 sm:w-56 sm:h-56 rounded-3xl object-cover border-4 border-slate-800 shadow-2xl z-10"
-          />
-        </div>
 
-        {/* Action buttons row */}
-        <div className="relative z-10 flex flex-wrap items-center justify-center gap-2 px-6 pb-6 pt-4">
           {isRegistrationFrozen ? (
-            <span className="px-4 py-2 bg-amber-500/10 text-amber-400 border border-amber-500/20 text-xs font-bold rounded-xl flex items-center gap-1.5">
-              <Lock className="w-3.5 h-3.5" /> Read-Only
+            <span className="w-8 h-8 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center" title="Read-only — registration frozen">
+              <Lock className="w-3.5 h-3.5 text-amber-400" />
             </span>
           ) : (
-            <button onClick={openEdit} className="px-4 py-2 bg-purple-600/20 hover:bg-purple-600 text-purple-300 hover:text-white border border-purple-500/30 text-xs font-bold rounded-xl transition flex items-center gap-1.5">
-              <Edit3 className="w-3.5 h-3.5" /> Edit Profile
+            <button
+              onClick={openEdit}
+              title="Edit Profile"
+              className="w-8 h-8 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center transition"
+            >
+              <Edit3 className="w-3.5 h-3.5 text-slate-300" />
             </button>
           )}
-          <Link to="/player/settings" className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 text-xs font-bold rounded-xl transition flex items-center gap-1.5">
-            <Settings className="w-4 h-4" /> Settings
+        </div>
+
+        {/* Center: Player Photo — floating, ghost jersey number behind it */}
+        <div className="relative flex flex-col items-center px-6 pt-2 pb-8">
+          <div className="relative">
+            <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-[9rem] sm:text-[10rem] font-black text-white/[0.04] leading-none select-none pointer-events-none">
+              {myPlayer.tShirtNumber || "00"}
+            </span>
+            <img
+              src={myPlayer.imageUrl || `${DEFAULT_AVATAR}${encodeURIComponent(myPlayer.name)}`}
+              alt={myPlayer.name}
+              className="relative w-36 h-36 sm:w-44 sm:h-44 rounded-3xl object-cover border-4 border-slate-800 shadow-2xl z-10"
+            />
+          </div>
+
+          {/* Name + Position — below the photo */}
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white leading-none uppercase mt-5 text-center">
+            {myPlayer.name}
+          </h1>
+          <p className="text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest mt-2 text-center">
+            {myPlayer.primaryPosition || "Position Not Set"}
+          </p>
+
+          {/* Category + Status pills */}
+          <div className="flex items-center gap-2 mt-3">
+            <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider ${catTone.bg} ${catTone.text} border ${catTone.border}`}>
+              <Award className="w-3 h-3" />
+              {myPlayer.category || 'Unranked'}
+            </span>
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-slate-800/70 text-slate-300 border border-slate-700">
+              {isSold ? "Sold" : "Registered"}
+            </span>
+          </div>
+        </div>
+
+        {/* Secondary actions — small, understated, tucked at the bottom edge */}
+        <div className="relative z-10 flex items-center justify-center gap-4 px-6 pb-4 border-t border-white/5 pt-3">
+          <Link to="/player/settings" className="text-[11px] font-bold text-slate-500 hover:text-slate-300 transition flex items-center gap-1.5">
+            <Settings className="w-3.5 h-3.5" /> Settings
           </Link>
-          <Link to="/player/results" className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold rounded-xl transition flex items-center gap-1.5 shadow">
-            <Trophy className="w-4 h-4" /> Auction Results
+          <span className="text-slate-700">•</span>
+          <Link to="/player/results" className="text-[11px] font-bold text-slate-500 hover:text-purple-300 transition flex items-center gap-1.5">
+            <Trophy className="w-3.5 h-3.5" /> Auction Results
           </Link>
         </div>
       </div>
 
-      {/* ── Personal Information Strip ─────────────────────────────────── */}
-      <div className="glass-card rounded-2xl border border-slate-800 p-5">
-        <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-4">Personal Information</h3>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div className="flex flex-col gap-1">
-            <span className="text-[10px] font-bold text-slate-500 uppercase flex items-center gap-1"><Hash className="w-3 h-3" /> Student ID</span>
-            <span className="text-sm font-black text-white font-mono">{myPlayer.studentId || '—'}</span>
-          </div>
-          <div className="flex flex-col gap-1">
-            <span className="text-[10px] font-bold text-slate-500 uppercase flex items-center gap-1"><Shirt className="w-3 h-3" /> Kit Size</span>
-            <span className="text-sm font-black text-white">{myPlayer.tShirtSize || '—'}</span>
-          </div>
-          <div className="flex flex-col gap-1">
-            <span className="text-[10px] font-bold text-slate-500 uppercase flex items-center gap-1"><Hash className="w-3 h-3" /> Jersey No.</span>
-            <span className="text-sm font-black text-white font-mono">#{myPlayer.tShirtNumber || '--'}</span>
-          </div>
-          <div className="flex flex-col gap-1">
-            <span className="text-[10px] font-bold text-slate-500 uppercase flex items-center gap-1"><Phone className="w-3 h-3" /> Phone</span>
-            <span className="text-sm font-black text-white">{myPlayer.phone || '—'}</span>
-          </div>
-        </div>
-      </div>
-
-      {/* ── Player Overview + Position Pitch Diagram ──────────────────── */}
+      {/* ── Consolidated Player Info (each fact shown exactly once) ────── */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
-        <div className="lg:col-span-3 glass-card rounded-2xl border border-slate-800 p-6 space-y-3">
-          <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Player Overview</h3>
-          {[
-            { label: "Primary Position", value: myPlayer.primaryPosition || '—' },
-            { label: "Jersey Name", value: myPlayer.jerseyName || '—' },
-            { label: "Category", value: myPlayer.category || 'Unranked' },
-            { label: "Base Price", value: formatCurrency(myPlayer.basePrice) },
-            { label: "Email", value: myPlayer.email || '—' },
-            { label: "Auction Status", value: (myPlayer.status || 'Registered') },
-          ].map(({ label, value }) => (
-            <div key={label} className="flex items-center justify-between text-xs py-1.5 border-b border-slate-800/60 last:border-0">
-              <span className="text-slate-500 font-semibold">{label}</span>
-              <span className="text-white font-bold text-right truncate max-w-[60%]">{value}</span>
-            </div>
-          ))}
+        <div className="lg:col-span-3 glass-card rounded-2xl border border-slate-800 p-6">
+          <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-4">Player Information</h3>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+            {infoFields.map(({ label, value, icon: Icon, mono }) => (
+              <div key={label} className="flex flex-col gap-1">
+                <span className="text-[10px] font-bold text-slate-500 uppercase flex items-center gap-1">
+                  <Icon className="w-3 h-3" /> {label}
+                </span>
+                <span className={`text-sm font-black text-white truncate ${mono ? 'font-mono' : ''}`}>
+                  {value || <span className="text-slate-600 font-normal">—</span>}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Pitch diagram derived from primaryPosition */}
@@ -321,7 +313,6 @@ export default function PlayerDashboard() {
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 rounded-full border border-white/25" />
             <div className="absolute left-3 top-1/2 -translate-y-1/2 w-7 h-16 border border-white/25 border-l-0" />
             <div className="absolute right-3 top-1/2 -translate-y-1/2 w-7 h-16 border border-white/25 border-r-0" />
-            {/* Faint direction arrow so left = own goal, right = attack */}
             <span className="absolute bottom-1.5 right-2.5 text-[9px] font-bold text-white/30 uppercase tracking-wider">Attack →</span>
 
             {pitchDot ? (
