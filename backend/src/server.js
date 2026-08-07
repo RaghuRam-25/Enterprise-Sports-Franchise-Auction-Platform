@@ -10,6 +10,7 @@ import { ENV } from './config/env.js';
 import { connectDB } from './config/db.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { handleSocketConnections } from './sockets/socketHandler.js';
+import { autoSeedDefaults } from './seedDefaults.js';
 
 import authRoutes from './routes/authRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
@@ -32,7 +33,11 @@ const io = new Server(httpServer, {
 });
 
 // Connect Database
-connectDB();
+connectDB().then(async () => {
+  // Ensure base platform config (sessions, positions, categories, bidding tiers)
+  // exists on every boot — critical so a fresh production DB (Vercel) is not blank.
+  await autoSeedDefaults();
+});
 
 // Attach Socket.IO instance to app so controllers can emit events via req.app.get('io')
 app.set('io', io);
