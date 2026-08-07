@@ -597,7 +597,7 @@ export const PodiumDashboard = () => {
                         {/* Waiting cinematic — confined to THIS Player Details panel only.
                     Navbar + Unsold Player Pool sidebar stay visible; the
                     animation never becomes a full-screen takeover for the admin. */}
-                        {timerStatus === 'idle' && animState === 'idle' ? (
+                        {animState === ANIM_STATES.IDLE ? (
                           <WaitingAnimation
                             inline
                             teamsConnected={0}

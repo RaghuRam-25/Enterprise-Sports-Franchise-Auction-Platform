@@ -185,7 +185,7 @@ export default function PlayerDashboard() {
 
   const currentAvatar = removeImage ? `${DEFAULT_AVATAR}${encodeURIComponent(myPlayer.name)}` : (filePreview || myPlayer.imageUrl || `${DEFAULT_AVATAR}${encodeURIComponent(myPlayer.name)}`);
   const catTone = getCategoryTone(myPlayer.category);
-  const pitchDot = POSITION_PITCH_MAP[myPlayer.primaryPosition] || null;
+  const markedPositions = (myPlayer.positions || []).filter(pos => POSITION_PITCH_MAP[pos]);
   const isSold = myPlayer.status === "SOLD";
 
   // Consolidated info list — every field appears exactly once across the page.
@@ -329,24 +329,36 @@ export default function PlayerDashboard() {
             <div className="absolute right-3 top-1/2 -translate-y-1/2 w-7 h-16 border border-white/25 border-r-0" />
             <span className="absolute bottom-1.5 right-2.5 text-[9px] font-bold text-white/30 uppercase tracking-wider">Attack →</span>
 
-            {pitchDot ? (
-              <motion.div
-                className="absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center"
-                style={{ left: `${pitchDot.x}%`, top: `${pitchDot.y}%` }}
-                initial={{ scale: 0.8, opacity: 0.4 }}
-                animate={{ scale: [0.9, 1.15, 0.95], opacity: [0.5, 1, 0.65] }}
-                transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
-              >
-                <motion.span
-                  className="absolute w-8 h-8 rounded-full bg-amber-400/30"
-                  animate={{ opacity: [0.45, 0.95, 0.45], scale: [0.9, 1.2, 0.9] }}
-                  transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
-                />
-                <span className="relative w-4 h-4 rounded-full bg-amber-400 border-2 border-white shadow-lg" />
-              </motion.div>
+            {markedPositions.length > 0 ? (
+              markedPositions.map(pos => {
+                const coord = POSITION_PITCH_MAP[pos];
+                const isPrimary = pos === myPlayer.primaryPosition;
+                return (
+                  <motion.div
+                    key={pos}
+                    className="absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center"
+                    style={{ left: `${coord.x}%`, top: `${coord.y}%` }}
+                    initial={{ scale: 0.7, opacity: 0.3 }}
+                    animate={{ scale: [0.9, isPrimary ? 1.15 : 1.0, 0.95], opacity: [isPrimary ? 0.5 : 0.3, 1, isPrimary ? 0.65 : 0.35] }}
+                    transition={{ duration: isPrimary ? 1.8 : 2.4, repeat: Infinity, ease: "easeInOut" }}
+                    title={pos}
+                  >
+                    {isPrimary && (
+                      <motion.span
+                        className="absolute w-8 h-8 rounded-full bg-amber-400/30"
+                        animate={{ opacity: [0.45, 0.95, 0.45], scale: [0.9, 1.2, 0.9] }}
+                        transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
+                      />
+                    )}
+                    <span
+                      className={`relative rounded-full border border-white shadow-lg ${isPrimary ? "w-4 h-4 bg-amber-400" : "w-3 h-3 bg-cyan-300/80"}`}
+                    />
+                  </motion.div>
+                );
+              })
             ) : (
               <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-[11px] text-white/40 font-semibold">No primary position set</span>
+                <span className="text-[11px] text-white/40 font-semibold">No positions set</span>
               </div>
             )}
 

@@ -40,7 +40,7 @@ export default function PlayerMyTeam() {
         return players.filter(p => (p.soldToTeam?._id || p.soldToTeam) === teamId);
     }, [myTeam, players]);
 
-    if (isDataLoading || (managers.length === 0 && !isDataLoading)) {
+    if (isDataLoading) {
         return (
             <div className="flex items-center justify-center py-20">
                 <Loader2 className="w-8 h-8 animate-spin text-purple-400" />
