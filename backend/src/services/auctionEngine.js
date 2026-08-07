@@ -14,6 +14,10 @@ class AuctionEngine {
     this.bidQueue = Promise.resolve(); // Serialized Queue Lock
     // GAP 13 FIX: Dynamic tiers loaded from DB at launch time
     this.activeTiers = [];
+    this.auctionSessionId = null;
+    this.isAuctionCompleting = false;
+    this.recentBidSignature = null;
+    this.recentBidTimestamp = 0;
 
     // Video Broadcast State (Synchronized across all clients)
     this.videoUrl = null;
@@ -279,6 +283,10 @@ class AuctionEngine {
 
     this.hasStartedAuction = true;
     this.systemAuctionState = 'LIVE_AUCTION';
+    this.auctionSessionId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    this.isAuctionCompleting = false;
+    this.recentBidSignature = null;
+    this.recentBidTimestamp = 0;
 
     if (wasBroadcasting && this.io) {
       this.io.emit('broadcast-stopped', { systemAuctionState: this.systemAuctionState });
@@ -357,6 +365,9 @@ class AuctionEngine {
 
   cancel() {
     timerService.stop();
+    this.isAuctionCompleting = false;
+    this.recentBidSignature = null;
+    this.recentBidTimestamp = 0;
     this.podiumPlayer = null;
     this.currentBid = 0;
     this.highestBidder = null;
@@ -381,6 +392,14 @@ class AuctionEngine {
       return { success: false, error: 'Auction clock is not active' };
     }
 
+    const teamId = teamData?.id || teamData?._id?.toString?.() || teamData?.name;
+    const signature = `${this.auctionSessionId}:${teamId}`;
+    const now = Date.now();
+
+    if (this.recentBidSignature === signature && now - this.recentBidTimestamp < 5000) {
+      return { success: false, error: 'Duplicate bid detected. Please wait a moment and try again.' };
+    }
+
     const nextAmount = this.calculateNextBidAmount(this.currentBid, teamData.totalBudget || 100000000);
     if (nextAmount > (teamData.remainingBudget || 100000000)) {
       return { success: false, error: 'Insufficient team budget' };
@@ -399,6 +418,9 @@ class AuctionEngine {
       type: 'NORMAL'
     };
     this.bidHistory.push(logEntry);
+
+    this.recentBidSignature = signature;
+    this.recentBidTimestamp = now;
 
     this.broadcastState('auction:new-bid');
     return { success: true, nextAmount };
@@ -439,6 +461,12 @@ class AuctionEngine {
   }
 
   handleTimerEnd() {
+    if (this.isAuctionCompleting) {
+      return;
+    }
+
+    this.isAuctionCompleting = true;
+
     if (this.mode === 'BLIND' && this.blindBids.length > 0) {
       // Resolve highest blind bid
       const sorted = [...this.blindBids].sort((a, b) => b.amount - a.amount);
@@ -457,11 +485,12 @@ class AuctionEngine {
         this.io.emit('auction:completed', result);
       }
       this.podiumPlayer = null;
+      this.broadcastState('auction:state');
       return;
     }
 
     // No bids → player goes unsold; broadcast full state (no celebration).
-    this.broadcastState('auction:completed');
+    this.broadcastState('auction:state');
   }
 
   broadcastState(eventName = 'auction:state') {

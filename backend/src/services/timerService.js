@@ -7,6 +7,7 @@ class TimerService {
     this.status = 'IDLE'; // 'IDLE' | 'RUNNING' | 'PAUSED' | 'ENDED'
     this.onTick = null;
     this.onEnd = null;
+    this.completedOnce = false;
   }
 
   start(durationSeconds, onTick, onEnd) {
@@ -17,6 +18,7 @@ class TimerService {
     this.status = 'RUNNING';
     this.onTick = onTick;
     this.onEnd = onEnd;
+    this.completedOnce = false;
 
     this.timerInterval = setInterval(() => {
       if (!this.isPaused && this.remainingSeconds > 0) {
@@ -26,7 +28,10 @@ class TimerService {
         if (this.remainingSeconds === 0) {
           this.status = 'ENDED';
           this.stop();
-          if (this.onEnd) this.onEnd();
+          if (this.onEnd && !this.completedOnce) {
+            this.completedOnce = true;
+            this.onEnd();
+          }
         }
       }
     }, 1000);

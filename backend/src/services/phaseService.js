@@ -50,6 +50,13 @@ export const transitionPhase = async (to, updatedBy = 'system') => {
       message: `Invalid target phase: ${to}`,
     };
   }
+  if (!isLegalTransition(from, to)) {
+    return {
+      ok: false,
+      phase: from,
+      message: `Illegal transition: ${from} → ${to}`,
+    };
+  }
   await setConfig(PHASE_CONFIG_KEY, to, updatedBy);
   return { ok: true, phase: to, from, message: `Phase changed ${from} → ${to}` };
 };

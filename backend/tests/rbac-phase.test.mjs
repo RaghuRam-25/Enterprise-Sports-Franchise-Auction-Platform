@@ -18,6 +18,9 @@
 import { test, mock, describe, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 
+const { auctionEngine } = await import('../src/services/auctionEngine.js');
+const { timerService } = await import('../src/services/timerService.js');
+
 // ── Shared in-memory config store standing in for the SystemConfig collection ──
 const store = { event_phase: 'SETUP' };
 
@@ -199,6 +202,43 @@ describe('Phase gate — requirePhase() distinguishes wrong-phase (409) from rol
 });
 
 // ══════════════════════════════════════════════════════════════════════════════
+describe('Auction engine — duplicate bids', () => {
+  beforeEach(() => {
+    auctionEngine.podiumPlayer = { _id: 'p-1', name: 'Test Player', basePrice: 1000000 };
+    auctionEngine.currentBid = 1000000;
+    auctionEngine.highestBidder = null;
+    auctionEngine.bidHistory = [];
+    auctionEngine.blindBids = [];
+    auctionEngine.bidQueue = Promise.resolve();
+    auctionEngine.auctionSessionId = 'session-1';
+    auctionEngine.isAuctionCompleting = false;
+    auctionEngine.recentBidSignature = null;
+    auctionEngine.recentBidTimestamp = 0;
+    timerService.status = 'RUNNING';
+    timerService.isPaused = false;
+    timerService.remainingSeconds = 60;
+    timerService.duration = 60;
+  });
+
+  test('rejects a rapid duplicate bid from the same team for the same auction session', async () => {
+    const team = {
+      id: 'team-1',
+      name: 'Team One',
+      totalBudget: 100000000,
+      remainingBudget: 100000000,
+      minRoster: 11,
+      currentRosterCount: 0
+    };
+
+    const first = await auctionEngine.placeNormalBid(team);
+    assert.equal(first.success, true);
+
+    const second = await auctionEngine.placeNormalBid(team);
+    assert.equal(second.success, false);
+    assert.match(second.error, /Duplicate bid detected/i);
+  });
+});
+
 describe('Phase transitions — transitionPhase() enforces the machine against the store', () => {
   beforeEach(() => { store.event_phase = 'SETUP'; });
 

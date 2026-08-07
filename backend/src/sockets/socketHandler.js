@@ -90,6 +90,11 @@ export const handleSocketConnections = (io) => {
 
     // Client places Normal Bid
     socket.on('bid:place', async (data) => {
+      if (!data?.team) {
+        socket.emit('bid:error', { error: 'Missing team payload' });
+        return;
+      }
+
       const result = await auctionEngine.placeNormalBid(data.team);
       if (!result?.success) {
         socket.emit('bid:error', { error: result?.error || 'Bid placement failed' });
@@ -98,6 +103,11 @@ export const handleSocketConnections = (io) => {
 
     // Client places Blind Bid
     socket.on('bid:blind', (data) => {
+      if (!data?.team) {
+        socket.emit('bid:error', { error: 'Missing team payload' });
+        return;
+      }
+
       const result = auctionEngine.placeBlindBid(data.team, data.amount, data.lowestBasePrice || 1000000);
       if (!result?.success) {
         socket.emit('bid:error', { error: result?.error || 'Blind bid failed' });

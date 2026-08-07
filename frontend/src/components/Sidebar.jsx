@@ -105,9 +105,6 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }) {
     { type: 'item', path: '/player/live', label: 'Live Auction', icon: Radio, highlight: true },
     { type: 'item', path: '/player/my-team', label: 'My Team', icon: Users },
     { type: 'item', path: '/player/teams', label: 'All Teams', icon: ShieldCheck },
-    ...(isSoldPlayer
-      ? [{ type: 'item', path: '/player/field-position', label: 'Field Reveal', icon: MapPin, highlight: true }]
-      : []),
     { type: 'item', path: '/player/results', label: 'Results', icon: Award },
     { type: 'item', path: '/player/settings', label: 'Settings', icon: Settings }
   ];
