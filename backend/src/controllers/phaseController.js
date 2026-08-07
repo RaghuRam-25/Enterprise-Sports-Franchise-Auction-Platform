@@ -1,7 +1,7 @@
 import {
   PHASES,
   getCurrentPhase,
-  transitionPhase,
+  forceSetPhase,
 } from '../services/phaseService.js';
 import { Player } from '../models/Player.js';
 import { Team } from '../models/Team.js';
@@ -122,35 +122,43 @@ export const setPhase = async (req, res, next) => {
         });
       }
 
-      const result = await transitionPhase(target, performedBy);
-
-      if (!result.ok) {
-        return res.status(409).json({ success: false, message: result.message, currentPhase: result.phase });
+      if (target === currentPhase) {
+        return res.status(409).json({
+          success: false,
+          message: `Already in ${target} phase`,
+          currentPhase,
+        });
       }
+
+      // SUPER_ADMIN free navigation: jump to any stage (forward, backward, or
+      // skipping ahead) via forceSetPhase, so the admin can re-enable e.g.
+      // REGISTRATION at any time. Every transition is still audited below.
+      const from = currentPhase;
+      await forceSetPhase(target, performedBy);
 
       // ── Side-effect: freeze registration & size rosters on entering AUCTION ──
       let rosterSizing = null;
-      if (result.phase === 'AUCTION') {
+      if (target === 'AUCTION') {
         rosterSizing = await computeAndStoreRosterSizes(performedBy);
       }
 
       await logPhaseAction('PHASE_TRANSITION', performedBy, {
-        from: result.from,
-        to: result.phase,
+        from,
+        to: target,
         rosterSizing,
-        action: action || 'DIRECT_TRANSITION'
+        action: action || 'FREE_NAVIGATION'
       });
 
       // Broadcast so every connected client re-renders
       const io = req.app.get('io');
       if (io) {
-        io.emit('phase:changed', { phase: result.phase, rosterSizing, locked: isLocked });
+        io.emit('phase:changed', { phase: target, rosterSizing, locked: isLocked });
       }
 
       return res.json({
         success: true,
-        message: result.message,
-        data: { phase: result.phase, rosterSizing, locked: isLocked },
+        message: `Phase changed ${from} → ${target}`,
+        data: { phase: target, rosterSizing, locked: isLocked },
       });
     }
 
