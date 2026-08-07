@@ -300,9 +300,13 @@ export const AuctionProvider = ({ children }) => {
     };
 
     const handleTimerUpdate = (data) => {
-      setTimerRemaining(data.remainingSeconds ?? 0);
-      if (data.isPaused) setTimerStatus('paused');
-      else setTimerStatus('running');
+      const nextRemaining = typeof data?.remainingSeconds === 'number' ? data.remainingSeconds : 0;
+      setTimerRemaining(nextRemaining);
+      const nextStatus = data?.status?.toLowerCase?.() || (data?.isPaused ? 'paused' : 'running');
+      setTimerStatus(nextStatus);
+      if (nextStatus === 'idle' || nextStatus === 'ended') {
+        setTimerRemaining(0);
+      }
     };
 
     const handlePlayerUpdate = () => {

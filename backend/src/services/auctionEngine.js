@@ -310,13 +310,17 @@ class AuctionEngine {
       durationSeconds,
       (remainingSeconds) => {
         if (this.io) {
-          this.io.emit('auction:timer-update', { remainingSeconds, isPaused: timerService.isPaused });
+          this.io.emit('auction:timer-update', { remainingSeconds, isPaused: timerService.isPaused, status: timerService.status });
         }
       },
       () => {
         this.handleTimerEnd();
       }
     );
+
+    if (this.io) {
+      this.io.emit('auction:timer-update', { remainingSeconds: timerService.remainingSeconds, isPaused: false, status: timerService.status });
+    }
 
     this.broadcastState('auction:player-launched');
     return this.getState();
@@ -325,11 +329,17 @@ class AuctionEngine {
   pause() {
     timerService.pause();
     this.broadcastState('auction:paused');
+    if (this.io) {
+      this.io.emit('auction:timer-update', { remainingSeconds: timerService.remainingSeconds, isPaused: true });
+    }
   }
 
   resume() {
     timerService.resume();
     this.broadcastState('auction:resumed');
+    if (this.io) {
+      this.io.emit('auction:timer-update', { remainingSeconds: timerService.remainingSeconds, isPaused: false });
+    }
   }
 
   rollback() {
@@ -347,6 +357,9 @@ class AuctionEngine {
     }
     timerService.addSeconds(15);
     this.broadcastState('auction:rollback');
+    if (this.io) {
+      this.io.emit('auction:timer-update', { remainingSeconds: timerService.remainingSeconds, isPaused: timerService.isPaused, status: timerService.status });
+    }
   }
 
   hammerSell() {
@@ -373,6 +386,9 @@ class AuctionEngine {
     this.highestBidder = null;
     this.bidHistory = [];
     this.broadcastState('auction:cancelled');
+    if (this.io) {
+      this.io.emit('auction:timer-update', { remainingSeconds: 0, isPaused: false, status: 'IDLE' });
+    }
   }
 
   // --- SERIALIZED BIDDING QUEUE (RACE CONDITION PREVENTION) ---
