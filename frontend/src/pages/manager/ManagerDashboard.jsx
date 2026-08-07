@@ -6,6 +6,7 @@ import { PlayerDisplayStage, TargetPlayerAlert } from '../../components/auction'
 import { useAuctionAnimation } from '../../hooks/useAuctionAnimation';
 
 import { playerFallback } from '../../utils/playerFallback';
+import { getImageUrl } from '../../utils/imageUrl';
 
 export const ManagerDashboard = () => {
   const { user } = useAuth();
@@ -22,6 +23,8 @@ export const ManagerDashboard = () => {
     placeBlindBid,
     formatCurrency = (v) => `${v} BDT`,
     triggerToast = () => { },
+    targetAlert = null,
+    dismissTargetAlert = () => { },
   } = useAuction();
 
   const {
@@ -167,7 +170,23 @@ export const ManagerDashboard = () => {
     <div className="space-y-6">
 
       {/* Real-Time Target Player Alert Notification Banner */}
-      {showTargetAlert && (
+      {/* Live socket-pushed alert fired the moment this manager's target player
+          hits the podium — beats the polling-derived banner below. */}
+      {targetAlert && targetAlert.player && (
+        <TargetPlayerAlert
+          targetItem={{
+            playerId: targetAlert.player,
+            note: targetAlert.note,
+            optionalBudgetLimit: targetAlert.optionalBudgetLimit,
+            priority: targetAlert.priority,
+          }}
+          onQuickBid={handleNormalBidSubmit}
+          onDismiss={dismissTargetAlert}
+        />
+      )}
+
+      {/* Real-Time Target Player Alert Notification Banner */}
+      {showTargetAlert && !targetAlert && (
         <TargetPlayerAlert
           targetItem={activeTargetItem}
           onQuickBid={handleNormalBidSubmit}
@@ -316,7 +335,7 @@ export const ManagerDashboard = () => {
               <div className="relative mx-auto md:mx-0">
                 <div className="absolute -inset-1.5 rounded-2xl bg-gradient-to-br from-emerald-500/30 to-transparent blur-md" />
                 <img
-                  src={podiumPlayer.imageUrl || playerFallback('emerald')}
+                  src={getImageUrl(podiumPlayer.imageUrl, playerFallback('emerald'))}
                   alt={podiumPlayer.name}
                   className="relative w-36 h-36 rounded-2xl object-cover border-2 border-emerald-500/40 shadow-2xl"
                 />

@@ -3,6 +3,7 @@ import  { useState, useEffect } from 'react';
 import { Trophy, Loader2, Clock, ShieldOff } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { playerFallback } from '../../utils/playerFallback';
+import { getImageUrl } from '../../utils/imageUrl';
 import api from '../../services/api';
 
 
@@ -82,7 +83,7 @@ export default function PlayerResults() {
               <div className="flex items-center justify-center gap-3">
                 {/* GAP 1 FIX: imageUrl not picture */}
                 <img
-                  src={myPlayer.imageUrl || playerFallback('gold')}
+                  src={getImageUrl(myPlayer.imageUrl, playerFallback('gold'))}
                   alt={myPlayer.name}
                   className="w-16 h-16 rounded-full object-cover border-2 border-amber-500/40"
                 />

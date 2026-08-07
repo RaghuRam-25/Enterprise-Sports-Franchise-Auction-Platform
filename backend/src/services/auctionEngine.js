@@ -1,5 +1,9 @@
 import { timerService } from './timerService.js';
 import { BiddingTier } from '../models/BiddingTier.js';
+import { Player } from '../models/Player.js';
+import { Team } from '../models/Team.js';
+import { AuctionLedger } from '../models/AuctionLedger.js';
+import { ManagerTargetPlayer } from '../models/ManagerTargetPlayer.js';
 
 class AuctionEngine {
   constructor() {
@@ -274,6 +278,96 @@ class AuctionEngine {
     return currentNum + monetaryRaise;
   }
 
+  // Resolve which managers have shortlisted this player and push a private
+  // real-time alert to each of them. This is the Phase 3 notification path.
+  async _emitTargetManagers(playerData) {
+    const playerId = playerData?._id || playerData?.id;
+    if (!playerId || !this.io) return;
+
+    try {
+      const targets = await ManagerTargetPlayer.find({ playerId })
+        .lean()
+        .populate('playerId', 'name jerseyName studentId primaryPosition positions category basePrice imageUrl status')
+        .populate('managerId', 'teamId');
+
+      if (!targets.length) return;
+
+      for (const target of targets) {
+        const teamId = target.managerId?.teamId || target.teamId;
+        if (!teamId) continue;
+
+        const payload = {
+          playerId: String(playerId),
+          player: target.playerId || null,
+          note: target.note || '',
+          optionalBudgetLimit: target.optionalBudgetLimit ?? null,
+          priority: target.priority ?? 1,
+          targetId: String(target._id),
+          timestamp: Date.now(),
+        };
+
+        // Private, per-team notification (managers join `team:<id>` on connect).
+        this.io.to(`team:${teamId}`).emit('target-player:alert', payload);
+      }
+    } catch (err) {
+      console.warn('[AuctionEngine] Failed to emit target-player alerts:', err.message);
+    }
+  }
+
+  // Persist a completed sale to the DB and re-broadcast the authoritative
+  // budget/roster/player changes to every connected client. Shared by both the
+  // manual Hammer/Hammer/Force-sell controllers and the timer-expiry auto-sell,
+  // so there is a single source of truth for sold-player bookkeeping.
+  async persistSale(result) {
+    const player = result?.player;
+    const winner = result?.winner;
+    const soldPrice = Number(result?.soldPrice) || 0;
+    if (!player || !winner) return false;
+
+    const playerId = player._id || player.id;
+    const teamId = winner._id || winner.id;
+    if (!playerId || !teamId) return false;
+
+    try {
+      await AuctionLedger.create({
+        playerId,
+        playerName: player.name,
+        soldPrice,
+        teamId,
+        teamName: winner.name,
+        soldAt: new Date(),
+      });
+
+      await Player.findByIdAndUpdate(playerId, {
+        status: 'SOLD',
+        finalPrice: soldPrice,
+        soldToTeam: teamId,
+      });
+
+      const team = await Team.findByIdAndUpdate(
+        teamId,
+        {
+          $inc: { remainingBudget: -soldPrice, currentRosterCount: 1 },
+          $push: { currentRoster: playerId },
+        },
+        { new: true }
+      )
+        .populate('currentRoster', 'name jerseyName primaryPosition category finalPrice imageUrl')
+        .populate('managerId', 'name email');
+
+      // Real-time sync so managers / spectators / admin see updated roster,
+      // available purse and player status immediately after a sale.
+      if (this.io) {
+        this.io.emit('teams:updated', team || { _id: teamId });
+        this.io.emit('player:updated', { _id: playerId, id: playerId, status: 'SOLD' });
+      }
+      return true;
+    } catch (err) {
+      console.error('[AuctionEngine] Failed to persist sale:', err);
+      return false;
+    }
+  }
+
   // --- PODIUM ADMIN CONTROLS ---
   async launchPlayer(playerData, durationSeconds = 60, mode = 'NORMAL') {
     const wasBroadcasting = Boolean(this.videoUrl);
@@ -288,6 +382,10 @@ class AuctionEngine {
     this.recentBidSignature = null;
     this.recentBidTimestamp = 0;
 
+    // Refresh raise tiers before real bids arrive, but NEVER block the timer on
+    // it — the clock must start deterministically the moment a player is pushed.
+    const tierLoad = this.loadTiers().catch(() => {});
+
     if (wasBroadcasting && this.io) {
       this.io.emit('broadcast-stopped', { systemAuctionState: this.systemAuctionState });
     }
@@ -295,9 +393,6 @@ class AuctionEngine {
       this.io.emit('auction-started', { systemAuctionState: this.systemAuctionState });
       this.io.emit('player-pushed', { player: playerData, systemAuctionState: this.systemAuctionState });
     }
-
-    // GAP 13 FIX: refresh tiers from DB every time a player is launched
-    await this.loadTiers();
 
     this.podiumPlayer = playerData;
     this.currentBid = playerData.basePrice || 1000000;
@@ -322,7 +417,11 @@ class AuctionEngine {
       this.io.emit('auction:timer-update', { remainingSeconds: timerService.remainingSeconds, isPaused: false, status: timerService.status });
     }
 
+    // Fire the target-manager alert in the background (never delays the push).
+    this._emitTargetManagers(playerData);
+
     this.broadcastState('auction:player-launched');
+    await tierLoad;
     return this.getState();
   }
 
@@ -362,13 +461,20 @@ class AuctionEngine {
     }
   }
 
-  hammerSell() {
+  // Persist the authoritative sale BEFORE broadcasting so clients never see
+  // "completed" before the budget/roster/status updates land (mirrors the
+  // timer-expiry path in handleTimerEnd). No winner → nothing to persist; the
+  // completed event still fires so every client clears the podium.
+  async hammerSell() {
     timerService.stop();
     const result = {
       player: this.podiumPlayer,
       soldPrice: this.currentBid,
       winner: this.highestBidder
     };
+    if (result.player && result.winner) {
+      await this.persistSale(result);
+    }
     if (this.io) {
       this.io.emit('auction:completed', result);
     }
@@ -402,34 +508,75 @@ class AuctionEngine {
     return this.bidQueue;
   }
 
-  _executeNormalBid(teamData) {
+  // Best-effort lookup of a real team so the engine never trusts client-supplied
+  // budget/roster numbers (guards against spoofed socket bids).
+  async _loadAuthoritativeTeam(teamData) {
+    const teamId = teamData?.id || teamData?._id;
+    if (!teamId) return null;
+    try {
+      return await Team.findById(teamId)
+        .select('name totalBudget remainingBudget minRoster currentRosterCount')
+        .lean();
+    } catch (_) {
+      return null;
+    }
+  }
+
+  async _executeNormalBid(teamData) {
     if (!this.podiumPlayer) return { success: false, error: 'No player on podium' };
     if (timerService.status !== 'RUNNING' || timerService.isPaused) {
       return { success: false, error: 'Auction clock is not active' };
     }
 
     const teamId = teamData?.id || teamData?._id?.toString?.() || teamData?.name;
-    const signature = `${this.auctionSessionId}:${teamId}`;
+
+    // Always reconcile against the DB so spoofed/fake client payloads cannot
+    // bid with invented purse or bypass the reserve rule.
+    const authoritative = await this._loadAuthoritativeTeam(teamData);
+    if (!authoritative) {
+      return { success: false, error: 'Could not verify team, bid rejected' };
+    }
+    const effectiveTeam = {
+      id: authoritative._id ? authoritative._id.toString() : teamId,
+      _id: authoritative._id,
+      name: authoritative.name,
+      totalBudget: authoritative.totalBudget,
+      remainingBudget: authoritative.remainingBudget,
+      minRoster: authoritative.minRoster,
+      currentRosterCount: authoritative.currentRosterCount || 0,
+    };
+
+    const signature = `${this.auctionSessionId}:${effectiveTeam.id}`;
     const now = Date.now();
 
     if (this.recentBidSignature === signature && now - this.recentBidTimestamp < 5000) {
       return { success: false, error: 'Duplicate bid detected. Please wait a moment and try again.' };
     }
 
-    const nextAmount = this.calculateNextBidAmount(this.currentBid, teamData.totalBudget || 100000000);
-    if (nextAmount > (teamData.remainingBudget || 100000000)) {
+    // GAP: a team must not be able to bid against its own winning bid and drive
+    // the price up. (The 5s duplicate guard above already catches immediate
+    // double-taps; this catches a team re-raising its own lead after that.)
+    if (
+      this.highestBidder &&
+      (this.highestBidder.id === effectiveTeam.id || this.highestBidder._id === effectiveTeam._id)
+    ) {
+      return { success: false, error: 'You are already the highest bidder' };
+    }
+
+    const nextAmount = this.calculateNextBidAmount(this.currentBid, effectiveTeam.totalBudget || 100000000);
+    if (nextAmount > (effectiveTeam.remainingBudget || 100000000)) {
       return { success: false, error: 'Insufficient team budget' };
     }
 
     this.currentBid = nextAmount;
-    this.highestBidder = teamData;
+    this.highestBidder = effectiveTeam;
     // Reset timer upon valid bid
     timerService.resetTimer(timerService.duration);
 
     const logEntry = {
       id: `b-${Date.now()}`,
       amount: nextAmount,
-      bidder: teamData.name,
+      bidder: effectiveTeam.name,
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
       type: 'NORMAL'
     };
@@ -443,40 +590,67 @@ class AuctionEngine {
   }
 
   // --- BLIND BIDDING ENGINE (BLIND BID BUDGET GUARDRAIL) ---
-  placeBlindBid(teamData, amount, lowestBasePrice = 1000000) {
+  async placeBlindBid(teamData, amount, lowestBasePrice = 1000000) {
     if (!this.podiumPlayer) return { success: false, error: 'No player on podium' };
+    if (timerService.status !== 'RUNNING' || timerService.isPaused) {
+      return { success: false, error: 'Auction clock is not active' };
+    }
 
     const bidAmount = Number(amount);
     if (isNaN(bidAmount) || bidAmount <= 0) {
       return { success: false, error: 'Invalid numeric bid amount' };
     }
 
+    // GAP: a sealed blind bid can never go below the player's reserve price.
+    const reserve = this.podiumPlayer.basePrice || 1000000;
+    if (bidAmount < reserve) {
+      return { success: false, error: `BLIND BID REJECTED: Bid of ${bidAmount} BDT is below the reserve price of ${reserve} BDT.` };
+    }
+
+    // Reconcile against authoritative team data (never trust client budget).
+    const authoritative = await this._loadAuthoritativeTeam(teamData);
+    if (!authoritative) {
+      return { success: false, error: 'Could not verify team, bid rejected' };
+    }
+    const team = {
+      id: authoritative._id ? authoritative._id.toString() : teamData.id,
+      name: authoritative.name,
+      remainingBudget: authoritative.remainingBudget,
+      minRoster: authoritative.minRoster,
+      currentRosterCount: authoritative.currentRosterCount || 0,
+    };
+
+    // GAP: one sealed bid per team per player — no stuffing the blind pool.
+    if (this.blindBids.some((b) => String(b.teamId) === String(team.id))) {
+      return { success: false, error: 'You have already submitted a blind bid for this player' };
+    }
+
     // PRD Blind Bid Budget Guardrail Formula:
     // Required Reserve = (minRoster - currentRosterCount - 1) * lowestCategoryBasePrice
-    const slotsNeeded = Math.max(0, (teamData.minRoster || 11) - ((teamData.currentRosterCount || 0) + 1));
+    const slotsNeeded = Math.max(0, (team.minRoster || 11) - ((team.currentRosterCount || 0) + 1));
     const requiredReserve = slotsNeeded * lowestBasePrice;
-    const maxAllowableBid = (teamData.remainingBudget || 100000000) - requiredReserve;
+    const maxAllowableBid = (team.remainingBudget || 100000000) - requiredReserve;
 
     if (bidAmount > maxAllowableBid) {
       const errorMsg = `BLIND BID REJECTED: Bid of ${bidAmount} BDT exceeds allowable limit. Required reserve for ${slotsNeeded} remaining slots is ${requiredReserve} BDT.`;
 
       // Notify ONLY this specific team manager via private socket room!
-      if (this.io && teamData.id) {
-        this.io.to(`team:${teamData.id}`).emit('bid:error', { error: errorMsg });
+      if (this.io && team.id) {
+        this.io.to(`team:${team.id}`).emit('bid:error', { error: errorMsg });
       }
       return { success: false, error: errorMsg };
     }
 
     // Register valid blind bid
-    this.blindBids.push({ teamId: teamData.id, teamName: teamData.name, amount: bidAmount, timestamp: Date.now() });
+    this.blindBids.push({ teamId: team.id, teamName: team.name, amount: bidAmount, timestamp: Date.now() });
 
-    if (this.io && teamData.id) {
-      this.io.to(`team:${teamData.id}`).emit('bid:blind-success', { amount: bidAmount });
+    if (this.io && team.id) {
+      this.io.to(`team:${team.id}`).emit('bid:blind-success', { amount: bidAmount });
     }
     return { success: true };
   }
 
-  handleTimerEnd() {
+  async handleTimerEnd() {
     if (this.isAuctionCompleting) {
       return;
     }
@@ -488,7 +662,7 @@ class AuctionEngine {
       const sorted = [...this.blindBids].sort((a, b) => b.amount - a.amount);
       const winner = sorted[0];
       this.currentBid = winner.amount;
-      this.highestBidder = { id: winner.teamId, name: winner.teamName };
+      this.highestBidder = { _id: winner.teamId, id: winner.teamId, name: winner.teamName };
     }
 
     if (this.highestBidder) {
@@ -497,16 +671,35 @@ class AuctionEngine {
         winner: this.highestBidder,
         soldPrice: this.currentBid,
       };
+
+      // Persist the auto-sale and push authoritative budget/roster updates so
+      // every client's state stays consistent even when the clock expires
+      // (no manual Hammer required).
+      await this.persistSale(result);
+
       if (this.io) {
         this.io.emit('auction:completed', result);
       }
       this.podiumPlayer = null;
       this.broadcastState('auction:state');
+      this.isAuctionCompleting = false;
       return;
     }
 
-    // No bids → player goes unsold; broadcast full state (no celebration).
+    // No bids → player goes unsold. Persist the UNSOLD status and surface a
+    // dedicated event so every client clears the podium consistently.
+    const unsoldPlayer = this.podiumPlayer;
+    this.podiumPlayer = null;
+    if (unsoldPlayer?._id) {
+      try {
+        await Player.findByIdAndUpdate(unsoldPlayer._id, { status: 'UNSOLD' });
+      } catch (_) { /* non-critical */ }
+    }
+    if (this.io) {
+      this.io.emit('auction:unsold', { player: unsoldPlayer });
+    }
     this.broadcastState('auction:state');
+    this.isAuctionCompleting = false;
   }
 
   broadcastState(eventName = 'auction:state') {

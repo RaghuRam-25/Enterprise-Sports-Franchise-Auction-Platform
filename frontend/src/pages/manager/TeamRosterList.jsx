@@ -2,6 +2,7 @@ import 'react';
 import { Users } from 'lucide-react';
 import { useAuction } from '../../context/AuctionContext';
 import { playerFallback } from '../../utils/playerFallback';
+import { getImageUrl } from '../../utils/imageUrl';
 
 export default function TeamRosterList({ players, team }) {
     const { formatCurrency } = useAuction();
@@ -38,7 +39,7 @@ export default function TeamRosterList({ players, team }) {
                                     <td className="py-3 px-4">
                                         <div className="flex items-center gap-2">
                                             <img
-                                                src={player.imageUrl || playerFallback('emerald')}
+                                                src={getImageUrl(player.imageUrl, playerFallback('emerald'))}
                                                 alt={player.name}
                                                 className="w-8 h-8 rounded-lg object-cover border border-slate-700"
                                             />

@@ -11,6 +11,8 @@ import { useAuction } from "../../context/AuctionContext";
 import FullscreenWrapper from "../../components/auction/FullscreenWrapper";
 import { playerAPI } from "../../services/api";
 import api from "../../services/api";
+import { getImageUrl } from "../../utils/imageUrl";
+import { playerFallback } from "../../utils/playerFallback";
 
 const DEFAULT_AVATAR = "https://ui-avatars.com/api/?background=7c3aed&color=fff&size=256&bold=true&name=";
 const POSITIONS = ["Goalkeeper", "Center Back", "Left Back", "Right Back", "Defensive Midfielder", "Central Midfielder", "Attacking Midfielder", "Left Winger", "Right Winger", "Striker", "Second Striker"];
@@ -242,7 +244,7 @@ export default function PlayerDashboard() {
               {myPlayer.tShirtNumber || "00"}
             </span>
             <img
-              src={myPlayer.imageUrl || `${DEFAULT_AVATAR}${encodeURIComponent(myPlayer.name)}`}
+              src={getImageUrl(myPlayer.imageUrl, myPlayer.imageUrl ? playerFallback('emerald') : `${DEFAULT_AVATAR}${encodeURIComponent(myPlayer.name)}`)}
               alt={myPlayer.name}
               className="relative w-36 h-36 sm:w-44 sm:h-44 rounded-3xl object-cover border-4 border-slate-800 shadow-2xl z-10"
             />
@@ -446,7 +448,7 @@ export default function PlayerDashboard() {
                 <div className="space-y-5 text-xs">
                   <div className="flex flex-col items-center gap-3">
                     <div className="relative">
-                      <img src={currentAvatar} alt="Preview" className="w-28 h-28 rounded-2xl object-cover border-2 border-purple-500/40 shadow-2xl" />
+                      <img src={getImageUrl(currentAvatar, playerFallback('emerald'))} alt="Preview" className="w-28 h-28 rounded-2xl object-cover border-2 border-purple-500/40 shadow-2xl" />
                       {filePreview && !removeImage && <span className="absolute -top-2 -right-2 px-1.5 py-0.5 bg-emerald-600 text-white text-[9px] font-bold rounded-full">NEW</span>}
                     </div>
                     <p className="text-slate-500">Profile photo preview</p>

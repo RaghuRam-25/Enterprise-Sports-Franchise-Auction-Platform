@@ -19,12 +19,13 @@ const playerSchema = new mongoose.Schema({
   phone: { type: String, default: '' },
   bio: { type: String, default: '' },
   address: { type: String, default: '' },
-  category: { type: String, required: true, default: 'B Grade' },
+  category: { type: String, required: true, default: 'B Grade', index: true },
   basePrice: { type: Number, default: 1000000 },
   status: {
     type: String,
     enum: ['REGISTERED', 'APPROVED', 'ON_PODIUM', 'SOLD', 'UNSOLD', 'WITHDRAWN', 'BANNED'],
-    default: 'REGISTERED'
+    default: 'REGISTERED',
+    index: true
   },
   finalPrice: { type: Number, default: 0 },
   soldToTeam: { type: mongoose.Schema.Types.ObjectId, ref: 'Team', default: null }

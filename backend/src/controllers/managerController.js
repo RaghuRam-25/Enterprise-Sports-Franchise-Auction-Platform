@@ -52,7 +52,8 @@ export const updateOwnTeam = async (req, res, next) => {
     if (shortCode) updateData.shortCode = shortCode.toUpperCase();
     if (description !== undefined) updateData.description = description;
     if (motto !== undefined) updateData.motto = motto;
-    if (teamColor) updateData.teamColor = teamColor;
+    // Frontend sends teamColor; the Team schema uses primaryColor (themeConfig reads team.primaryColor).
+    if (teamColor) updateData.primaryColor = teamColor;
 
     if (req.files) {
       const { processAndUploadImage } = await import('../services/imageService.js');
@@ -310,9 +311,15 @@ export const changeOwnPassword = async (req, res, next) => {
 export const getAuctionHistory = async (req, res, next) => {
   try {
     const { AuctionLedger } = await import('../models/AuctionLedger.js');
-    const history = await AuctionLedger.find()
-      .sort({ createdAt: -1 })
-      .limit(100);
+    const teamId = req.user.teamId;
+
+    // Privacy: a manager may only see their own franchise's auction history,
+    // never the competing teams' spend (previously the full ledger leaked).
+    const history = teamId
+      ? await AuctionLedger.find({ teamId })
+          .sort({ createdAt: -1 })
+          .limit(100)
+      : [];
 
     res.json({ success: true, count: history.length, data: history });
   } catch (e) { next(e); }
@@ -366,7 +373,7 @@ export const addTargetPlayer = async (req, res, next) => {
 
     const newTarget = await ManagerTargetPlayer.create({
       managerId,
-      teamId: teamId || req.user._id,
+      teamId: req.user.teamId || null,
       playerId,
       priority: nextPriority,
       note: note || '',

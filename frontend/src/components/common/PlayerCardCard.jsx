@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Shield, Trophy, Zap, Star, CheckCircle, Ban, Clock, UserX, Edit3, Lock, Tag, DollarSign, Award, Layers } from 'lucide-react';
 import { getCategoryTheme } from '../../utils/themeConfig';
 import { getImageUrl } from '../../utils/imageUrl';
+import { playerFallback } from '../../utils/playerFallback';
 import TeamBadge from '../common/TeamBadge';
 
 const STATUS_BADGES = {
@@ -69,7 +70,7 @@ export default function PlayerCardCard({
             <div className={`w-16 h-16 rounded-xl overflow-hidden border-2 bg-slate-900 shadow-md ${theme.border}`}>
               {player?.imageUrl && !imgError ? (
                 <img
-                  src={getImageUrl(player.imageUrl || player.picture)}
+                  src={getImageUrl(player.imageUrl, playerFallback('emerald'))}
                   alt={player?.name}
                   onError={() => setImgError(true)}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"

@@ -316,7 +316,7 @@ export const PodiumDashboard = () => {
                     className={`border p-3.5 rounded-xl flex items-center justify-between transition-colors group ${categoryStyles.card}`}
                   >
                     <div className="flex items-center gap-3 min-w-0">
-                      <img src={player.imageUrl || playerFallback('slate')} alt="" className="w-10 h-10 rounded-full object-cover border border-slate-700 flex-shrink-0" />
+                      <img src={getImageUrl(player.imageUrl, playerFallback('slate'))} alt="" className="w-10 h-10 rounded-full object-cover border border-slate-700 flex-shrink-0" />
                       <div className="min-w-0">
                         <p className={`font-extrabold text-xs text-white truncate transition ${categoryStyles.text}`}>{player.name}</p>
                         <p className="text-[11px] text-slate-400">
@@ -448,7 +448,7 @@ export const PodiumDashboard = () => {
                           </span>
                           <div className="relative w-36 h-36 mx-auto rounded-2xl overflow-hidden border-2 border-purple-500/50 shadow-2xl shadow-purple-900/50">
                             <img
-                              src={getImageUrl(curPlayer.imageUrl || curPlayer.image, playerFallback('indigo'))}
+                              src={getImageUrl(curPlayer.imageUrl, playerFallback('indigo'))}
                               alt={curPlayer.name}
                               className="w-full h-full object-cover object-top"
                             />
@@ -493,7 +493,7 @@ export const PodiumDashboard = () => {
                           <div className="flex items-center gap-4">
                             <div className="relative">
                               <img
-                                src={podiumPlayer.imageUrl || playerFallback('slate')}
+                                src={getImageUrl(podiumPlayer.imageUrl, playerFallback('slate'))}
                                 alt=""
                                 className="w-24 h-24 rounded-2xl object-cover border-2 border-emerald-500/40 shadow-xl"
                               />

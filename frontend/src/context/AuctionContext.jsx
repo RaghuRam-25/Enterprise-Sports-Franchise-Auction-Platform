@@ -1,6 +1,7 @@
 import  { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useSocket } from './SocketContext';
 import api from '../services/api';
+import { soundManager, AUCTION_SOUNDS } from '../components/auction/soundManager';
 
 const AuctionContext = createContext();
 
@@ -53,6 +54,11 @@ export const AuctionProvider = ({ children }) => {
   });
 
   const [lastActionToast, setLastActionToast] = useState(null);
+
+  // Real-time Target Player alert (pushed privately to this manager's team room)
+  const [targetAlert, setTargetAlert] = useState(null);
+
+  const dismissTargetAlert = useCallback(() => setTargetAlert(null), []);
 
   const triggerToast = (msg, type = 'info') => {
     setLastActionToast({ id: Date.now(), msg, type });
@@ -299,6 +305,21 @@ export const AuctionProvider = ({ children }) => {
       setBidHistory([]);
     };
 
+    const handleUnsold = (data) => {
+      // Timer expired with no bids → podium clears, clock ends.
+      if (data?.player) setPodiumPlayer(null);
+      setHighestBidder(null);
+      setTimerStatus('ended');
+    };
+
+    // Phase 3: private, real-time target-player notification for THIS manager.
+    const handleTargetAlert = (payload) => {
+      if (!payload?.player) return;
+      setTargetAlert(payload);
+      triggerToast(`🎯 Target Player on the podium: ${payload.player.name}`, 'success');
+      soundManager.play(AUCTION_SOUNDS.AUCTION_START);
+    };
+
     const handleTimerUpdate = (data) => {
       const nextRemaining = typeof data?.remainingSeconds === 'number' ? data.remainingSeconds : 0;
       setTimerRemaining(nextRemaining);
@@ -368,6 +389,8 @@ export const AuctionProvider = ({ children }) => {
     socket.on('auction:player-launched', handlePlayerLaunched);
     socket.on('auction:completed', handleCompleted);
     socket.on('auction:cancelled', handleCancelled);
+    socket.on('auction:unsold', handleUnsold);
+    socket.on('target-player:alert', handleTargetAlert);
     socket.on('auction:paused', handleState);
     socket.on('auction:resumed', handleState);
     socket.on('auction:rollback', handleState);
@@ -402,6 +425,8 @@ export const AuctionProvider = ({ children }) => {
       socket.off('auction:player-launched', handlePlayerLaunched);
       socket.off('auction:completed', handleCompleted);
       socket.off('auction:cancelled', handleCancelled);
+      socket.off('auction:unsold', handleUnsold);
+      socket.off('target-player:alert', handleTargetAlert);
       socket.off('auction:paused', handleState);
       socket.off('auction:resumed', handleState);
       socket.off('auction:rollback', handleState);
@@ -448,9 +473,26 @@ export const AuctionProvider = ({ children }) => {
     setTimerStatus('running');
 
     if (socket && isConnected) {
-      api.post('/podium/launch-player', { playerId: player.id || player._id, duration, mode: mode.toUpperCase() }).catch(() => { });
+      api.post('/podium/launch-player', { playerId: player.id || player._id, duration, mode: mode.toUpperCase() })
+        .then((res) => {
+          if (res?.data?.state?.timerRemaining != null) {
+            setTimerRemaining(res.data.state.timerRemaining);
+          }
+          triggerToast(`Pushed ${player.name} to Live Podium (${mode.toUpperCase()} mode)`, 'success');
+        })
+        .catch((err) => {
+          // GAP FIX: revert the optimistic podium state so the UI never shows a
+          // frozen/stuck timer when the server rejects the launch (e.g. wrong phase).
+          const msg = err?.response?.data?.message || err?.message || 'Launch failed';
+          triggerToast(msg, 'error');
+          setTimerStatus('idle');
+          setPodiumPlayer(null);
+          setHighestBidder(null);
+          setBidHistory([]);
+        });
+    } else {
+      triggerToast('Pushed ' + player.name + ' to Live Podium (' + mode.toUpperCase() + ' mode)', 'success');
     }
-    triggerToast(`Pushed ${player.name} to Live Podium (${mode.toUpperCase()} mode)`, 'success');
   };
 
   const pauseTimer = () => {
@@ -625,7 +667,8 @@ export const AuctionProvider = ({ children }) => {
         systemAuctionState, hasStartedAuction,
         broadcastVideoUrl, videoBroadcastState, introLoopState,
         formatCurrency, calculateNextBidAmount, getLowestCategoryBasePrice,
-        pushToPodium, pauseTimer, resumeTimer, rollbackBid, hammerSell, cancelAuction, placeNormalBid, placeBlindBid, triggerToast
+        pushToPodium, pauseTimer, resumeTimer, rollbackBid, hammerSell, cancelAuction, placeNormalBid, placeBlindBid, triggerToast,
+        targetAlert, dismissTargetAlert
       }}
     >
       {children}

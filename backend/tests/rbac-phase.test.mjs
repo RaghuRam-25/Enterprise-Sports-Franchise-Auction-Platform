@@ -18,6 +18,33 @@
 import { test, mock, describe, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 
+// Mock the persistent Team model BEFORE auctionEngine is imported so the bid
+// guard's authoritative DB reconciliation resolves deterministically with no
+// live MongoDB. Returns the same team for every lookup so the duplicate-bid
+// signature is stable across two rapid bids from the same franchise.
+mock.module('../src/models/Team.js', {
+  exports: {
+    Team: {
+      findById: () => ({
+        select: () => ({
+          lean: async () => ({
+            _id: 'team-1',
+            name: 'Team One',
+            totalBudget: 100000000,
+            remainingBudget: 100000000,
+            minRoster: 11,
+            currentRosterCount: 0,
+          }),
+        }),
+      }),
+      findByIdAndUpdate: () => ({
+        populate: () => ({ populate: () => ({ exec: async () => ({ _id: 'team-1' }) }) }),
+        __noop: true,
+      }),
+    },
+  },
+});
+
 const { auctionEngine } = await import('../src/services/auctionEngine.js');
 const { timerService } = await import('../src/services/timerService.js');
 

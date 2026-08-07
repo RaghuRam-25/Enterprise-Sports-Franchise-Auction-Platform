@@ -3,6 +3,8 @@ import { Shield, User, Users, Mail, Loader2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useAuction } from '../../context/AuctionContext';
 import TeamBadge from '../../components/common/TeamBadge';
+import { getImageUrl } from '../../utils/imageUrl';
+import { playerFallback } from '../../utils/playerFallback';
 
 export default function PlayerMyTeam() {
     const { user } = useAuth();
@@ -96,7 +98,7 @@ export default function PlayerMyTeam() {
                     {teamMembers.map(player => (
                         <div key={player._id || player.id} className="bg-slate-900/70 border border-slate-800 p-4 rounded-xl flex items-center gap-3">
                             <img
-                                src={player.imageUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(player.name || 'P')}&background=1e293b&color=94a3b8`}
+                                src={getImageUrl(player.imageUrl, playerFallback('emerald'))}
                                 alt={player.name}
                                 className="w-10 h-10 rounded-full object-cover border border-slate-700"
                             />

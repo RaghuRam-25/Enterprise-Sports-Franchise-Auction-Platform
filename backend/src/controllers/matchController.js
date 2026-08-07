@@ -20,7 +20,7 @@ export const getMatches = async (req, res, next) => {
     let matchesFromDb = await Match.find(filter)
       .populate({
         path: 'teamA',
-        select: 'name shortCode code logo logoUrl icon primaryColor secondaryColor gradient borderColor glowColor logoSvg logoKey managerId currentRoster',
+        select: 'name shortCode logo logoUrl icon primaryColor secondaryColor gradient borderColor glowColor logoSvg logoKey managerId currentRoster',
         populate: [
           { path: 'currentRoster', select: 'name primaryPosition imageUrl finalPrice' },
           { path: 'managerId', select: 'name email' }
@@ -28,7 +28,7 @@ export const getMatches = async (req, res, next) => {
       })
       .populate({
         path: 'teamB',
-        select: 'name shortCode code logo logoUrl icon primaryColor secondaryColor gradient borderColor glowColor logoSvg logoKey managerId currentRoster',
+        select: 'name shortCode logo logoUrl icon primaryColor secondaryColor gradient borderColor glowColor logoSvg logoKey managerId currentRoster',
         populate: [
           { path: 'currentRoster', select: 'name primaryPosition imageUrl finalPrice' },
           { path: 'managerId', select: 'name email' }
@@ -135,10 +135,19 @@ export const updateMatch = async (req, res, next) => {
     const match = await Match.findById(req.params.id);
     if (!match) return res.status(404).json({ success: false, message: 'Match not found' });
 
-    const updates = req.body;
+    // Whitelist fields to prevent mass-assignment of arbitrary schema fields.
+    const ALLOWED = ['teamA','teamB','teamAName','teamALogo','teamBName','teamBLogo','matchDate','matchTime','venue','status','scoreA','scoreB','winnerNotes','matchNumber','tournament','round','description','isPublished','liveScore'];
+    const updates = {};
+    for (const key of ALLOWED) {
+      if (req.body[key] !== undefined) updates[key] = req.body[key];
+    }
 
-    if (updates.teamAId) {
-      const tA = await Team.findById(updates.teamAId);
+    if (req.body.status && !['Upcoming', 'Live', 'Finished', 'Cancelled'].includes(req.body.status)) {
+      return res.status(400).json({ success: false, message: 'Invalid match status' });
+    }
+
+    if (req.body.teamAId) {
+      const tA = await Team.findById(req.body.teamAId);
       if (tA) {
         updates.teamA = tA._id;
         updates.teamAName = tA.name;
@@ -146,8 +155,8 @@ export const updateMatch = async (req, res, next) => {
       }
     }
 
-    if (updates.teamBId) {
-      const tB = await Team.findById(updates.teamBId);
+    if (req.body.teamBId) {
+      const tB = await Team.findById(req.body.teamBId);
       if (tB) {
         updates.teamB = tB._id;
         updates.teamBName = tB.name;

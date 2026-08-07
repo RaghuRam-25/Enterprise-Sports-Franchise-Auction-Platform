@@ -4,6 +4,8 @@ import {
 } from 'lucide-react';
 import { useSocket } from '../../context/SocketContext';
 import { useAuction } from '../../context/AuctionContext';
+import { getImageUrl } from '../../utils/imageUrl';
+import { playerFallback } from '../../utils/playerFallback';
 
 export default function PodiumVideoControl() {
   const { socket } = useSocket();
@@ -350,7 +352,7 @@ export default function PodiumVideoControl() {
           <div className="p-4 bg-slate-900/90 rounded-2xl border border-purple-500/40 flex items-center justify-between shadow-xl">
             <div className="flex items-center gap-3">
               <img
-                src={currentIntroPlayer.imageUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(currentIntroPlayer.name || 'P')}&background=7c3aed&color=fff`}
+                src={getImageUrl(currentIntroPlayer.imageUrl, playerFallback('emerald'))}
                 alt={currentIntroPlayer.name}
                 className="w-12 h-12 rounded-xl object-cover border border-purple-400"
               />

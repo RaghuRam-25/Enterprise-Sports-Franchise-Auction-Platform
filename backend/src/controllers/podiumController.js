@@ -1,7 +1,5 @@
 import { auctionEngine } from '../services/auctionEngine.js';
 import { Player } from '../models/Player.js';
-import { Team } from '../models/Team.js';
-import { AuctionLedger } from '../models/AuctionLedger.js';
 import { AuditLog } from '../models/AuditLog.js';
 
 const logPodiumAction = async (action, performedBy, details) => {
@@ -59,48 +57,32 @@ export const selectUnsoldPlayer = async (req, res, next) => {
 
 export const moveNextPlayer = async (req, res, next) => {
   try {
+    // Capture the player BEFORE cancel() clears the podium (log fix).
+    const previousPlayer = auctionEngine.podiumPlayer;
+
     // Mark current player as unsold, reset state, ready for next selection
-    if (auctionEngine.podiumPlayer?._id) {
-      await Player.findByIdAndUpdate(auctionEngine.podiumPlayer._id, { status: 'UNSOLD' });
+    if (previousPlayer?._id) {
+      await Player.findByIdAndUpdate(previousPlayer._id, { status: 'UNSOLD' });
     }
     auctionEngine.cancel();
 
     await logPodiumAction('MOVE_NEXT_PLAYER', req.user?.email || 'podium', {
-      previousPlayer: auctionEngine.podiumPlayer?.name
+      previousPlayer: previousPlayer?.name
     });
 
     res.json({ success: true, message: 'Moved to next player. Podium is ready.' });
   } catch (e) { next(e); }
 };
 
+
+
 export const declareWinner = async (req, res, next) => {
   try {
-    const result = auctionEngine.hammerSell();
+    // hammerSell persists the sale + broadcasts `auction:completed` atomically
+    // (persist-before-broadcast), so budget/roster/status stay consistent.
+    const result = await auctionEngine.hammerSell();
 
     if (result.player && result.winner) {
-      await AuctionLedger.create({
-        playerId: result.player._id || result.player.id,
-        playerName: result.player.name,
-        soldPrice: result.soldPrice,
-        teamId: result.winner._id || result.winner.id,
-        teamName: result.winner.name
-      });
-
-      const playerId = result.player._id || result.player.id;
-      const teamId = result.winner._id || result.winner.id;
-
-      await Player.findByIdAndUpdate(playerId, {
-        status: 'SOLD',
-        finalPrice: result.soldPrice,
-        soldToTeam: teamId
-      });
-
-      // GAP 7 FIX: push player into currentRoster array
-      await Team.findByIdAndUpdate(teamId, {
-        $inc: { remainingBudget: -result.soldPrice, currentRosterCount: 1 },
-        $push: { currentRoster: playerId }
-      });
-
       await logPodiumAction('DECLARE_WINNER', req.user?.email || 'podium', {
         player: result.player.name,
         team: result.winner.name,
@@ -140,31 +122,9 @@ export const cancelAuction = async (req, res, next) => {
 
 export const forceSellAuction = async (req, res, next) => {
   try {
-    const result = auctionEngine.hammerSell();
+    const result = await auctionEngine.hammerSell();
+
     if (result.player && result.winner) {
-      await AuctionLedger.create({
-        playerId: result.player._id || result.player.id,
-        playerName: result.player.name,
-        soldPrice: result.soldPrice,
-        teamId: result.winner._id || result.winner.id,
-        teamName: result.winner.name
-      });
-
-      const fsPlayerId = result.player._id || result.player.id;
-      const fsTeamId = result.winner._id || result.winner.id;
-
-      await Player.findByIdAndUpdate(fsPlayerId, {
-        status: 'SOLD',
-        finalPrice: result.soldPrice,
-        soldToTeam: fsTeamId
-      });
-
-      // GAP 7 FIX: push player into currentRoster array
-      await Team.findByIdAndUpdate(fsTeamId, {
-        $inc: { remainingBudget: -result.soldPrice, currentRosterCount: 1 },
-        $push: { currentRoster: fsPlayerId }
-      });
-
       await logPodiumAction('FORCE_SELL', req.user?.email || 'podium', {
         player: result.player.name,
         price: result.soldPrice
@@ -184,7 +144,9 @@ export const getAvailablePlayers = async (req, res, next) => {
   try {
     // APPROVED = Super Admin approved the registration; UNSOLD = previously on podium but unsold
     const players = await Player.find({ status: { $in: ['APPROVED', 'UNSOLD'] } })
-      .sort({ category: 1, name: 1 });
+      .select('name jerseyName studentId primaryPosition positions category basePrice session imageUrl status tShirtNumber soldToTeam finalPrice')
+      .sort({ category: 1, name: 1 })
+      .lean();
     res.json({ success: true, count: players.length, data: players });
   } catch (e) { next(e); }
 };

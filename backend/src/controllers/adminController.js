@@ -63,7 +63,7 @@ export const createSession = async (req, res, next) => {
   try {
     const parsed = sessionSchema.parse(req.body);
     const exists = await Session.findOne({ name: parsed.name });
-    if (exists) return res.status(400).json({ success: false, message: 'Session already exists' });
+    if (exists) return res.status(409).json({ success: false, message: 'Session already exists' });
 
     const session = await Session.create(parsed);
     await logAdminAction('CREATE_SESSION', req.user?.email || 'admin', session);
@@ -91,7 +91,7 @@ export const createPosition = async (req, res, next) => {
   try {
     const parsed = positionSchema.parse(req.body);
     const exists = await Position.findOne({ code: parsed.code.toUpperCase() });
-    if (exists) return res.status(400).json({ success: false, message: 'Position code already exists' });
+    if (exists) return res.status(409).json({ success: false, message: 'Position code already exists' });
 
     const position = await Position.create({ ...parsed, code: parsed.code.toUpperCase() });
     await logAdminAction('CREATE_POSITION', req.user?.email || 'admin', position);
@@ -119,7 +119,7 @@ export const createCategory = async (req, res, next) => {
   try {
     const parsed = categorySchema.parse(req.body);
     const exists = await PlayerCategory.findOne({ name: parsed.name });
-    if (exists) return res.status(400).json({ success: false, message: 'Category name already exists' });
+    if (exists) return res.status(409).json({ success: false, message: 'Category name already exists' });
 
     const existingCategories = await PlayerCategory.find().lean();
     const categoryTheme = buildCategoryTheme(parsed.name, existingCategories);
@@ -201,7 +201,7 @@ export const createTeam = async (req, res, next) => {
   try {
     const parsed = teamSchema.parse(req.body);
     const exists = await Team.findOne({ name: parsed.name });
-    if (exists) return res.status(400).json({ success: false, message: 'Team name already exists' });
+    if (exists) return res.status(409).json({ success: false, message: 'Team name already exists' });
 
     // Auto theme calculation (Colors, Icon, Logo SVG)
     const existingTeams = await Team.find().lean();
@@ -273,7 +273,7 @@ export const createManager = async (req, res, next) => {
     if (!name || !email) return res.status(400).json({ success: false, message: 'Name and email are required' });
 
     const exists = await User.findOne({ email: email.toLowerCase() });
-    if (exists) return res.status(400).json({ success: false, message: 'User email already exists' });
+    if (exists) return res.status(409).json({ success: false, message: 'User email already exists' });
 
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(password || 'user12345', salt);
@@ -288,6 +288,11 @@ export const createManager = async (req, res, next) => {
       teamId: teamId || null,
       mustResetPassword: true
     });
+
+    // Mirror user.teamId → Team.managerId so the two links never diverge.
+    if (teamId) {
+      await Team.findByIdAndUpdate(teamId, { managerId: manager._id });
+    }
 
     await logAdminAction('CREATE_USER', req.user?.email || 'admin', { email, name, role: targetRole });
     res.status(201).json({ success: true, data: { id: manager._id, name: manager.name, email: manager.email, role: manager.role } });
@@ -306,7 +311,17 @@ export const editManager = async (req, res, next) => {
       user.role = role;
     }
     if (teamId !== undefined) {
+      const oldTeamId = user.teamId;
       user.teamId = teamId || null;
+
+      // Mirror user.teamId ↔ Team.managerId so the two links stay consistent:
+      // release the previous team, claim the new one.
+      if (oldTeamId && String(oldTeamId) !== String(teamId || '')) {
+        await Team.findByIdAndUpdate(oldTeamId, { managerId: null });
+      }
+      if (teamId) {
+        await Team.findByIdAndUpdate(teamId, { managerId: user._id });
+      }
     }
 
     await user.save();

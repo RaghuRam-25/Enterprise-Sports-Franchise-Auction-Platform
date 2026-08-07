@@ -132,7 +132,7 @@ export default function RosterAnimation({
               className="flex items-center gap-4 bg-slate-950/80 rounded-2xl p-4 border border-slate-800"
             >
               <img
-                src={(player?.imageUrl || player?.image) ? getImageUrl(player.imageUrl || player.image) : 'data:image/svg+xml;utf8,' + encodeURIComponent(PLAYER_FALLBACK_SVG)}
+                src={(player?.imageUrl) ? getImageUrl(player.imageUrl) : 'data:image/svg+xml;utf8,' + encodeURIComponent(PLAYER_FALLBACK_SVG)}
                 alt={player?.name}
                 className="w-16 h-16 rounded-xl object-cover border-2 border-emerald-400/30"
               />

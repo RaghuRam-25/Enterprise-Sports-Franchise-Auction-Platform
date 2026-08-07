@@ -6,6 +6,8 @@ import { adminAPI } from '../../services/api';
 import Navbar from '../../components/Navbar';
 import TeamBadge from '../../components/common/TeamBadge';
 import { getTeamAvatarConfig } from '../../utils/themeConfig';
+import { getImageUrl } from '../../utils/imageUrl';
+import { playerFallback } from '../../utils/playerFallback';
 
 const getCategoryStyles = (category) => {
   switch (category) {
@@ -647,7 +649,7 @@ function RosterModalContent({ team }) {
         return (<div key={player._id || player.id} className={`border p-3 rounded-xl flex items-center justify-between gap-3 ${categoryStyle}`}>
           <div className="flex items-center gap-3 min-w-0">
             <img
-              src={player.imageUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(player.name || 'P')}&background=1e293b&color=94a3b8`}
+              src={getImageUrl(player.imageUrl, playerFallback('emerald'))}
               alt={player.name}
               className="w-10 h-10 rounded-full object-cover border-2 border-slate-700 flex-shrink-0"
             />

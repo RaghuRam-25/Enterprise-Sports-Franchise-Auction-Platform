@@ -1,5 +1,6 @@
 import { auctionEngine } from '../services/auctionEngine.js';
 import { Player } from '../models/Player.js';
+import { getCurrentPhase } from '../services/phaseService.js';
 
 export const handleSocketConnections = (io) => {
   auctionEngine.init(io);
@@ -95,6 +96,13 @@ export const handleSocketConnections = (io) => {
         return;
       }
 
+      // Mirror the REST phase gate: bidding is only legal during AUCTION.
+      const phase = await getCurrentPhase().catch(() => null);
+      if (phase !== 'AUCTION') {
+        socket.emit('bid:error', { error: 'Bids are only accepted during the AUCTION phase' });
+        return;
+      }
+
       const result = await auctionEngine.placeNormalBid(data.team);
       if (!result?.success) {
         socket.emit('bid:error', { error: result?.error || 'Bid placement failed' });
@@ -102,13 +110,20 @@ export const handleSocketConnections = (io) => {
     });
 
     // Client places Blind Bid
-    socket.on('bid:blind', (data) => {
+    socket.on('bid:blind', async (data) => {
       if (!data?.team) {
         socket.emit('bid:error', { error: 'Missing team payload' });
         return;
       }
 
-      const result = auctionEngine.placeBlindBid(data.team, data.amount, data.lowestBasePrice || 1000000);
+      // Mirror the REST phase gate: bidding is only legal during AUCTION.
+      const phase = await getCurrentPhase().catch(() => null);
+      if (phase !== 'AUCTION') {
+        socket.emit('bid:error', { error: 'Bids are only accepted during the AUCTION phase' });
+        return;
+      }
+
+      const result = await auctionEngine.placeBlindBid(data.team, data.amount, data.lowestBasePrice || 1000000);
       if (!result?.success) {
         socket.emit('bid:error', { error: result?.error || 'Blind bid failed' });
       }

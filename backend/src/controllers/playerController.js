@@ -33,13 +33,15 @@ export const getMyPlayerProfile = async (req, res, next) => {
 // Registration is "frozen" whenever the phase is not REGISTRATION. The phase
 // state machine (services/phaseService.js) is the single source of truth; this
 // endpoint is retained for backward compatibility with the existing frontend.
-export const getRegistrationStatus = async (req, res) => {
+export const getRegistrationStatus = async (req, res, next) => {
   try {
     const isRegistrationFrozen = await isRegFrozenByPhase();
     const phase = await getCurrentPhase();
     res.json({ success: true, isRegistrationFrozen, phase });
   } catch (e) {
-    res.json({ success: true, isRegistrationFrozen: true });
+    // Surface failures instead of silently claiming "frozen" (which would lock
+    // the registration UI on a DB/phase-service outage).
+    next(e);
   }
 };
 
@@ -118,12 +120,12 @@ export const registerPlayer = async (req, res, next) => {
     // 1. Check unique studentId and email
     const existingPlayer = await Player.findOne({ studentId: parsed.studentId });
     if (existingPlayer) {
-      return res.status(400).json({ success: false, message: `Student ID ${parsed.studentId} is already registered.` });
+      return res.status(409).json({ success: false, message: `Student ID ${parsed.studentId} is already registered.` });
     }
 
     const existingUser = await User.findOne({ email: parsed.email.toLowerCase() });
     if (existingUser) {
-      return res.status(400).json({ success: false, message: `Email ${parsed.email} is already registered.` });
+      return res.status(409).json({ success: false, message: `Email ${parsed.email} is already registered.` });
     }
 
     // 2. Validate session exists in DB
@@ -262,9 +264,9 @@ export const withdrawPlayer = async (req, res, next) => {
 export const getMyProfile = async (req, res, next) => {
   try {
     const userId = req.user._id;
-    let player = await Player.findOne({ userId }).populate('soldToTeam', 'name logo logoUrl code');
+    let player = await Player.findOne({ userId }).populate('soldToTeam', 'name logo logoUrl shortCode');
     if (!player && req.user.email) {
-      player = await Player.findOne({ email: req.user.email }).populate('soldToTeam', 'name logo logoUrl code');
+      player = await Player.findOne({ email: req.user.email }).populate('soldToTeam', 'name logo logoUrl shortCode');
     }
     if (!player) {
       return res.status(404).json({ success: false, message: 'No player profile found for this account' });

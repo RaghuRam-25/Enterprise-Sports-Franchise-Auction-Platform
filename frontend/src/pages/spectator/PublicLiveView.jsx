@@ -9,6 +9,7 @@ import {
 } from '../../components/auction';
 import { useAuctionAnimation } from '../../hooks/useAuctionAnimation';
 import { playerFallback } from '../../utils/playerFallback';
+import { getImageUrl } from '../../utils/imageUrl';
 import Navbar from '../../components/Navbar';
 
 export default function PublicLiveView() {
@@ -133,7 +134,7 @@ export default function PublicLiveView() {
                   <div className="flex flex-col sm:flex-row items-center gap-6">
                     <div className="relative flex-shrink-0">
                       <img
-                        src={podiumPlayer.imageUrl || podiumPlayer.image || playerFallback('slate')}
+                        src={getImageUrl(podiumPlayer.imageUrl, playerFallback('slate'))}
                         alt={podiumPlayer.name}
                         className="w-32 h-32 rounded-3xl object-cover border-4 border-emerald-500/50 shadow-2xl"
                       />

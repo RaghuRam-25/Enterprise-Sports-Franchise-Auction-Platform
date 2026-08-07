@@ -13,13 +13,14 @@ const matchSchema = new mongoose.Schema({
   status: {
     type: String,
     enum: ['Upcoming', 'Live', 'Finished', 'Cancelled'],
-    default: 'Upcoming'
+    default: 'Upcoming',
+    index: true
   },
   scoreA: { type: String, default: '0' },
   scoreB: { type: String, default: '0' },
   winnerNotes: { type: String, default: '' },
   matchNumber: { type: String, default: '' },
-  tournament: { type: String, default: 'Championship' },
+  tournament: { type: String, default: 'Championship', index: true },
   round: { type: String, default: 'Group Stage' },
   description: { type: String, default: '' },
   isPublished: { type: Boolean, default: true },
