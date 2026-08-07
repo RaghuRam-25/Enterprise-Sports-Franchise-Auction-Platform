@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
 import {
   User, Settings, Trophy, CheckCircle2, Edit3, X, Save, Loader2,
   Camera, Shield, Hash, Shirt, List, Star, Mail, GraduationCap, BadgeCheck,
@@ -7,6 +8,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useAuction } from "../../context/AuctionContext";
+import FullscreenWrapper from "../../components/auction/FullscreenWrapper";
 import { playerAPI } from "../../services/api";
 import api from "../../services/api";
 
@@ -289,14 +291,35 @@ export default function PlayerDashboard() {
         <div className="lg:col-span-2 glass-card rounded-2xl border border-slate-800 p-4 flex flex-col">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500">Position on Pitch</h3>
-            {myPlayer.primaryPosition && (
-              <span className="text-[10px] font-bold text-amber-400 flex items-center gap-1">
-                <MapPin className="w-3 h-3" /> {myPlayer.primaryPosition}
+            <div className="flex items-center gap-2">
+              {myPlayer.primaryPosition && (
+                <span className="text-[10px] font-bold text-amber-400 flex items-center gap-1">
+                  <MapPin className="w-3 h-3" /> {myPlayer.primaryPosition}
+                </span>
+              )}
+              <span className="rounded-full border border-cyan-400/20 bg-cyan-500/10 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.25em] text-cyan-300">
+                Live
               </span>
-            )}
+            </div>
           </div>
-          <div className="relative flex-1 min-h-[200px] rounded-xl overflow-hidden border border-emerald-900/40 bg-gradient-to-b from-emerald-800 to-emerald-900">
-            {/* Pitch lines */}
+
+          <FullscreenWrapper className="relative h-[220px] sm:h-[260px] w-full rounded-xl overflow-hidden border border-emerald-900/40 bg-gradient-to-b from-emerald-800 to-emerald-900">
+            <motion.div
+              className="absolute inset-0"
+              initial={{ opacity: 0.2 }}
+              animate={{ opacity: [0.2, 0.35, 0.2] }}
+              transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
+              style={{ background: "radial-gradient(circle at top, rgba(34,211,238,0.18), transparent 55%)" }}
+            />
+
+            <motion.div
+              className="absolute inset-y-0 w-1/3"
+              style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent)", filter: "blur(18px)" }}
+              initial={{ left: "-40%" }}
+              animate={{ left: ["-40%", "110%"] }}
+              transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
+            />
+
             <div className="absolute inset-3 border border-white/25 rounded-sm" />
             <div className="absolute top-1/2 left-3 right-3 h-px bg-white/25" />
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 rounded-full border border-white/25" />
@@ -305,19 +328,30 @@ export default function PlayerDashboard() {
             <span className="absolute bottom-1.5 right-2.5 text-[9px] font-bold text-white/30 uppercase tracking-wider">Attack →</span>
 
             {pitchDot ? (
-              <div
+              <motion.div
                 className="absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center"
                 style={{ left: `${pitchDot.x}%`, top: `${pitchDot.y}%` }}
+                initial={{ scale: 0.8, opacity: 0.4 }}
+                animate={{ scale: [0.9, 1.15, 0.95], opacity: [0.5, 1, 0.65] }}
+                transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
               >
-                <span className="absolute w-8 h-8 rounded-full bg-amber-400/30 animate-ping" />
+                <motion.span
+                  className="absolute w-8 h-8 rounded-full bg-amber-400/30"
+                  animate={{ opacity: [0.45, 0.95, 0.45], scale: [0.9, 1.2, 0.9] }}
+                  transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
+                />
                 <span className="relative w-4 h-4 rounded-full bg-amber-400 border-2 border-white shadow-lg" />
-              </div>
+              </motion.div>
             ) : (
               <div className="absolute inset-0 flex items-center justify-center">
                 <span className="text-[11px] text-white/40 font-semibold">No primary position set</span>
               </div>
             )}
-          </div>
+
+            <div className="absolute bottom-2 right-2 rounded-full border border-white/10 bg-slate-950/60 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-slate-300 backdrop-blur">
+              Field pulse
+            </div>
+          </FullscreenWrapper>
         </div>
       </div>
 
