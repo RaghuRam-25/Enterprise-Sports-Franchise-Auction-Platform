@@ -219,7 +219,7 @@ export default function AdminPlayers() {
       {/* ── Edit Player Modal (SUPER_ADMIN ONLY) ──────────────────────────────── */}
       {canManage && editingPlayer && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="glass-card w-full max-w-md rounded-2xl p-6 border border-slate-700 space-y-5 shadow-2xl">
+          <div className="glass-card w-full max-w-md rounded-2xl p-6 border border-slate-700 space-y-5 shadow-2xl max-h-[90vh] overflow-y-auto custom-scrollbar">
             <div className="flex justify-between items-center">
               <div>
                 <h2 className="text-lg font-black text-white">Edit Player</h2>
@@ -234,20 +234,29 @@ export default function AdminPlayers() {
             </div>
 
             <div className="space-y-3">
-              {[
-                { label: 'Category', field: 'category', type: 'text' },
-                { label: 'Base Price (BDT)', field: 'basePrice', type: 'number' },
-              ].map(({ label, field, type }) => (
-                <div key={field}>
-                  <label className="block text-[11px] font-semibold text-slate-400 mb-1">{label}</label>
-                  <input
-                    type={type}
-                    value={editForm[field] || ''}
-                    onChange={e => setEditForm(prev => ({ ...prev, [field]: type === 'number' ? Number(e.target.value) : e.target.value }))}
-                    className="glass-input w-full px-3 py-2 rounded-xl text-xs"
-                  />
-                </div>
-              ))}
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-400 mb-1">Category</label>
+                <select
+                  value={editForm.category || ''}
+                  onChange={e => setEditForm(prev => ({ ...prev, category: e.target.value }))}
+                  className="glass-input w-full px-3 py-2 rounded-xl text-xs"
+                >
+                  <option value="">-- Select Category --</option>
+                  {categories.map(c => (
+                    <option key={c._id || c.id} value={c.name}>{c.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-400 mb-1">Base Price (BDT)</label>
+                <input
+                  type="number"
+                  value={editForm.basePrice || ''}
+                  onChange={e => setEditForm(prev => ({ ...prev, basePrice: Number(e.target.value) }))}
+                  className="glass-input w-full px-3 py-2 rounded-xl text-xs"
+                />
+              </div>
 
               <div>
                 <label className="block text-[11px] font-semibold text-slate-400 mb-1">Status</label>
