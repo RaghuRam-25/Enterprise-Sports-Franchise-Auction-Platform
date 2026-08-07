@@ -312,8 +312,8 @@ export default function SuperAdminDashboard() {
           <div className="flex justify-between items-start">
             <div>
               <p className="text-xs font-semibold text-slate-400 uppercase">Dynamic Configs</p>
-              <h3 className="text-2xl font-black text-white mt-1">{categories.length} Tiers</h3>
-              <p className="text-[11px] text-purple-400 mt-1">{positions.length} Positions &bull; {sessions.length} Sessions</p>
+              <h3 className="text-2xl font-black text-white mt-1">{biddingTiers.length} Tiers</h3>
+              <p className="text-[11px] text-purple-400 mt-1">{categories.length} Categories &bull; {positions.length} Positions &bull; {sessions.length} Sessions</p>
             </div>
             <div className="p-3 bg-purple-500/10 text-purple-400 rounded-xl border border-purple-500/20">
               <Settings className="w-6 h-6" />

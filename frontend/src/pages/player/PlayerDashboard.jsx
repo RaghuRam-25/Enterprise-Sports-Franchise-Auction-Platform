@@ -341,22 +341,37 @@ export default function PlayerDashboard() {
           </div>
 
           <FullscreenWrapper className="relative h-[220px] sm:h-[260px] w-full rounded-xl overflow-hidden border border-emerald-900/40 bg-gradient-to-b from-emerald-800 to-emerald-900">
+            {/* Ambient radar glow */}
             <motion.div
               className="absolute inset-0"
               initial={{ opacity: 0.2 }}
-              animate={{ opacity: [0.2, 0.35, 0.2] }}
+              animate={{ opacity: [0.2, 0.4, 0.2] }}
               transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
               style={{ background: "radial-gradient(circle at top, rgba(34,211,238,0.18), transparent 55%)" }}
             />
 
+            {/* Sweeping light beam */}
             <motion.div
               className="absolute inset-y-0 w-1/3"
               style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent)", filter: "blur(18px)" }}
               initial={{ left: "-40%" }}
               animate={{ left: ["-40%", "110%"] }}
-              transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
+              transition={{ duration: 2.4, repeat: Infinity, repeatType: "mirror", ease: "easeInOut" }}
             />
 
+            {/* Rotating radar cone sweep */}
+            <motion.div
+              className="pointer-events-none absolute inset-0 rounded-sm"
+              style={{
+                background: "conic-gradient(from 0deg, transparent 0deg, rgba(56,189,248,0.12) 90deg, transparent 180deg, transparent 360deg)",
+                WebkitMaskImage: "radial-gradient(circle, black 40%, transparent 75%)",
+                maskImage: "radial-gradient(circle, black 40%, transparent 75%)",
+              }}
+              animate={{ rotate: 360 }}
+              transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+            />
+
+            {/* Pitch markings */}
             <div className="absolute inset-3 border border-white/25 rounded-sm" />
             <div className="absolute top-1/2 left-3 right-3 h-px bg-white/25" />
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 rounded-full border border-white/25" />
@@ -372,21 +387,39 @@ export default function PlayerDashboard() {
                     key={mark.code}
                     className="absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center"
                     style={{ left: `${mark.x}%`, top: `${mark.y}%` }}
-                    initial={{ scale: 0.7, opacity: 0.3 }}
-                    animate={{ scale: [0.9, isPrimary ? 1.15 : 1.0, 0.95], opacity: [isPrimary ? 0.5 : 0.3, 1, isPrimary ? 0.65 : 0.35] }}
-                    transition={{ duration: isPrimary ? 1.8 : 2.4, repeat: Infinity, ease: "easeInOut" }}
-                    title={mark.name}
                   >
-                    {isPrimary && (
-                      <motion.span
-                        className="absolute w-8 h-8 rounded-full bg-amber-400/30"
-                        animate={{ opacity: [0.45, 0.95, 0.45], scale: [0.9, 1.2, 0.9] }}
-                        transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
-                      />
+                    {isPrimary ? (
+                      <>
+                        {/* Expanding heartbeat ripple rings */}
+                        {[0, 1, 2].map(i => (
+                          <motion.span
+                            key={i}
+                            className="pointer-events-none absolute w-3 h-3 rounded-full border border-amber-400/60"
+                            initial={{ x: -6, y: -6, scale: 0.6, opacity: 0.9 }}
+                            animate={{ x: -6, y: -6, scale: [0.6, 2.6], opacity: [0.9, 0] }}
+                            transition={{ duration: 1.8, repeat: Infinity, delay: i * 0.6, ease: "easeOut" }}
+                          />
+                        ))}
+                        {/* Primary glowing marker with a clear heartbeat tick */}
+                        <motion.div
+                          className="relative flex h-5 w-5 items-center justify-center rounded-full border-2 border-white bg-amber-400 shadow-[0_0_18px_rgba(251,191,36,0.95)]"
+                          animate={{ scale: [1, 1.3, 1] }}
+                          transition={{ duration: 0.45, repeat: Infinity, ease: "easeInOut" }}
+                        >
+                          <span className="h-1.5 w-1.5 rounded-full bg-amber-900/70" />
+                        </motion.div>
+                      </>
+                    ) : (
+                      <>
+                        {/* Soft secondary glow for supporting positions */}
+                        <motion.span
+                          className="pointer-events-none absolute w-8 h-8 rounded-full bg-cyan-400/25"
+                          animate={{ opacity: [0.3, 0.7, 0.3], scale: [0.8, 1.25, 0.8] }}
+                          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                        />
+                        <span className="relative block h-3 w-3 rounded-full border border-white/80 bg-cyan-300/80 shadow-[0_0_10px_rgba(34,211,238,0.65)]" />
+                      </>
                     )}
-                    <span
-                      className={`relative rounded-full border border-white shadow-lg ${isPrimary ? "w-4 h-4 bg-amber-400" : "w-3 h-3 bg-cyan-300/80"}`}
-                    />
                   </motion.div>
                 );
               })
@@ -397,7 +430,8 @@ export default function PlayerDashboard() {
             )}
 
             <div className="absolute bottom-2 right-2 rounded-full border border-white/10 bg-slate-950/60 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-slate-300 backdrop-blur">
-              Field pulse
+              <span className="inline-block h-1.5 w-1.5 rounded-full bg-cyan-400 align-middle animate-pulse" />
+              <span className="ml-1.5 align-middle">Field pulse</span>
             </div>
           </FullscreenWrapper>
         </div>

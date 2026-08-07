@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -14,36 +14,19 @@ import {
   Award,
   ChevronLeft,
   Crown,
-  MapPin,
   Calendar,
-  Video
+  Video,
+  X
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { useAuction } from '../context/AuctionContext';
 
-export default function Sidebar({ isCollapsed, setIsCollapsed }) {
+export default function Sidebar({ isCollapsed, setIsCollapsed, mobileOpen = false, onCloseMobile }) {
   const { user, logout } = useAuth();
-  const { players } = useAuction();
   const navigate = useNavigate();
-
-  // Has THIS player been sold? Gates the "Field Reveal" link (below). Derived
-  // from the already-loaded auction players list — same source PlayerMyTeam
-  // uses — so it costs no extra request. Falls back to false if data isn't in.
-  const isSoldPlayer = useMemo(() => {
-    if (user?.role !== 'PLAYER' || !Array.isArray(players)) return false;
-    const me = players.find(
-      (p) => p.userId === (user._id || user.id) || p.email === user.email
-    );
-    return !!me && (me.status === 'SOLD' || !!me.soldToTeam);
-  }, [user, players]);
-
 
   // Expanded submenus state
   const [openSubmenus, setOpenSubmenus] = useState({
     configurations: true,
-    podiumControl: true,
-    playerStatus: true,
-    teamStatus: true,
   });
 
   const toggleSubmenu = (key) => {
@@ -96,10 +79,7 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }) {
     { type: 'item', path: '/manager/teams', label: 'All Teams', icon: ShieldCheck }
   ];
 
-
   // ── PLAYER NAV CONFIG ───────────────────────────────────────────────────
-  // "Live Auction" sits at the top — it's the most-used link during an active
-  // auction. "Field Reveal" only appears once the player has been sold.
   const playerNav = [
     { type: 'item', path: '/player/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { type: 'item', path: '/player/live', label: 'Live Auction', icon: Radio, highlight: true },
@@ -131,13 +111,83 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }) {
     roleBadgeColor = 'bg-amber-500/20 text-amber-400 border-amber-500/30';
   }
 
+  // Mobile nav builds a linear list (groups flattened so children are reachable
+  // without hover) — the same items as desktop, so mobile shows the same links.
+  const mobileNav = [];
+  currentNavConfig.forEach((item) => {
+    if (item.type === 'item') {
+      mobileNav.push(item);
+    } else if (item.type === 'group') {
+      item.children.forEach((child) => {
+        mobileNav.push({ type: 'item', path: child.path, label: child.label, icon: item.icon });
+      });
+    }
+  });
+
   return (
-    <aside
-      className={`relative h-full flex flex-col bg-slate-900/95 backdrop-blur-xl border-r border-slate-800 transition-all duration-300 z-30 select-none ${isCollapsed ? 'w-20' : 'w-64'
+    <>
+      {/* Desktop: always visible on lg+ */}
+      <aside
+        className={`hidden lg:flex relative h-full flex-col bg-slate-900/95 backdrop-blur-xl border-r border-slate-800 transition-all duration-300 z-30 select-none ${isCollapsed ? 'w-20' : 'w-64'
+          }`}
+      >
+        <SidebarBody
+          isCollapsed={isCollapsed}
+          setIsCollapsed={setIsCollapsed}
+          currentNavConfig={currentNavConfig}
+          roleTitle={roleTitle}
+          roleBadgeColor={roleBadgeColor}
+          user={user}
+          onLogout={handleLogout}
+          openSubmenus={openSubmenus}
+          toggleSubmenu={toggleSubmenu}
+          isMobile={false}
+          onCloseMobile={onCloseMobile}
+        />
+      </aside>
+
+      {/* Mobile: slide-in overlay drawer */}
+      <aside
+        className={`fixed lg:hidden top-0 left-0 z-50 flex h-full w-72 max-w-[85vw] flex-col bg-slate-900/95 backdrop-blur-xl border-r border-slate-800 shadow-2xl transition-transform duration-300 select-none ${
+          mobileOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
-    >
-      {/* Sidebar Header & Toggle */}
-      <div className="h-16 px-4 flex items-center justify-between border-b border-slate-800">
+      >
+        <SidebarBody
+          isCollapsed={false}
+          setIsCollapsed={setIsCollapsed}
+          currentNavConfig={mobileNav}
+          roleTitle={roleTitle}
+          roleBadgeColor={roleBadgeColor}
+          user={user}
+          onLogout={handleLogout}
+          openSubmenus={openSubmenus}
+          toggleSubmenu={toggleSubmenu}
+          isMobile={true}
+          onCloseMobile={onCloseMobile}
+        />
+      </aside>
+    </>
+  );
+}
+
+/* Shared sidebar body — reused by both desktop rail and mobile drawer. */
+function SidebarBody({
+  isCollapsed,
+  setIsCollapsed,
+  currentNavConfig,
+  roleTitle,
+  roleBadgeColor,
+  user,
+  onLogout,
+  openSubmenus,
+  toggleSubmenu,
+  isMobile,
+  onCloseMobile,
+}) {
+  return (
+    <>
+      {/* Sidebar Header */}
+      <div className="h-16 px-4 flex items-center justify-between border-b border-slate-800 flex-shrink-0">
         {!isCollapsed && (
           <div className="flex items-center gap-2.5 overflow-hidden">
             <div className="w-8 h-8 rounded-lg bg-blue-600/20 border border-blue-500/30 flex items-center justify-center flex-shrink-0">
@@ -151,13 +201,25 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }) {
             </div>
           </div>
         )}
-        <button
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition mx-auto ui-focus"
-          title={isCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
-        >
-          {isCollapsed ? <ChevronRight className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />}
-        </button>
+        {isMobile ? (
+          <button
+            onClick={onCloseMobile}
+            className="p-1.5 ml-auto rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition ui-focus"
+            title="Close Sidebar"
+            aria-label="Close Sidebar"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        ) : (
+          <button
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition mx-auto ui-focus"
+            title={isCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
+            aria-label={isCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
+          >
+            {isCollapsed ? <ChevronRight className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />}
+          </button>
+        )}
       </div>
 
       {/* Sidebar Navigation Items */}
@@ -213,11 +275,6 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }) {
                       <ChevronRight className="w-3.5 h-3.5 text-slate-500" />
                     )
                   )}
-                  {isCollapsed && (
-                    <div className="absolute left-full ml-2 px-2.5 py-1 bg-slate-900 text-slate-200 text-xs font-semibold rounded-md shadow-xl border border-slate-800 whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50">
-                      {item.label}
-                    </div>
-                  )}
                 </button>
 
                 {!isCollapsed && isOpen && (
@@ -247,7 +304,7 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }) {
       </div>
 
       {/* Sidebar Footer User Info & Logout */}
-      <div className="p-3 border-t border-slate-800 bg-slate-950/60">
+      <div className="p-3 border-t border-slate-800 bg-slate-950/60 flex-shrink-0">
         {!isCollapsed ? (
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5 min-w-0">
@@ -262,23 +319,25 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }) {
               </div>
             </div>
             <button
-              onClick={handleLogout}
+              onClick={onLogout}
               className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-slate-800 rounded-lg transition ui-focus"
               title="Logout"
+              aria-label="Logout"
             >
               <LogOut className="w-4 h-4" />
             </button>
           </div>
         ) : (
           <button
-            onClick={handleLogout}
+            onClick={onLogout}
             className="w-full flex justify-center py-2 text-slate-400 hover:text-rose-400 hover:bg-slate-800 rounded-lg transition"
             title="Logout"
+            aria-label="Logout"
           >
             <LogOut className="w-4 h-4" />
           </button>
         )}
       </div>
-    </aside>
+    </>
   );
 }

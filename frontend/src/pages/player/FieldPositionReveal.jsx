@@ -15,7 +15,7 @@ import { playerAPI } from '../../services/api';
  * marker drops onto it at (fieldX, fieldY) — stored as percentages so it stays
  * correct at any panel size.
  *
- * Cinematic language is lifted from PlayerRevealAnimation (the "সরাসরি" live
+ * Cinematic language is lifted from PlayerRevealAnimation (the "Live Reveal"
  * reveal used on the podium): dark premium backdrop, SpotlightBackground +
  * FloatingParticles, GPU-accelerated transform/opacity, cyan→emerald glow, and
  * prefers-reduced-motion jumps straight to the revealed state.

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Shield, User } from 'lucide-react';
+import { useState } from 'react';
+import { User } from 'lucide-react';
 import { getTeamAvatarConfig } from '../../utils/themeConfig';
 import { getImageUrl } from '../../utils/imageUrl';
 
@@ -24,6 +24,16 @@ export default function TeamBadge({
   const avatarConfig = getTeamAvatarConfig(team);
   const IconComponent = avatarConfig.IconComponent;
 
+  // Team coloring is applied as inline style so custom primary/secondary colors
+  // always render (Tailwind cannot build arbitrary classes like from-[#ff0000]
+  // at runtime, which silently dropped the custom gradient before).
+  const customColors = team.primaryColor || team.secondaryColor;
+  const avatarStyle = customColors
+    ? {
+        backgroundImage: `linear-gradient(135deg, ${team.primaryColor || '#3b82f6'}, ${team.secondaryColor || (team.primaryColor || '#0f172a')})`,
+      }
+    : undefined;
+
   // Size mappings
   const dimensions = {
     sm: { avatar: 'w-7 h-7 rounded-lg text-[10px]', icon: 'w-3.5 h-3.5', text: 'text-xs', code: 'text-[9px]' },
@@ -36,7 +46,10 @@ export default function TeamBadge({
     <div className={`flex items-center gap-3 ${className}`}>
       
       {/* Visual Avatar / Custom Logo Container */}
-      <div className={`relative flex-shrink-0 flex items-center justify-center font-black overflow-hidden border shadow-md transition-transform duration-200 group-hover:scale-105 ${dimensions.avatar} ${avatarConfig.borderColor} ${logoUrl && !imgError ? 'bg-slate-900' : `bg-gradient-to-tr ${avatarConfig.bgGradient}`}`}>
+      <div
+        style={avatarStyle || undefined}
+        className={`relative flex-shrink-0 flex items-center justify-center font-black overflow-hidden border shadow-md transition-transform duration-200 group-hover:scale-105 ${dimensions.avatar} ${avatarConfig.borderColor} ${logoUrl && !imgError ? 'bg-slate-900' : customColors ? '' : `bg-gradient-to-tr ${avatarConfig.bgGradient}`}`}
+      >
         
         {logoUrl && !imgError ? (
           <img

@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
-import { ShieldCheck, Loader2, UserCircle2, Mail } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { Loader2, UserCircle2, Mail, RefreshCw } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useAuction } from '../../context/AuctionContext';
+import { useSocket } from '../../context/SocketContext';
 import api from '../../services/api';
 import TeamRosterList from './TeamRosterList';
 import TeamBadge from '../../components/common/TeamBadge';
@@ -9,30 +10,51 @@ import TeamBadge from '../../components/common/TeamBadge';
 export default function ManagerMyTeamView() {
     const { user } = useAuth();
     const { triggerToast, formatCurrency } = useAuction();
+    const { socket } = useSocket();
 
     const [team, setTeam] = useState(null);
     const [players, setPlayers] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        const fetchTeamDetails = async () => {
-            setLoading(true);
-            try {
-                const res = await api.get('/manager/roster');
-                const data = res.data?.data || res.data || null;
-                if (data && data.team) {
-                    setTeam(data.team);
-                    setPlayers(data.players || []);
-                }
-            } catch (err) {
-                console.error('Failed to load team details:', err);
-                triggerToast('Failed to load your team data.', 'error');
-            } finally {
-                setLoading(false);
+    const fetchTeamDetails = useCallback(async (silent = false) => {
+        if (!silent) setLoading(true);
+        try {
+            const res = await api.get('/manager/roster');
+            // axios interceptor unwraps response.data, so res = { success, data }
+            const data = res?.data || res || null;
+            if (data && data.team) {
+                setTeam(data.team);
+                setPlayers(data.players || []);
             }
-        };
+        } catch (err) {
+            console.error('Failed to load team details:', err);
+            if (!silent) triggerToast('Failed to load your team data.', 'error');
+        } finally {
+            if (!silent) setLoading(false);
+        }
+    }, [triggerToast]);
+
+    useEffect(() => {
         if (user) fetchTeamDetails();
-    }, [user, triggerToast]);
+    }, [user, fetchTeamDetails]);
+
+    // Real-time sync: refresh the roster the moment a player is sold to this
+    // team (or any auction completes), so the "My Team" page always matches the
+    // live podium without a manual reload.
+    useEffect(() => {
+        if (!socket) return;
+        const handleSaleEvent = () => fetchTeamDetails(true);
+        socket.on('teams:updated', handleSaleEvent);
+        socket.on('player:updated', handleSaleEvent);
+        socket.on('auction:completed', handleSaleEvent);
+        socket.on('auction:new-bid', handleSaleEvent);
+        return () => {
+            socket.off('teams:updated', handleSaleEvent);
+            socket.off('player:updated', handleSaleEvent);
+            socket.off('auction:completed', handleSaleEvent);
+            socket.off('auction:new-bid', handleSaleEvent);
+        };
+    }, [socket, fetchTeamDetails]);
 
     if (loading) {
         return (
@@ -110,6 +132,16 @@ export default function ManagerMyTeamView() {
             </div>
 
             {/* Roster List */}
+            <div className="flex items-center justify-end">
+                <button
+                    onClick={() => fetchTeamDetails(true)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] font-bold transition border border-slate-700"
+                    title="Refresh roster"
+                    aria-label="Refresh roster"
+                >
+                    <RefreshCw className="w-3.5 h-3.5" /> Refresh
+                </button>
+            </div>
             {players && team && <TeamRosterList players={players} team={team} />}
         </div>
     );

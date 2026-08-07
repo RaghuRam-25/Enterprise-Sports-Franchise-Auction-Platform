@@ -1,12 +1,12 @@
 import 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Trophy, Radio, LogOut, Sun, Moon, Info, Calendar } from 'lucide-react';
+import { Trophy, Radio, LogOut, Sun, Moon, Info, Calendar, Menu } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useAuction } from '../context/AuctionContext';
 import { usePhase } from '../context/PhaseContext';
 import { useTheme } from '../context/ThemeContext';
 
-export default function Navbar() {
+export default function Navbar({ onOpenMobileSidebar }) {
   const { user, logout } = useAuth();
   const {  timerStatus, podiumPlayer, currentBid, formatCurrency, isRegistrationFrozen } = useAuction();
   const { phase } = usePhase();
@@ -19,22 +19,35 @@ export default function Navbar() {
       <div className="w-full px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
 
-          {/* Brand Logo & Name */}
-          <Link to="/" className="flex items-center space-x-3 group">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-500 to-emerald-400 p-0.5 shadow-lg group-hover:scale-105 transition-transform">
-              <div className="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center">
-                <Trophy className="w-4 h-4 text-emerald-400" />
+          {/* Hamburgers & Brand */}
+          <div className="flex items-center gap-2 min-w-0">
+            {/* Hamburger — only visible when authenticated (sidebar present) & small screens */}
+            {user && (
+              <button
+                onClick={onOpenMobileSidebar}
+                className="lg:hidden p-2 -ml-1 text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg transition ui-focus"
+                title="Open Menu"
+                aria-label="Open Menu"
+              >
+                <Menu className="w-5 h-5" />
+              </button>
+            )}
+            <Link to="/" className="flex items-center space-x-3 group shrink-0">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-500 to-emerald-400 p-0.5 shadow-lg group-hover:scale-105 transition-transform">
+                <div className="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center">
+                  <Trophy className="w-4 h-4 text-emerald-400" />
+                </div>
               </div>
-            </div>
-            <div>
-              <span className="font-heading font-black text-base tracking-wider bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent uppercase">
-                FRANCHISE<span className="text-emerald-400">AUCTION</span>
-              </span>
-              <span className="block text-[9px] tracking-widest text-slate-400 uppercase font-semibold">
-                Enterprise Platform
-              </span>
-            </div>
-          </Link>
+              <div className="min-w-0">
+                <span className="font-heading font-black text-base tracking-wider bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent uppercase whitespace-nowrap">
+                  FRANCHISE<span className="text-emerald-400">AUCTION</span>
+                </span>
+                <span className="block text-[9px] tracking-widest text-slate-400 uppercase font-semibold">
+                  Enterprise Platform
+                </span>
+              </div>
+            </Link>
+          </div>
 
           {/* Live Auction Ticker Widget */}
           <div className="hidden md:flex items-center gap-3 bg-slate-950/80 px-3.5 py-1 rounded-full border border-slate-800 shadow-inner">
@@ -59,13 +72,13 @@ export default function Navbar() {
           </div>
 
           {/* Public Top Nav Menu (Only for SPECTATOR / Unauthenticated) */}
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-2 shrink-0">
             {/* User Auth Buttons */}
             {user ? (
               <div className="flex items-center space-x-2 pl-2 border-l border-slate-800">
-                <div className="hidden sm:block text-right">
+                <div className="hidden sm:block text-right min-w-0">
                   <span className="block text-xs font-semibold text-slate-200">{user.name}</span>
-                  <span className="block text-[10px] text-blue-400 font-mono uppercase tracking-wide font-bold">
+                  <span className="block text-[10px] text-blue-400 font-mono uppercase tracking-wide font-bold truncate">
                     {user.role?.replace('_', ' ')}
                   </span>
                 </div>
