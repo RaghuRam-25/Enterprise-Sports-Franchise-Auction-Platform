@@ -265,17 +265,6 @@ export default function PlayerDashboard() {
             </span>
           </div>
         </div>
-
-        {/* Secondary actions — small, understated, tucked at the bottom edge */}
-        <div className="relative z-10 flex items-center justify-center gap-4 px-6 pb-4 border-t border-white/5 pt-3">
-          <Link to="/player/settings" className="text-[11px] font-bold text-slate-500 hover:text-slate-300 transition flex items-center gap-1.5">
-            <Settings className="w-3.5 h-3.5" /> Settings
-          </Link>
-          <span className="text-slate-700">•</span>
-          <Link to="/player/results" className="text-[11px] font-bold text-slate-500 hover:text-purple-300 transition flex items-center gap-1.5">
-            <Trophy className="w-3.5 h-3.5" /> Auction Results
-          </Link>
-        </div>
       </div>
 
       {/* ── Consolidated Player Info (each fact shown exactly once) ────── */}
