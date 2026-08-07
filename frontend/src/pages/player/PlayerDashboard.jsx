@@ -1,9 +1,9 @@
-import  { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import {
   User, Settings, Trophy, CheckCircle2, Edit3, X, Save, Loader2,
   Camera, Shield, Hash, Shirt, List, Star, Mail, GraduationCap, BadgeCheck,
-  Lock, Upload, Trash2
+  Lock, Upload, Trash2, Phone, MapPin, Calendar, Award, Zap
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useAuction } from "../../context/AuctionContext";
@@ -13,6 +13,31 @@ import api from "../../services/api";
 const DEFAULT_AVATAR = "https://ui-avatars.com/api/?background=7c3aed&color=fff&size=256&bold=true&name=";
 const POSITIONS = ["Goalkeeper", "Center Back", "Left Back", "Right Back", "Defensive Midfielder", "Central Midfielder", "Attacking Midfielder", "Left Winger", "Right Winger", "Striker", "Second Striker"];
 const TSHIRT_SIZES = ["S", "M", "L", "XL", "XXL"];
+
+// Approximate pitch coordinates (percent-based, top-down half/full pitch) per
+// position — used only to place a dot on the pitch diagram, not fabricated
+// player stats.
+const POSITION_PITCH_MAP = {
+  "Goalkeeper": { x: 8, y: 50 },
+  "Center Back": { x: 22, y: 50 },
+  "Left Back": { x: 25, y: 15 },
+  "Right Back": { x: 25, y: 85 },
+  "Defensive Midfielder": { x: 42, y: 50 },
+  "Central Midfielder": { x: 55, y: 50 },
+  "Attacking Midfielder": { x: 68, y: 50 },
+  "Left Winger": { x: 75, y: 15 },
+  "Right Winger": { x: 75, y: 85 },
+  "Striker": { x: 90, y: 50 },
+  "Second Striker": { x: 82, y: 50 },
+};
+
+const CATEGORY_TONE = {
+  "Icon Category": { text: "text-amber-600", bg: "bg-amber-50", border: "border-amber-200", chip: "bg-amber-500" },
+  "A Grade": { text: "text-blue-600", bg: "bg-blue-50", border: "border-blue-200", chip: "bg-blue-500" },
+  "B Grade": { text: "text-teal-600", bg: "bg-teal-50", border: "border-teal-200", chip: "bg-teal-500" },
+  "Emerging Youth": { text: "text-purple-600", bg: "bg-purple-50", border: "border-purple-200", chip: "bg-purple-500" },
+};
+const getCategoryTone = (cat) => CATEGORY_TONE[cat] || { text: "text-slate-600", bg: "bg-slate-100", border: "border-slate-200", chip: "bg-slate-500" };
 
 export default function PlayerDashboard() {
   const { user, setUser } = useAuth();
@@ -155,59 +180,150 @@ export default function PlayerDashboard() {
   );
 
   const currentAvatar = removeImage ? `${DEFAULT_AVATAR}${encodeURIComponent(myPlayer.name)}` : (filePreview || myPlayer.imageUrl || `${DEFAULT_AVATAR}${encodeURIComponent(myPlayer.name)}`);
+  const catTone = getCategoryTone(myPlayer.category);
+  const pitchDot = POSITION_PITCH_MAP[myPlayer.primaryPosition] || { x: 50, y: 50 };
+  const isSold = myPlayer.status === "SOLD";
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
-      <div className="glass-card rounded-2xl p-6 border border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4 bg-gradient-to-r from-slate-900 via-purple-950/10 to-slate-900">
-        <div className="flex items-center gap-4">
-          <img src={myPlayer.imageUrl || `${DEFAULT_AVATAR}${encodeURIComponent(myPlayer.name)}`} alt={myPlayer.name} className="w-20 h-20 rounded-2xl object-cover border-2 border-purple-500/40 shadow-xl" />
-          <div>
-            <span className="text-[10px] font-bold text-purple-400 uppercase tracking-widest">Player Portal</span>
-            <h1 className="text-2xl font-black font-heading text-white">{myPlayer.name}</h1>
-            <p className="text-xs text-slate-300">{myPlayer.jerseyName || '—'} &bull; <span className="font-mono text-slate-400">{myPlayer.studentId || '—'}</span></p>
-            <p className="text-[11px] text-slate-500 mt-0.5">{myPlayer.email || '—'}</p>
+
+      {/* ── Player ID Card (light hero, football-card style) ─────────────── */}
+      <div className="relative overflow-hidden rounded-3xl shadow-2xl border border-slate-200 bg-gradient-to-br from-slate-50 via-white to-slate-100">
+        {/* Faint stadium/crowd texture backdrop */}
+        <div
+          className="absolute inset-0 opacity-[0.06] pointer-events-none"
+          style={{
+            backgroundImage: 'radial-gradient(circle, #0f172a 1px, transparent 1px)',
+            backgroundSize: '14px 14px',
+          }}
+        />
+
+        <div className="relative px-6 sm:px-10 pt-8 sm:pt-10 pb-0 flex flex-col sm:flex-row items-center sm:items-start justify-between gap-6">
+          {/* Left: Name / Position / Session */}
+          <div className="text-center sm:text-left order-2 sm:order-1">
+            <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-slate-900 leading-none uppercase">
+              {myPlayer.name}
+            </h1>
+            <p className="text-xs sm:text-sm font-bold text-slate-500 uppercase tracking-widest mt-2">
+              {myPlayer.primaryPosition || "Position Not Set"}
+            </p>
+            {myPlayer.session && (
+              <div className="inline-flex items-center gap-1.5 mt-3 text-xs font-semibold text-slate-500">
+                <GraduationCap className="w-3.5 h-3.5 text-slate-400" />
+                Session {myPlayer.session}
+              </div>
+            )}
+          </div>
+
+          {/* Right: Status badge (category) */}
+          <div className="flex flex-col items-center sm:items-end gap-2 order-1 sm:order-2">
+            <div className={`w-16 h-16 rounded-2xl ${catTone.bg} border ${catTone.border} flex flex-col items-center justify-center shadow-sm`}>
+              <Award className={`w-5 h-5 ${catTone.text}`} />
+            </div>
+            <p className={`text-[11px] font-black uppercase tracking-wider ${catTone.text}`}>{myPlayer.category || 'Unranked'}</p>
+            <p className="text-[10px] text-slate-400 font-semibold">
+              {isSold ? "Auction Status: Sold" : "Auction Status: Registered"}
+            </p>
           </div>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
+
+        {/* Center: Player Photo + ghost jersey number */}
+        <div className="relative flex items-end justify-center px-6 -mt-4 sm:-mt-10">
+          <span className="absolute bottom-0 left-1/2 -translate-x-1/2 text-[9rem] sm:text-[11rem] font-black text-slate-900/[0.05] leading-none select-none pointer-events-none">
+            {myPlayer.tShirtNumber || "00"}
+          </span>
+          <img
+            src={myPlayer.imageUrl || `${DEFAULT_AVATAR}${encodeURIComponent(myPlayer.name)}`}
+            alt={myPlayer.name}
+            className="relative w-44 h-44 sm:w-56 sm:h-56 rounded-3xl object-cover border-4 border-white shadow-2xl z-10"
+          />
+        </div>
+
+        {/* Action buttons row */}
+        <div className="relative z-10 flex flex-wrap items-center justify-center gap-2 px-6 pb-6 pt-4">
           {isRegistrationFrozen ? (
-            <span className="px-3 py-2 bg-amber-500/10 text-amber-400 border border-amber-500/20 text-xs font-bold rounded-xl flex items-center gap-1.5"><Lock className="w-3.5 h-3.5" /> Read-Only</span>
+            <span className="px-4 py-2 bg-amber-100 text-amber-700 border border-amber-300 text-xs font-bold rounded-xl flex items-center gap-1.5">
+              <Lock className="w-3.5 h-3.5" /> Read-Only
+            </span>
           ) : (
-            <button onClick={openEdit} className="px-4 py-2 bg-purple-600/20 hover:bg-purple-600 text-purple-300 hover:text-white border border-purple-500/30 text-xs font-bold rounded-xl transition flex items-center gap-1.5">
+            <button onClick={openEdit} className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition flex items-center gap-1.5 shadow-lg">
               <Edit3 className="w-3.5 h-3.5" /> Edit Profile
             </button>
           )}
-          <Link to="/player/settings" className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 text-xs font-bold rounded-xl transition flex items-center gap-1.5"><Settings className="w-4 h-4" /> Settings</Link>
-          <Link to="/player/results" className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold rounded-xl transition flex items-center gap-1.5 shadow"><Trophy className="w-4 h-4" /> Auction Results</Link>
+          <Link to="/player/settings" className="px-4 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 text-xs font-bold rounded-xl transition flex items-center gap-1.5">
+            <Settings className="w-4 h-4" /> Settings
+          </Link>
+          <Link to="/player/results" className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold rounded-xl transition flex items-center gap-1.5 shadow-lg">
+            <Trophy className="w-4 h-4" /> Auction Results
+          </Link>
         </div>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="glass-card rounded-2xl p-5 border border-slate-800 space-y-1">
-          <span className="text-[10px] font-bold text-slate-400 uppercase">Category</span>
-          <p className="text-xl font-black text-amber-400">{myPlayer.category || 'Unranked'}</p>
-          <p className="text-[11px] text-slate-400">Base: <strong className="font-mono text-emerald-400">{formatCurrency(myPlayer.basePrice)}</strong></p>
-        </div>
-        <div className="glass-card rounded-2xl p-5 border border-slate-800 space-y-1">
-          <span className="text-[10px] font-bold text-slate-400 uppercase">Session</span>
-          <p className="text-base font-extrabold text-white">{myPlayer.session || '—'}</p>
-          <p className="text-[11px] text-emerald-400 font-semibold flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5" /> Verified</p>
-        </div>
-        <div className="glass-card rounded-2xl p-5 border border-slate-800 space-y-1">
-          <span className="text-[10px] font-bold text-slate-400 uppercase">Auction Status</span>
-          <p className="text-xl font-black capitalize text-blue-400">{(myPlayer.status || 'Registered').toLowerCase()}</p>
-          <p className="text-[11px] text-slate-400">{myPlayer.status === "SOLD" ? "Sold at auction" : "Awaiting podium"}</p>
+
+      {/* ── Personal Information Strip ─────────────────────────────────── */}
+      <div className="glass-card rounded-2xl border border-slate-800 p-5">
+        <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-4">Personal Information</h3>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div className="flex flex-col gap-1">
+            <span className="text-[10px] font-bold text-slate-500 uppercase flex items-center gap-1"><Hash className="w-3 h-3" /> Student ID</span>
+            <span className="text-sm font-black text-white font-mono">{myPlayer.studentId || '—'}</span>
+          </div>
+          <div className="flex flex-col gap-1">
+            <span className="text-[10px] font-bold text-slate-500 uppercase flex items-center gap-1"><Shirt className="w-3 h-3" /> Kit Size</span>
+            <span className="text-sm font-black text-white">{myPlayer.tShirtSize || '—'}</span>
+          </div>
+          <div className="flex flex-col gap-1">
+            <span className="text-[10px] font-bold text-slate-500 uppercase flex items-center gap-1"><Hash className="w-3 h-3" /> Jersey No.</span>
+            <span className="text-sm font-black text-white font-mono">#{myPlayer.tShirtNumber || '--'}</span>
+          </div>
+          <div className="flex flex-col gap-1">
+            <span className="text-[10px] font-bold text-slate-500 uppercase flex items-center gap-1"><Phone className="w-3 h-3" /> Phone</span>
+            <span className="text-sm font-black text-white">{myPlayer.phone || '—'}</span>
+          </div>
         </div>
       </div>
-      <div className="glass-card rounded-2xl p-6 border border-slate-800 space-y-4">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2"><User className="w-3.5 h-3.5 text-purple-400" /> Player Information</h3>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
-          {[{ label: "Full Name", value: myPlayer.name, cls: "text-white" }, { label: "Student ID", value: myPlayer.studentId, cls: "text-white font-mono" }, { label: "Session", value: myPlayer.session, cls: "text-white" }, { label: "Email", value: myPlayer.email, cls: "text-blue-300 truncate" }, { label: "Jersey Name", value: myPlayer.jerseyName, cls: "text-white font-mono font-bold" }, { label: "Kit", value: `${myPlayer.tShirtSize} / #${myPlayer.tShirtNumber || "--"}`, cls: "text-white" }].map(({ label, value, cls }) => (
-            <div key={label} className="bg-slate-950/60 rounded-xl p-3 border border-slate-800">
-              <span className="text-slate-500 uppercase text-[10px] font-bold">{label}</span>
-              <p className={`${cls} font-semibold mt-0.5`}>{value || <span className="text-slate-600">—</span>}</p>
+
+      {/* ── Player Overview + Position Pitch Diagram ──────────────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
+        <div className="lg:col-span-3 glass-card rounded-2xl border border-slate-800 p-6 space-y-3">
+          <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Player Overview</h3>
+          {[
+            { label: "Primary Position", value: myPlayer.primaryPosition || '—' },
+            { label: "Jersey Name", value: myPlayer.jerseyName || '—' },
+            { label: "Category", value: myPlayer.category || 'Unranked' },
+            { label: "Base Price", value: formatCurrency(myPlayer.basePrice) },
+            { label: "Email", value: myPlayer.email || '—' },
+            { label: "Auction Status", value: (myPlayer.status || 'Registered') },
+          ].map(({ label, value }) => (
+            <div key={label} className="flex items-center justify-between text-xs py-1.5 border-b border-slate-800/60 last:border-0">
+              <span className="text-slate-500 font-semibold">{label}</span>
+              <span className="text-white font-bold text-right truncate max-w-[60%]">{value}</span>
             </div>
           ))}
         </div>
+
+        {/* Pitch diagram derived from primaryPosition */}
+        <div className="lg:col-span-2 glass-card rounded-2xl border border-slate-800 p-4 flex flex-col">
+          <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-3">Position on Pitch</h3>
+          <div className="relative flex-1 min-h-[180px] rounded-xl overflow-hidden border border-emerald-900/40 bg-gradient-to-b from-emerald-800 to-emerald-900">
+            {/* Pitch lines */}
+            <div className="absolute inset-3 border border-white/25 rounded-sm" />
+            <div className="absolute top-1/2 left-3 right-3 h-px bg-white/25" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 rounded-full border border-white/25" />
+            <div className="absolute left-3 top-1/2 -translate-y-1/2 w-6 h-14 border border-white/25 border-l-0" />
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-14 border border-white/25 border-r-0" />
+
+            {myPlayer.primaryPosition && (
+              <div
+                className="absolute w-4 h-4 rounded-full bg-amber-400 border-2 border-white shadow-lg -translate-x-1/2 -translate-y-1/2"
+                style={{ left: `${pitchDot.x}%`, top: `${pitchDot.y}%` }}
+                title={myPlayer.primaryPosition}
+              />
+            )}
+          </div>
+        </div>
       </div>
+
+      {/* ── Positions ──────────────────────────────────────────────────── */}
       <div className="glass-card rounded-2xl p-5 border border-slate-800">
         <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 flex items-center gap-2"><Shield className="w-3.5 h-3.5 text-purple-400" /> Positions</h3>
         <div className="flex flex-wrap gap-2">
@@ -216,8 +332,13 @@ export default function PlayerDashboard() {
               {pos === myPlayer.primaryPosition && <Star className="w-3 h-3 inline mr-1 text-yellow-400" />}{pos}{pos === myPlayer.primaryPosition && " (Primary)"}
             </span>
           ))}
+          {(!myPlayer.positions || myPlayer.positions.length === 0) && (
+            <p className="text-xs text-slate-600 italic">No positions selected yet.</p>
+          )}
         </div>
       </div>
+
+      {/* ── Franchise Management ──────────────────────────────────────── */}
       <div className="glass-card rounded-2xl p-6 border border-slate-800 space-y-4">
         <div className="flex items-center justify-between">
           <div><h3 className="text-sm font-bold text-white uppercase tracking-wider">Franchise Management</h3><p className="text-xs text-slate-400">Request permission to become a Team Manager.</p></div>
@@ -248,6 +369,7 @@ export default function PlayerDashboard() {
           </button>
         )}
       </div>
+
       {editing && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-start justify-center p-4 overflow-y-auto">
           <div className="glass-card w-full max-w-2xl rounded-2xl border border-slate-700 shadow-2xl my-6">

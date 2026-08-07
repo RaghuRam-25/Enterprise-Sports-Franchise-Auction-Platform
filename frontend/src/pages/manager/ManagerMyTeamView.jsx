@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ShieldCheck, Loader2 } from 'lucide-react';
+import { ShieldCheck, Loader2, UserCircle2, Mail } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useAuction } from '../../context/AuctionContext';
 import api from '../../services/api';
@@ -51,13 +51,46 @@ export default function ManagerMyTeamView() {
     }
 
     const spentBudget = (team.totalBudget || 0) - (team.remainingBudget || 0);
+    const managerInitial = (user?.name || 'M')[0].toUpperCase();
 
     return (
         <div className="space-y-6">
             {/* Team Header */}
-            <div className="glass-card rounded-2xl p-6 border border-slate-800 flex flex-col md:flex-row items-start md:items-center gap-6">
-                <TeamBadge team={team} size="xl" showManager={true} />
-                {team.motto && <p className="text-sm text-emerald-400/80 italic mt-1">"{team.motto}"</p>}
+            <div className="glass-card rounded-2xl p-6 border border-slate-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                {/* Left: Team identity */}
+                <div className="flex flex-col gap-1">
+                    <TeamBadge team={team} size="xl" showManager={false} />
+                    {team.motto && <p className="text-sm text-emerald-400/80 italic mt-1">"{team.motto}"</p>}
+                </div>
+
+                {/* Right: Manager profile card */}
+                <div className="flex items-center gap-3 bg-slate-900/70 border border-slate-800 rounded-2xl px-4 py-3 self-stretch md:self-auto shadow-inner">
+                    {user?.avatarUrl || user?.profilePicture ? (
+                        <img
+                            src={user.avatarUrl || user.profilePicture}
+                            alt={user?.name || 'Manager'}
+                            className="w-12 h-12 rounded-xl object-cover border-2 border-emerald-500/40 flex-shrink-0"
+                        />
+                    ) : (
+                        <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-emerald-500 to-blue-500 flex items-center justify-center text-white font-black text-lg border-2 border-emerald-500/40 flex-shrink-0">
+                            {managerInitial}
+                        </div>
+                    )}
+                    <div className="min-w-0">
+                        <span className="text-[9px] font-bold uppercase tracking-widest text-slate-500 flex items-center gap-1">
+                            <UserCircle2 className="w-3 h-3 text-emerald-400" /> Franchise Manager
+                        </span>
+                        <p className="text-sm font-extrabold text-white truncate max-w-[160px]">
+                            {user?.name || 'Team Manager'}
+                        </p>
+                        {user?.email && (
+                            <p className="text-[10px] text-slate-500 truncate max-w-[160px] flex items-center gap-1 mt-0.5">
+                                <Mail className="w-2.5 h-2.5 flex-shrink-0" />
+                                {user.email}
+                            </p>
+                        )}
+                    </div>
+                </div>
             </div>
 
             {/* Budget Summary */}

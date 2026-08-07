@@ -1,20 +1,22 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 
 import {
   ShieldCheck, Save, Loader2, DollarSign, Users, Award, Edit3, X,
   Wallet, TrendingUp, Camera, Sparkles, Quote,
-  MapPin, Mail, UserCog, CalendarDays, Palette, Info, Key
+  MapPin, Mail, UserCog, CalendarDays, Palette, Info, Key, Shirt
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useAuction } from '../../context/AuctionContext';
 import api, { managerAPI } from '../../services/api';
 import TeamBadge from '../../components/common/TeamBadge';
+import PlayerCardCard from '../../components/common/PlayerCardCard';
 
 export default function ManagerMyTeam() {
   const { user } = useAuth();
-  const { triggerToast, formatCurrency, refetchTeams } = useAuction();
+  const { triggerToast, formatCurrency, refetchTeams, teams: allTeams = [] } = useAuction();
 
   const [team, setTeam] = useState(null);
+  const [roster, setRoster] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // Modal and form state
@@ -40,6 +42,10 @@ export default function ManagerMyTeam() {
       const data = res.data?.data || res.data || null;
       if (data && data.team) {
         setTeam(data.team);
+        // Roster players can arrive under a few different keys depending on
+        // how the backend shapes the response — check the common ones.
+        const rosterList = data.roster || data.players || data.team.currentRoster || [];
+        setRoster(Array.isArray(rosterList) ? rosterList : []);
       } else {
         triggerToast('Could not find an assigned team for your account.', 'warning');
       }
@@ -107,6 +113,48 @@ export default function ManagerMyTeam() {
     }
   };
 
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    if (newPass !== confirmPass) {
+      triggerToast('New passwords do not match.', 'error');
+      return;
+    }
+    if (newPass.length < 6) {
+      triggerToast('Password must be at least 6 characters.', 'error');
+      return;
+    }
+    setChangingPass(true);
+    try {
+      await api.put('/manager/password', { currentPassword: currentPass, newPassword: newPass });
+      triggerToast('Password changed successfully!', 'success');
+      setShowPasswordModal(false);
+      setCurrentPass('');
+      setNewPass('');
+      setConfirmPass('');
+    } catch (err) {
+      triggerToast(err?.response?.data?.message || 'Failed to change password.', 'error');
+    } finally {
+      setChangingPass(false);
+    }
+  };
+
+  // Normalize roster entries — they may be full player objects, or IDs that
+  // still need resolving against the full player list. We only have the
+  // player objects returned in `roster` here, so just filter out any junk.
+  const rosterPlayers = useMemo(() => {
+    return roster.filter(p => p && typeof p === 'object' && (p._id || p.id));
+  }, [roster]);
+
+  const positionGroups = useMemo(() => {
+    const groups = {};
+    rosterPlayers.forEach(p => {
+      const pos = p.primaryPosition || 'Unassigned';
+      if (!groups[pos]) groups[pos] = 0;
+      groups[pos] += 1;
+    });
+    return groups;
+  }, [rosterPlayers]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -127,8 +175,8 @@ export default function ManagerMyTeam() {
   const remainingBudget = team.remainingBudget || 0;
   const spentBudget = totalBudget - remainingBudget;
   const utilization = totalBudget > 0 ? Math.min(100, Math.round((spentBudget / totalBudget) * 100)) : 0;
-  const squadSize = team.rosterCount ?? team.playerCount ?? team.players?.length ?? '—';
-  const squadTarget = team.requiredSlots ?? team.squadTarget ?? null;
+  const squadSize = rosterPlayers.length || team.rosterCount || team.playerCount || 0;
+  const squadTarget = team.requiredSlots ?? team.squadTarget ?? team.minRoster ?? null;
 
   const stats = [
     {
@@ -157,38 +205,12 @@ export default function ManagerMyTeam() {
     },
   ];
 
-  const handleChangePassword = async (e) => {
-    e.preventDefault();
-    if (newPass !== confirmPass) {
-      triggerToast('New passwords do not match.', 'error');
-      return;
-    }
-    if (newPass.length < 6) {
-      triggerToast('Password must be at least 6 characters.', 'error');
-      return;
-    }
-    setChangingPass(true);
-    try {
-      await api.put('/manager/password', { currentPassword: currentPass, newPassword: newPass });
-      triggerToast('Password changed successfully!', 'success');
-      setShowPasswordModal(false);
-      setCurrentPass('');
-      setNewPass('');
-      setConfirmPass('');
-    } catch (err) {
-      triggerToast(err?.response?.data?.message || 'Failed to change password.', 'error');
-    } finally {
-      setChangingPass(false);
-    }
-  };
-
   return (
     <div className="space-y-6">
-      {/* Profile Header Card */}
+      {/* ── Profile Header Card ─────────────────────────────────────────── */}
       <div className="glass-card rounded-2xl border border-slate-800 overflow-hidden shadow-2xl shadow-purple-950/10">
         {/* Banner */}
         <div className="relative h-40 md:h-52 bg-gradient-to-br from-slate-950 via-indigo-950 to-purple-950 overflow-hidden">
-          {/* Ambient signature pattern — dot grid + soft radial glow, on-brand with the auction "podium light" motif */}
           <div
             className="absolute inset-0 opacity-40"
             style={{
@@ -200,10 +222,14 @@ export default function ManagerMyTeam() {
           <div className="absolute -bottom-20 -left-10 w-56 h-56 bg-emerald-500/10 rounded-full blur-3xl" />
 
           <div className="relative h-full p-6 flex flex-col justify-between">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center justify-between">
               <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/30 border border-white/10 text-[10px] font-bold tracking-wider uppercase text-slate-200 backdrop-blur-sm">
                 <Sparkles className="w-3 h-3 text-emerald-400" />
                 Franchise Profile
+              </span>
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/30 border border-white/10 text-[10px] font-bold tracking-wider uppercase text-slate-200 backdrop-blur-sm">
+                <UserCog className="w-3 h-3 text-blue-400" />
+                {user?.name || 'Team Manager'}
               </span>
             </div>
             <button
@@ -259,7 +285,7 @@ export default function ManagerMyTeam() {
         </div>
       </div>
 
-      {/* Budget Utilization */}
+      {/* ── Budget Utilization ──────────────────────────────────────────── */}
       <div className="glass-card rounded-2xl border border-slate-800 p-5 shadow-xl">
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
@@ -275,7 +301,7 @@ export default function ManagerMyTeam() {
         </div>
       </div>
 
-      {/* Stat Cards */}
+      {/* ── Stat Cards ──────────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map(({ label, value, icon: Icon, tone }) => (
           <div key={label} className="glass-card rounded-2xl border border-slate-800 p-4 shadow-lg">
@@ -288,7 +314,7 @@ export default function ManagerMyTeam() {
         ))}
       </div>
 
-      {/* Team Details */}
+      {/* ── Team Details ────────────────────────────────────────────────── */}
       <div className="glass-card rounded-2xl border border-slate-800 p-6 shadow-xl">
         <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4 flex items-center gap-2">
           <Info className="w-4 h-4 text-emerald-400" /> Team Details
@@ -354,7 +380,7 @@ export default function ManagerMyTeam() {
         </div>
       </div>
 
-      {/* About */}
+      {/* ── About ───────────────────────────────────────────────────────── */}
       {team.description && (
         <div className="glass-card rounded-2xl border border-slate-800 p-6 shadow-xl">
           <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2 flex items-center gap-2">
@@ -363,6 +389,53 @@ export default function ManagerMyTeam() {
           <p className="text-sm text-slate-300 leading-relaxed">{team.description}</p>
         </div>
       )}
+
+      {/* ── My Squad — Acquired Players as Cards ───────────────────────── */}
+      <div className="glass-card rounded-2xl border border-slate-800 p-6 shadow-xl space-y-5">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+            <Shirt className="w-4 h-4 text-emerald-400" /> My Squad
+            <span className="ml-1 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-[10px] font-mono font-bold normal-case tracking-normal">
+              {squadSize}{squadTarget ? ` / ${squadTarget}` : ''} Players
+            </span>
+          </h3>
+
+          {/* Position breakdown pills */}
+          {Object.keys(positionGroups).length > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              {Object.entries(positionGroups).map(([pos, count]) => (
+                <span
+                  key={pos}
+                  className="px-2.5 py-1 rounded-lg bg-slate-800/80 border border-slate-700 text-[10px] font-bold text-slate-300"
+                >
+                  {pos}: <span className="text-white">{count}</span>
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {rosterPlayers.length === 0 ? (
+          <div className="py-12 text-center space-y-3 border border-dashed border-slate-800 rounded-2xl">
+            <Users className="w-10 h-10 mx-auto text-slate-700" />
+            <p className="text-sm font-bold text-slate-400">No players acquired yet</p>
+            <p className="text-xs text-slate-600 max-w-sm mx-auto">
+              Players you win in the live auction will automatically appear here as part of your squad.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+            {rosterPlayers.map(player => (
+              <PlayerCardCard
+                key={player._id || player.id}
+                player={player}
+                formatCurrency={formatCurrency}
+                teams={allTeams}
+              />
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Edit Team Modal */}
       {showEditModal && (
