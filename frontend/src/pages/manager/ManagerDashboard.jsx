@@ -324,7 +324,7 @@ export const ManagerDashboard = () => {
             highestBidder &&
             (highestBidder.id === activeTeam.id || highestBidder._id === activeTeam._id)
           )}
-          showWaiting={!podiumPlayer && timerStatus === 'idle' && (animState === ANIM_STATES_HOOK?.IDLE || !animState)}
+          showWaiting={!podiumPlayer && (animState === ANIM_STATES_HOOK?.IDLE || !animState)}
           waitingStats={{
             teamsConnected: safeTeams.length,
             managersReady: safeTeams.filter((t) => t.managerId).length,

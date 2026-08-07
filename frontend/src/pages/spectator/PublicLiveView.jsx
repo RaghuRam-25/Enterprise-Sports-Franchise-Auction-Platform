@@ -52,7 +52,7 @@ export default function PublicLiveView() {
     }
   }, [socket, isConnected]);
 
-  const showWaiting = !podiumPlayer && timerStatus === 'idle' && animState === ANIM_STATES.IDLE;
+  const showWaiting = !podiumPlayer && animState === ANIM_STATES.IDLE;
   const isUrgent = animState === ANIM_STATES.LAST5 || (timerRemaining <= 5 && timerStatus === 'running');
 
   return (

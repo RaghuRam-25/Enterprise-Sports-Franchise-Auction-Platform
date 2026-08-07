@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -18,21 +18,26 @@ const DEFAULT_AVATAR = "https://ui-avatars.com/api/?background=7c3aed&color=fff&
 const POSITIONS = ["Goalkeeper", "Center Back", "Left Back", "Right Back", "Defensive Midfielder", "Central Midfielder", "Attacking Midfielder", "Left Winger", "Right Winger", "Striker", "Second Striker"];
 const TSHIRT_SIZES = ["S", "M", "L", "XL", "XXL"];
 
-// Approximate pitch coordinates (percent-based, left-to-right full pitch) per
-// position — used only to place a dot on the pitch diagram, not fabricated
-// player stats.
-const POSITION_PITCH_MAP = {
-  "Goalkeeper": { x: 8, y: 50 },
-  "Center Back": { x: 22, y: 50 },
-  "Left Back": { x: 25, y: 15 },
-  "Right Back": { x: 25, y: 85 },
-  "Defensive Midfielder": { x: 42, y: 50 },
-  "Central Midfielder": { x: 55, y: 50 },
-  "Attacking Midfielder": { x: 68, y: 50 },
-  "Left Winger": { x: 75, y: 15 },
-  "Right Winger": { x: 75, y: 85 },
-  "Striker": { x: 90, y: 50 },
-  "Second Striker": { x: 82, y: 50 },
+// Fallback pitch coordinates keyed by position CODE (positions are stored as
+// codes like 'ST'/'CB'). Live config positions (from /config/positions, which
+// carry fieldX/fieldY) take priority; this map covers positions whose code is
+// not in the current config, so the pitch always renders.
+const POSITION_CODE_MAP = {
+  "GK":   { name: "Goalkeeper",           x: 6,  y: 50 },
+  "CB":   { name: "Center Back",          x: 22, y: 50 },
+  "LB":   { name: "Left Back",            x: 28, y: 16 },
+  "RB":   { name: "Right Back",           x: 28, y: 84 },
+  "DM":   { name: "Defensive Midfielder", x: 40, y: 50 },
+  "CDM":  { name: "Defensive Midfielder", x: 40, y: 50 },
+  "CM":   { name: "Central Midfielder",   x: 52, y: 50 },
+  "CAM":  { name: "Attacking Midfielder", x: 64, y: 50 },
+  "LM":   { name: "Left Midfielder",      x: 55, y: 18 },
+  "RM":   { name: "Right Midfielder",     x: 55, y: 82 },
+  "LW":   { name: "Left Winger",          x: 78, y: 18 },
+  "RW":   { name: "Right Winger",         x: 78, y: 82 },
+  "SS":   { name: "Second Striker",       x: 80, y: 50 },
+  "ST":   { name: "Striker",              x: 88, y: 50 },
+  "CF":   { name: "Center Forward",       x: 86, y: 50 },
 };
 
 const CATEGORY_TONE = {
@@ -45,7 +50,7 @@ const getCategoryTone = (cat) => CATEGORY_TONE[cat] || { text: "text-slate-400",
 
 export default function PlayerDashboard() {
   const { user, setUser } = useAuth();
-  const { formatCurrency, triggerToast, isRegistrationFrozen } = useAuction();
+  const { formatCurrency, triggerToast, isRegistrationFrozen, positions } = useAuction();
   const [myPlayer, setMyPlayer] = useState(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
@@ -56,6 +61,35 @@ export default function PlayerDashboard() {
   const [removeImage, setRemoveImage] = useState(false);
   const [activeTab, setActiveTab] = useState("personal");
   const fileInputRef = useRef(null);
+
+  // Code → { name, fieldX, fieldY } from the live /config/positions list.
+  const positionInfo = useMemo(() => {
+    const map = {};
+    (Array.isArray(positions) ? positions : []).forEach(p => {
+      const key = String(p.code || p.name || '').toUpperCase();
+      if (key) {
+        map[key] = {
+          name: p.name || p.code,
+          x: Number.isFinite(p.fieldX) ? p.fieldX : null,
+          y: Number.isFinite(p.fieldY) ? p.fieldY : null,
+        };
+      }
+    });
+    return map;
+  }, [positions]);
+
+  // Resolve a stored position code (or name) to { code, name, x, y }. Uses the
+  // live config's fieldX/fieldY, falling back to the canonical code map so the
+  // marker always lands in the right place on the pitch.
+  const resolvePosition = (code) => {
+    const key = String(code || '').toUpperCase();
+    const cfg = positionInfo[key];
+    const fb = POSITION_CODE_MAP[key];
+    const x = cfg?.x != null ? cfg.x : (fb ? fb.x : null);
+    const y = cfg?.y != null ? cfg.y : (fb ? fb.y : null);
+    if (x == null || y == null) return null;
+    return { code, name: (cfg ? cfg.name : fb.name), x, y };
+  };
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -185,7 +219,8 @@ export default function PlayerDashboard() {
 
   const currentAvatar = removeImage ? `${DEFAULT_AVATAR}${encodeURIComponent(myPlayer.name)}` : (filePreview || myPlayer.imageUrl || `${DEFAULT_AVATAR}${encodeURIComponent(myPlayer.name)}`);
   const catTone = getCategoryTone(myPlayer.category);
-  const markedPositions = (myPlayer.positions || []).filter(pos => POSITION_PITCH_MAP[pos]);
+  const pitchMarks = (myPlayer.positions || []).map(resolvePosition).filter(Boolean);
+  const primaryName = (resolvePosition(myPlayer.primaryPosition)?.name) || (myPlayer.primaryPosition || "");
   const isSold = myPlayer.status === "SOLD";
 
   // Consolidated info list — every field appears exactly once across the page.
@@ -255,7 +290,7 @@ export default function PlayerDashboard() {
             {myPlayer.name}
           </h1>
           <p className="text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest mt-2 text-center">
-            {myPlayer.primaryPosition || "Position Not Set"}
+            {primaryName || "Position Not Set"}
           </p>
 
           {/* Category + Status pills */}
@@ -296,7 +331,7 @@ export default function PlayerDashboard() {
             <div className="flex items-center gap-2">
               {myPlayer.primaryPosition && (
                 <span className="text-[10px] font-bold text-amber-400 flex items-center gap-1">
-                  <MapPin className="w-3 h-3" /> {myPlayer.primaryPosition}
+                  <MapPin className="w-3 h-3" /> {primaryName}
                 </span>
               )}
               <span className="rounded-full border border-cyan-400/20 bg-cyan-500/10 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.25em] text-cyan-300">
@@ -329,19 +364,18 @@ export default function PlayerDashboard() {
             <div className="absolute right-3 top-1/2 -translate-y-1/2 w-7 h-16 border border-white/25 border-r-0" />
             <span className="absolute bottom-1.5 right-2.5 text-[9px] font-bold text-white/30 uppercase tracking-wider">Attack →</span>
 
-            {markedPositions.length > 0 ? (
-              markedPositions.map(pos => {
-                const coord = POSITION_PITCH_MAP[pos];
-                const isPrimary = pos === myPlayer.primaryPosition;
+            {pitchMarks.length > 0 ? (
+              pitchMarks.map(mark => {
+                const isPrimary = String(mark.code).toUpperCase() === String(myPlayer.primaryPosition).toUpperCase();
                 return (
                   <motion.div
-                    key={pos}
+                    key={mark.code}
                     className="absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center"
-                    style={{ left: `${coord.x}%`, top: `${coord.y}%` }}
+                    style={{ left: `${mark.x}%`, top: `${mark.y}%` }}
                     initial={{ scale: 0.7, opacity: 0.3 }}
                     animate={{ scale: [0.9, isPrimary ? 1.15 : 1.0, 0.95], opacity: [isPrimary ? 0.5 : 0.3, 1, isPrimary ? 0.65 : 0.35] }}
                     transition={{ duration: isPrimary ? 1.8 : 2.4, repeat: Infinity, ease: "easeInOut" }}
-                    title={pos}
+                    title={mark.name}
                   >
                     {isPrimary && (
                       <motion.span
@@ -373,11 +407,16 @@ export default function PlayerDashboard() {
       <div className="glass-card rounded-2xl p-5 border border-slate-800">
         <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 flex items-center gap-2"><Shield className="w-3.5 h-3.5 text-purple-400" /> Positions</h3>
         <div className="flex flex-wrap gap-2">
-          {(myPlayer.positions || []).map(pos => (
-            <span key={pos} className={`px-3 py-1 rounded-lg text-xs font-bold border ${pos === myPlayer.primaryPosition ? "bg-purple-500/20 text-purple-300 border-purple-500/40" : "bg-slate-800 text-slate-400 border-slate-700"}`}>
-              {pos === myPlayer.primaryPosition && <Star className="w-3 h-3 inline mr-1 text-yellow-400" />}{pos}{pos === myPlayer.primaryPosition && " (Primary)"}
-            </span>
-          ))}
+          {(myPlayer.positions || []).map(pos => {
+            const info = resolvePosition(pos);
+            const label = info ? info.name : pos;
+            const isPrimary = String(pos).toUpperCase() === String(myPlayer.primaryPosition).toUpperCase();
+            return (
+              <span key={pos} className={`px-3 py-1 rounded-lg text-xs font-bold border ${isPrimary ? "bg-purple-500/20 text-purple-300 border-purple-500/40" : "bg-slate-800 text-slate-400 border-slate-700"}`}>
+                {isPrimary && <Star className="w-3 h-3 inline mr-1 text-yellow-400" />}{label}{isPrimary && " (Primary)"}
+              </span>
+            );
+          })}
           {(!myPlayer.positions || myPlayer.positions.length === 0) && (
             <p className="text-xs text-slate-600 italic">No positions selected yet.</p>
           )}
