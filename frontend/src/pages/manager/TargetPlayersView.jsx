@@ -180,6 +180,12 @@ export default function TargetPlayersView() {
   // Filtered Players Pool
   const filteredPlayers = useMemo(() => {
     return players.filter((p) => {
+      // Exclude players who are not available for targeting (sold, banned, or withdrawn)
+      const playerStatus = p.status?.toUpperCase();
+      if (playerStatus === 'SOLD' || playerStatus === 'BANNED' || playerStatus === 'WITHDRAWN') {
+        return false;
+      }
+
       // Search
       const nameMatch =
         p.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -317,7 +323,7 @@ export default function TargetPlayersView() {
               <Star className="w-4 h-4 text-amber-400 fill-amber-400" /> Ranked Target Shortlist
             </h2>
             <span className="text-xs text-slate-500">
-              Drag & priority controls enable ranking. Reminders auto-popup during live bidding.
+              Priority controls enable ranking. Reminders auto-popup during live bidding.
             </span>
           </div>
 
@@ -341,115 +347,81 @@ export default function TargetPlayersView() {
               </button>
             </div>
           ) : (
-            <div className="space-y-3">
+            /* Card Grid — matches PublicPlayersView layout */
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
               {targetList.map((target, idx) => {
                 const player = target.playerId || {};
                 const pId = player._id || player.id;
-                const isSold = player.status === 'SOLD';
-                const soldToTeam = isSold ? teams.find(t => (t._id || t.id) === player.soldToTeam) : null;
                 if (!pId) return null;
 
                 return (
-                  <div
-                    key={target._id || target.id}
-                    className="glass-card rounded-2xl p-4 sm:p-5 border border-white/5 bg-gradient-to-r from-slate-900 via-slate-900/90 to-slate-950 hover:border-amber-500/30 transition-all flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-xl"
-                  >
-                    {/* Left: Priority Badge & Player Identity */}
-                    <div className="flex items-center gap-4 min-w-0">
-                      <div className="flex flex-col items-center justify-center gap-1 flex-shrink-0">
-                        <span className="w-9 h-9 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-400 font-black font-mono text-sm flex items-center justify-center shadow-inner">
-                          #{target.priority}
-                        </span>
-                        <div className="flex flex-col gap-0.5">
-                          <button
-                            onClick={() => handleMovePriority(idx, 'up')}
-                            disabled={idx === 0}
-                            className="p-1 text-slate-500 hover:text-amber-400 disabled:opacity-30 disabled:cursor-not-allowed transition"
-                            title="Move Priority Up"
-                          >
-                            <MoveUp className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            onClick={() => handleMovePriority(idx, 'down')}
-                            disabled={idx === targetList.length - 1}
-                            className="p-1 text-slate-500 hover:text-amber-400 disabled:opacity-30 disabled:cursor-not-allowed transition"
-                            title="Move Priority Down"
-                          >
-                            <MoveDown className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      </div>
+                  <div key={target._id || target.id} className="relative">
+                    {/* Priority Badge — floats over the top-left corner of the card */}
+                    <div className="absolute -top-2.5 -left-2.5 z-20 flex items-center gap-1">
+                      <span className="w-8 h-8 rounded-xl bg-amber-500 text-slate-950 font-black font-mono text-xs flex items-center justify-center shadow-lg border-2 border-slate-950">
+                        #{target.priority ?? idx + 1}
+                      </span>
+                    </div>
 
-                      <img
-                        src={player.imageUrl || playerFallback('amber')}
-                        alt={player.name}
-                        className="w-14 h-14 rounded-2xl object-cover border-2 border-emerald-500/30 shadow-lg flex-shrink-0"
-                      />
-
-                      <div className="space-y-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <h3 className="text-base font-extrabold text-white truncate">{player.name}</h3>
-                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                            {player.category || 'Category'}
-                          </span>
-                        </div>
-
-                        <div className="flex items-center gap-3 text-xs text-slate-300 flex-wrap">
-                          <span>Pos: <strong className="text-white">{player.primaryPosition}</strong></span>
-                          {isSold ? (
-                            <>
-                              <span className="text-slate-500">&bull;</span>
-                              <span className="font-mono text-amber-400">Sold: {formatCurrency(player.finalPrice || player.soldPrice || 0)}</span>
-                              <span className="text-slate-500">&bull;</span>
-                              <span className="text-slate-400">To: <strong className="text-white">{soldToTeam?.name || 'N/A'}</strong></span>
-                            </>
-                          ) : (
-                            <>
-                              <span className="text-slate-500">&bull;</span><span className="font-mono text-emerald-400">Base: {formatCurrency(player.basePrice)}</span>
-                            </>
+                    <PlayerCardCard
+                      player={player}
+                      formatCurrency={formatCurrency}
+                      teams={teams}
+                      customActions={
+                        <div className="w-full space-y-2">
+                          {/* Note & Budget Cap badges */}
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            {target.optionalBudgetLimit ? (
+                              <span className="px-2 py-1 rounded-lg bg-slate-950 border border-amber-500/30 text-amber-300 font-mono text-[10px] font-bold flex items-center gap-1">
+                                <DollarSign className="w-3 h-3 text-amber-400" />
+                                {formatCurrency(target.optionalBudgetLimit)}
+                              </span>
+                            ) : (
+                              <span className="text-[10px] text-slate-500 italic">No budget cap</span>
+                            )}
+                          </div>
+                          {target.note && (
+                            <p className="text-[10px] text-slate-400 italic truncate flex items-center gap-1">
+                              <FileText className="w-3 h-3 text-amber-400 flex-shrink-0" />
+                              "{target.note}"
+                            </p>
                           )}
+
+                          {/* Priority + Edit + Remove Controls */}
+                          <div className="flex items-center gap-1.5 pt-1">
+                            <button
+                              onClick={() => handleMovePriority(idx, 'up')}
+                              disabled={idx === 0}
+                              className="p-1.5 rounded-lg bg-slate-800 text-slate-400 hover:text-amber-400 disabled:opacity-30 disabled:cursor-not-allowed transition border border-slate-700"
+                              title="Move Priority Up"
+                            >
+                              <MoveUp className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={() => handleMovePriority(idx, 'down')}
+                              disabled={idx === targetList.length - 1}
+                              className="p-1.5 rounded-lg bg-slate-800 text-slate-400 hover:text-amber-400 disabled:opacity-30 disabled:cursor-not-allowed transition border border-slate-700"
+                              title="Move Priority Down"
+                            >
+                              <MoveDown className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={() => openEditModal(target)}
+                              className="flex-1 px-2 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-[10px] font-bold border border-slate-700 transition flex items-center justify-center gap-1"
+                            >
+                              <FileText className="w-3 h-3 text-amber-400" /> Edit
+                            </button>
+                            <button
+                              onClick={() => handleRemoveTarget(target._id || target.id, player.name)}
+                              className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 border border-slate-700 hover:border-rose-500/30 transition"
+                              title="Remove Target"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
                         </div>
-                      </div>
-                    </div>
-
-                    {/* Middle: Notes & Budget Cap Badges */}
-                    <div className="flex flex-wrap items-center gap-2.5 w-full md:w-auto">
-                      {target.optionalBudgetLimit ? (
-                        <span className="px-3 py-1.5 rounded-xl bg-slate-950 border border-amber-500/30 text-amber-300 font-mono text-xs font-bold flex items-center gap-1.5">
-                          <DollarSign className="w-3.5 h-3.5 text-amber-400" />
-                          Cap: {formatCurrency(target.optionalBudgetLimit)}
-                        </span>
-                      ) : (
-                        <span className="text-[11px] text-slate-500 italic">No budget cap</span>
-                      )}
-
-                      {target.note ? (
-                        <span className="px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-300 text-xs italic truncate max-w-xs flex items-center gap-1.5">
-                          <FileText className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
-                          "{target.note}"
-                        </span>
-                      ) : (
-                        <span className="text-[11px] text-slate-500 italic">No note</span>
-                      )}
-                    </div>
-
-                    {/* Right: Actions */}
-                    <div className="flex items-center gap-2 flex-shrink-0 self-end md:self-center">
-                      <button
-                        onClick={() => openEditModal(target)}
-                        className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition flex items-center gap-1.5"
-                      >
-                        <FileText className="w-3.5 h-3.5 text-amber-400" /> Edit Strategy
-                      </button>
-
-                      <button
-                        onClick={() => handleRemoveTarget(target._id || target.id, player.name)}
-                        className="p-2 rounded-xl text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/30 transition"
-                        title="Remove Target"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
+                      }
+                    />
                   </div>
                 );
               })}
