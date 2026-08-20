@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import { memo, useId } from 'react';
 
 /**
  * FootballField — A responsive, self-contained SVG top-down soccer/football field component.
@@ -10,6 +10,10 @@ import React, { memo } from 'react';
  * - Complete markings: outer boundary, halfway line, center circle + spot,
  *   penalty areas, goal areas (6-yd box), penalty spots, penalty arcs, and 4 corner arcs
  * - Customizable via props (width, height, fieldColor, stripeColor, lineColor, lineWidth, etc.)
+ *
+ * Marker overlay: children of the parent can be absolutely positioned with
+ * `left: fieldX%` / `top: fieldY%` (attacking direction pointing RIGHT) — the
+ * same coordinate convention used by the backend (fieldPositions.js).
  */
 function FootballField({
   width = '100%',
@@ -19,9 +23,11 @@ function FootballField({
   stripeColor = '#1d7332',
   lineColor = '#ffffff',
   lineWidth = 3,
+  preserveAspectRatio = 'xMidYMid slice',
   style = {},
   ...props
 }) {
+  const gradientId = useId();
   const W = 1050;
   const H = 680;
   const marginX = 30;
@@ -35,10 +41,12 @@ function FootballField({
   // 12 vertical mowed stripes
   const numStripes = 12;
   const stripeW = W / numStripes;
+  const vignetteId = `field-vignette-${gradientId}`;
 
   return (
     <svg
       viewBox={`0 0 ${W} ${H}`}
+      preserveAspectRatio={preserveAspectRatio}
       width={width}
       height={height}
       className={className}
@@ -54,7 +62,7 @@ function FootballField({
     >
       <defs>
         {/* Subtle turf vignette overlay for realistic depth */}
-        <radialGradient id="field-vignette" cx="50%" cy="50%" r="70%">
+        <radialGradient id={vignetteId} cx="50%" cy="50%" r="70%">
           <stop offset="0%" stopColor="#ffffff" stopOpacity="0.08" />
           <stop offset="100%" stopColor="#000000" stopOpacity="0.18" />
         </radialGradient>
@@ -78,7 +86,7 @@ function FootballField({
       </g>
 
       {/* 3. Turf Depth Vignette */}
-      <rect x="0" y="0" width={W} height={H} fill="url(#field-vignette)" />
+      <rect x="0" y="0" width={W} height={H} fill={`url(#${vignetteId})`} />
 
       {/* 4. White Field Markings */}
       <g fill="none" stroke={lineColor} strokeWidth={lineWidth} strokeLinecap="round" strokeLinejoin="round">

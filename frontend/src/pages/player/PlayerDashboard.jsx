@@ -1,14 +1,15 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
-  User, Settings, Trophy, CheckCircle2, Edit3, X, Save, Loader2,
+  User, CheckCircle2, Edit3, X, Save, Loader2,
   Camera, Shield, Hash, Shirt, List, Star, Mail, GraduationCap, BadgeCheck,
   Lock, Upload, Trash2, Phone, MapPin, Award
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useAuction } from "../../context/AuctionContext";
 import FullscreenWrapper from "../../components/auction/FullscreenWrapper";
+import FootballField from "../../components/common/FootballField";
 import { playerAPI } from "../../services/api";
 import api from "../../services/api";
 import { getImageUrl } from "../../utils/imageUrl";
@@ -61,6 +62,7 @@ export default function PlayerDashboard() {
   const [removeImage, setRemoveImage] = useState(false);
   const [activeTab, setActiveTab] = useState("personal");
   const fileInputRef = useRef(null);
+  const [activePos, setActivePos] = useState(null);
 
   // Code → { name, fieldX, fieldY } from the live /config/positions list.
   const positionInfo = useMemo(() => {
@@ -340,53 +342,24 @@ export default function PlayerDashboard() {
             </div>
           </div>
 
-          <FullscreenWrapper className="relative h-[220px] sm:h-[260px] w-full rounded-xl overflow-hidden border border-emerald-900/40 bg-gradient-to-b from-emerald-800 to-emerald-900">
-            {/* Ambient radar glow */}
-            <motion.div
-              className="absolute inset-0"
-              initial={{ opacity: 0.2 }}
-              animate={{ opacity: [0.2, 0.4, 0.2] }}
-              transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
-              style={{ background: "radial-gradient(circle at top, rgba(34,211,238,0.18), transparent 55%)" }}
-            />
+          {/* Full regulation pitch — clean green turf, white line markings,
+              recreated in pure SVG (no image background, no text/watermark). */}
+          <FullscreenWrapper className="relative h-[220px] sm:h-[260px] w-full rounded-xl overflow-hidden border border-emerald-900/60">
+            <FootballField className="absolute inset-0 h-full w-full" preserveAspectRatio="xMidYMid slice" />
 
-            {/* Sweeping light beam */}
-            <motion.div
-              className="absolute inset-y-0 w-1/3"
-              style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent)", filter: "blur(18px)" }}
-              initial={{ left: "-40%" }}
-              animate={{ left: ["-40%", "110%"] }}
-              transition={{ duration: 2.4, repeat: Infinity, repeatType: "mirror", ease: "easeInOut" }}
-            />
-
-            {/* Rotating radar cone sweep */}
-            <motion.div
-              className="pointer-events-none absolute inset-0 rounded-sm"
-              style={{
-                background: "conic-gradient(from 0deg, transparent 0deg, rgba(56,189,248,0.12) 90deg, transparent 180deg, transparent 360deg)",
-                WebkitMaskImage: "radial-gradient(circle, black 40%, transparent 75%)",
-                maskImage: "radial-gradient(circle, black 40%, transparent 75%)",
-              }}
-              animate={{ rotate: 360 }}
-              transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-            />
-
-            {/* Pitch markings */}
-            <div className="absolute inset-3 border border-white/25 rounded-sm" />
-            <div className="absolute top-1/2 left-3 right-3 h-px bg-white/25" />
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 rounded-full border border-white/25" />
-            <div className="absolute left-3 top-1/2 -translate-y-1/2 w-7 h-16 border border-white/25 border-l-0" />
-            <div className="absolute right-3 top-1/2 -translate-y-1/2 w-7 h-16 border border-white/25 border-r-0" />
-            <span className="absolute bottom-1.5 right-2.5 text-[9px] font-bold text-white/30 uppercase tracking-wider">Attack →</span>
-
+            {/* Player markers — positioned from backend fieldX/fieldY (percentages),
+                drawn with the player's uploaded profile picture. */}
             {pitchMarks.length > 0 ? (
               pitchMarks.map(mark => {
                 const isPrimary = String(mark.code).toUpperCase() === String(myPlayer.primaryPosition).toUpperCase();
                 return (
-                  <motion.div
+                  <button
                     key={mark.code}
-                    className="absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center"
+                    type="button"
+                    onClick={() => setActivePos(mark.code)}
+                    className="absolute z-10 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center group/pos"
                     style={{ left: `${mark.x}%`, top: `${mark.y}%` }}
+                    aria-label={`${mark.name} (${mark.code})`}
                   >
                     {isPrimary ? (
                       <>
@@ -394,45 +367,96 @@ export default function PlayerDashboard() {
                         {[0, 1, 2].map(i => (
                           <motion.span
                             key={i}
-                            className="pointer-events-none absolute w-3 h-3 rounded-full border border-amber-400/60"
-                            initial={{ x: -6, y: -6, scale: 0.6, opacity: 0.9 }}
-                            animate={{ x: -6, y: -6, scale: [0.6, 2.6], opacity: [0.9, 0] }}
+                            className="pointer-events-none absolute top-1/2 left-1/2 h-3 w-3 rounded-full border border-amber-400/60"
+                            style={{ margin: '-6px 0 0 -6px' }}
+                            initial={{ scale: 0.6, opacity: 0.9 }}
+                            animate={{ scale: [0.6, 2.6], opacity: [0.9, 0] }}
                             transition={{ duration: 1.8, repeat: Infinity, delay: i * 0.6, ease: "easeOut" }}
                           />
                         ))}
                         {/* Primary glowing marker with a clear heartbeat tick */}
-                        <motion.div
-                          className="relative flex h-5 w-5 items-center justify-center rounded-full border-2 border-white bg-amber-400 shadow-[0_0_18px_rgba(251,191,36,0.95)]"
-                          animate={{ scale: [1, 1.3, 1] }}
+                        <motion.span
+                          className="relative flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-full border-2 border-amber-300/80 bg-slate-950/70 shadow-[0_0_20px_rgba(251,191,36,0.65)] backdrop-blur-sm"
+                          animate={{ scale: [1, 1.12, 1] }}
                           transition={{ duration: 0.45, repeat: Infinity, ease: "easeInOut" }}
                         >
-                          <span className="h-1.5 w-1.5 rounded-full bg-amber-900/70" />
-                        </motion.div>
+                          <img
+                            src={getImageUrl(myPlayer.imageUrl, myPlayer.imageUrl ? playerFallback('emerald') : `${DEFAULT_AVATAR}${encodeURIComponent(myPlayer.name)}`)}
+                            alt={mark.name}
+                            className="h-9 w-9 rounded-full object-cover transition group-hover/pos:scale-110"
+                          />
+                        </motion.span>
                       </>
                     ) : (
                       <>
                         {/* Soft secondary glow for supporting positions */}
                         <motion.span
-                          className="pointer-events-none absolute w-8 h-8 rounded-full bg-cyan-400/25"
-                          animate={{ opacity: [0.3, 0.7, 0.3], scale: [0.8, 1.25, 0.8] }}
+                          className="pointer-events-none absolute top-1/2 left-1/2 h-9 w-9 rounded-full bg-emerald-300/20"
+                          style={{ margin: '-18px 0 0 -18px' }}
+                          animate={{ opacity: [0.3, 0.7, 0.3], scale: [0.8, 1.3, 0.8] }}
                           transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                         />
-                        <span className="relative block h-3 w-3 rounded-full border border-white/80 bg-cyan-300/80 shadow-[0_0_10px_rgba(34,211,238,0.65)]" />
+                        <span className="relative block h-9 w-9 sm:h-10 sm:w-10 rounded-full border-2 border-white/90 bg-slate-950/70 p-0.5 shadow-[0_0_10px_rgba(52,211,153,0.45)] backdrop-blur-sm">
+                          <img
+                            src={getImageUrl(myPlayer.imageUrl, myPlayer.imageUrl ? playerFallback('emerald') : `${DEFAULT_AVATAR}${encodeURIComponent(myPlayer.name)}`)}
+                            alt={mark.name}
+                            className="h-full w-full rounded-full object-cover transition group-hover/pos:scale-110"
+                          />
+                        </span>
                       </>
                     )}
-                  </motion.div>
+                    <span className={`pointer-events-none mt-1 rounded px-1 py-px text-[9px] font-black uppercase tracking-widest shadow-sm ${isPrimary ? "bg-amber-300/90 text-amber-950" : "bg-slate-950/75 text-emerald-300/90"}`}>
+                      {mark.code}
+                    </span>
+                  </button>
                 );
               })
             ) : (
               <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-[11px] text-white/40 font-semibold">No positions set</span>
+                <span className="text-[11px] text-white/45 font-semibold bg-slate-950/40 rounded-full px-3 py-1">No positions set</span>
               </div>
             )}
 
-            <div className="absolute bottom-2 right-2 rounded-full border border-white/10 bg-slate-950/60 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-slate-300 backdrop-blur">
-              <span className="inline-block h-1.5 w-1.5 rounded-full bg-cyan-400 align-middle animate-pulse" />
-              <span className="ml-1.5 align-middle">Field pulse</span>
-            </div>
+            {/* Selected marker → player info popover */}
+            <AnimatePresence>
+              {activePos && (
+                <motion.div
+                  key="player-info"
+                  className="absolute inset-x-3 bottom-3 z-20 mx-auto flex items-center justify-center"
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 16 }}
+                  transition={{ duration: 0.28, ease: "easeOut" }}
+                >
+                  <div className="flex w-full max-w-sm items-center gap-3 rounded-2xl border border-white/10 bg-slate-950/90 p-3 shadow-2xl backdrop-blur-md">
+                    <img
+                      src={getImageUrl(myPlayer.imageUrl, myPlayer.imageUrl ? playerFallback('emerald') : `${DEFAULT_AVATAR}${encodeURIComponent(myPlayer.name)}`)}
+                      alt={myPlayer.name}
+                      className="h-12 w-12 rounded-xl object-cover border border-slate-700"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-black text-white">{myPlayer.name}</p>
+                      <p className="truncate text-[11px] font-semibold text-cyan-300">
+                        {resolvePosition(activePos)?.name || activePos} <span className="text-slate-500">· {activePos}</span>
+                      </p>
+                      <p className="truncate text-[10px] text-slate-400">
+                        {myPlayer.tShirtNumber && <>#{myPlayer.tShirtNumber} · </>}
+                        {myPlayer.jerseyName}
+                        {myPlayer.category || myPlayer.primaryPosition ? <> · {myPlayer.category || 'Unranked'}</> : null}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setActivePos(null)}
+                      className="shrink-0 rounded-full border border-slate-700 p-1.5 text-slate-400 transition hover:bg-slate-800 hover:text-white"
+                      aria-label="Close player info"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </FullscreenWrapper>
         </div>
       </div>
