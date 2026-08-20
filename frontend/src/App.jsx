@@ -340,6 +340,14 @@ function App() {
                   </ProtectedRoute>
                 }
               />
+              <Route
+                path="matches"
+                element={
+                  <ProtectedRoute allowedRoles={['TEAM_MANAGER', 'SUPER_ADMIN', 'PODIUM_ADMIN']}>
+                    <TeamsScudle />
+                  </ProtectedRoute>
+                }
+              />
             </Route>
 
             {/* ── PLAYER ROUTES ────────────────────────────────────────────── */}
@@ -410,6 +418,14 @@ function App() {
                 element={
                   <ProtectedRoute allowedRoles={['PLAYER', 'SUPER_ADMIN', 'PODIUM_ADMIN', 'TEAM_MANAGER']}>
                     <PublicTeamsView />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="matches"
+                element={
+                  <ProtectedRoute allowedRoles={['PLAYER', 'SUPER_ADMIN', 'PODIUM_ADMIN', 'TEAM_MANAGER']}>
+                    <TeamsScudle />
                   </ProtectedRoute>
                 }
               />

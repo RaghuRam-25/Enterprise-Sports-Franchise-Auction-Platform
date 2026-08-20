@@ -9,6 +9,7 @@ import TeamBadge from '../../components/common/TeamBadge';
 import api from '../../services/api';
 import { getImageUrl } from '../../utils/imageUrl';
 import { useAuction } from '../../context/AuctionContext';
+import { useAuth } from '../../context/AuthContext';
 import io from 'socket.io-client';
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -568,6 +569,7 @@ function MatchCardSkeleton({ index = 0 }) {
 // ─────────────────────────────────────────────────────────────────────────
 
 export default function TeamsScudle() {
+  const { user } = useAuth();
   const { teams = [] } = useAuction();
   const [matches, setMatches] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -726,7 +728,7 @@ export default function TeamsScudle() {
         }
       `}</style>
 
-      <Navbar />
+      {!user && <Navbar />}
 
       <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
 

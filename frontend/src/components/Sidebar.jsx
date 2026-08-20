@@ -75,6 +75,7 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, mobileOpen = fals
     { type: 'item', path: '/manager/target-players', label: 'Target Players', icon: Crown, highlight: true },
     { type: 'item', path: '/manager/my-team', label: 'My Team', icon: ShieldCheck },
     { type: 'item', path: '/manager/players', label: 'Player Pool', icon: Users },
+    { type: 'item', path: '/manager/matches', label: 'Matches', icon: Calendar },
     { type: 'item', path: '/manager/settings', label: 'Team Settings', icon: Settings },
     { type: 'item', path: '/manager/teams', label: 'All Teams', icon: ShieldCheck }
   ];
@@ -85,6 +86,7 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, mobileOpen = fals
     { type: 'item', path: '/player/live', label: 'Live Auction', icon: Radio, highlight: true },
     { type: 'item', path: '/player/my-team', label: 'My Team', icon: Users },
     { type: 'item', path: '/player/teams', label: 'All Teams', icon: ShieldCheck },
+    { type: 'item', path: '/player/matches', label: 'Matches', icon: Calendar },
     { type: 'item', path: '/player/results', label: 'Results', icon: Award },
     { type: 'item', path: '/player/settings', label: 'Settings', icon: Settings }
   ];
