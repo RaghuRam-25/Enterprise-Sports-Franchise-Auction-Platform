@@ -98,7 +98,12 @@ const updateProfileSchema = z.object({
   age: z.union([z.number().int().min(5).max(120), z.string(), z.null()]).optional(),
   height: z.string().max(20).optional(),
   preferredFoot: z.enum(['', 'Left', 'Right', 'Both']).optional(),
-  nationality: z.string().max(80).optional()
+  nationality: z.string().max(80).optional(),
+  // Performance statistics
+  matchesPlayed: z.union([z.number().int().min(0).max(9999), z.string(), z.null()]).optional(),
+  goals: z.union([z.number().int().min(0).max(9999), z.string(), z.null()]).optional(),
+  assists: z.union([z.number().int().min(0).max(9999), z.string(), z.null()]).optional(),
+  cleanSheets: z.union([z.number().int().min(0).max(9999), z.string(), z.null()]).optional()
 }).partial();
 
 // ── Public player fields (visible to Spectators / unauthenticated) ────────────
@@ -396,7 +401,7 @@ export const updatePlayerProfile = async (req, res, next) => {
     delete parsed.email;
 
     const allowedFields = req.user?.role === 'PLAYER'
-      ? ['name', 'phone', 'bio', 'address', 'session', 'jerseyName', 'positions', 'primaryPosition', 'tShirtSize', 'tShirtNumber', 'imageUrl', 'age', 'height', 'preferredFoot', 'nationality']
+      ? ['name', 'phone', 'bio', 'address', 'session', 'jerseyName', 'positions', 'primaryPosition', 'tShirtSize', 'tShirtNumber', 'imageUrl', 'age', 'height', 'preferredFoot', 'nationality', 'matchesPlayed', 'goals', 'assists', 'cleanSheets']
       : Object.keys(parsed);
 
     const update = {};
@@ -411,6 +416,13 @@ export const updatePlayerProfile = async (req, res, next) => {
       const age = Number(update.age);
       update.age = Number.isFinite(age) ? age : null;
     }
+
+    // Performance stats — FormData sends them as strings; coerce to non-negative ints.
+    ['matchesPlayed', 'goals', 'assists', 'cleanSheets'].forEach((key) => {
+      if (update[key] === undefined || update[key] === null || update[key] === '') return;
+      const n = Number(update[key]);
+      update[key] = Number.isFinite(n) ? Math.max(0, Math.floor(n)) : 0;
+    });
 
     if (update.jerseyName) update.jerseyName = update.jerseyName.toUpperCase();
 

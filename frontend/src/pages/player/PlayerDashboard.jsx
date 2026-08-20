@@ -4,7 +4,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   User, CheckCircle2, Edit3, X, Save, Loader2,
   Camera, Shield, Hash, Shirt, List, Star, Mail, GraduationCap, BadgeCheck,
-  Lock, Upload, Trash2, Phone, MapPin, Award, Calendar, Ruler, Footprints, Globe, Activity
+  Lock, Upload, Trash2, MapPin, Award, Calendar, Ruler, Footprints, Globe, Activity,
+  Goal, TrendingUp, Gavel, Trophy, Rocket, ShieldOff
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useAuction } from "../../context/AuctionContext";
@@ -52,12 +53,12 @@ const getCategoryTone = (cat) => CATEGORY_TONE[cat] || { text: "text-slate-400",
 
 export default function PlayerDashboard() {
   const { user, setUser } = useAuth();
-  const { formatCurrency, triggerToast, isRegistrationFrozen, positions } = useAuction();
+  const { formatCurrency, triggerToast, isRegistrationFrozen, positions, teams, podiumPlayer, currentBid, bidHistory } = useAuction();
   const [myPlayer, setMyPlayer] = useState(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [editForm, setEditForm] = useState({ name: "", phone: "", jerseyName: "", tShirtSize: "M", tShirtNumber: "", positions: [], primaryPosition: "", session: "", bio: "", address: "", age: "", height: "", preferredFoot: "", nationality: "" });
+  const [editForm, setEditForm] = useState({ name: "", phone: "", jerseyName: "", tShirtSize: "M", tShirtNumber: "", positions: [], primaryPosition: "", session: "", bio: "", address: "", age: "", height: "", preferredFoot: "", nationality: "", matchesPlayed: 0, goals: 0, assists: 0, cleanSheets: 0 });
   const [selectedFile, setSelectedFile] = useState(null);
   const [filePreview, setFilePreview] = useState(null);
   const [removeImage, setRemoveImage] = useState(false);
@@ -139,7 +140,11 @@ export default function PlayerDashboard() {
       age: myPlayer?.age ?? "",
       height: myPlayer?.height || "",
       preferredFoot: myPlayer?.preferredFoot || "",
-      nationality: myPlayer?.nationality || ""
+      nationality: myPlayer?.nationality || "",
+      matchesPlayed: myPlayer?.matchesPlayed ?? 0,
+      goals: myPlayer?.goals ?? 0,
+      assists: myPlayer?.assists ?? 0,
+      cleanSheets: myPlayer?.cleanSheets ?? 0
     });
     setSelectedFile(null); setFilePreview(null); setRemoveImage(false); setActiveTab("personal"); setEditing(true);
   };
@@ -189,6 +194,10 @@ export default function PlayerDashboard() {
       if (editForm.height) fd.append("height", editForm.height);
       if (editForm.preferredFoot) fd.append("preferredFoot", editForm.preferredFoot);
       if (editForm.nationality) fd.append("nationality", editForm.nationality);
+      if (editForm.matchesPlayed !== 0) fd.append("matchesPlayed", editForm.matchesPlayed);
+      if (editForm.goals !== 0) fd.append("goals", editForm.goals);
+      if (editForm.assists !== 0) fd.append("assists", editForm.assists);
+      if (editForm.cleanSheets !== 0) fd.append("cleanSheets", editForm.cleanSheets);
 
       const res = await playerAPI.updateProfile(myPlayer._id || myPlayer.id, fd);
       const updated = res?.data?.data || res?.data || res;
@@ -234,18 +243,56 @@ export default function PlayerDashboard() {
   const pitchMarks = (myPlayer.positions || []).map(resolvePosition).filter(Boolean);
   const primaryName = (resolvePosition(myPlayer.primaryPosition)?.name) || (myPlayer.primaryPosition || "");
   const isSold = myPlayer.status === "SOLD";
+  const isHalted = myPlayer.status === "WITHDRAWN" || myPlayer.status === "BANNED";
 
-  // Consolidated info list — every field appears exactly once across the page.
-  // ("Jersey No." lives on the profile card below; "Status" lives on the card too.)
-  const infoFields = [
-    { label: "Student ID", value: myPlayer.studentId, icon: Hash, mono: true },
-    { label: "Session", value: myPlayer.session, icon: GraduationCap },
-    { label: "Email", value: myPlayer.email, icon: Mail },
-    { label: "Phone", value: myPlayer.phone, icon: Phone },
-    { label: "Jersey Name", value: myPlayer.jerseyName, icon: BadgeCheck, mono: true },
-    { label: "Kit Size", value: myPlayer.tShirtSize, icon: Shirt },
-    { label: "Base Price", value: myPlayer.basePrice != null ? formatCurrency(myPlayer.basePrice) : null, icon: Award },
+  // Live auction signals — only meaningful when THIS player is the current podium
+  // player. Values are real socket state, never fabricated.
+  const podiumId = String(podiumPlayer?._id || podiumPlayer?.id || '');
+  const myId = String(myPlayer?._id || myPlayer?.id || '');
+  const isLiveMe = !!podiumId && podiumId === myId;
+  const liveBids = isLiveMe ? (bidHistory?.length ?? 0) : null;
+  const liveHighest = isLiveMe ? (currentBid ?? null) : (isSold ? myPlayer.finalPrice : null);
+  const finalBid = isSold ? myPlayer.finalPrice : (isLiveMe ? currentBid : null);
+  const winningTeamName =
+    myPlayer.soldToTeam?.name ||
+    (Array.isArray(teams) ? teams.find(t => String(t?._id || t?.id) === String(myPlayer.soldToTeam))?.name : null) ||
+    null;
+
+  // Bid status → label + tone (every status the backend can emit).
+  const AUCTION_STATUS_META = {
+    REGISTERED: { label: "Registered", tone: "text-sky-400 bg-sky-500/10 border-sky-500/30" },
+    APPROVED: { label: "Verified", tone: "text-cyan-400 bg-cyan-500/10 border-cyan-500/30" },
+    ON_PODIUM: { label: "On Podium", tone: "text-amber-400 bg-amber-500/10 border-amber-500/30" },
+    SOLD: { label: "Sold", tone: "text-emerald-400 bg-emerald-500/10 border-emerald-500/30" },
+    UNSOLD: { label: "Unsold", tone: "text-rose-400 bg-rose-500/10 border-rose-500/30" },
+    WITHDRAWN: { label: "Withdrawn", tone: "text-slate-400 bg-slate-500/10 border-slate-500/30" },
+    BANNED: { label: "Banned", tone: "text-rose-400 bg-rose-500/10 border-rose-500/30" },
+  };
+  const statusMeta = AUCTION_STATUS_META[myPlayer.status] || AUCTION_STATUS_META.REGISTERED;
+
+  // Performance Statistics — committed match stats from the player record, live
+  // auction counters from real-time socket state. Anything unavailable = "—".
+  const perfStats = [
+    { label: "Matches Played", value: myPlayer.matchesPlayed ?? 0, icon: Activity },
+    { label: "Goals", value: myPlayer.goals ?? 0, icon: Goal },
+    { label: "Assists", value: myPlayer.assists ?? 0, icon: Footprints },
+    { label: "Clean Sheets", value: myPlayer.cleanSheets ?? 0, icon: Shield },
+    { label: "Total Bids", value: liveBids, icon: TrendingUp },
+    { label: "Highest Bid", value: liveHighest, icon: Gavel, currency: true },
   ];
+
+  // Auction Summary — authoritative player/auction/team values from the backend.
+  const auctionRows = [
+    { label: "Base Price", value: myPlayer.basePrice != null ? formatCurrency(myPlayer.basePrice) : null, icon: Award },
+    { label: "Highest Bid", value: liveHighest != null ? formatCurrency(liveHighest) : null, icon: TrendingUp },
+    { label: "Final Bid", value: finalBid != null ? formatCurrency(finalBid) : null, icon: Gavel },
+    { label: "Winning Team", value: winningTeamName, icon: Trophy },
+  ];
+
+  // Auction Timeline — Registered → Verified → Selected → Pushed to Auction → Sold/Unsold.
+  const TIMELINE_STEPS = ["Registered", "Verified", "Selected", "Pushed to Auction", isSold ? "Sold" : "Unsold"];
+  const TIMELINE_MAP = { REGISTERED: 0, APPROVED: 1, ON_PODIUM: 3, SOLD: 4, UNSOLD: 4 };
+  const activeStage = TIMELINE_MAP[myPlayer.status] ?? (isHalted ? -1 : 0);
 
   // Premium profile card stats — each sourced live from the loaded player.
   const profileStats = [
@@ -371,21 +418,104 @@ export default function PlayerDashboard() {
         </div>
       </div>
 
-      {/* ── Consolidated Player Info (each fact shown exactly once) ────── */}
+      {/* ── Player Overview (Performance + Auction + Timeline) ────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
-        <div className="lg:col-span-3 glass-card rounded-2xl border border-slate-800 p-6">
-          <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-4">Player Information</h3>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-            {infoFields.map(({ label, value, icon: Icon, mono }) => (
-              <div key={label} className="flex flex-col gap-1">
-                <span className="text-[10px] font-bold text-slate-500 uppercase flex items-center gap-1">
-                  <Icon className="w-3 h-3" /> {label}
+        <div className="lg:col-span-3 glass-card rounded-2xl border border-slate-800 p-5 sm:p-6 space-y-6">
+          {/* Header */}
+          <div className="flex items-center justify-between">
+            <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 flex items-center gap-2">
+              <Activity className="w-3.5 h-3.5 text-purple-400" /> Player Overview
+            </h3>
+            {isLiveMe && (
+              <span className="rounded-full border border-amber-400/30 bg-amber-500/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-amber-300 animate-pulse">
+                <span className="inline-block h-1.5 w-1.5 rounded-full bg-amber-400 mr-1.5" /> Live Auction
+              </span>
+            )}
+          </div>
+
+          {/* 1. Performance Statistics — real player record + live auction data */}
+          <div className="space-y-3">
+            <h4 className="text-[10px] font-bold uppercase tracking-widest text-slate-500 flex items-center gap-2">
+              <Goal className="w-3.5 h-3.5 text-emerald-400" /> Performance Statistics
+            </h4>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {perfStats.map(({ label, value, icon: Icon, currency }) => (
+                <div key={label} className="rounded-xl border border-white/10 bg-slate-950/50 p-3">
+                  <span className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-slate-500">
+                    <Icon className="w-3 h-3 text-emerald-400" /> {label}
+                  </span>
+                  <span className="mt-1 block text-base sm:text-lg font-black text-white truncate">
+                    {currency
+                      ? (value != null ? formatCurrency(value) : <span className="font-semibold text-slate-600">—</span>)
+                      : (value != null ? value : <span className="font-semibold text-slate-600">—</span>)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* 2. Auction Summary */}
+          <div className="space-y-3">
+            <h4 className="text-[10px] font-bold uppercase tracking-widest text-slate-500 flex items-center gap-2">
+              <Gavel className="w-3.5 h-3.5 text-amber-400" /> Auction Summary
+            </h4>
+            <div className="space-y-2">
+              {auctionRows.map(({ label, value, icon: Icon }) => (
+                <div key={label} className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-slate-950/40 px-3 py-2.5">
+                  <span className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                    <Icon className="w-3.5 h-3.5 text-amber-300/80" /> {label}
+                  </span>
+                  <span className={`text-sm font-black truncate ${label === 'Winning Team' ? 'text-emerald-300' : 'text-white'}`}>
+                    {value || <span className="font-semibold text-slate-600">—</span>}
+                  </span>
+                </div>
+              ))}
+              <div className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-slate-950/40 px-3 py-2.5">
+                <span className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                  <BadgeCheck className="w-3.5 h-3.5 text-cyan-300/80" /> Bid Status
                 </span>
-                <span className={`text-sm font-black text-white truncate ${mono ? 'font-mono' : ''}`}>
-                  {value || <span className="text-slate-600 font-normal">—</span>}
+                <span className={`rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-wider ${statusMeta.tone}`}>
+                  {statusMeta.label}
                 </span>
               </div>
-            ))}
+            </div>
+          </div>
+
+          {/* 3. Auction Timeline */}
+          <div className="space-y-3">
+            <h4 className="text-[10px] font-bold uppercase tracking-widest text-slate-500 flex items-center gap-2">
+              <Rocket className="w-3.5 h-3.5 text-purple-400" /> Auction Timeline
+            </h4>
+            <div className="grid grid-cols-5">
+              {TIMELINE_STEPS.map((step, i) => {
+                const done = i < activeStage;
+                const active = i === activeStage;
+                return (
+                  <div key={step} className="relative flex flex-col items-center px-0.5">
+                    {i < TIMELINE_STEPS.length - 1 && (
+                      <div className={`absolute top-3 left-1/2 w-[calc(100%-0.5rem)] h-px ${i < activeStage ? 'bg-emerald-500/40' : 'bg-slate-700'}`} />
+                    )}
+                    <div className={`relative z-10 flex h-6 w-6 items-center justify-center rounded-full border-2 text-[9px] font-black ${
+                      done
+                        ? 'border-emerald-400 bg-emerald-500/20 text-emerald-300'
+                        : active
+                          ? 'border-amber-400 bg-amber-500/20 text-amber-300 shadow-[0_0_12px_rgba(251,191,36,0.5)]'
+                          : 'border-slate-700 bg-slate-900 text-slate-600'
+                    }`}>
+                      {done ? <CheckCircle2 className="w-3.5 h-3.5" /> : i + 1}
+                    </div>
+                    <span className={`mt-1.5 text-center text-[8px] font-bold uppercase tracking-wide leading-tight ${
+                      done ? 'text-emerald-300/90' : active ? 'text-amber-300' : 'text-slate-600'
+                    }`}>{step}</span>
+                  </div>
+                );
+              })}
+            </div>
+            {isHalted && (
+              <div className="flex items-center gap-2 rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-[10px] font-bold text-rose-400">
+                <ShieldOff className="w-3.5 h-3.5" /> {statusMeta.label} — auction track halted.
+              </div>
+            )}
           </div>
         </div>
 
@@ -587,7 +717,7 @@ export default function PlayerDashboard() {
               <button onClick={() => setEditing(false)} className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl transition"><X className="w-5 h-5" /></button>
             </div>
             <div className="flex border-b border-slate-800 px-6 overflow-x-auto">
-              {[{ id: "personal", label: "Personal", icon: User }, { id: "photo", label: "Photo", icon: Camera }, { id: "sports", label: "Positions", icon: Shield }, { id: "kit", label: "Kit & Jersey", icon: Shirt }].map(tab => (
+              {[{ id: "stats", label: "Stats", icon: Goal }, { id: "personal", label: "Personal", icon: User }, { id: "photo", label: "Photo", icon: Camera }, { id: "sports", label: "Positions", icon: Shield }, { id: "kit", label: "Kit & Jersey", icon: Shirt }].map(tab => (
                 <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex items-center gap-1.5 px-4 py-3 text-xs font-bold border-b-2 whitespace-nowrap transition ${activeTab === tab.id ? "border-purple-500 text-purple-400" : "border-transparent text-slate-500 hover:text-slate-300"}`}>
                   <tab.icon className="w-3.5 h-3.5" />{tab.label}
                 </button>
@@ -635,6 +765,34 @@ export default function PlayerDashboard() {
                       <label className="block font-semibold text-slate-400 mb-1.5 flex items-center gap-1.5"><Globe className="w-3.5 h-3.5 text-purple-400" /> Nationality</label>
                       <input type="text" value={editForm.nationality} onChange={e => setEditForm(prev => ({ ...prev, nationality: e.target.value }))} className="glass-input w-full px-3 py-2.5 rounded-xl text-white" placeholder="e.g. Bangladesh" />
                     </div>
+                  </div>
+                </div>
+              )}
+              {activeTab === "stats" && (
+                <div className="space-y-4 text-xs">
+                  <div>
+                    <p className="text-[11px] text-slate-500 mb-3 flex items-center gap-1.5"><Activity className="w-3.5 h-3.5 text-emerald-400" /> Match performance stats — used in the Player Overview.</p>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block font-semibold text-slate-400 mb-1.5 flex items-center gap-1.5"><Activity className="w-3.5 h-3.5 text-emerald-400" /> Matches Played</label>
+                        <input type="number" min="0" max="9999" value={editForm.matchesPlayed === 0 ? "" : editForm.matchesPlayed ?? ""} onChange={e => setEditForm(prev => ({ ...prev, matchesPlayed: e.target.value.replace(/\D/g, "").slice(0, 4) }))} className="glass-input w-full px-3 py-2.5 rounded-xl text-white" placeholder="e.g. 25" />
+                      </div>
+                      <div>
+                        <label className="block font-semibold text-slate-400 mb-1.5 flex items-center gap-1.5"><Goal className="w-3.5 h-3.5 text-emerald-400" /> Goals</label>
+                        <input type="number" min="0" max="9999" value={editForm.goals === 0 ? "" : editForm.goals ?? ""} onChange={e => setEditForm(prev => ({ ...prev, goals: e.target.value.replace(/\D/g, "").slice(0, 4) }))} className="glass-input w-full px-3 py-2.5 rounded-xl text-white" placeholder="e.g. 15" />
+                      </div>
+                      <div>
+                        <label className="block font-semibold text-slate-400 mb-1.5 flex items-center gap-1.5"><Footprints className="w-3.5 h-3.5 text-emerald-400" /> Assists</label>
+                        <input type="number" min="0" max="9999" value={editForm.assists === 0 ? "" : editForm.assists ?? ""} onChange={e => setEditForm(prev => ({ ...prev, assists: e.target.value.replace(/\D/g, "").slice(0, 4) }))} className="glass-input w-full px-3 py-2.5 rounded-xl text-white" placeholder="e.g. 10" />
+                      </div>
+                      <div>
+                        <label className="block font-semibold text-slate-400 mb-1.5 flex items-center gap-1.5"><Shield className="w-3.5 h-3.5 text-emerald-400" /> Clean Sheets</label>
+                        <input type="number" min="0" max="9999" value={editForm.cleanSheets === 0 ? "" : editForm.cleanSheets ?? ""} onChange={e => setEditForm(prev => ({ ...prev, cleanSheets: e.target.value.replace(/\D/g, "").slice(0, 4) }))} className="glass-input w-full px-3 py-2.5 rounded-xl text-white" placeholder="e.g. 8" />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-3 bg-slate-950/60 rounded-xl border border-slate-800 text-[10px] text-slate-500">
+                    Total Bids and Highest Bid are pulled live from the auction engine and are not manually editable.
                   </div>
                 </div>
               )}

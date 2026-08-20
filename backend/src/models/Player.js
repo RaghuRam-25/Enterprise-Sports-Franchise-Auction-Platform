@@ -24,6 +24,11 @@ const playerSchema = new mongoose.Schema({
   height: { type: String, default: '' },
   preferredFoot: { type: String, default: '', enum: ['', 'Left', 'Right', 'Both'] },
   nationality: { type: String, default: '' },
+  // Performance statistics (optional, populated via profile edit)
+  matchesPlayed: { type: Number, default: 0 },
+  goals: { type: Number, default: 0 },
+  assists: { type: Number, default: 0 },
+  cleanSheets: { type: Number, default: 0 },
   category: { type: String, required: true, default: 'B Grade', index: true },
   basePrice: { type: Number, default: 1000000 },
   status: {
