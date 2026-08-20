@@ -100,10 +100,10 @@ const updateProfileSchema = z.object({
   preferredFoot: z.enum(['', 'Left', 'Right', 'Both']).optional(),
   nationality: z.string().max(80).optional(),
   // Performance statistics
-  matchesPlayed: z.union([z.number().int().min(0).max(9999), z.string(), z.null()]).optional(),
-  goals: z.union([z.number().int().min(0).max(9999), z.string(), z.null()]).optional(),
-  assists: z.union([z.number().int().min(0).max(9999), z.string(), z.null()]).optional(),
-  cleanSheets: z.union([z.number().int().min(0).max(9999), z.string(), z.null()]).optional()
+  matchesPlayed: z.union([z.number().int().min(0).max(99), z.string(), z.null()]).optional(),
+  goals: z.union([z.number().int().min(0).max(99), z.string(), z.null()]).optional(),
+  assists: z.union([z.number().int().min(0).max(99), z.string(), z.null()]).optional(),
+  cleanSheets: z.union([z.number().int().min(0).max(99), z.string(), z.null()]).optional()
 }).partial();
 
 // ── Public player fields (visible to Spectators / unauthenticated) ────────────
@@ -421,7 +421,7 @@ export const updatePlayerProfile = async (req, res, next) => {
     ['matchesPlayed', 'goals', 'assists', 'cleanSheets'].forEach((key) => {
       if (update[key] === undefined || update[key] === null || update[key] === '') return;
       const n = Number(update[key]);
-      update[key] = Number.isFinite(n) ? Math.max(0, Math.floor(n)) : 0;
+      update[key] = Number.isFinite(n) ? Math.max(0, Math.min(99, Math.floor(n))) : 0;
     });
 
     if (update.jerseyName) update.jerseyName = update.jerseyName.toUpperCase();

@@ -40,10 +40,10 @@ const editPlayerSchema = z.object({
   status: z.string().optional(),
   basePrice: z.number().min(0).optional(),
   imageUrl: z.string().url().optional(),
-  matchesPlayed: z.number().int().min(0).optional(),
-  goals: z.number().int().min(0).optional(),
-  assists: z.number().int().min(0).optional(),
-  cleanSheets: z.number().int().min(0).optional(),
+  matchesPlayed: z.number().int().min(0).max(99).optional(),
+  goals: z.number().int().min(0).max(99).optional(),
+  assists: z.number().int().min(0).max(99).optional(),
+  cleanSheets: z.number().int().min(0).max(99).optional(),
 }).partial();
 
 // Audit log helper

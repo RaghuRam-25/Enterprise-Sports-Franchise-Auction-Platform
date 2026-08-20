@@ -307,7 +307,7 @@ export default function PlayerDashboard() {
   return (
     <div className="max-w-6xl mx-auto space-y-6">
 
-      {/* ── Premium Two-Panel Player Profile Card ─────────────────────── */}
+      {/* ── Top Player Section ────────────────────────────────────────── */}
       <div className="group relative overflow-hidden rounded-3xl border border-slate-800 bg-gradient-to-br from-slate-950 via-purple-950/20 to-slate-900 shadow-2xl transition-shadow duration-300 hover:shadow-purple-950/40">
         {/* Ambient glow + faint dot texture */}
         <div
@@ -342,9 +342,9 @@ export default function PlayerDashboard() {
         </div>
 
         {/* Two-panel split */}
-        <div className="relative z-10 grid grid-cols-1 gap-6 p-5 sm:p-7 md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] md:items-center">
+        <div className="relative z-10 grid grid-cols-1 gap-6 p-5 sm:p-7 md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] md:items-stretch">
           {/* ── LEFT PANEL — Profile Photograph ─────────────────────────── */}
-          <div className="relative flex items-center justify-center">
+          <div className="relative flex items-center justify-center min-h-[220px]">
             {/* Ghost jersey number behind the photo */}
             <span
               className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-[9rem] sm:text-[11rem] font-black text-white/[0.04] leading-none select-none"
@@ -368,7 +368,7 @@ export default function PlayerDashboard() {
             </div>
           </div>
 
-          {/* ── RIGHT PANEL — Identity + Stats ─────────────────────────── */}
+          {/* ── RIGHT PANEL — Identity + Details ─────────────────────────── */}
           <div className="flex flex-col justify-center gap-4 text-center md:text-left">
             {/* PLAYER label */}
             <span className="inline-flex items-center justify-center gap-2 md:justify-start">
@@ -398,7 +398,7 @@ export default function PlayerDashboard() {
               </span>
             </div>
 
-            {/* Structured stats grid */}
+            {/* Structured details grid (Age, Height, Foot, Jersey Number, Nationality, Status) */}
             <div className="mt-1 grid grid-cols-2 gap-2.5 sm:grid-cols-3">
               {profileStats.map(({ label, value, icon: Icon }) => (
                 <div
@@ -418,130 +418,99 @@ export default function PlayerDashboard() {
         </div>
       </div>
 
-      {/* ── Player Overview (Performance + Auction + Timeline) ────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
-        <div className="lg:col-span-3 glass-card rounded-2xl border border-slate-800 p-5 sm:p-6 space-y-6">
-          {/* Header */}
-          <div className="flex items-center justify-between">
-            <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 flex items-center gap-2">
-              <Activity className="w-3.5 h-3.5 text-purple-400" /> Player Overview
+      {/* ── Bottom Section: Player Information & Position on Pitch ────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
+        {/* Left Card: PLAYER INFORMATION */}
+        <div className="glass-card rounded-2xl border border-slate-800 p-5 sm:p-6 flex flex-col justify-between h-full">
+          <div className="flex items-center justify-between mb-4 border-b border-slate-800/80 pb-3">
+            <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
+              <User className="w-4 h-4 text-purple-400" /> Player Information
             </h3>
-            {isLiveMe && (
-              <span className="rounded-full border border-amber-400/30 bg-amber-500/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-amber-300 animate-pulse">
-                <span className="inline-block h-1.5 w-1.5 rounded-full bg-amber-400 mr-1.5" /> Live Auction
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 flex-1">
+            <div className="rounded-xl border border-white/10 bg-slate-950/50 p-3.5 flex flex-col justify-center">
+              <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                <Hash className="w-3.5 h-3.5 text-amber-400" /> Student ID
               </span>
-            )}
-          </div>
-
-          {/* 1. Performance Statistics — real player record + live auction data */}
-          <div className="space-y-3">
-            <h4 className="text-[10px] font-bold uppercase tracking-widest text-slate-500 flex items-center gap-2">
-              <Goal className="w-3.5 h-3.5 text-emerald-400" /> Performance Statistics
-            </h4>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {perfStats.map(({ label, value, icon: Icon, currency }) => (
-                <div key={label} className="rounded-xl border border-white/10 bg-slate-950/50 p-3">
-                  <span className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-slate-500">
-                    <Icon className="w-3 h-3 text-emerald-400" /> {label}
-                  </span>
-                  <span className="mt-1 block text-base sm:text-lg font-black text-white truncate">
-                    {currency
-                      ? (value != null ? formatCurrency(value) : <span className="font-semibold text-slate-600">—</span>)
-                      : (value != null ? value : <span className="font-semibold text-slate-600">—</span>)}
-                  </span>
-                </div>
-              ))}
+              <span className="mt-1 block text-sm font-bold text-white font-mono truncate">
+                {myPlayer.studentId || "—"}
+              </span>
             </div>
-          </div>
 
-          {/* 2. Auction Summary */}
-          <div className="space-y-3">
-            <h4 className="text-[10px] font-bold uppercase tracking-widest text-slate-500 flex items-center gap-2">
-              <Gavel className="w-3.5 h-3.5 text-amber-400" /> Auction Summary
-            </h4>
-            <div className="space-y-2">
-              {auctionRows.map(({ label, value, icon: Icon }) => (
-                <div key={label} className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-slate-950/40 px-3 py-2.5">
-                  <span className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-500">
-                    <Icon className="w-3.5 h-3.5 text-amber-300/80" /> {label}
-                  </span>
-                  <span className={`text-sm font-black truncate ${label === 'Winning Team' ? 'text-emerald-300' : 'text-white'}`}>
-                    {value || <span className="font-semibold text-slate-600">—</span>}
-                  </span>
-                </div>
-              ))}
-              <div className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-slate-950/40 px-3 py-2.5">
-                <span className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-500">
-                  <BadgeCheck className="w-3.5 h-3.5 text-cyan-300/80" /> Bid Status
-                </span>
-                <span className={`rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-wider ${statusMeta.tone}`}>
-                  {statusMeta.label}
-                </span>
-              </div>
+            <div className="rounded-xl border border-white/10 bg-slate-950/50 p-3.5 flex flex-col justify-center">
+              <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                <GraduationCap className="w-3.5 h-3.5 text-emerald-400" /> Session
+              </span>
+              <span className="mt-1 block text-sm font-bold text-white truncate">
+                {myPlayer.session || "—"}
+              </span>
             </div>
-          </div>
 
-          {/* 3. Auction Timeline */}
-          <div className="space-y-3">
-            <h4 className="text-[10px] font-bold uppercase tracking-widest text-slate-500 flex items-center gap-2">
-              <Rocket className="w-3.5 h-3.5 text-purple-400" /> Auction Timeline
-            </h4>
-            <div className="grid grid-cols-5">
-              {TIMELINE_STEPS.map((step, i) => {
-                const done = i < activeStage;
-                const active = i === activeStage;
-                return (
-                  <div key={step} className="relative flex flex-col items-center px-0.5">
-                    {i < TIMELINE_STEPS.length - 1 && (
-                      <div className={`absolute top-3 left-1/2 w-[calc(100%-0.5rem)] h-px ${i < activeStage ? 'bg-emerald-500/40' : 'bg-slate-700'}`} />
-                    )}
-                    <div className={`relative z-10 flex h-6 w-6 items-center justify-center rounded-full border-2 text-[9px] font-black ${
-                      done
-                        ? 'border-emerald-400 bg-emerald-500/20 text-emerald-300'
-                        : active
-                          ? 'border-amber-400 bg-amber-500/20 text-amber-300 shadow-[0_0_12px_rgba(251,191,36,0.5)]'
-                          : 'border-slate-700 bg-slate-900 text-slate-600'
-                    }`}>
-                      {done ? <CheckCircle2 className="w-3.5 h-3.5" /> : i + 1}
-                    </div>
-                    <span className={`mt-1.5 text-center text-[8px] font-bold uppercase tracking-wide leading-tight ${
-                      done ? 'text-emerald-300/90' : active ? 'text-amber-300' : 'text-slate-600'
-                    }`}>{step}</span>
-                  </div>
-                );
-              })}
+            <div className="rounded-xl border border-white/10 bg-slate-950/50 p-3.5 flex flex-col justify-center sm:col-span-2">
+              <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                <Mail className="w-3.5 h-3.5 text-blue-400" /> Email Address
+              </span>
+              <span className="mt-1 block text-sm font-bold text-blue-300 font-mono truncate">
+                {myPlayer.email || "—"}
+              </span>
             </div>
-            {isHalted && (
-              <div className="flex items-center gap-2 rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-[10px] font-bold text-rose-400">
-                <ShieldOff className="w-3.5 h-3.5" /> {statusMeta.label} — auction track halted.
-              </div>
-            )}
+
+            <div className="rounded-xl border border-white/10 bg-slate-950/50 p-3.5 flex flex-col justify-center">
+              <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                <Activity className="w-3.5 h-3.5 text-cyan-400" /> Phone Number
+              </span>
+              <span className="mt-1 block text-sm font-bold text-white font-mono truncate">
+                {myPlayer.phone || "—"}
+              </span>
+            </div>
+
+            <div className="rounded-xl border border-white/10 bg-slate-950/50 p-3.5 flex flex-col justify-center">
+              <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                <Shirt className="w-3.5 h-3.5 text-purple-400" /> Jersey Name
+              </span>
+              <span className="mt-1 block text-sm font-bold text-white uppercase font-mono truncate">
+                {myPlayer.jerseyName || "—"}
+              </span>
+            </div>
+
+            <div className="rounded-xl border border-white/10 bg-slate-950/50 p-3.5 flex flex-col justify-center">
+              <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                <List className="w-3.5 h-3.5 text-indigo-400" /> Kit Size
+              </span>
+              <span className="mt-1 block text-sm font-bold text-white uppercase truncate">
+                {myPlayer.tShirtSize || "—"}
+              </span>
+            </div>
+
+            <div className="rounded-xl border border-white/10 bg-slate-950/50 p-3.5 flex flex-col justify-center">
+              <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                <Award className="w-3.5 h-3.5 text-amber-400" /> Base Price
+              </span>
+              <span className="mt-1 block text-sm font-black text-emerald-400 truncate">
+                {myPlayer.basePrice != null ? formatCurrency(myPlayer.basePrice) : "—"}
+              </span>
+            </div>
           </div>
         </div>
 
-        {/* Pitch diagram derived from primaryPosition */}
-        <div className="lg:col-span-2 glass-card rounded-2xl border border-slate-800 p-4 flex flex-col">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500">Position on Pitch</h3>
-            <div className="flex items-center gap-2">
-              {myPlayer.primaryPosition && (
-                <span className="text-[10px] font-bold text-amber-400 flex items-center gap-1">
-                  <MapPin className="w-3 h-3" /> {primaryName}
-                </span>
-              )}
-              <span className="rounded-full border border-cyan-400/20 bg-cyan-500/10 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.25em] text-cyan-300">
-                Live
+        {/* Right Card: POSITION ON PITCH */}
+        <div className="glass-card rounded-2xl border border-slate-800 p-5 sm:p-6 flex flex-col justify-between h-full">
+          <div className="flex items-center justify-between mb-4 border-b border-slate-800/80 pb-3">
+            <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
+              <MapPin className="w-4 h-4 text-emerald-400" /> Position on Pitch
+            </h3>
+            {myPlayer.primaryPosition && (
+              <span className="text-[10px] font-bold text-amber-400 flex items-center gap-1">
+                <Star className="w-3 h-3 text-yellow-400" /> {primaryName}
               </span>
-            </div>
+            )}
           </div>
 
-          {/* Full regulation pitch — clean green turf, white line markings,
-              recreated in pure SVG (no image background, no text/watermark). */}
-          <FullscreenWrapper className="relative h-[220px] sm:h-[260px] w-full rounded-xl overflow-hidden border border-emerald-900/60">
-            <FootballField className="absolute inset-0 h-full w-full" preserveAspectRatio="xMidYMid slice" />
+          <div className="relative w-full aspect-[105/68] rounded-xl overflow-hidden border border-emerald-900/60 bg-slate-950 flex items-center justify-center my-auto">
+            <FootballField width="100%" height="100%" preserveAspectRatio="xMidYMid meet" className="w-full h-full" />
 
-            {/* Player markers — positioned from backend fieldX/fieldY (percentages),
-                drawn with the player's uploaded profile picture. */}
+            {/* Player markers overlay */}
             {pitchMarks.length > 0 ? (
               pitchMarks.map(mark => {
                 const isPrimary = String(mark.code).toUpperCase() === String(myPlayer.primaryPosition).toUpperCase();
@@ -556,7 +525,6 @@ export default function PlayerDashboard() {
                   >
                     {isPrimary ? (
                       <>
-                        {/* Expanding heartbeat ripple rings */}
                         {[0, 1, 2].map(i => (
                           <motion.span
                             key={i}
@@ -567,29 +535,27 @@ export default function PlayerDashboard() {
                             transition={{ duration: 1.8, repeat: Infinity, delay: i * 0.6, ease: "easeOut" }}
                           />
                         ))}
-                        {/* Primary glowing marker with a clear heartbeat tick */}
                         <motion.span
-                          className="relative flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-full border-2 border-amber-300/80 bg-slate-950/70 shadow-[0_0_20px_rgba(251,191,36,0.65)] backdrop-blur-sm"
+                          className="relative flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-full border-2 border-amber-300/80 bg-slate-950/70 shadow-[0_0_20px_rgba(251,191,36,0.65)] backdrop-blur-sm"
                           animate={{ scale: [1, 1.12, 1] }}
                           transition={{ duration: 0.45, repeat: Infinity, ease: "easeInOut" }}
                         >
                           <img
                             src={getImageUrl(myPlayer.imageUrl, myPlayer.imageUrl ? playerFallback('emerald') : `${DEFAULT_AVATAR}${encodeURIComponent(myPlayer.name)}`)}
                             alt={mark.name}
-                            className="h-9 w-9 rounded-full object-cover transition group-hover/pos:scale-110"
+                            className="h-8 w-8 rounded-full object-cover transition group-hover/pos:scale-110"
                           />
                         </motion.span>
                       </>
                     ) : (
                       <>
-                        {/* Soft secondary glow for supporting positions */}
                         <motion.span
-                          className="pointer-events-none absolute top-1/2 left-1/2 h-9 w-9 rounded-full bg-emerald-300/20"
-                          style={{ margin: '-18px 0 0 -18px' }}
+                          className="pointer-events-none absolute top-1/2 left-1/2 h-8 w-8 rounded-full bg-emerald-300/20"
+                          style={{ margin: '-16px 0 0 -16px' }}
                           animate={{ opacity: [0.3, 0.7, 0.3], scale: [0.8, 1.3, 0.8] }}
                           transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                         />
-                        <span className="relative block h-9 w-9 sm:h-10 sm:w-10 rounded-full border-2 border-white/90 bg-slate-950/70 p-0.5 shadow-[0_0_10px_rgba(52,211,153,0.45)] backdrop-blur-sm">
+                        <span className="relative block h-8 w-8 sm:h-9 sm:w-9 rounded-full border-2 border-white/90 bg-slate-950/70 p-0.5 shadow-[0_0_10px_rgba(52,211,153,0.45)] backdrop-blur-sm">
                           <img
                             src={getImageUrl(myPlayer.imageUrl, myPlayer.imageUrl ? playerFallback('emerald') : `${DEFAULT_AVATAR}${encodeURIComponent(myPlayer.name)}`)}
                             alt={mark.name}
@@ -610,7 +576,7 @@ export default function PlayerDashboard() {
               </div>
             )}
 
-            {/* Selected marker → player info popover */}
+            {/* Selected marker info popover */}
             <AnimatePresence>
               {activePos && (
                 <motion.div
@@ -625,32 +591,27 @@ export default function PlayerDashboard() {
                     <img
                       src={getImageUrl(myPlayer.imageUrl, myPlayer.imageUrl ? playerFallback('emerald') : `${DEFAULT_AVATAR}${encodeURIComponent(myPlayer.name)}`)}
                       alt={myPlayer.name}
-                      className="h-12 w-12 rounded-xl object-cover border border-slate-700"
+                      className="h-10 w-10 rounded-xl object-cover border border-slate-700"
                     />
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-black text-white">{myPlayer.name}</p>
-                      <p className="truncate text-[11px] font-semibold text-cyan-300">
+                      <p className="truncate text-xs font-black text-white">{myPlayer.name}</p>
+                      <p className="truncate text-[10px] font-semibold text-cyan-300">
                         {resolvePosition(activePos)?.name || activePos} <span className="text-slate-500">· {activePos}</span>
-                      </p>
-                      <p className="truncate text-[10px] text-slate-400">
-                        {myPlayer.tShirtNumber && <>#{myPlayer.tShirtNumber} · </>}
-                        {myPlayer.jerseyName}
-                        {myPlayer.category || myPlayer.primaryPosition ? <> · {myPlayer.category || 'Unranked'}</> : null}
                       </p>
                     </div>
                     <button
                       type="button"
                       onClick={() => setActivePos(null)}
-                      className="shrink-0 rounded-full border border-slate-700 p-1.5 text-slate-400 transition hover:bg-slate-800 hover:text-white"
+                      className="shrink-0 rounded-full border border-slate-700 p-1 text-slate-400 transition hover:bg-slate-800 hover:text-white"
                       aria-label="Close player info"
                     >
-                      <X className="h-3.5 w-3.5" />
+                      <X className="h-3 w-3" />
                     </button>
                   </div>
                 </motion.div>
               )}
             </AnimatePresence>
-          </FullscreenWrapper>
+          </div>
         </div>
       </div>
 
