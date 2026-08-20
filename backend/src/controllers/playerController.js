@@ -93,7 +93,12 @@ const updateProfileSchema = z.object({
   primaryPosition: z.string().optional(),
   tShirtSize: z.enum(['S', 'M', 'L', 'XL', 'XXL']).optional(),
   tShirtNumber: z.string().optional(),
-  imageUrl: z.string().optional()
+  imageUrl: z.string().optional(),
+  // Premium profile card attributes
+  age: z.union([z.number().int().min(5).max(120), z.string(), z.null()]).optional(),
+  height: z.string().max(20).optional(),
+  preferredFoot: z.enum(['', 'Left', 'Right', 'Both']).optional(),
+  nationality: z.string().max(80).optional()
 }).partial();
 
 // ── Public player fields (visible to Spectators / unauthenticated) ────────────
@@ -391,12 +396,20 @@ export const updatePlayerProfile = async (req, res, next) => {
     delete parsed.email;
 
     const allowedFields = req.user?.role === 'PLAYER'
-      ? ['name', 'phone', 'bio', 'address', 'session', 'jerseyName', 'positions', 'primaryPosition', 'tShirtSize', 'tShirtNumber', 'imageUrl']
+      ? ['name', 'phone', 'bio', 'address', 'session', 'jerseyName', 'positions', 'primaryPosition', 'tShirtSize', 'tShirtNumber', 'imageUrl', 'age', 'height', 'preferredFoot', 'nationality']
       : Object.keys(parsed);
 
     const update = {};
     for (const key of allowedFields) {
       if (parsed[key] !== undefined) update[key] = parsed[key];
+    }
+
+    // FormData sends numbers as strings — normalize before persisting.
+    if (update.age === '' || update.age === null || update.age === undefined) {
+      update.age = null;
+    } else {
+      const age = Number(update.age);
+      update.age = Number.isFinite(age) ? age : null;
     }
 
     if (update.jerseyName) update.jerseyName = update.jerseyName.toUpperCase();

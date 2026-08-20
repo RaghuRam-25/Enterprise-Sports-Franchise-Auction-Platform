@@ -19,6 +19,11 @@ const playerSchema = new mongoose.Schema({
   phone: { type: String, default: '' },
   bio: { type: String, default: '' },
   address: { type: String, default: '' },
+  // Premium profile card attributes (optional, populated via profile edit)
+  age: { type: Number, default: null },
+  height: { type: String, default: '' },
+  preferredFoot: { type: String, default: '', enum: ['', 'Left', 'Right', 'Both'] },
+  nationality: { type: String, default: '' },
   category: { type: String, required: true, default: 'B Grade', index: true },
   basePrice: { type: Number, default: 1000000 },
   status: {

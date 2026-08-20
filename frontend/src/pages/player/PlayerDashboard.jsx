@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   User, CheckCircle2, Edit3, X, Save, Loader2,
   Camera, Shield, Hash, Shirt, List, Star, Mail, GraduationCap, BadgeCheck,
-  Lock, Upload, Trash2, Phone, MapPin, Award
+  Lock, Upload, Trash2, Phone, MapPin, Award, Calendar, Ruler, Footprints, Globe, Activity
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useAuction } from "../../context/AuctionContext";
@@ -18,6 +18,7 @@ import { playerFallback } from "../../utils/playerFallback";
 const DEFAULT_AVATAR = "https://ui-avatars.com/api/?background=7c3aed&color=fff&size=256&bold=true&name=";
 const POSITIONS = ["Goalkeeper", "Center Back", "Left Back", "Right Back", "Defensive Midfielder", "Central Midfielder", "Attacking Midfielder", "Left Winger", "Right Winger", "Striker", "Second Striker"];
 const TSHIRT_SIZES = ["S", "M", "L", "XL", "XXL"];
+const FOOT_PREFERENCES = ["Left", "Right", "Both"];
 
 // Fallback pitch coordinates keyed by position CODE (positions are stored as
 // codes like 'ST'/'CB'). Live config positions (from /config/positions, which
@@ -56,7 +57,7 @@ export default function PlayerDashboard() {
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [editForm, setEditForm] = useState({ name: "", phone: "", jerseyName: "", tShirtSize: "M", tShirtNumber: "", positions: [], primaryPosition: "", session: "", bio: "", address: "" });
+  const [editForm, setEditForm] = useState({ name: "", phone: "", jerseyName: "", tShirtSize: "M", tShirtNumber: "", positions: [], primaryPosition: "", session: "", bio: "", address: "", age: "", height: "", preferredFoot: "", nationality: "" });
   const [selectedFile, setSelectedFile] = useState(null);
   const [filePreview, setFilePreview] = useState(null);
   const [removeImage, setRemoveImage] = useState(false);
@@ -134,7 +135,11 @@ export default function PlayerDashboard() {
       primaryPosition: myPlayer?.primaryPosition || "",
       session: myPlayer?.session || "",
       bio: myPlayer?.bio || "",
-      address: myPlayer?.address || ""
+      address: myPlayer?.address || "",
+      age: myPlayer?.age ?? "",
+      height: myPlayer?.height || "",
+      preferredFoot: myPlayer?.preferredFoot || "",
+      nationality: myPlayer?.nationality || ""
     });
     setSelectedFile(null); setFilePreview(null); setRemoveImage(false); setActiveTab("personal"); setEditing(true);
   };
@@ -179,6 +184,11 @@ export default function PlayerDashboard() {
 
       if (selectedFile) fd.append("picture", selectedFile);
       else if (removeImage) fd.append("imageUrl", "");
+
+      if (editForm.age !== "") fd.append("age", editForm.age);
+      if (editForm.height) fd.append("height", editForm.height);
+      if (editForm.preferredFoot) fd.append("preferredFoot", editForm.preferredFoot);
+      if (editForm.nationality) fd.append("nationality", editForm.nationality);
 
       const res = await playerAPI.updateProfile(myPlayer._id || myPlayer.id, fd);
       const updated = res?.data?.data || res?.data || res;
@@ -226,22 +236,32 @@ export default function PlayerDashboard() {
   const isSold = myPlayer.status === "SOLD";
 
   // Consolidated info list — every field appears exactly once across the page.
+  // ("Jersey No." lives on the profile card below; "Status" lives on the card too.)
   const infoFields = [
     { label: "Student ID", value: myPlayer.studentId, icon: Hash, mono: true },
     { label: "Session", value: myPlayer.session, icon: GraduationCap },
     { label: "Email", value: myPlayer.email, icon: Mail },
     { label: "Phone", value: myPlayer.phone, icon: Phone },
     { label: "Jersey Name", value: myPlayer.jerseyName, icon: BadgeCheck, mono: true },
-    { label: "Jersey No.", value: myPlayer.tShirtNumber ? `#${myPlayer.tShirtNumber}` : null, icon: Hash, mono: true },
     { label: "Kit Size", value: myPlayer.tShirtSize, icon: Shirt },
     { label: "Base Price", value: myPlayer.basePrice != null ? formatCurrency(myPlayer.basePrice) : null, icon: Award },
+  ];
+
+  // Premium profile card stats — each sourced live from the loaded player.
+  const profileStats = [
+    { label: "Age", value: myPlayer.age != null ? `${myPlayer.age}` : null, icon: Calendar },
+    { label: "Height", value: myPlayer.height || null, icon: Ruler },
+    { label: "Foot", value: myPlayer.preferredFoot || null, icon: Footprints },
+    { label: "Jersey Number", value: myPlayer.tShirtNumber ? `#${myPlayer.tShirtNumber}` : null, icon: Hash },
+    { label: "Nationality", value: myPlayer.nationality || null, icon: Globe },
+    { label: "Status", value: isSold ? "Sold" : "Registered", icon: Activity },
   ];
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
 
-      {/* ── Player ID Card (photo floats centered, name below) ─────────── */}
-      <div className="relative overflow-hidden rounded-3xl shadow-2xl border border-slate-800 bg-gradient-to-br from-slate-950 via-purple-950/20 to-slate-900">
+      {/* ── Premium Two-Panel Player Profile Card ─────────────────────── */}
+      <div className="group relative overflow-hidden rounded-3xl border border-slate-800 bg-gradient-to-br from-slate-950 via-purple-950/20 to-slate-900 shadow-2xl transition-shadow duration-300 hover:shadow-purple-950/40">
         {/* Ambient glow + faint dot texture */}
         <div
           className="absolute inset-0 opacity-[0.05] pointer-events-none"
@@ -251,9 +271,9 @@ export default function PlayerDashboard() {
           }}
         />
         <div className="absolute -top-24 -right-16 w-72 h-72 bg-purple-600/20 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-24 -left-16 w-72 h-72 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-24 -left-16 w-72 h-72 bg-indigo-500/15 rounded-full blur-3xl pointer-events-none" />
 
-        {/* Top-right corner: subtle status/edit controls only */}
+        {/* Top bar: portal label + status/edit controls */}
         <div className="relative z-20 flex items-center justify-between px-5 pt-5">
           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] font-bold tracking-wider uppercase text-purple-300 backdrop-blur-sm">
             Player Portal
@@ -267,43 +287,86 @@ export default function PlayerDashboard() {
             <button
               onClick={openEdit}
               title="Edit Profile"
-              className="w-8 h-8 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center transition"
+              className="w-8 h-8 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-slate-300 hover:text-white transition"
             >
-              <Edit3 className="w-3.5 h-3.5 text-slate-300" />
+              <Edit3 className="w-3.5 h-3.5" />
             </button>
           )}
         </div>
 
-        {/* Center: Player Photo — floating, ghost jersey number behind it */}
-        <div className="relative flex flex-col items-center px-6 pt-2 pb-8">
-          <div className="relative">
-            <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-[9rem] sm:text-[10rem] font-black text-white/[0.04] leading-none select-none pointer-events-none">
+        {/* Two-panel split */}
+        <div className="relative z-10 grid grid-cols-1 gap-6 p-5 sm:p-7 md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] md:items-center">
+          {/* ── LEFT PANEL — Profile Photograph ─────────────────────────── */}
+          <div className="relative flex items-center justify-center">
+            {/* Ghost jersey number behind the photo */}
+            <span
+              className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-[9rem] sm:text-[11rem] font-black text-white/[0.04] leading-none select-none"
+              aria-hidden="true"
+            >
               {myPlayer.tShirtNumber || "00"}
             </span>
-            <img
-              src={getImageUrl(myPlayer.imageUrl, myPlayer.imageUrl ? playerFallback('emerald') : `${DEFAULT_AVATAR}${encodeURIComponent(myPlayer.name)}`)}
-              alt={myPlayer.name}
-              className="relative w-36 h-36 sm:w-44 sm:h-44 rounded-3xl object-cover border-4 border-slate-800 shadow-2xl z-10"
-            />
+
+            {/* Glow halo */}
+            <div className="absolute h-52 w-52 sm:h-64 sm:w-64 rounded-full bg-purple-600/25 blur-3xl pointer-events-none transition-opacity duration-300 group-hover:opacity-100 opacity-70" />
+
+            {/* Framed photograph */}
+            <div className="relative rounded-[1.75rem] bg-white/5 p-[3px] shadow-[0_20px_60px_rgba(0,0,0,0.55)] ring-1 ring-white/10 transition-transform duration-300 group-hover:scale-[1.02]">
+              <div className="rounded-[1.6rem] bg-gradient-to-tr from-purple-600/40 via-indigo-500/20 to-emerald-400/30 p-[2px]">
+                <img
+                  src={getImageUrl(myPlayer.imageUrl, myPlayer.imageUrl ? playerFallback('emerald') : `${DEFAULT_AVATAR}${encodeURIComponent(myPlayer.name)}`)}
+                  alt={myPlayer.name}
+                  className="h-52 w-52 sm:h-64 sm:w-64 rounded-[1.55rem] object-cover"
+                />
+              </div>
+            </div>
           </div>
 
-          {/* Name + Position — below the photo */}
-          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white leading-none uppercase mt-5 text-center">
-            {myPlayer.name}
-          </h1>
-          <p className="text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest mt-2 text-center">
-            {primaryName || "Position Not Set"}
-          </p>
+          {/* ── RIGHT PANEL — Identity + Stats ─────────────────────────── */}
+          <div className="flex flex-col justify-center gap-4 text-center md:text-left">
+            {/* PLAYER label */}
+            <span className="inline-flex items-center justify-center gap-2 md:justify-start">
+              <span className="h-px w-5 bg-purple-500/60" />
+              <span className="text-[10px] font-black uppercase tracking-[0.35em] text-purple-300">Player</span>
+            </span>
 
-          {/* Category + Status pills */}
-          <div className="flex items-center gap-2 mt-3">
-            <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider ${catTone.bg} ${catTone.text} border ${catTone.border}`}>
-              <Award className="w-3 h-3" />
-              {myPlayer.category || 'Unranked'}
-            </span>
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-slate-800/70 text-slate-300 border border-slate-700">
-              {isSold ? "Sold" : "Registered"}
-            </span>
+            {/* Name — hero typography */}
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black uppercase tracking-tight leading-none text-white [text-shadow:0_0_40px_rgba(139,92,246,0.35)]">
+              {myPlayer.name}
+            </h1>
+
+            {/* Position */}
+            <p className="text-xs sm:text-sm font-black uppercase tracking-[0.3em] text-cyan-300">
+              {primaryName || "Position Not Set"}
+            </p>
+
+            {/* Category + Status badges */}
+            <div className="flex flex-wrap items-center justify-center gap-2 md:justify-start">
+              <span className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-[11px] font-black uppercase tracking-wider ${catTone.bg} ${catTone.text} ${catTone.border}`}>
+                <Award className="h-3 w-3" />
+                {myPlayer.category || 'Unranked'}
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-200 backdrop-blur-sm">
+                <span className={`inline-block h-1.5 w-1.5 rounded-full ${isSold ? 'bg-emerald-400' : 'bg-cyan-400'} animate-pulse`} />
+                {isSold ? "Sold" : "Registered"}
+              </span>
+            </div>
+
+            {/* Structured stats grid */}
+            <div className="mt-1 grid grid-cols-2 gap-2.5 sm:grid-cols-3">
+              {profileStats.map(({ label, value, icon: Icon }) => (
+                <div
+                  key={label}
+                  className="rounded-xl border border-white/10 bg-slate-950/50 p-3 backdrop-blur-sm transition-colors duration-200 hover:border-purple-500/40 hover:bg-slate-900/60"
+                >
+                  <span className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-slate-500">
+                    <Icon className="h-3 w-3 text-purple-400" /> {label}
+                  </span>
+                  <span className="mt-1 block truncate text-sm font-black text-white">
+                    {value || <span className="font-semibold text-slate-600">—</span>}
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -550,6 +613,28 @@ export default function PlayerDashboard() {
                   <div className="p-3 bg-slate-950/60 rounded-xl border border-slate-800 flex items-start gap-2">
                     <Mail className="w-3.5 h-3.5 text-slate-500 mt-0.5 flex-shrink-0" />
                     <div><span className="text-slate-500 font-semibold">Email (read-only)</span><p className="text-blue-300 font-mono mt-0.5">{myPlayer.email}</p></div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block font-semibold text-slate-400 mb-1.5 flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5 text-purple-400" /> Age</label>
+                      <input type="number" min="5" max="120" value={editForm.age ?? ""} onChange={e => setEditForm(prev => ({ ...prev, age: e.target.value.replace(/\D/g, "").slice(0, 3) }))} className="glass-input w-full px-3 py-2.5 rounded-xl text-white" placeholder="e.g. 21" />
+                    </div>
+                    <div>
+                      <label className="block font-semibold text-slate-400 mb-1.5 flex items-center gap-1.5"><Ruler className="w-3.5 h-3.5 text-purple-400" /> Height</label>
+                      <input type="text" value={editForm.height} onChange={e => setEditForm(prev => ({ ...prev, height: e.target.value }))} className="glass-input w-full px-3 py-2.5 rounded-xl text-white" placeholder="e.g. 5ft 10in / 178cm" />
+                    </div>
+                    <div>
+                      <label className="block font-semibold text-slate-400 mb-1.5 flex items-center gap-1.5"><Footprints className="w-3.5 h-3.5 text-purple-400" /> Preferred Foot</label>
+                      <select value={editForm.preferredFoot} onChange={e => setEditForm(prev => ({ ...prev, preferredFoot: e.target.value }))} className="glass-input w-full px-3 py-2.5 rounded-xl text-white appearance-none">
+                        <option value="">Select foot</option>
+                        {FOOT_PREFERENCES.map(f => <option key={f} value={f}>{f}</option>)}
+                      </select>
+                    </div>
+                    <div className="sm:col-span-1">
+                      <label className="block font-semibold text-slate-400 mb-1.5 flex items-center gap-1.5"><Globe className="w-3.5 h-3.5 text-purple-400" /> Nationality</label>
+                      <input type="text" value={editForm.nationality} onChange={e => setEditForm(prev => ({ ...prev, nationality: e.target.value }))} className="glass-input w-full px-3 py-2.5 rounded-xl text-white" placeholder="e.g. Bangladesh" />
+                    </div>
                   </div>
                 </div>
               )}
