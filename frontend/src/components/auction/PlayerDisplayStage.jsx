@@ -8,6 +8,7 @@ import FullscreenWrapper from './FullscreenWrapper';
 import EmbeddedVideoPlayer from './EmbeddedVideoPlayer';
 import { useAuction } from '../../context/AuctionContext';
 import { playerFallback } from '../../utils/playerFallback';
+import { getImageUrl } from '../../utils/imageUrl';
 
 /**
  * PlayerDisplayStage — the single, reusable "Player Details" cinematic surface.
