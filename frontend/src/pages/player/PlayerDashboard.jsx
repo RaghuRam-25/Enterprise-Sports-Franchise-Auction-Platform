@@ -26,21 +26,21 @@ const FOOT_PREFERENCES = ["Left", "Right", "Both"];
 // carry fieldX/fieldY) take priority; this map covers positions whose code is
 // not in the current config, so the pitch always renders.
 const POSITION_CODE_MAP = {
-  "GK":   { name: "Goalkeeper",           x: 6,  y: 50 },
-  "CB":   { name: "Center Back",          x: 22, y: 50 },
-  "LB":   { name: "Left Back",            x: 28, y: 16 },
-  "RB":   { name: "Right Back",           x: 28, y: 84 },
-  "DM":   { name: "Defensive Midfielder", x: 40, y: 50 },
-  "CDM":  { name: "Defensive Midfielder", x: 40, y: 50 },
-  "CM":   { name: "Central Midfielder",   x: 52, y: 50 },
-  "CAM":  { name: "Attacking Midfielder", x: 64, y: 50 },
-  "LM":   { name: "Left Midfielder",      x: 55, y: 18 },
-  "RM":   { name: "Right Midfielder",     x: 55, y: 82 },
-  "LW":   { name: "Left Winger",          x: 78, y: 18 },
-  "RW":   { name: "Right Winger",         x: 78, y: 82 },
-  "SS":   { name: "Second Striker",       x: 80, y: 50 },
-  "ST":   { name: "Striker",              x: 88, y: 50 },
-  "CF":   { name: "Center Forward",       x: 86, y: 50 },
+  "GK": { name: "Goalkeeper", x: 6, y: 50 },
+  "CB": { name: "Center Back", x: 22, y: 50 },
+  "LB": { name: "Left Back", x: 28, y: 16 },
+  "RB": { name: "Right Back", x: 28, y: 84 },
+  "DM": { name: "Defensive Midfielder", x: 40, y: 50 },
+  "CDM": { name: "Defensive Midfielder", x: 40, y: 50 },
+  "CM": { name: "Central Midfielder", x: 52, y: 50 },
+  "CAM": { name: "Attacking Midfielder", x: 64, y: 50 },
+  "LM": { name: "Left Midfielder", x: 55, y: 18 },
+  "RM": { name: "Right Midfielder", x: 55, y: 82 },
+  "LW": { name: "Left Winger", x: 78, y: 18 },
+  "RW": { name: "Right Winger", x: 78, y: 82 },
+  "SS": { name: "Second Striker", x: 80, y: 50 },
+  "ST": { name: "Striker", x: 88, y: 50 },
+  "CF": { name: "Center Forward", x: 86, y: 50 },
 };
 
 const CATEGORY_TONE = {
@@ -342,7 +342,7 @@ export default function PlayerDashboard() {
         </div>
 
         {/* Two-panel split */}
-        <div className="relative z-10 grid grid-cols-1 gap-6 p-5 sm:p-7 md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] md:items-stretch">
+        <div className="relative z-10 grid grid-cols-1 gap-6 p-5 sm:p-7 md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] md:items-center">
           {/* ── LEFT PANEL — Profile Photograph ─────────────────────────── */}
           <div className="relative flex items-center justify-center min-h-[220px]">
             {/* Ghost jersey number behind the photo */}
@@ -368,12 +368,11 @@ export default function PlayerDashboard() {
             </div>
           </div>
 
-          {/* ── RIGHT PANEL — Identity + Details ─────────────────────────── */}
-          <div className="flex flex-col justify-center gap-4 text-center md:text-left">
+          {/* ── RIGHT PANEL — Identity ─────────────────────────── */}
+          <div className="flex flex-col justify-center gap-3.5 text-center md:text-left py-2">
             {/* PLAYER label */}
             <span className="inline-flex items-center justify-center gap-2 md:justify-start">
               <span className="h-px w-5 bg-purple-500/60" />
-              <span className="text-[10px] font-black uppercase tracking-[0.35em] text-purple-300">Player</span>
             </span>
 
             {/* Name — hero typography */}
@@ -387,7 +386,7 @@ export default function PlayerDashboard() {
             </p>
 
             {/* Category + Status badges */}
-            <div className="flex flex-wrap items-center justify-center gap-2 md:justify-start">
+            <div className="flex flex-wrap items-center justify-center gap-2 md:justify-start pt-1">
               <span className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-[11px] font-black uppercase tracking-wider ${catTone.bg} ${catTone.text} ${catTone.border}`}>
                 <Award className="h-3 w-3" />
                 {myPlayer.category || 'Unranked'}
@@ -396,23 +395,6 @@ export default function PlayerDashboard() {
                 <span className={`inline-block h-1.5 w-1.5 rounded-full ${isSold ? 'bg-emerald-400' : 'bg-cyan-400'} animate-pulse`} />
                 {isSold ? "Sold" : "Registered"}
               </span>
-            </div>
-
-            {/* Structured details grid (Age, Height, Foot, Jersey Number, Nationality, Status) */}
-            <div className="mt-1 grid grid-cols-2 gap-2.5 sm:grid-cols-3">
-              {profileStats.map(({ label, value, icon: Icon }) => (
-                <div
-                  key={label}
-                  className="rounded-xl border border-white/10 bg-slate-950/50 p-3 backdrop-blur-sm transition-colors duration-200 hover:border-purple-500/40 hover:bg-slate-900/60"
-                >
-                  <span className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-slate-500">
-                    <Icon className="h-3 w-3 text-purple-400" /> {label}
-                  </span>
-                  <span className="mt-1 block truncate text-sm font-black text-white">
-                    {value || <span className="font-semibold text-slate-600">—</span>}
-                  </span>
-                </div>
-              ))}
             </div>
           </div>
         </div>
@@ -615,30 +597,10 @@ export default function PlayerDashboard() {
         </div>
       </div>
 
-      {/* ── Positions ──────────────────────────────────────────────────── */}
-      <div className="glass-card rounded-2xl p-5 border border-slate-800">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 flex items-center gap-2"><Shield className="w-3.5 h-3.5 text-purple-400" /> Positions</h3>
-        <div className="flex flex-wrap gap-2">
-          {(myPlayer.positions || []).map(pos => {
-            const info = resolvePosition(pos);
-            const label = info ? info.name : pos;
-            const isPrimary = String(pos).toUpperCase() === String(myPlayer.primaryPosition).toUpperCase();
-            return (
-              <span key={pos} className={`px-3 py-1 rounded-lg text-xs font-bold border ${isPrimary ? "bg-purple-500/20 text-purple-300 border-purple-500/40" : "bg-slate-800 text-slate-400 border-slate-700"}`}>
-                {isPrimary && <Star className="w-3 h-3 inline mr-1 text-yellow-400" />}{label}{isPrimary && " (Primary)"}
-              </span>
-            );
-          })}
-          {(!myPlayer.positions || myPlayer.positions.length === 0) && (
-            <p className="text-xs text-slate-600 italic">No positions selected yet.</p>
-          )}
-        </div>
-      </div>
-
       {/* ── Franchise Management ──────────────────────────────────────── */}
       <div className="glass-card rounded-2xl p-6 border border-slate-800 space-y-4">
         <div className="flex items-center justify-between">
-          <div><h3 className="text-sm font-bold text-white uppercase tracking-wider">Franchise Management</h3><p className="text-xs text-slate-400">Request permission to become a Team Manager.</p></div>
+          <div><h3 className="text-sm font-bold text-white uppercase tracking-wider">Franchise Management</h3></div>
           {user?.managerRequestStatus === "PENDING" && <span className="px-3 py-1 bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-lg text-xs font-bold animate-pulse">Pending</span>}
           {user?.managerRequestStatus === "APPROVED" && <span className="px-3 py-1 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-lg text-xs font-bold">Approved</span>}
           {user?.managerRequestStatus === "REJECTED" && <span className="px-3 py-1 bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded-lg text-xs font-bold">Declined</span>}
