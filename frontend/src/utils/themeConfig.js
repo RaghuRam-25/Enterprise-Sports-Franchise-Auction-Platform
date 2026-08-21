@@ -11,14 +11,22 @@ export const CATEGORY_ICONS = {
   Banknote, Pentagon, Hexagon, Octagon, Triangle, Square, CircleDot, Circle, Tag, Shield, Trophy, Zap, Crown, Flame, Star
 };
 
-// Maps icon name strings (as stored in DB) → Lucide components for Team icons
 const TEAM_ICON_MAP = {
-  Shield, Trophy, Crown, Flame, Star, Award, Target, Sparkles,
-  Feather, Swords, Rocket, Gem, Anchor, Castle,
-  // Aliases used in AdminTeams TEAM_ICON_OPTIONS
-  Lightning: Zap,
-  Falcon: Feather,
-  Zap,
+  Shield, shield: Shield,
+  Trophy, trophy: Trophy,
+  Crown, crown: Crown,
+  Flame, flame: Flame,
+  Star, star: Star,
+  Award, award: Award,
+  Target, target: Target,
+  Sparkles, sparkles: Sparkles,
+  Feather, feather: Feather, Falcon: Feather, falcon: Feather,
+  Swords, swords: Swords,
+  Rocket, rocket: Rocket,
+  Gem, gem: Gem,
+  Anchor, anchor: Anchor,
+  Castle, castle: Castle,
+  Zap, zap: Zap, Lightning: Zap, lightning: Zap
 };
 
 // ─── Player Category Themes ──────────────────────────────────────────────────
@@ -191,61 +199,44 @@ function stringHash(str) {
 
 /**
  * Returns avatar rendering config for a team.
- * BorderColor returned as a CSS color string (NOT a Tailwind class) so it can be used in inline styles.
+ * Guaranteed to return a valid IconComponent so shortcode initials are never rendered in the icon box.
  */
 export function getTeamAvatarConfig(team = {}) {
   const name = team.name || team.teamName || 'Team';
   const shortCode = team.shortCode || team.code || '';
-
-  let initials = shortCode;
-  if (!initials) {
-    const parts = name.trim().split(/\s+/);
-    if (parts.length >= 2) {
-      initials = (parts[0][0] + parts[1][0]).toUpperCase();
-    } else {
-      initials = name.slice(0, 3).toUpperCase();
-    }
-  }
-
-  if (team.primaryColor || team.icon) {
-    const IconComponent = (team.icon && TEAM_ICON_MAP[team.icon]) ? TEAM_ICON_MAP[team.icon] : (team.icon ? Shield : null);
-    const primaryColor = team.primaryColor || '#3b82f6';
-    const secondaryColor = team.secondaryColor || '#0f172a';
-
-    return {
-      initials,
-      presetName: team.icon || '',
-      IconComponent,
-      hasCustomIcon: !!(team.icon && TEAM_ICON_MAP[team.icon]),
-      hasCustomColors: !!team.primaryColor,
-      primaryColor,
-      secondaryColor,
-      // borderColorHex is used for inline style on the avatar box border
-      borderColorHex: secondaryColor,
-      bgGradient: '',
-      accentColor: primaryColor,
-      logoSvg: team.logoSvg || null,
-    };
-  }
-
   const rawId = team._id || team.id || '';
   const hash = stringHash(`${name}-${shortCode}-${rawId}`);
+
   const iconPreset = ICON_PRESETS[hash % ICON_PRESETS.length];
   const colorPreset = TEAM_COLOR_PALETTE[hash % TEAM_COLOR_PALETTE.length];
 
+  let IconComponent = null;
+  if (team.icon) {
+    const key = String(team.icon).trim();
+    IconComponent = TEAM_ICON_MAP[key] || TEAM_ICON_MAP[key.toLowerCase()] || TEAM_ICON_MAP[key.charAt(0).toUpperCase() + key.slice(1)];
+  }
+
+  // Guaranteed Icon Fallback (so Vercel/Production teams ALWAYS render an Icon)
+  if (!IconComponent) {
+    IconComponent = iconPreset.Icon || Shield;
+  }
+
+  const primaryColor = team.primaryColor || colorPreset.accent || '#3b82f6';
+  const secondaryColor = team.secondaryColor || '#0f172a';
+
   return {
-    initials,
-    presetName: iconPreset.name,
-    IconComponent: iconPreset.Icon,
+    initials: shortCode || name.slice(0, 2).toUpperCase(),
+    presetName: team.icon || iconPreset.name,
+    IconComponent,
     hasCustomIcon: true,
-    hasCustomColors: false,
-    primaryColor: colorPreset.accent,
-    secondaryColor: '#0f172a',
-    borderColorHex: null, // use Tailwind class
+    hasCustomColors: !!team.primaryColor,
+    primaryColor,
+    secondaryColor,
+    borderColorHex: secondaryColor,
     borderColorClass: iconPreset.border,
     bgGradient: colorPreset.bg,
-    accentColor: colorPreset.accent,
-    logoSvg: null,
+    accentColor: primaryColor,
+    logoSvg: team.logoSvg || null,
   };
 }
 
@@ -266,12 +257,6 @@ export const TEAM_THEMES = [
 
 /**
  * Returns theme object for a team card.
- * When team has custom primaryColor/secondaryColor:
- *   - customStyle      → inline style for the card wrapper (background gradient)
- *   - customBorderStyle → inline style for card border (uses secondaryColor)
- *   - customAccentStyle → inline style for the top accent bar (uses primaryColor)
- *   - customBadgeStyle  → inline style for the short-code badge
- *   - customStatStyle   → inline style for stat text
  */
 export function getTeamTheme(team) {
   if (!team) return TEAM_THEMES[0];
@@ -282,11 +267,9 @@ export function getTeamTheme(team) {
     const s = tObj.secondaryColor || '#0f172a';
     return {
       name: 'custom',
-      // Card background — primaryColor fades into dark
       customStyle: {
         background: `linear-gradient(135deg, ${p}22 0%, #0b0f19 100%)`,
       },
-      // Border uses secondaryColor (the user's request)
       customBorderStyle: {
         borderColor: s,
         borderWidth: '1.5px',
@@ -295,7 +278,6 @@ export function getTeamTheme(team) {
       customAccentStyle: { background: s },
       customBadgeStyle: { backgroundColor: `${p}25`, color: p, borderColor: `${p}60`, borderWidth: '1px', borderStyle: 'solid' },
       customStatStyle: { color: p },
-      // Fallback Tailwind classes (unused when customStyle present)
       gradient: '',
       border: 'border-slate-700',
       ring: 'hover:shadow-lg',
