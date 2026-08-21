@@ -1,12 +1,12 @@
 import { useState } from 'react';
-import { User } from 'lucide-react';
+import { User, Trophy, Shield } from 'lucide-react';
 import { getTeamAvatarConfig } from '../../utils/themeConfig';
 import { getImageUrl } from '../../utils/imageUrl';
 
 /**
  * Team Icon & Badge Display Component
- * Renders uploaded logo, SVG logo, custom icon, or initials.
- * Border on the avatar uses secondaryColor when available (via inline style).
+ * Renders uploaded logo, SVG logo, or custom SVG icon (default Trophy/Shield).
+ * Text/shortcode fallback is completely removed so this box ALWAYS displays an SVG icon.
  */
 export default function TeamBadge({
   team,
@@ -23,15 +23,17 @@ export default function TeamBadge({
 
   const logoUrl = team.logoUrl || (typeof team.logo === 'string' && (team.logo.startsWith('http') || team.logo.startsWith('/')) ? team.logo : null);
   const avatarConfig = getTeamAvatarConfig(team);
-  const IconComponent = avatarConfig.IconComponent;
 
-  const primaryCol  = team.primaryColor  || avatarConfig.primaryColor  || '#3b82f6';
+  // Guarantee an SVG Icon Component (never text/shortcode)
+  const FallbackIcon = avatarConfig.IconComponent || Trophy || Shield;
+
+  const primaryCol   = team.primaryColor   || avatarConfig.primaryColor   || '#3b82f6';
   const secondaryCol = team.secondaryColor || avatarConfig.secondaryColor || '#0f172a';
 
   // Avatar background = gradient primary → secondary
   const avatarBgStyle = { background: `linear-gradient(135deg, ${primaryCol}, ${secondaryCol})` };
 
-  // Avatar border = secondary color inline (so it actually changes)
+  // Avatar border = secondary color inline
   const avatarBorderStyle = avatarConfig.hasCustomColors
     ? { borderColor: secondaryCol, borderWidth: '2px', borderStyle: 'solid' }
     : undefined;
@@ -44,22 +46,19 @@ export default function TeamBadge({
     xl: { avatar: 'w-20 h-20 rounded-3xl text-xl',     icon: 'w-10 h-10',   text: 'text-xl',   code: 'text-sm' },
   }[size] || { avatar: 'w-10 h-10 rounded-xl text-xs', icon: 'w-5 h-5', text: 'text-sm', code: 'text-[10px]' };
 
-  // Decide what goes inside the avatar
-  const showLogo   = logoUrl && !imgError;
-  const showSvg    = !showLogo && team.logoSvg;
-  const showIcon   = !showLogo && !showSvg && !!IconComponent;
-  const showInitials = !showLogo && !showSvg && !showIcon;
+  const showLogo = logoUrl && !imgError;
+  const showSvg  = !showLogo && team.logoSvg;
 
   return (
     <div className={`flex items-center gap-3 ${className}`}>
 
-      {/* ── Avatar / Custom Logo Container ── */}
+      {/* ── Avatar / Custom Logo Container (SVG ICON ONLY) ── */}
       <div
         style={{
           ...(showLogo ? undefined : avatarBgStyle),
           ...avatarBorderStyle,
         }}
-        className={`relative flex-shrink-0 flex items-center justify-center font-black overflow-hidden shadow-md transition-transform duration-200 group-hover:scale-105 ${dimensions.avatar} ${!avatarConfig.hasCustomColors ? (avatarConfig.borderColorClass || 'border border-sky-500/40') : ''} ${showLogo ? 'bg-slate-900' : ''}`}
+        className={`relative flex-shrink-0 flex items-center justify-center overflow-hidden shadow-md transition-transform duration-200 group-hover:scale-105 ${dimensions.avatar} ${!avatarConfig.hasCustomColors ? (avatarConfig.borderColorClass || 'border border-sky-500/40') : ''} ${showLogo ? 'bg-slate-900' : ''}`}
       >
         {showLogo ? (
           <img
@@ -70,12 +69,8 @@ export default function TeamBadge({
           />
         ) : showSvg ? (
           <div className="w-full h-full p-1 flex items-center justify-center" dangerouslySetInnerHTML={{ __html: team.logoSvg }} />
-        ) : showIcon ? (
-          <IconComponent className={`${dimensions.icon} text-white drop-shadow`} />
         ) : (
-          <span className="font-mono tracking-tight text-white drop-shadow-md">
-            {avatarConfig.initials}
-          </span>
+          <FallbackIcon className={`${dimensions.icon} text-white drop-shadow`} />
         )}
       </div>
 
