@@ -5,8 +5,8 @@ import { getImageUrl } from '../../utils/imageUrl';
 
 /**
  * Team Icon & Badge Display Component
- * Renders uploaded logo, SVG logo, or custom SVG icon (default Trophy/Shield).
- * Text/shortcode fallback is completely removed so this box ALWAYS displays an SVG icon.
+ * Renders uploaded logo image or Lucide SVG Icon (default Trophy/Shield/custom team icon).
+ * Auto-generated SVG text circles are bypassed so this box ALWAYS displays an SVG icon.
  */
 export default function TeamBadge({
   team,
@@ -47,12 +47,11 @@ export default function TeamBadge({
   }[size] || { avatar: 'w-10 h-10 rounded-xl text-xs', icon: 'w-5 h-5', text: 'text-sm', code: 'text-[10px]' };
 
   const showLogo = logoUrl && !imgError;
-  const showSvg  = !showLogo && team.logoSvg;
 
   return (
     <div className={`flex items-center gap-3 ${className}`}>
 
-      {/* ── Avatar / Custom Logo Container (SVG ICON ONLY) ── */}
+      {/* ── Avatar Container (SVG ICON ONLY) ── */}
       <div
         style={{
           ...(showLogo ? undefined : avatarBgStyle),
@@ -67,8 +66,6 @@ export default function TeamBadge({
             onError={() => setImgError(true)}
             className="w-full h-full object-contain p-1"
           />
-        ) : showSvg ? (
-          <div className="w-full h-full p-1 flex items-center justify-center" dangerouslySetInnerHTML={{ __html: team.logoSvg }} />
         ) : (
           <FallbackIcon className={`${dimensions.icon} text-white drop-shadow`} />
         )}

@@ -67,7 +67,7 @@ export function generateUniqueLogo(teamName = '', primaryColor = '#3b82f6', seco
 /**
  * Builds clean, responsive SVG vector code for team logo
  */
-function buildSvgMarkup({ shape, emblem, borderStyle, primaryColor, secondaryColor, initials }) {
+function buildSvgMarkup({ shape, emblem, borderStyle, primaryColor, secondaryColor }) {
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" class="w-full h-full">
     <defs>
       <linearGradient id="teamGrad" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -75,7 +75,7 @@ function buildSvgMarkup({ shape, emblem, borderStyle, primaryColor, secondaryCol
         <stop offset="100%" stop-color="${secondaryColor}" />
       </linearGradient>
     </defs>
-    <circle cx="50" cy="50" r="46" fill="url(#teamGrad)" stroke="${primaryColor}" stroke-width="3" />
-    <text x="50" y="56" font-family="sans-serif" font-weight="900" font-size="22" fill="#ffffff" text-anchor="middle" dominant-baseline="middle">${initials}</text>
+    <path d="M50 10 L85 25 L85 60 C85 78 50 92 50 92 C50 92 15 78 15 60 L15 25 Z" fill="url(#teamGrad)" stroke="${primaryColor}" stroke-width="2" />
+    <path d="M50 30 L62 42 L58 65 L50 58 L42 65 L38 42 Z" fill="#ffffff" opacity="0.9" />
   </svg>`;
 }
