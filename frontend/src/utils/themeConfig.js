@@ -208,13 +208,13 @@ export function getTeamAvatarConfig(team = {}) {
   }
 
   if (team.primaryColor || team.icon) {
-    const IconComponent = (team.icon && TEAM_ICON_MAP[team.icon]) ? TEAM_ICON_MAP[team.icon] : Shield;
+    const IconComponent = (team.icon && TEAM_ICON_MAP[team.icon]) ? TEAM_ICON_MAP[team.icon] : (team.icon ? Shield : null);
     const primaryColor = team.primaryColor || '#3b82f6';
     const secondaryColor = team.secondaryColor || '#0f172a';
 
     return {
       initials,
-      presetName: team.icon || 'Shield',
+      presetName: team.icon || '',
       IconComponent,
       hasCustomIcon: !!(team.icon && TEAM_ICON_MAP[team.icon]),
       hasCustomColors: !!team.primaryColor,

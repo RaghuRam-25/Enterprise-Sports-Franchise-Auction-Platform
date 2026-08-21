@@ -12,7 +12,7 @@ export default function TeamBadge({
   team,
   size = 'md', // 'sm' | 'md' | 'lg' | 'xl'
   showName = true,
-  showCode = true,
+  showCode = false,
   showManager = false,
   managerName = null,
   className = '',
