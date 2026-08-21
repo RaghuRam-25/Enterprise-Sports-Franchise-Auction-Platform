@@ -2,7 +2,7 @@ import  { createContext, useContext, useState, useEffect, useCallback, useRef } 
 import { authAPI } from '../services/api';
 
 // ── Canonical role values (what the backend/DB stores) ───────────────────────
-export const VALID_ROLES = ['SUPER_ADMIN', 'PODIUM_ADMIN', 'TEAM_MANAGER', 'PLAYER', 'SPECTATOR'];
+export const VALID_ROLES = ['SUPER_ADMIN', 'PODIUM_ADMIN', 'TEAM_MANAGER', 'PLAYER', 'SPECTATOR', 'GENERAL_USER'];
 
 // ── Role normalisation: backend may return lowercase variants ─────────────────
 export const ROLE_MAP = {
@@ -12,11 +12,14 @@ export const ROLE_MAP = {
   team_manager: 'TEAM_MANAGER',
   player:       'PLAYER',
   spectator:    'SPECTATOR',
+  general_user: 'GENERAL_USER',
+  user:         'GENERAL_USER',
   SUPER_ADMIN:  'SUPER_ADMIN',
   PODIUM_ADMIN: 'PODIUM_ADMIN',
   TEAM_MANAGER: 'TEAM_MANAGER',
   PLAYER:       'PLAYER',
   SPECTATOR:    'SPECTATOR',
+  GENERAL_USER: 'GENERAL_USER',
 };
 
 /**
@@ -30,6 +33,7 @@ export const getDashboardForRole = (role) => {
     case 'PODIUM_ADMIN': return '/podium/dashboard';
     case 'TEAM_MANAGER': return '/manager/dashboard';
     case 'PLAYER':       return '/player/dashboard';
+    case 'GENERAL_USER': return '/general/dashboard';
     default:             return '/';
   }
 };

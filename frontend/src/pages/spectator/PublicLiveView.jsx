@@ -56,7 +56,7 @@ export default function PublicLiveView() {
   const isUrgent = animState === ANIM_STATES.LAST5 || (timerRemaining <= 5 && timerStatus === 'running');
 
   return (
-    <div className="min-h-screen flex flex-col bg-darkBg text-slate-100 relative overflow-hidden">
+    <div className="min-h-screen flex flex-col bg-darkBg text-slate-100 relative overflow-clip">
       {!user && <Navbar />}
 
       <main

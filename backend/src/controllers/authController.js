@@ -102,9 +102,14 @@ export const login = async (req, res, next) => {
         email: user.email,
         role: user.role,
         teamId: user.teamId,
+        profilePhoto: user.profilePhoto || '',
+        notificationPrefs: user.notificationPrefs,
+        createdAt: user.createdAt,
         mustResetPassword: user.mustResetPassword,
         managerRequestStatus: user.managerRequestStatus || 'NONE',
-        managerRequestNote: user.managerRequestNote || ''
+        managerRequestNote: user.managerRequestNote || '',
+        playerRequestStatus: user.playerRequestStatus || 'NONE',
+        playerRequestNote: user.playerRequestNote || ''
       }
     });
   } catch (e) { next(e); }
@@ -200,5 +205,116 @@ export const changePassword = async (req, res, next) => {
     await user.save();
 
     res.json({ success: true, message: 'Password changed successfully' });
+  } catch (e) { next(e); }
+};
+
+// ── GENERAL USER SELF-REGISTRATION ───────────────────────────────────────────
+// Public endpoint. ALWAYS creates a GENERAL_USER account — the role is
+// hardcoded server-side and can never be elevated from the client payload.
+export const registerGeneralUser = async (req, res, next) => {
+  try {
+    const { name, email, password, phone } = req.body;
+
+    if (!name || name.trim().length < 2) {
+      return res.status(400).json({ success: false, message: 'Full name (min 2 characters) is required' });
+    }
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).json({ success: false, message: 'A valid email address is required' });
+    }
+    if (!password || password.length < 6) {
+      return res.status(400).json({ success: false, message: 'Password must be at least 6 characters' });
+    }
+    if (!phone || String(phone).trim().length < 6) {
+      return res.status(400).json({ success: false, message: 'A valid mobile phone number is required' });
+    }
+
+    const normalizedEmail = String(email).toLowerCase().trim();
+    const existing = await User.findOne({ email: normalizedEmail });
+    if (existing) {
+      return res.status(409).json({ success: false, message: 'An account with this email already exists' });
+    }
+
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    // role is NEVER taken from req.body — always GENERAL_USER
+    const user = await User.create({
+      name: name.trim(),
+      email: normalizedEmail,
+      phone: String(phone).trim(),
+      passwordHash,
+      role: 'GENERAL_USER',
+      isActive: true,
+      profilePhoto: typeof req.body.profilePhoto === 'string' ? req.body.profilePhoto : ''
+    });
+
+    const tokens = generateTokens(user);
+    res.status(201).json({
+      success: true,
+      token: tokens.token,
+      refreshToken: tokens.refreshToken,
+      user: {
+        id: user._id,
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        role: user.role,
+        teamId: user.teamId,
+        profilePhoto: user.profilePhoto,
+        notificationPrefs: user.notificationPrefs,
+        createdAt: user.createdAt,
+        managerRequestStatus: 'NONE',
+        managerRequestNote: '',
+        playerRequestStatus: 'NONE',
+        playerRequestNote: ''
+      }
+    });
+  } catch (e) { next(e); }
+};
+
+// ── UPDATE OWN PROFILE (GENERAL_USER) ────────────────────────────────────────
+// Only allows safe self-fields. Role / email / teamId / isActive are ignored
+// even if present in the body — a GENERAL_USER can never elevate themselves.
+export const updateMe = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user._id || req.user.id);
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+
+    const { name, profilePhoto, notificationPrefs } = req.body;
+
+    if (name !== undefined) {
+      if (typeof name !== 'string' || name.trim().length < 2) {
+        return res.status(400).json({ success: false, message: 'Name must be at least 2 characters' });
+      }
+      user.name = name.trim();
+    }
+    if (profilePhoto !== undefined && typeof profilePhoto === 'string') {
+      user.profilePhoto = profilePhoto;
+    }
+    if (notificationPrefs && typeof notificationPrefs === 'object') {
+      const allowed = ['tournamentUpdates', 'matchReminders', 'auctionAlerts', 'resultsPublished'];
+      for (const key of allowed) {
+        if (typeof notificationPrefs[key] === 'boolean') {
+          user.notificationPrefs[key] = notificationPrefs[key];
+        }
+      }
+    }
+
+    await user.save();
+    res.json({
+      success: true,
+      message: 'Profile updated successfully',
+      user: {
+        id: user._id,
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        teamId: user.teamId,
+        profilePhoto: user.profilePhoto,
+        notificationPrefs: user.notificationPrefs,
+        createdAt: user.createdAt
+      }
+    });
   } catch (e) { next(e); }
 };

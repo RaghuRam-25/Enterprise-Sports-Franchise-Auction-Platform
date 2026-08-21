@@ -46,6 +46,14 @@ router.get('/teams', optionalAuth, async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
+router.get('/display', optionalAuth, async (req, res, next) => {
+  try {
+    const { getDisplayOverrides } = await import('../controllers/displayController.js');
+    const overrides = await getDisplayOverrides();
+    res.json({ success: true, data: overrides });
+  } catch (e) { next(e); }
+});
+
 router.post('/calculate-raise', optionalAuth, async (req, res, next) => {
   try {
     const { currentBid = 0, totalPurse = 100000000 } = req.body || {};

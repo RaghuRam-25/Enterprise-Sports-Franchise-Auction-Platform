@@ -28,6 +28,8 @@ const playerSchema = new mongoose.Schema({
   matchesPlayed: { type: Number, default: 0 },
   goals: { type: Number, default: 0 },
   assists: { type: Number, default: 0 },
+  yellowCards: { type: Number, default: 0 },
+  redCards: { type: Number, default: 0 },
   cleanSheets: { type: Number, default: 0 },
   category: { type: String, required: true, default: 'B Grade', index: true },
   basePrice: { type: Number, default: 1000000 },

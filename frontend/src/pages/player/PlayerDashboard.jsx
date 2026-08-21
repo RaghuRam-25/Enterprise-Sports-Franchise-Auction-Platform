@@ -58,7 +58,7 @@ export default function PlayerDashboard() {
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [editForm, setEditForm] = useState({ name: "", phone: "", jerseyName: "", tShirtSize: "M", tShirtNumber: "", positions: [], primaryPosition: "", session: "", bio: "", address: "", age: "", height: "", preferredFoot: "", nationality: "", matchesPlayed: 0, goals: 0, assists: 0, cleanSheets: 0 });
+  const [editForm, setEditForm] = useState({ name: "", phone: "", jerseyName: "", tShirtSize: "M", tShirtNumber: "", positions: [], primaryPosition: "", session: "", bio: "", address: "", age: "", height: "", preferredFoot: "", nationality: "", matchesPlayed: 0, goals: 0, assists: 0, yellowCards: 0, redCards: 0, cleanSheets: 0 });
   const [selectedFile, setSelectedFile] = useState(null);
   const [filePreview, setFilePreview] = useState(null);
   const [removeImage, setRemoveImage] = useState(false);
@@ -144,6 +144,8 @@ export default function PlayerDashboard() {
       matchesPlayed: myPlayer?.matchesPlayed ?? 0,
       goals: myPlayer?.goals ?? 0,
       assists: myPlayer?.assists ?? 0,
+      yellowCards: myPlayer?.yellowCards ?? 0,
+      redCards: myPlayer?.redCards ?? 0,
       cleanSheets: myPlayer?.cleanSheets ?? 0
     });
     setSelectedFile(null); setFilePreview(null); setRemoveImage(false); setActiveTab("personal"); setEditing(true);
@@ -197,6 +199,8 @@ export default function PlayerDashboard() {
       if (editForm.matchesPlayed !== 0) fd.append("matchesPlayed", editForm.matchesPlayed);
       if (editForm.goals !== 0) fd.append("goals", editForm.goals);
       if (editForm.assists !== 0) fd.append("assists", editForm.assists);
+      if (editForm.yellowCards !== 0) fd.append("yellowCards", editForm.yellowCards);
+      if (editForm.redCards !== 0) fd.append("redCards", editForm.redCards);
       if (editForm.cleanSheets !== 0) fd.append("cleanSheets", editForm.cleanSheets);
 
       const res = await playerAPI.updateProfile(myPlayer._id || myPlayer.id, fd);
@@ -276,6 +280,8 @@ export default function PlayerDashboard() {
     { label: "Matches Played", value: myPlayer.matchesPlayed ?? 0, icon: Activity },
     { label: "Goals", value: myPlayer.goals ?? 0, icon: Goal },
     { label: "Assists", value: myPlayer.assists ?? 0, icon: Footprints },
+    { label: "Yellow Cards", value: myPlayer.yellowCards ?? 0, icon: Shield },
+    { label: "Red Cards", value: myPlayer.redCards ?? 0, icon: Shield },
     { label: "Clean Sheets", value: myPlayer.cleanSheets ?? 0, icon: Shield },
     { label: "Total Bids", value: liveBids, icon: TrendingUp },
     { label: "Highest Bid", value: liveHighest, icon: Gavel, currency: true },
@@ -707,6 +713,14 @@ export default function PlayerDashboard() {
                       <div>
                         <label className="block font-semibold text-slate-400 mb-1.5 flex items-center gap-1.5"><Footprints className="w-3.5 h-3.5 text-emerald-400" /> Assists</label>
                         <input type="number" min="0" max="9999" value={editForm.assists === 0 ? "" : editForm.assists ?? ""} onChange={e => setEditForm(prev => ({ ...prev, assists: e.target.value.replace(/\D/g, "").slice(0, 4) }))} className="glass-input w-full px-3 py-2.5 rounded-xl text-white" placeholder="e.g. 10" />
+                      </div>
+                      <div>
+                        <label className="block font-semibold text-slate-400 mb-1.5 flex items-center gap-1.5"><Shield className="w-3.5 h-3.5 text-amber-400" /> Yellow Cards</label>
+                        <input type="number" min="0" max="9999" value={editForm.yellowCards === 0 ? "" : editForm.yellowCards ?? ""} onChange={e => setEditForm(prev => ({ ...prev, yellowCards: e.target.value.replace(/\D/g, "").slice(0, 4) }))} className="glass-input w-full px-3 py-2.5 rounded-xl text-white" placeholder="e.g. 5" />
+                      </div>
+                      <div>
+                        <label className="block font-semibold text-slate-400 mb-1.5 flex items-center gap-1.5"><Shield className="w-3.5 h-3.5 text-rose-400" /> Red Cards</label>
+                        <input type="number" min="0" max="9999" value={editForm.redCards === 0 ? "" : editForm.redCards ?? ""} onChange={e => setEditForm(prev => ({ ...prev, redCards: e.target.value.replace(/\D/g, "").slice(0, 4) }))} className="glass-input w-full px-3 py-2.5 rounded-xl text-white" placeholder="e.g. 1" />
                       </div>
                       <div>
                         <label className="block font-semibold text-slate-400 mb-1.5 flex items-center gap-1.5"><Shield className="w-3.5 h-3.5 text-emerald-400" /> Clean Sheets</label>

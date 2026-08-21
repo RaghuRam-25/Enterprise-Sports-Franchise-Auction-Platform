@@ -56,6 +56,6 @@ router.post('/blind-bid', authorize('TEAM_MANAGER'), requirePhase('AUCTION'), pl
 
 // ── All authenticated users can change their own password ─────────────────────
 // PUT /api/manager/password — change own password
-router.put('/password', authorize('TEAM_MANAGER', 'PODIUM_ADMIN', 'PLAYER', 'SUPER_ADMIN'), changeOwnPassword);
+router.put('/password', authorize('TEAM_MANAGER', 'PODIUM_ADMIN', 'PLAYER', 'SUPER_ADMIN', 'GENERAL_USER', 'SPECTATOR'), changeOwnPassword);
 
 export default router;

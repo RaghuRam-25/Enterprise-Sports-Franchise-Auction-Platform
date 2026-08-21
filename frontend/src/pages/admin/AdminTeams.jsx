@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Plus, Trash2, Edit3, X, Save, Eye, Copy, CheckCircle, AlertTriangle, Lock, Users } from 'lucide-react';
+import { Plus, Trash2, Edit3, X, Save, Eye, Copy, CheckCircle, AlertTriangle, Lock, Users, Shield, Trophy, Zap, Crown, Flame, Star, Feather, Target, Sparkles, Award, Swords, Rocket, Gem, Anchor, Castle } from 'lucide-react';
 import { useAuction } from '../../context/AuctionContext';
 import { useAuth } from '../../context/AuthContext';
 import { adminAPI } from '../../services/api';
@@ -57,6 +57,26 @@ function getTeamTheme(team) {
   return TEAM_THEMES[idx];
 }
 
+/* 15 selectable franchise icons — names are persisted on the Team record
+   and resolved back to components by themeConfig.getTeamAvatarConfig. */
+const TEAM_ICON_OPTIONS = [
+  { name: 'Shield', Icon: Shield },
+  { name: 'Trophy', Icon: Trophy },
+  { name: 'Lightning', Icon: Zap },
+  { name: 'Crown', Icon: Crown },
+  { name: 'Flame', Icon: Flame },
+  { name: 'Star', Icon: Star },
+  { name: 'Falcon', Icon: Feather },
+  { name: 'Target', Icon: Target },
+  { name: 'Sparkles', Icon: Sparkles },
+  { name: 'Award', Icon: Award },
+  { name: 'Swords', Icon: Swords },
+  { name: 'Rocket', Icon: Rocket },
+  { name: 'Gem', Icon: Gem },
+  { name: 'Anchor', Icon: Anchor },
+  { name: 'Castle', Icon: Castle },
+];
+
 export default function AdminTeams() {
   const {
     teams, setTeams, managers, loadManagers, formatCurrency, triggerToast, players, refetchTeams,
@@ -79,6 +99,11 @@ export default function AdminTeams() {
   const [budget, setBudget] = useState(eventConfig?.defaultTeamBudget?.toString() || '100000000');
   const [selectedExistingManagerId, setSelectedExistingManagerId] = useState('');
   const [creating, setCreating] = useState(false);
+  const [primaryColor, setPrimaryColor] = useState('#3b82f6');
+  const [secondaryColor, setSecondaryColor] = useState('#0f172a');
+  const [icon, setIcon] = useState('Shield');
+  const [iconMenuOpen, setIconMenuOpen] = useState(false);
+  const [editIconMenuOpen, setEditIconMenuOpen] = useState(false);
 
   const [selectedManager, setSelectedManager] = useState(null);
   const [tempPass, setTempPass] = useState('');
@@ -112,6 +137,13 @@ export default function AdminTeams() {
       (t.shortCode || t.code || '').toLowerCase().includes(q)
     );
   }, [teams, search]);
+
+  // Icons already taken by existing teams are hidden from the create picker
+  const usedIcons = useMemo(() => new Set(teams.map(t => t.icon).filter(Boolean)), [teams]);
+  const availableIcons = useMemo(
+    () => TEAM_ICON_OPTIONS.filter(o => !usedIcons.has(o.name)),
+    [usedIcons]
+  );
 
   const handleCreateFranchise = async (e) => {
     e.preventDefault();
@@ -147,6 +179,9 @@ export default function AdminTeams() {
         shortCode: code.toUpperCase(),
         totalBudget: budgetNum,
         minRoster: eventConfig?.minRosterSize ?? 11,
+        primaryColor: primaryColor.toLowerCase(),
+        secondaryColor: secondaryColor.toLowerCase(),
+        icon,
       };
       const teamRes = await adminAPI.createTeam(teamPayload);
       createdTeam = teamRes.data;
@@ -174,6 +209,7 @@ export default function AdminTeams() {
 
       // Reset form
       setName(''); setCode(''); setBudget(eventConfig?.defaultTeamBudget?.toString() || '100000000'); setSelectedExistingManagerId('');
+      setPrimaryColor('#3b82f6'); setSecondaryColor('#0f172a'); setIcon('Shield');
       triggerToast(`Franchise "${name}" created successfully!`, 'success');
 
     } catch (err) {
@@ -217,11 +253,15 @@ export default function AdminTeams() {
       return;
     }
     setEditingTeam(team);
+    setEditIconMenuOpen(false);
     setEditForm({
       name: team.name || '',
       shortCode: team.shortCode || team.code || '',
       totalBudget: team.totalBudget || 0,
       managerId: team.managerId || '',
+      primaryColor: (team.primaryColor || '#3b82f6').toLowerCase(),
+      secondaryColor: (team.secondaryColor || '#0f172a').toLowerCase(),
+      icon: team.icon || 'Shield',
     });
   };
 
@@ -239,7 +279,14 @@ export default function AdminTeams() {
     setSaving(true);
     const id = editingTeam._id || editingTeam.id;
     try {
-      const res = await adminAPI.editTeam(id, { name: editForm.name, shortCode: editForm.shortCode.toUpperCase(), totalBudget: editForm.totalBudget });
+      const res = await adminAPI.editTeam(id, {
+        name: editForm.name,
+        shortCode: editForm.shortCode.toUpperCase(),
+        totalBudget: editForm.totalBudget,
+        primaryColor: editForm.primaryColor,
+        secondaryColor: editForm.secondaryColor,
+        icon: editForm.icon || 'Shield'
+      });
       const updatedTeamData = res.data;
 
       const oldManagerId = editingTeam.managerId;
@@ -313,25 +360,21 @@ export default function AdminTeams() {
         )}
 
         {isSuperAdmin && isSetupPhase && (
-          <div className="glass-card rounded-2xl p-6 border border-slate-800 space-y-4">
+          <div className="glass-card relative z-30 rounded-2xl p-6 border border-slate-800 space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <h3 className="text-sm font-bold uppercase tracking-wider text-slate-300">Create New Franchise</h3>
             </div>
 
-            <form onSubmit={handleCreateFranchise} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <input type="text" placeholder="Team Name*" value={name} onChange={e => setName(e.target.value)} className="glass-input rounded-xl px-4 py-2 text-xs" required disabled={!isSetupPhase} />
-                <input type="text" placeholder="Short Code (e.g. DHD)*" maxLength={4} value={code} onChange={e => setCode(e.target.value.toUpperCase())} className="glass-input rounded-xl px-4 py-2 text-xs font-mono uppercase" required disabled={!isSetupPhase} />
-                <input type="number" min="1" placeholder="Total Budget (BDT)*" value={budget} onChange={e => setBudget(e.target.value)} className="glass-input rounded-xl px-4 py-2 text-xs" required disabled={!isSetupPhase} />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <div className="md:col-span-2">
+            <form onSubmit={handleCreateFranchise} className="flex items-end gap-3">
+                <input type="text" placeholder="Team Name*" value={name} onChange={e => setName(e.target.value)} className="glass-input rounded-lg px-3 py-2 text-xs w-44" required disabled={!isSetupPhase} />
+                <input type="text" placeholder="Short Code (e.g. DHD)*" maxLength={4} value={code} onChange={e => setCode(e.target.value.toUpperCase())} className="glass-input rounded-lg px-3 py-2 text-xs font-mono uppercase w-48" required disabled={!isSetupPhase} />
+                <input type="number" min="1" placeholder="Total Budget (BDT)*" value={budget} onChange={e => setBudget(e.target.value)} className="glass-input rounded-lg px-3 py-2 text-xs w-36" required disabled={!isSetupPhase} />
+                <div className="w-full sm:w-60">
                   <label className="block text-[11px] font-semibold text-slate-400 mb-1">Assign Manager (Optional)</label>
                   <select
                     value={selectedExistingManagerId}
                     onChange={e => setSelectedExistingManagerId(e.target.value)}
-                    className="glass-input w-full rounded-xl px-4 py-2 text-xs"
+                    className="glass-input w-full rounded-lg px-3 py-2 text-xs"
                     disabled={!isSetupPhase}
                   >
                     <option value="">-- No Manager --</option>
@@ -342,11 +385,69 @@ export default function AdminTeams() {
                     ))}
                   </select>
                 </div>
-                <button type="submit" id="create-team-btn" disabled={creating || !isSetupPhase} className="px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-60 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1 shadow-md transition md:col-span-1 md:self-end">
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-400 mb-1">Primary</label>
+                  <input
+                    type="color"
+                    value={primaryColor}
+                    onChange={e => setPrimaryColor(e.target.value)}
+                    className="w-14 h-[34px] rounded-lg cursor-pointer bg-transparent border border-slate-700 p-0.5"
+                    title={`Primary: ${primaryColor.toUpperCase()}`}
+                    disabled={!isSetupPhase}
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-400 mb-1">Secondary</label>
+                  <input
+                    type="color"
+                    value={secondaryColor}
+                    onChange={e => setSecondaryColor(e.target.value)}
+                    className="w-14 h-[34px] rounded-lg cursor-pointer bg-transparent border border-slate-700 p-0.5"
+                    title={`Secondary: ${secondaryColor.toUpperCase()}`}
+                    disabled={!isSetupPhase}
+                  />
+                </div>
+                <div className="relative">
+                  <label className="block text-[11px] font-semibold text-slate-400 mb-1">Icon</label>
+                  <button
+                    type="button"
+                    onClick={() => setIconMenuOpen(prev => !prev)}
+                    disabled={!isSetupPhase}
+                    className="h-[34px] flex items-center gap-1.5 bg-slate-900/60 border border-slate-800 hover:border-slate-600 rounded-lg px-2.5 transition disabled:opacity-60"
+                    title={`Icon: ${icon}`}
+                  >
+                    {(() => {
+                      const Selected = (TEAM_ICON_OPTIONS.find(o => o.name === icon) || TEAM_ICON_OPTIONS[0]).Icon;
+                      return <Selected className="w-4 h-4 text-white" />;
+                    })()}
+                    <span className="text-xs text-slate-300 font-semibold">{icon}</span>
+                  </button>
+                  {iconMenuOpen && (
+                    <>
+                      <div className="fixed inset-0 z-20" onClick={() => setIconMenuOpen(false)} />
+                      <div className="absolute z-30 top-full mt-1 left-0 bg-slate-950 border border-slate-700 rounded-xl p-2 shadow-2xl flex flex-col gap-1">
+                        {availableIcons.length === 0 && (
+                          <span className="text-[11px] text-slate-500 px-1 py-1 whitespace-nowrap">All icons are already in use</span>
+                        )}
+                        {availableIcons.map(({ name: iconName, Icon }) => (
+                          <button
+                            key={iconName}
+                            type="button"
+                            onClick={() => { setIcon(iconName); setIconMenuOpen(false); }}
+                            title={iconName}
+                            className={`w-8 h-8 rounded-md flex items-center justify-center transition ${icon === iconName ? 'bg-blue-600 text-white shadow-md' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}
+                          >
+                            <Icon className="w-4 h-4" />
+                          </button>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
+                <button type="submit" id="create-team-btn" disabled={creating || !isSetupPhase} className="px-4 h-[34px] bg-blue-600 hover:bg-blue-500 disabled:opacity-60 text-white font-bold text-xs rounded-lg flex items-center justify-center gap-1 shadow-md transition">
                   <Plus className="w-4 h-4" />
-                  {creating ? 'Creating Franchise...' : 'Create Franchise'}
+                  {creating ? 'Creating...' : 'Create Franchise'}
                 </button>
-              </div>
             </form>
           </div>
         )}
@@ -556,6 +657,83 @@ export default function AdminTeams() {
                     )}
                     {unassignedManagers.map(m => <option key={m._id} value={m._id}>{m.name}</option>)}
                   </select>
+                </div>
+
+                {/* Team Colors */}
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-400 mb-1">Team Colors</label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="flex items-center gap-2 bg-slate-900/60 border border-slate-800 rounded-xl px-3 py-2">
+                      <input
+                        type="color"
+                        value={/^#[0-9a-fA-F]{6}$/.test(editForm.primaryColor || '') ? editForm.primaryColor : '#3b82f6'}
+                        onChange={e => setEditForm(prev => ({ ...prev, primaryColor: e.target.value }))}
+                        className="w-9 h-7 rounded-lg cursor-pointer bg-transparent border border-slate-700 p-0.5"
+                        title="Primary Color"
+                      />
+                      <div className="leading-tight">
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Primary</p>
+                        <p className="font-mono text-[11px] text-slate-300 uppercase">{(editForm.primaryColor || '#3b82f6').toUpperCase()}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 bg-slate-900/60 border border-slate-800 rounded-xl px-3 py-2">
+                      <input
+                        type="color"
+                        value={/^#[0-9a-fA-F]{6}$/.test(editForm.secondaryColor || '') ? editForm.secondaryColor : '#0f172a'}
+                        onChange={e => setEditForm(prev => ({ ...prev, secondaryColor: e.target.value }))}
+                        className="w-9 h-7 rounded-lg cursor-pointer bg-transparent border border-slate-700 p-0.5"
+                        title="Secondary Color"
+                      />
+                      <div className="leading-tight">
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Secondary</p>
+                        <p className="font-mono text-[11px] text-slate-300 uppercase">{(editForm.secondaryColor || '#0f172a').toUpperCase()}</p>
+                      </div>
+                    </div>
+                  </div>
+                  {/* Live gradient preview */}
+                  <div
+                    className="mt-2 h-8 rounded-xl border border-slate-700 flex items-center justify-center transition-colors duration-300"
+                    style={{ background: `linear-gradient(90deg, ${editForm.primaryColor || '#3b82f6'}, ${editForm.secondaryColor || '#0f172a'})` }}
+                  >
+                    <span className="text-[11px] font-black text-white drop-shadow px-2">{editForm.shortCode || 'CODE'}</span>
+                  </div>
+                </div>
+
+                {/* Team Icon */}
+                <div className="relative">
+                  <label className="block text-[11px] font-semibold text-slate-400 mb-1">Team Icon</label>
+                  <button
+                    type="button"
+                    onClick={() => setEditIconMenuOpen(prev => !prev)}
+                    className="w-full h-[34px] flex items-center gap-2 bg-slate-900/60 border border-slate-800 hover:border-slate-600 rounded-xl px-3 transition"
+                    title={`Icon: ${editForm.icon || 'Shield'}`}
+                  >
+                    {(() => {
+                      const Selected = (TEAM_ICON_OPTIONS.find(o => o.name === (editForm.icon || 'Shield')) || TEAM_ICON_OPTIONS[0]).Icon;
+                      return <Selected className="w-4 h-4 text-white" />;
+                    })()}
+                    <span className="text-xs text-slate-300 font-semibold">{editForm.icon || 'Shield'}</span>
+                  </button>
+                  {editIconMenuOpen && (
+                    <>
+                      <div className="fixed inset-0 z-20" onClick={() => setEditIconMenuOpen(false)} />
+                      <div className="absolute z-30 top-full mt-1 left-0 bg-slate-950 border border-slate-700 rounded-xl p-2 shadow-2xl flex flex-col gap-1">
+                        {TEAM_ICON_OPTIONS
+                          .filter(o => o.name === (editForm.icon || 'Shield') || !usedIcons.has(o.name))
+                          .map(({ name: iconName, Icon }) => (
+                          <button
+                            key={iconName}
+                            type="button"
+                            onClick={() => { setEditForm(prev => ({ ...prev, icon: iconName })); setEditIconMenuOpen(false); }}
+                            title={iconName}
+                            className={`w-8 h-8 rounded-md flex items-center justify-center transition ${(editForm.icon || 'Shield') === iconName ? 'bg-blue-600 text-white shadow-md' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}
+                          >
+                            <Icon className="w-4 h-4" />
+                          </button>
+                        ))}
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
 

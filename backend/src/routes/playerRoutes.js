@@ -9,7 +9,8 @@ import {
   updatePlayerProfile,
   getRegistrationStatus,
   toggleRegistrationFreeze,
-  requestManagerRole
+  requestManagerRole,
+  requestPlayerRole
 } from '../controllers/playerController.js';
 import { protect, optionalAuth, authorize } from '../middleware/auth.js';
 import { requirePhase } from '../middleware/phase.js';
@@ -37,8 +38,11 @@ router.get('/', optionalAuth, getPlayers);
 
 // ── Authenticated Routes ──────────────────────────────────────────────────────
 
-// POST /api/players/request-manager — PLAYER role upgrade request
-router.post('/request-manager', protect, authorize('PLAYER', 'SPECTATOR'), requestManagerRole);
+// POST /api/players/request-manager — PLAYER or GENERAL_USER role upgrade request
+router.post('/request-manager', protect, authorize('PLAYER', 'SPECTATOR', 'GENERAL_USER'), requestManagerRole);
+
+// POST /api/players/request-player — GENERAL_USER request for Player role
+router.post('/request-player', protect, authorize('GENERAL_USER', 'SPECTATOR'), requestPlayerRole);
 
 // PUT /api/players/:id/withdraw — PLAYER (own only) or SUPER_ADMIN
 // Self-service withdraw is a REGISTRATION-phase action; Super Admin overrides

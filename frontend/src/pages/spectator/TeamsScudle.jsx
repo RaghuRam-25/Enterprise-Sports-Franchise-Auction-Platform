@@ -1,11 +1,12 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import {
-  Calendar, Clock, MapPin, Trophy, Shield, Radio, Search, RefreshCw,
-  Layers, Hourglass, Filter, ArrowUpDown, ChevronLeft, ChevronRight, X, AlertCircle, Users
+  Calendar, Clock, MapPin, Trophy, Shield, Search, RefreshCw,
+  Hourglass, Filter, ArrowUpDown, X, AlertCircle, Users
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Navbar from '../../components/Navbar';
 import TeamBadge from '../../components/common/TeamBadge';
+import CompetitionHeader from '../../components/common/CompetitionHeader';
 import api from '../../services/api';
 import { getImageUrl } from '../../utils/imageUrl';
 import { useAuction } from '../../context/AuctionContext';
@@ -453,7 +454,6 @@ function MatchCard({ match, index = 0, teams = [], onCardClick }) {
 
 function PlayerAvatar({ player }) {
   const [imgError, setImgError] = useState(false);
-  const theme = getTeamTheme(player.category || 'default');
 
   const imgSrc = getImageUrl(player.imageUrl);
   const showImage = imgSrc && !imgError;
@@ -570,7 +570,7 @@ function MatchCardSkeleton({ index = 0 }) {
 
 export default function TeamsScudle() {
   const { user } = useAuth();
-  const { teams = [] } = useAuction();
+  const { teams = [], sessions = [] } = useAuction();
   const [matches, setMatches] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -582,10 +582,6 @@ export default function TeamsScudle() {
   const [selectedTournament, setSelectedTournament] = useState('all');
   const [sortOrder, setSortOrder] = useState('asc'); // asc / desc
   const [selectedMatch, setSelectedMatch] = useState(null);
-
-  // Pagination
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 8;
 
   const fetchMatches = async ({ silent = false } = {}) => {
     try {
@@ -693,11 +689,6 @@ export default function TeamsScudle() {
     return list;
   }, [processedMatches, activeTab, selectedTournament, search, sortOrder]);
 
-  // Reset pagination when filters change
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [activeTab, selectedTournament, search, sortOrder]);
-
   // Group Matches by Date
   const groupedMatches = useMemo(() => {
     if (!filteredMatches.length) return {};
@@ -710,9 +701,6 @@ export default function TeamsScudle() {
   }, [filteredMatches]);
 
   const sortedDates = Object.keys(groupedMatches);
-
-  // Paginated Dates
-  const totalPages = Math.ceil(filteredMatches.length / itemsPerPage);
 
   return (
     <div className="min-h-screen flex flex-col bg-[#0b0f19] text-slate-100 font-sans selection:bg-blue-500 selection:text-white">
@@ -730,36 +718,47 @@ export default function TeamsScudle() {
 
       {!user && <Navbar />}
 
-      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-4 space-y-4">
 
-        {/* Page Header */}
-        <div className="relative text-center py-6">
-          <div className="absolute inset-x-0 top-0 h-48 -z-10 opacity-70 pointer-events-none"
-            style={{ background: 'radial-gradient(ellipse at center, rgba(59,130,246,0.15) 0%, transparent 70%)' }}
-          />
-          <div className="inline-flex p-3 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-400 mb-3 shadow-lg shadow-blue-950/30">
-            <Trophy className="w-8 h-8" />
-          </div>
-          <h1 className="text-3xl sm:text-5xl font-black tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent">
-            Tournament Match Schedule
-          </h1>
-          <p className="text-sm text-slate-400 mt-2 max-w-md mx-auto">
-            Live fixtures, upcoming clashes, and match results.
-          </p>
-        </div>
+        {/* Competition Header — kept sticky so navigation never drops the
+            Championship / Overview / Matches / Table / Stats / Players bar */}
+        <CompetitionHeader
+          competitionName={matches[0]?.tournament || 'Championship'}
+          sessionName={sessions?.[0]?.name || 'Current Season'}
+          user={user}
+          active="matches"
+        />
 
-        {!loading && !error && (
-          <>
-            {/* Stat Pills */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {/* Page Header — compact bar so the content sits right below the
+            CompetitionHeader without dead space */}
+        <div className="glass-card rounded-3xl overflow-hidden ui-fade-up">
+          <div className="flex flex-wrap items-center justify-between gap-3 px-4 sm:px-6 py-3.5">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="p-2 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 shrink-0">
+                <Trophy className="w-4 h-4" />
+              </div>
+              <div className="min-w-0">
+                <h1 className="font-heading font-black text-lg tracking-wide text-white leading-tight truncate">
+                  Tournament Match Schedule
+                </h1>
+                <p className="text-[10px] text-slate-500 truncate">
+                  Live fixtures, upcoming clashes, and match results.
+                </p>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               <StatPill label="Total Matches" value={stats.total} tone="text-slate-200 border-slate-800" />
               <StatPill label="Live Now" value={stats.live} tone="text-rose-400 border-rose-500/30" />
               <StatPill label="Upcoming" value={stats.upcoming} tone="text-blue-400 border-blue-500/30" />
               <StatPill label="Completed" value={stats.finished} tone="text-emerald-400 border-emerald-500/30" />
             </div>
+          </div>
+        </div>
 
+        {!loading && !error && (
+          <>
             {/* Filter Bar */}
-            <div className="sticky top-4 z-30 flex flex-col md:flex-row gap-3 md:items-center md:justify-between rounded-2xl border border-slate-800/90 bg-slate-950/80 backdrop-blur-xl px-4 py-3 shadow-2xl shadow-black/40">
+            <div className="sticky top-16 z-20 flex flex-col md:flex-row gap-3 md:items-center md:justify-between rounded-2xl border border-slate-800/90 bg-slate-950/80 backdrop-blur-xl px-4 py-3 shadow-2xl shadow-black/40">
 
               {/* Status Tabs */}
               <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
@@ -768,8 +767,8 @@ export default function TeamsScudle() {
                     key={tab.key}
                     onClick={() => setActiveTab(tab.key)}
                     className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all duration-200 shrink-0 ${activeTab === tab.key
-                        ? 'bg-gradient-to-r from-blue-600 to-indigo-600 border border-blue-500 text-white shadow-lg shadow-blue-950/60'
-                        : 'bg-slate-900/60 border border-slate-800/80 text-slate-400 hover:text-white hover:border-slate-700'
+                      ? 'bg-gradient-to-r from-blue-600 to-indigo-600 border border-blue-500 text-white shadow-lg shadow-blue-950/60'
+                      : 'bg-slate-900/60 border border-slate-800/80 text-slate-400 hover:text-white hover:border-slate-700'
                       }`}
                   >
                     {tab.label}

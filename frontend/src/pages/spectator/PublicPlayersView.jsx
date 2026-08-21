@@ -1,12 +1,13 @@
 import { useState, useMemo, useEffect } from 'react';
 import {
-  Users, Search, X, ChevronDown, Star, Shield,
+  Users, Search, X, ChevronDown, Shield,
   Trophy, Zap, Eye, UserCheck, UserX, Clock, SlidersHorizontal,
-  RefreshCw, TrendingUp, Tag, Hash
+  RefreshCw, TrendingUp
 } from 'lucide-react';
 import { useAuction } from '../../context/AuctionContext';
 import { useAuth } from '../../context/AuthContext';
 import Navbar from '../../components/Navbar';
+import CompetitionHeader from '../../components/common/CompetitionHeader';
 import '../../services/api';
 import { getImageUrl } from '../../utils/imageUrl';
 import PlayerCardCard from '../../components/common/PlayerCardCard';
@@ -27,21 +28,6 @@ const ROLE_BADGE = {
   TEAM_MANAGER: { label: 'Team Manager', color: 'text-emerald-300', bg: 'bg-emerald-900/60', border: 'border-emerald-700' },
   PLAYER: { label: 'Player', color: 'text-purple-300', bg: 'bg-purple-900/60', border: 'border-purple-700' },
   null: { label: 'Spectator', color: 'text-slate-300', bg: 'bg-slate-800/60', border: 'border-slate-700' },
-};
-
-const getCategoryCardStyle = (category) => {
-  switch (category) {
-    case 'Icon Category':
-      return 'border-amber-700/50 bg-amber-950/50 hover:border-amber-500/70';
-    case 'A Grade':
-      return 'border-blue-800/60 bg-blue-950/50 hover:border-blue-600/70';
-    case 'B Grade':
-      return 'border-teal-800/50 bg-teal-950/50 hover:border-teal-600/70';
-    case 'Emerging Youth':
-      return 'border-purple-800/50 bg-purple-950/50 hover:border-purple-600/70';
-    default:
-      return 'border-slate-800 bg-slate-900/60 hover:border-blue-500/40';
-  }
 };
 
 const getCategoryRowStyle = (category) => {
@@ -65,103 +51,7 @@ function StatusBadge({ status }) {
   );
 }
 
-function PlayerCard({ player, isPrivileged, formatCurrency, teams = [] }) {
-  const [imgError, setImgError] = useState(false);
-  const positions = Array.isArray(player.positions) ? player.positions : [];
-  const isSold = player.status === 'SOLD';
-  const soldToTeam = isSold ? teams.find(t => (t._id || t.id) === player.soldToTeam) : null;
-  const categoryStyle = getCategoryCardStyle(player.category);
-
-  return (
-    <div className={`glass-card rounded-2xl border overflow-hidden group transition-all duration-300 ${isSold ? 'opacity-60' : ''} ${categoryStyle}`}>
-      <div className="p-5">
-        {/* Header Row */}
-        <div className="flex items-start gap-3 mb-4">
-          {/* Avatar */}
-          <div className="relative flex-shrink-0">
-            {player.imageUrl && !imgError ? (
-              <img
-                src={getImageUrl(player.imageUrl)}
-                alt={player.name}
-                onError={() => setImgError(true)}
-                className="w-14 h-14 rounded-xl object-cover border-2 border-slate-700 group-hover:border-blue-500/50 transition-colors"
-              />
-            ) : (
-              <div className="w-14 h-14 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-500 to-purple-500 flex items-center justify-center text-white font-black text-xl border-2 border-slate-700 group-hover:border-blue-500/50 transition-colors">
-                {(player.name || 'P')[0].toUpperCase()}
-              </div>
-            )}
-            {/* Status dot */}
-            <span className={`absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full border-2 border-slate-900 ${player.status === 'SOLD' ? 'bg-emerald-400' :
-              player.status === 'WITHDRAWN' ? 'bg-rose-400' :
-                player.status === 'UNSOLD' ? 'bg-amber-400' :
-                  'bg-blue-400'
-              }`} />
-          </div>
-
-          {/* Name + Jersey */}
-          <div className="flex-1 min-w-0">
-            <h3 className="font-black text-white text-base leading-tight truncate">{player.name}</h3>
-            <div className="mt-1.5">
-              <StatusBadge status={player.status} />
-            </div>
-          </div>
-        </div>
-
-        {/* Positions */}
-        <div className="flex flex-wrap gap-1.5 mb-3">
-          {positions.map(pos => (
-            <span
-              key={pos}
-              className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide border ${pos === player.primaryPosition
-                ? 'bg-amber-500/15 text-amber-400 border-amber-500/30'
-                : 'bg-slate-800/80 text-slate-400 border-slate-700'
-                }`}
-            >
-              {pos === player.primaryPosition && <Star className="w-2.5 h-2.5 inline mr-0.5 -mt-0.5" />}
-              {pos}
-            </span>
-          ))}
-        </div>
-
-        {/* Meta Info Row */}
-        <div className="flex items-center justify-between text-xs text-slate-400 pt-3 border-t border-slate-800">
-          <div className="flex items-center gap-1">
-            <Tag className="w-3 h-3 text-slate-500" />
-            <span className={`font-semibold ${player.category?.includes('A') ? 'text-amber-400' :
-              player.category?.includes('S') ? 'text-purple-400' :
-                'text-slate-400'
-              }`}>{player.category || 'B Grade'}</span>
-          </div>
-        </div>
-
-        {/* Privileged-only Details */}
-        <div className="mt-3 pt-3 border-t border-slate-800/50 space-y-1.5">
-          {!isSold && formatCurrency && (
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-slate-500 font-medium">Base Price</span>
-              <span className="font-mono font-bold text-emerald-400">{formatCurrency(player.basePrice)}</span>
-            </div>
-          )}
-          {isSold && (
-            <>
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-slate-500 font-medium">Sold For</span>
-                <span className="font-mono font-bold text-amber-400">{formatCurrency(player.finalPrice || 0)}</span>
-              </div>
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-slate-500 font-medium">Acquired By</span>
-                <span className="font-semibold text-white truncate">{soldToTeam?.name || 'N/A'}</span>
-              </div>
-            </>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function PlayerListRow({ player, isPrivileged, formatCurrency, teams = [] }) {
+function PlayerListRow({ player, formatCurrency, teams = [] }) {
   const [imgErr, setImgErr] = useState(false);
   const positions = Array.isArray(player.positions) ? player.positions : [];
   const isSold = player.status === 'SOLD';
@@ -234,7 +124,7 @@ function PlayerListRow({ player, isPrivileged, formatCurrency, teams = [] }) {
 }
 
 export default function PublicPlayersView() {
-  const { players: ctxPlayers, teams, positions, categories, formatCurrency, isDataLoading, refetchPlayers } = useAuction();
+  const { players: ctxPlayers, teams, positions, categories, formatCurrency, isDataLoading, refetchPlayers, sessions = [] } = useAuction();
   const { user } = useAuth();
 
   const role = user?.role || null;
@@ -318,9 +208,16 @@ export default function PublicPlayersView() {
       {!user && <Navbar />}
 
       <main className={`flex-1 space-y-6 ${!user
-        ? 'max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8'
+        ? 'max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-4 space-y-4'
         : ''
         }`}>
+
+        <CompetitionHeader
+          competitionName="Championship"
+          sessionName={sessions?.[0]?.name || 'Current Season'}
+          user={user}
+          active="players"
+        />
 
         {/* ── Page Header ─────────────────────────────────────────────────── */}
         <div className="glass-card rounded-2xl p-4 border border-slate-600">
@@ -541,7 +438,7 @@ export default function PublicPlayersView() {
             )}
           </div>
         ) : viewMode === 'grid' ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 auto-rows-fr">
             {filtered.map(player => (
               <PlayerCardCard
                 key={player._id || player.id}
@@ -569,7 +466,6 @@ export default function PublicPlayersView() {
                 <PlayerListRow
                   key={player._id || player.id || idx}
                   player={player}
-                  isPrivileged={isPrivileged}
                   formatCurrency={formatCurrency}
                   teams={teams}
                 />

@@ -348,7 +348,7 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-darkBg text-slate-100 relative overflow-hidden font-sans selection:bg-emerald-500 selection:text-slate-950">
+    <div className="min-h-screen flex flex-col bg-darkBg text-slate-100 relative overflow-clip font-sans selection:bg-emerald-500 selection:text-slate-950">
       <header className="sticky top-0 z-50">
         <Navbar />
       </header>
@@ -438,6 +438,15 @@ export default function LandingPage() {
                       : 'REGISTRATION CLOSED'}
                 </span>
               )}
+
+              {/* Fan Zone — spectator accounts are ALWAYS open (no approval needed) */}
+              <Link
+                to="/general/register"
+                className="px-8 py-4 bg-sky-600/20 hover:bg-sky-600/30 text-sky-300 border border-sky-500/40 font-extrabold text-sm uppercase tracking-wider rounded-2xl transition shadow-xl flex items-center gap-2.5"
+              >
+                <Users className="w-5 h-5" />
+                JOIN FAN ZONE
+              </Link>
             </motion.div>
           </div>
         </section>
@@ -559,15 +568,10 @@ export default function LandingPage() {
                       <div className="md:col-span-5 text-center">
                         <div className="relative inline-block group">
                           <img
-                            src={getImageUrl(podiumPlayer.imageUrl, playerFallback('slate'))}
+                            src={getImageUrl(podiumPlayer.imageUrl, playerFallback(podiumPlayer.primaryPosition))}
                             alt={podiumPlayer.name}
-                            className="w-40 h-40 md:w-44 md:h-44 rounded-2xl object-cover border-4 border-slate-700 shadow-2xl mx-auto"
+                            className="w-28 h-28 sm:w-36 sm:h-36 rounded-3xl object-cover border-4 border-emerald-500/30 shadow-2xl mx-auto"
                           />
-                          <div className="absolute -bottom-3 inset-x-0 flex justify-center">
-                            <span className="bg-slate-950/90 text-amber-400 border border-amber-500/40 text-xs font-extrabold px-3 py-1 rounded-full shadow-lg">
-                              {podiumPlayer.category || 'B Grade'}
-                            </span>
-                          </div>
                         </div>
                       </div>
 
@@ -635,68 +639,39 @@ export default function LandingPage() {
               </div>
             </div>
 
-            {/* Highest Bidder / Stats Panel (4 cols) */}
+            {/* Dedicated Recent Purchases Panel (4 cols) */}
             <div className="col-span-1 lg:col-span-4 h-full">
-              <div className="glass-card rounded-3xl border border-slate-800 p-4 flex flex-col shadow-2xl h-full">
+              <div className="glass-card rounded-3xl border border-slate-800 p-5 flex flex-col shadow-2xl h-full min-h-[360px]">
                 <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-                  <h3 className="text-sm font-black font-heading text-white flex items-center gap-2">
-                    <Trophy className="w-4 h-4 text-amber-400" />
-                    LEADING FRANCHISE
+                  <h3 className="text-sm font-black font-heading text-white flex items-center gap-2 uppercase tracking-wider">
+                    <ShoppingBag className="w-4 h-4 text-emerald-400" />
+                    Recent Purchases
                   </h3>
+                  <span className="text-[10px] font-mono font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full">
+                    {soldPlayers.length} Sold
+                  </span>
                 </div>
 
-                <div className="flex-1 flex flex-col justify-center">
-                  {highestBidder ? (() => {
-                    const theme = getTeamTheme(highestBidder);
-                    const rosterCount = highestBidder.currentRosterCount ?? (highestBidder.currentRoster?.length || 0);
-                    return (
-                      <div className={`space-y-3 rounded-2xl border p-3.5 bg-gradient-to-br ${theme.gradient} ${theme.border}`}>
-                        <TeamBadge team={highestBidder} size="sm" showManager={false} />
-                        <div className="grid grid-cols-1 gap-2 text-xs">
-                          <div className="bg-slate-950/70 p-2 rounded-xl border border-slate-800/80">
-                            <span className="text-[10px] text-slate-400 uppercase block">Purse Left</span>
-                            <span className={`font-mono font-bold text-sm mt-0.5 block ${theme.stat}`}>{formatCurrency(highestBidder.remainingBudget)}</span>
-                          </div>
-                          <div className="bg-slate-950/70 p-2 rounded-xl border border-slate-800/80">
-                            <span className="text-[10px] text-slate-400 uppercase block">Squad</span>
-                            <span className="font-mono font-bold text-white text-sm mt-0.5 block">{rosterCount} / {highestBidder.minRoster || 11}</span>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })() : (
-                    <div className="text-center text-slate-500 space-y-2 py-8">
-                      <Trophy className="w-8 h-8 mx-auto opacity-30" />
-                      <p className="font-bold text-slate-400 text-sm">
-                        {podiumPlayer ? 'Awaiting first bid' : 'Podium is standing by'}
-                      </p>
-                      <p className="text-xs">
-                        {podiumPlayer ? `Base price is ${formatCurrency(podiumPlayer.basePrice)}` : 'The leading team will be shown here.'}
-                      </p>
-                    </div>
-                  )}
-                </div>
-
-                {/* Recent Purchases */}
-                <div className="mt-4 pt-3 border-t border-slate-800 flex-1 flex flex-col min-h-0">
-                  <div className="flex items-center justify-between mb-3">
-                    <h4 className="text-[11px] font-black font-heading text-white uppercase tracking-wider flex items-center gap-2">
-                      <ShoppingBag className="w-3.5 h-3.5 text-emerald-400" />
-                      Recent Purchases
-                    </h4>
-                  </div>
+                <div className="mt-4 flex-1 flex flex-col min-h-0">
                   {soldPlayers.length === 0 ? (
-                    <p className="text-xs text-slate-500">No players sold yet.</p>
+                    <div className="text-center text-slate-500 my-auto py-8">
+                      <ShoppingBag className="w-8 h-8 mx-auto opacity-30 text-slate-600 mb-2" />
+                      <p className="font-bold text-xs text-slate-400">No players sold yet</p>
+                      <p className="text-[11px] text-slate-600 mt-1">Live auction draft purchases will stream here automatically.</p>
+                    </div>
                   ) : (
-                    <ul className="space-y-2 overflow-y-auto pr-1 flex-1">
+                    <ul className="space-y-2.5 overflow-y-auto pr-1 flex-1 custom-scrollbar">
                       {soldPlayers.map((p, idx) => (
-                        <li key={p._id || p.id || idx} className="flex items-center justify-between gap-2 text-xs bg-slate-900/60 border border-slate-800/60 rounded-lg px-3 py-2">
-                          <div className="flex items-center gap-2 min-w-0">
-                            <img src={getImageUrl(p.imageUrl, playerFallback('emerald'))} alt={p.name} className="w-7 h-7 rounded-md object-cover border border-slate-700 shrink-0" />
-                            <span className="font-bold text-white truncate">{p.name}</span>
+                        <li key={p._id || p.id || idx} className="flex items-center justify-between gap-3 text-xs bg-slate-900/80 border border-slate-800/80 hover:border-slate-700 rounded-xl p-2.5 transition">
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <img src={getImageUrl(p.imageUrl, playerFallback('emerald'))} alt={p.name} className="w-8 h-8 rounded-lg object-cover border border-slate-700 shrink-0" />
+                            <div className="min-w-0">
+                              <span className="font-bold text-white block truncate">{p.name}</span>
+                              <span className="text-[10px] text-slate-400 font-mono block">{p.primaryPosition || 'Player'}</span>
+                            </div>
                           </div>
                           <div className="text-right shrink-0">
-                            <span className="text-emerald-400 font-mono font-bold block">→ {teamNameOf(p.soldToTeam)}</span>
+                            <span className="text-emerald-400 font-mono font-black block text-xs">→ {teamNameOf(p.soldToTeam)}</span>
                             <span className="text-[10px] text-slate-400 font-mono block">{formatCurrency(p.finalPrice || p.basePrice || 0)}</span>
                           </div>
                         </li>
@@ -852,7 +827,7 @@ export default function LandingPage() {
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 auto-rows-fr">
             {topPlayersShowcase.map(player => (
               <PlayerCardCard
                 key={player.id || player._id}

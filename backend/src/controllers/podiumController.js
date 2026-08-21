@@ -41,7 +41,7 @@ export const selectUnsoldPlayer = async (req, res, next) => {
   try {
     const { playerId, duration, mode } = req.body;
 
-    let player = await Player.findOne({ _id: playerId, status: { $in: ['UNSOLD', 'REGISTERED'] } });
+    let player = await Player.findOne({ _id: playerId, status: { $in: ['UNSOLD', 'REGISTERED', 'APPROVED'] } });
     if (!player) {
       return res.status(404).json({ success: false, message: 'Player not found or not available for selection' });
     }
@@ -139,12 +139,15 @@ export const getAuctionState = (req, res) => {
   res.json({ success: true, data: auctionEngine.getState() });
 };
 
-// GET available players for Podium to select — GAP 9 FIX: include APPROVED
+// GET available players for Podium to select
 export const getAvailablePlayers = async (req, res, next) => {
   try {
-    // APPROVED = Super Admin approved the registration; UNSOLD = previously on podium but unsold
-    const players = await Player.find({ status: { $in: ['APPROVED', 'UNSOLD'] } })
-      .select('name jerseyName studentId primaryPosition positions category basePrice session imageUrl status tShirtNumber soldToTeam finalPrice')
+    // Include players with status REGISTERED, UNSOLD, or APPROVED whose registration is not REJECTED
+    const players = await Player.find({
+      status: { $in: ['REGISTERED', 'UNSOLD', 'APPROVED'] },
+      registrationStatus: { $ne: 'REJECTED' }
+    })
+      .select('name jerseyName studentId primaryPosition positions category basePrice session imageUrl status tShirtNumber soldToTeam finalPrice registrationStatus')
       .sort({ category: 1, name: 1 })
       .lean();
     res.json({ success: true, count: players.length, data: players });

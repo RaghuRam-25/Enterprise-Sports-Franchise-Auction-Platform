@@ -435,10 +435,10 @@ export default function PlayerRegister() {
             <button
               type="submit"
               disabled={isRegistrationFrozen}
-              className={`w-full py-3.5 font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-xl transition ${
+              className={`w-full py-3.5 text-xs shadow-xl ${
                 isRegistrationFrozen
                   ? 'bg-slate-800 text-slate-500 cursor-not-allowed'
-                  : 'bg-blue-600 hover:bg-blue-500 text-white'
+                  : 'btn-primary'
               }`}
             >
               Submit Player Registration

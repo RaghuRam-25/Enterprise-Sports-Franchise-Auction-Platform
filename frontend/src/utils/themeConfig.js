@@ -1,5 +1,5 @@
 import React from 'react';
-import { Shield, Trophy, Zap, Crown, Flame, Star, Award, Target, Sparkles, Feather } from 'lucide-react';
+import { Shield, Trophy, Zap, Crown, Flame, Star, Award, Target, Sparkles, Feather, Swords, Rocket, Gem, Anchor, Castle } from 'lucide-react';
 
 /**
  * Modern Sports Category Theme & Color System
@@ -274,7 +274,7 @@ export function getTeamAvatarConfig(team = {}) {
 
   // 1. If database has explicitly stored icon/colors, use them directly!
   if (team.primaryColor && team.icon) {
-    const iconMap = { Shield, Trophy, Zap, Crown, Flame, Star, Falcon: Feather, Target, Sparkles, Award };
+    const iconMap = { Shield, Trophy, Zap, Crown, Flame, Star, Falcon: Feather, Target, Sparkles, Award, Swords, Rocket, Gem, Anchor, Castle };
     const IconComponent = iconMap[team.icon] || Shield;
 
     return {

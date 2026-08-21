@@ -8,6 +8,9 @@ import Toast from './components/Toast';
 const LandingPage = lazy(() => import('./pages/spectator/LandingPage'));
 const PublicLiveView = lazy(() => import('./pages/spectator/PublicLiveView'));
 const TeamsScudle = lazy(() => import('./pages/spectator/TeamsScudle'));
+const LeagueTable = lazy(() => import('./pages/spectator/LeagueTable'));
+const LeagueStats = lazy(() => import('./pages/spectator/LeagueStats'));
+const MatchesHub = lazy(() => import('./pages/spectator/MatchesHub'));
 const PublicAboutView = lazy(() => import('./pages/spectator/PublicAboutView'));
 const PublicPlayersView = lazy(() => import('./pages/spectator/PublicPlayersView'));
 const PublicTeamsView = lazy(() => import('./pages/spectator/PublicTeamsView'));
@@ -17,6 +20,19 @@ const PublicTeamsView = lazy(() => import('./pages/spectator/PublicTeamsView'));
 const ManagerLogin = lazy(() => import('./pages/manager/ManagerLogin'));
 const PlayerRegister = lazy(() => import('./pages/player/PlayerRegister'));
 const ForgotPassword = lazy(() => import('./pages/auth/ForgotPassword'));
+
+// ── General User (Spectator / Fan Portal) ─────────────────────────────────────
+const GeneralUserRegister = lazy(() => import('./pages/general/GeneralUserRegister'));
+const GeneralDashboard = lazy(() => import('./pages/general/GeneralDashboard'));
+const GeneralTournaments = lazy(() => import('./pages/general/GeneralTournaments'));
+const GeneralTeams = lazy(() => import('./pages/general/GeneralTeams'));
+const GeneralTeamProfile = lazy(() => import('./pages/general/GeneralTeamProfile'));
+const GeneralPlayers = lazy(() => import('./pages/general/GeneralPlayers'));
+const GeneralPlayerProfile = lazy(() => import('./pages/general/GeneralPlayerProfile'));
+const GeneralResults = lazy(() => import('./pages/general/GeneralResults'));
+const GeneralProfile = lazy(() => import('./pages/general/GeneralProfile'));
+const GeneralNotifications = lazy(() => import('./pages/general/GeneralNotifications'));
+const GeneralSettings = lazy(() => import('./pages/general/GeneralSettings'));
 
 // ── Player Portal ─────────────────────────────────────────────────────────────
 const PlayerDashboard = lazy(() => import('./pages/player/PlayerDashboard'));
@@ -53,6 +69,7 @@ const AdminTeams = lazy(() => import('./pages/admin/AdminTeams'));
 const AdminPlayers = lazy(() => import('./pages/admin/AdminPlayers'));
 const AdminManagerRequests = lazy(() => import('./pages/admin/AdminManagerRequests'));
 const AdminFixtures = lazy(() => import('./pages/admin/AdminFixtures'));
+const AdminMatchResults = lazy(() => import('./pages/admin/AdminMatchResults'));
 
 // ── Error Pages ───────────────────────────────────────────────────────────────
 const AccessDenied = lazy(() => import('./pages/AccessDenied'));
@@ -76,7 +93,13 @@ function App() {
           {/* ── Public Spectator Routes (Top Navbar Only, No Sidebar) ─────────── */}
           <Route path="/" element={<LandingPage />} />
           <Route path="/live" element={<PublicLiveView />} />
-          <Route path="/matches" element={<TeamsScudle />} />
+          <Route path="/matches" element={<MatchesHub />} />
+          {/* Full chronological match schedule (browse view) */}
+          <Route path="/matches/schedule" element={<TeamsScudle />} />
+          {/* Live league table (browse view) */}
+          <Route path="/matches/table" element={<LeagueTable />} />
+          {/* Tournament statistics (browse view) */}
+          <Route path="/matches/stats" element={<LeagueStats />} />
           <Route path="/teams" element={<PublicTeamsView />} />
           <Route path="/about" element={<PublicAboutView />} />
           <Route path="/players" element={<PublicPlayersView />} />
@@ -89,10 +112,14 @@ function App() {
           <Route path="/register" element={<PlayerRegister />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
 
+          {/* ── GENERAL USER (Fan Zone) — public auth routes ──────────────────── */}
+          <Route path="/general/login" element={<Navigate to="/login" replace />} />
+          <Route path="/general/register" element={<GeneralUserRegister />} />
+
           {/* ── Authenticated Enterprise Dashboard Layout (Sidebar + Top Navbar) */}
           <Route
             element={
-              <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PODIUM_ADMIN', 'TEAM_MANAGER', 'PLAYER']}>
+              <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PODIUM_ADMIN', 'TEAM_MANAGER', 'PLAYER', 'GENERAL_USER']}>
                 <DashboardLayout />
               </ProtectedRoute>
             }
@@ -142,6 +169,14 @@ function App() {
                 element={
                   <ProtectedRoute allowedRoles={['SUPER_ADMIN']}>
                     <AdminFixtures />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="match-results"
+                element={
+                  <ProtectedRoute allowedRoles={['SUPER_ADMIN']}>
+                    <AdminMatchResults />
                   </ProtectedRoute>
                 }
               />
@@ -344,7 +379,31 @@ function App() {
                 path="matches"
                 element={
                   <ProtectedRoute allowedRoles={['TEAM_MANAGER', 'SUPER_ADMIN', 'PODIUM_ADMIN']}>
+                    <MatchesHub />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="matches/schedule"
+                element={
+                  <ProtectedRoute allowedRoles={['TEAM_MANAGER', 'SUPER_ADMIN', 'PODIUM_ADMIN']}>
                     <TeamsScudle />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="matches/table"
+                element={
+                  <ProtectedRoute allowedRoles={['TEAM_MANAGER', 'SUPER_ADMIN', 'PODIUM_ADMIN']}>
+                    <LeagueTable />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="matches/stats"
+                element={
+                  <ProtectedRoute allowedRoles={['TEAM_MANAGER', 'SUPER_ADMIN', 'PODIUM_ADMIN']}>
+                    <LeagueStats />
                   </ProtectedRoute>
                 }
               />
@@ -422,10 +481,184 @@ function App() {
                 }
               />
               <Route
+                path="players"
+                element={
+                  <ProtectedRoute allowedRoles={['PLAYER']}>
+                    <PublicPlayersView />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
                 path="matches"
                 element={
                   <ProtectedRoute allowedRoles={['PLAYER', 'SUPER_ADMIN', 'PODIUM_ADMIN', 'TEAM_MANAGER']}>
+                    <MatchesHub />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="matches/schedule"
+                element={
+                  <ProtectedRoute allowedRoles={['PLAYER', 'SUPER_ADMIN', 'PODIUM_ADMIN', 'TEAM_MANAGER']}>
                     <TeamsScudle />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="matches/table"
+                element={
+                  <ProtectedRoute allowedRoles={['PLAYER', 'SUPER_ADMIN', 'PODIUM_ADMIN', 'TEAM_MANAGER']}>
+                    <LeagueTable />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="matches/stats"
+                element={
+                  <ProtectedRoute allowedRoles={['PLAYER', 'SUPER_ADMIN', 'PODIUM_ADMIN', 'TEAM_MANAGER']}>
+                    <LeagueStats />
+                  </ProtectedRoute>
+                }
+              />
+            </Route>
+
+            {/* ── GENERAL USER (Spectator / Fan) ROUTES — read-only portal ──── */}
+            <Route path="/general">
+              <Route index element={<Navigate to="/general/dashboard" replace />} />
+              <Route
+                path="dashboard"
+                element={
+                  <ProtectedRoute allowedRoles={['GENERAL_USER']}>
+                    <GeneralDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              {/* Live auction broadcast — strictly read-only for spectators */}
+              <Route
+                path="live"
+                element={
+                  <ProtectedRoute allowedRoles={['GENERAL_USER']}>
+                    <PublicLiveView />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="tournaments"
+                element={
+                  <ProtectedRoute allowedRoles={['GENERAL_USER']}>
+                    <GeneralTournaments />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="matches"
+                element={
+                  <ProtectedRoute allowedRoles={['GENERAL_USER']}>
+                    <MatchesHub />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="matches/schedule"
+                element={
+                  <ProtectedRoute allowedRoles={['GENERAL_USER']}>
+                    <TeamsScudle />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="matches/table"
+                element={
+                  <ProtectedRoute allowedRoles={['GENERAL_USER']}>
+                    <LeagueTable />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="matches/stats"
+                element={
+                  <ProtectedRoute allowedRoles={['GENERAL_USER']}>
+                    <LeagueStats />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="teams"
+                element={
+                  <ProtectedRoute allowedRoles={['GENERAL_USER']}>
+                    <PublicTeamsView />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="teams/:id"
+                element={
+                  <ProtectedRoute allowedRoles={['GENERAL_USER']}>
+                    <GeneralTeamProfile />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="players"
+                element={
+                  <ProtectedRoute allowedRoles={['GENERAL_USER']}>
+                    <PublicPlayersView />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="players/:id"
+                element={
+                  <ProtectedRoute allowedRoles={['GENERAL_USER']}>
+                    <GeneralPlayerProfile />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="schedule"
+                element={
+                  <ProtectedRoute allowedRoles={['GENERAL_USER']}>
+                    <TeamsScudle />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="results"
+                element={
+                  <ProtectedRoute allowedRoles={['GENERAL_USER']}>
+                    <GeneralResults />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="standings"
+                element={
+                  <ProtectedRoute allowedRoles={['GENERAL_USER']}>
+                    <LeagueTable />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="profile"
+                element={
+                  <ProtectedRoute allowedRoles={['GENERAL_USER']}>
+                    <GeneralProfile />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="notifications"
+                element={
+                  <ProtectedRoute allowedRoles={['GENERAL_USER']}>
+                    <GeneralNotifications />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="settings"
+                element={
+                  <ProtectedRoute allowedRoles={['GENERAL_USER']}>
+                    <GeneralSettings />
                   </ProtectedRoute>
                 }
               />

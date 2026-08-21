@@ -5,6 +5,8 @@ const playerCategorySchema = new mongoose.Schema({
   priorityLevel: { type: Number, required: true, default: 1 },
   basePrice: { type: Number, required: true, default: 1000000 },
   isActive: { type: Boolean, default: true },
+  // Category icon (lucide name) — distinct set from Team icons
+  icon: { type: String, default: 'Medal' },
   // Dynamic Auto-Theme Fields
   color: { type: String, default: '#3b82f6' },
   gradient: { type: String, default: 'from-blue-600 to-cyan-500' },

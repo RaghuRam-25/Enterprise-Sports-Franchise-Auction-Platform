@@ -344,6 +344,10 @@ class AuctionEngine {
         soldToTeam: teamId,
       });
 
+      // A sold player can no longer be targeted — auto-remove them from
+      // every manager's target shortlist.
+      await ManagerTargetPlayer.deleteMany({ playerId });
+
       const team = await Team.findByIdAndUpdate(
         teamId,
         {

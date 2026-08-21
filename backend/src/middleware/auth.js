@@ -3,7 +3,7 @@ import { ENV } from '../config/env.js';
 import { User } from '../models/User.js';
 
 // ── Role hierarchy ────────────────────────────────────────────────────────────
-export const ROLES = ['SPECTATOR', 'PLAYER', 'TEAM_MANAGER', 'PODIUM_ADMIN', 'SUPER_ADMIN'];
+export const ROLES = ['SPECTATOR', 'PLAYER', 'TEAM_MANAGER', 'PODIUM_ADMIN', 'SUPER_ADMIN', 'GENERAL_USER'];
 
 /**
  * Helper: checks if a string is a valid 24-char hex MongoDB ObjectId

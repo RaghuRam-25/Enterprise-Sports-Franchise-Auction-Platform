@@ -4,8 +4,9 @@ import { PlayerCategory } from '../models/PlayerCategory.js';
 import { BiddingTier } from '../models/BiddingTier.js';
 import { Team } from '../models/Team.js';
 import { User } from '../models/User.js';
+import { Player } from '../models/Player.js';
 import { AuditLog } from '../models/AuditLog.js';
-import { buildCompleteTeamTheme, buildCategoryTheme } from '../services/ThemeGenerator.js';
+import { buildCompleteTeamTheme, buildCategoryTheme, buildCategoryThemeFromColor } from '../services/ThemeGenerator.js';
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 
@@ -17,9 +18,30 @@ const positionSchema = z.object({
   fieldX: z.number().min(0).max(100).optional(),
   fieldY: z.number().min(0).max(100).optional()
 });
-const categorySchema = z.object({ name: z.string().min(2), priorityLevel: z.number().min(1), basePrice: z.number().min(0) });
+const categorySchema = z.object({
+  name: z.string().min(2),
+  priorityLevel: z.number().min(1),
+  basePrice: z.number().min(0),
+  color: z.string().regex(/^#[0-9a-fA-F]{6}$/, 'Color must be a valid hex code (e.g. #3b82f6)').optional(),
+  icon: z.string().max(30).optional()
+});
+const categoryUpdateSchema = z.object({
+  name: z.string().min(2).optional(),
+  priorityLevel: z.number().min(1).optional(),
+  basePrice: z.number().min(0).optional(),
+  color: z.string().regex(/^#[0-9a-fA-F]{6}$/, 'Color must be a valid hex code (e.g. #3b82f6)').optional(),
+  icon: z.string().max(30).optional()
+});
 const biddingTierSchema = z.object({ minPercent: z.number().min(0), maxPercent: z.number().min(0), raisePercent: z.number().min(0) });
-const teamSchema = z.object({ name: z.string().min(2), shortCode: z.string().min(2), totalBudget: z.number().min(0), minRoster: z.number().min(1) });
+const teamSchema = z.object({
+  name: z.string().min(2),
+  shortCode: z.string().min(2),
+  totalBudget: z.number().min(0),
+  minRoster: z.number().min(1),
+  primaryColor: z.string().regex(/^#[0-9a-fA-F]{6}$/, 'Primary color must be a valid hex code').optional(),
+  secondaryColor: z.string().regex(/^#[0-9a-fA-F]{6}$/, 'Secondary color must be a valid hex code').optional(),
+  icon: z.string().max(30).optional()
+});
 const editTeamSchema = z.object({
   name: z.string().min(2).optional(),
   shortCode: z.string().min(2).optional(),
@@ -27,6 +49,9 @@ const editTeamSchema = z.object({
   remainingBudget: z.number().min(0).optional(),
   minRoster: z.number().min(1).optional(),
   maxRoster: z.number().min(1).optional(),
+  primaryColor: z.string().regex(/^#[0-9a-fA-F]{6}$/, 'Primary color must be a valid hex code').optional(),
+  secondaryColor: z.string().regex(/^#[0-9a-fA-F]{6}$/, 'Secondary color must be a valid hex code').optional(),
+  icon: z.string().max(30).optional(),
 }).partial();
 const editPlayerSchema = z.object({
   name: z.string().min(2).optional(),
@@ -43,6 +68,8 @@ const editPlayerSchema = z.object({
   matchesPlayed: z.number().int().min(0).max(99).optional(),
   goals: z.number().int().min(0).max(99).optional(),
   assists: z.number().int().min(0).max(99).optional(),
+  yellowCards: z.number().int().min(0).max(99).optional(),
+  redCards: z.number().int().min(0).max(99).optional(),
   cleanSheets: z.number().int().min(0).max(99).optional(),
 }).partial();
 
@@ -126,7 +153,9 @@ export const createCategory = async (req, res, next) => {
     if (exists) return res.status(409).json({ success: false, message: 'Category name already exists' });
 
     const existingCategories = await PlayerCategory.find().lean();
-    const categoryTheme = buildCategoryTheme(parsed.name, existingCategories);
+    const categoryTheme = parsed.color
+      ? buildCategoryThemeFromColor(parsed.color)
+      : buildCategoryTheme(parsed.name, existingCategories);
 
     const category = await PlayerCategory.create({
       ...parsed,
@@ -139,6 +168,29 @@ export const createCategory = async (req, res, next) => {
     if (io) io.emit('category:created', category);
 
     res.status(201).json({ success: true, data: category });
+  } catch (e) { next(e); }
+};
+
+export const updateCategory = async (req, res, next) => {
+  try {
+    const parsed = categoryUpdateSchema.parse(req.body);
+    const category = await PlayerCategory.findById(req.params.id);
+    if (!category) return res.status(404).json({ success: false, message: 'Category not found' });
+
+    if (parsed.name) category.name = parsed.name;
+    if (parsed.priorityLevel !== undefined) category.priorityLevel = parsed.priorityLevel;
+    if (parsed.basePrice !== undefined) category.basePrice = parsed.basePrice;
+    if (parsed.color) Object.assign(category, buildCategoryThemeFromColor(parsed.color));
+    if (parsed.icon) category.icon = parsed.icon;
+
+    await category.save();
+    await logAdminAction('UPDATE_CATEGORY', req.user?.email || 'admin', category);
+
+    // Broadcast WebSocket event
+    const io = req.app?.get('io');
+    if (io) io.emit('category:updated', category);
+
+    res.json({ success: true, data: category });
   } catch (e) { next(e); }
 };
 
@@ -211,11 +263,24 @@ export const createTeam = async (req, res, next) => {
     const existingTeams = await Team.find().lean();
     const teamTheme = buildCompleteTeamTheme(parsed.name, existingTeams);
 
+    // Manual color selection overrides the auto palette
+    if (parsed.primaryColor || parsed.secondaryColor) {
+      const primary = (parsed.primaryColor || teamTheme.primaryColor).toLowerCase();
+      const secondary = (parsed.secondaryColor || '#0f172a').toLowerCase();
+      parsed.primaryColor = primary;
+      parsed.secondaryColor = secondary;
+      parsed.accentColor = primary;
+      parsed.gradient = `from-[${primary}] to-[${secondary}]`;
+      parsed.glowColor = `${primary}4d`;
+    }
+
     const team = await Team.create({
       ...parsed,
       shortCode: parsed.shortCode.toUpperCase(),
       remainingBudget: parsed.totalBudget,
-      ...teamTheme
+      ...teamTheme,
+      // Manual icon selection overrides the auto-generated one
+      ...(parsed.icon ? { icon: parsed.icon } : {})
     });
     await logAdminAction('CREATE_TEAM', req.user?.email || 'admin', team);
 
@@ -231,6 +296,17 @@ export const editTeam = async (req, res, next) => {
   try {
     const parsed = editTeamSchema.parse(req.body);
     if (parsed.shortCode) parsed.shortCode = parsed.shortCode.toUpperCase();
+
+    // When colors are manually chosen, derive the dependent theme fields
+    if (parsed.primaryColor || parsed.secondaryColor) {
+      const existing = await Team.findById(req.params.id).select('primaryColor secondaryColor');
+      const primary = (parsed.primaryColor || existing?.primaryColor || '#3b82f6').toLowerCase();
+      const secondary = (parsed.secondaryColor || existing?.secondaryColor || '#0f172a').toLowerCase();
+      parsed.primaryColor = primary;
+      parsed.secondaryColor = secondary;
+      parsed.gradient = `from-[${primary}] to-[${secondary}]`;
+      parsed.glowColor = `${primary}4d`;
+    }
 
     const team = await Team.findByIdAndUpdate(req.params.id, parsed, { new: true });
     if (!team) return res.status(404).json({ success: false, message: 'Team not found' });
@@ -263,7 +339,7 @@ export const deleteTeam = async (req, res, next) => {
 // --- MANAGERS, PODIUM ADMINS & USER ACCOUNTS ---
 export const getManagers = async (req, res, next) => {
   try {
-    const managers = await User.find({ role: { $in: ['TEAM_MANAGER', 'PODIUM_ADMIN', 'SUPER_ADMIN', 'PLAYER'] } })
+    const managers = await User.find({ role: { $in: ['TEAM_MANAGER', 'PODIUM_ADMIN', 'SUPER_ADMIN', 'PLAYER', 'GENERAL_USER', 'SPECTATOR'] } })
       .populate('teamId')
       .select('-passwordHash')
       .sort({ role: 1, createdAt: -1 });
@@ -422,6 +498,79 @@ export const handleManagerRequest = async (req, res, next) => {
       }
 
       return res.json({ success: true, message: `Manager request REJECTED for '${user.name}'.`, data: user });
+    } else {
+      return res.status(400).json({ success: false, message: "Invalid action. Must be 'APPROVE' or 'REJECT'." });
+    }
+  } catch (e) { next(e); }
+};
+
+export const handlePlayerRequest = async (req, res, next) => {
+  try {
+    const { action } = req.body; // 'APPROVE' or 'REJECT'
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+
+    const io = req.app?.get('io');
+
+    if (action === 'APPROVE') {
+      user.role = 'PLAYER';
+      user.playerRequestStatus = 'APPROVED';
+
+      // Create a Player record for this user if one doesn't exist
+      let player = await Player.findOne({ userId: user._id });
+      if (!player) {
+        const currentSession = await Session.findOne({ isCurrent: true }) || await Session.findOne();
+        const playerCode = 'GEN-' + Math.floor(1000 + Math.random() * 9000);
+        player = await Player.create({
+          userId: user._id,
+          name: user.name,
+          studentId: playerCode,
+          email: user.email,
+          session: currentSession?.name || '2026',
+          jerseyName: user.name.split(' ')[0].toUpperCase(),
+          tShirtSize: 'L',
+          positions: ['Forward'],
+          primaryPosition: 'Forward',
+          status: 'UNSOLD',
+          registrationStatus: 'APPROVED',
+          category: 'SILVER',
+          basePrice: 50000,
+          imageUrl: user.profilePhoto || ''
+        });
+      }
+
+      await user.save();
+      await logAdminAction('APPROVE_PLAYER_REQUEST', req.user?.email || 'admin', { id: user._id, email: user.email });
+
+      if (io) {
+        io.emit('user:role_updated', {
+          userId: user._id.toString(),
+          newRole: 'PLAYER',
+          playerRequestStatus: 'APPROVED'
+        });
+        io.emit('players:updated', player);
+      }
+
+      return res.json({
+        success: true,
+        message: `Player request APPROVED for '${user.name}'. Account promoted to Player role.`,
+        data: user,
+        player
+      });
+    } else if (action === 'REJECT') {
+      user.playerRequestStatus = 'REJECTED';
+      await user.save();
+      await logAdminAction('REJECT_PLAYER_REQUEST', req.user?.email || 'admin', { id: user._id, email: user.email });
+
+      if (io) {
+        io.emit('user:role_updated', {
+          userId: user._id.toString(),
+          newRole: user.role,
+          playerRequestStatus: 'REJECTED'
+        });
+      }
+
+      return res.json({ success: true, message: `Player request REJECTED for '${user.name}'.`, data: user });
     } else {
       return res.status(400).json({ success: false, message: "Invalid action. Must be 'APPROVE' or 'REJECT'." });
     }

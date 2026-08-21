@@ -16,7 +16,13 @@ import {
   Crown,
   Calendar,
   Video,
-  X
+  Trophy,
+  ClipboardList,
+  X,
+  Volleyball,
+  ListOrdered,
+  Bell,
+  User
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -60,7 +66,9 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, mobileOpen = fals
     { type: 'item', path: '/podium/dashboard', label: 'Podium Control', icon: ShieldCheck },
     { type: 'item', path: '/admin/teams', label: 'Team Management', icon: ShieldCheck },
     { type: 'item', path: '/admin/players', label: 'Players', icon: UserCheck },
-    { type: 'item', path: '/admin/fixtures', label: 'Fixtures & Scheduling', icon: Calendar }
+    { type: 'item', path: '/admin/fixtures', label: 'Fixtures & Scheduling', icon: Calendar },
+    { type: 'item', path: '/admin/match-results', label: 'Match Results', icon: Trophy },
+    { type: 'item', path: '/admin/requests', label: 'Manager Requests', icon: ClipboardList }
   ];
 
   // ── PODIUM ADMIN NAV CONFIG ─────────────────────────────────────────────
@@ -74,8 +82,7 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, mobileOpen = fals
     { type: 'item', path: '/manager/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { type: 'item', path: '/manager/target-players', label: 'Target Players', icon: Crown, highlight: true },
     { type: 'item', path: '/manager/my-team', label: 'My Team', icon: ShieldCheck },
-    { type: 'item', path: '/manager/players', label: 'Player Pool', icon: Users },
-    { type: 'item', path: '/manager/matches', label: 'Matches', icon: Calendar },
+    { type: 'item', path: '/manager/matches', label: 'Tournament', icon: Trophy },
     { type: 'item', path: '/manager/settings', label: 'Team Settings', icon: Settings },
     { type: 'item', path: '/manager/teams', label: 'All Teams', icon: ShieldCheck }
   ];
@@ -86,9 +93,22 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, mobileOpen = fals
     { type: 'item', path: '/player/live', label: 'Live Auction', icon: Radio, highlight: true },
     { type: 'item', path: '/player/my-team', label: 'My Team', icon: Users },
     { type: 'item', path: '/player/teams', label: 'All Teams', icon: ShieldCheck },
-    { type: 'item', path: '/player/matches', label: 'Matches', icon: Calendar },
+    { type: 'item', path: '/player/matches', label: 'Tournament', icon: Trophy },
     { type: 'item', path: '/player/results', label: 'Results', icon: Award },
     { type: 'item', path: '/player/settings', label: 'Settings', icon: Settings }
+  ];
+
+  // ── GENERAL USER (Spectator / Fan) NAV CONFIG ───────────────────────────
+  const generalUserNav = [
+    { type: 'header', label: 'Main' },
+    { type: 'item', path: '/general/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { type: 'item', path: '/general/live', label: 'Live Auction', icon: Radio, highlight: true },
+    { type: 'item', path: '/general/matches', label: 'Tournament', icon: Trophy },
+    { type: 'item', path: '/general/teams', label: 'Teams', icon: ShieldCheck },
+    { type: 'header', label: 'Account' },
+    { type: 'item', path: '/general/profile', label: 'My Profile', icon: User },
+    { type: 'item', path: '/general/notifications', label: 'Notifications', icon: Bell },
+    { type: 'item', path: '/general/settings', label: 'Settings', icon: Settings }
   ];
 
   let currentNavConfig = [];
@@ -111,6 +131,10 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, mobileOpen = fals
     currentNavConfig = playerNav;
     roleTitle = 'Player Portal';
     roleBadgeColor = 'bg-amber-500/20 text-amber-400 border-amber-500/30';
+  } else if (role === 'GENERAL_USER') {
+    currentNavConfig = generalUserNav;
+    roleTitle = 'Fan Zone';
+    roleBadgeColor = 'bg-sky-500/20 text-sky-400 border-sky-500/30';
   }
 
   // Mobile nav builds a linear list (groups flattened so children are reachable
@@ -177,7 +201,6 @@ function SidebarBody({
   isCollapsed,
   setIsCollapsed,
   currentNavConfig,
-  roleTitle,
   roleBadgeColor,
   user,
   onLogout,
@@ -188,45 +211,30 @@ function SidebarBody({
 }) {
   return (
     <>
-      {/* Sidebar Header */}
-      <div className="h-16 px-4 flex items-center justify-between border-b border-slate-800 flex-shrink-0">
-        {!isCollapsed && (
-          <div className="flex items-center gap-2.5 overflow-hidden">
-            <div className="w-8 h-8 rounded-lg bg-blue-600/20 border border-blue-500/30 flex items-center justify-center flex-shrink-0">
-              <Crown className="w-4 h-4 text-blue-400" />
-            </div>
-            <div className="truncate">
-              <h2 className="text-sm font-extrabold text-white leading-none">Enterprise</h2>
-              <span className="text-[10px] text-slate-400 font-mono font-semibold uppercase tracking-wider">
-                {roleTitle}
-              </span>
-            </div>
+      {/* Sidebar Navigation Items — Starts at the very top */}
+      <div className="flex-1 overflow-y-auto px-3 py-3 space-y-1 custom-scrollbar">
+        {isMobile && (
+          <div className="flex items-center justify-end pb-2 mb-2 border-b border-slate-800">
+            <button
+              onClick={onCloseMobile}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition ui-focus"
+              title="Close Sidebar"
+              aria-label="Close Sidebar"
+            >
+              <X className="w-5 h-5" />
+            </button>
           </div>
         )}
-        {isMobile ? (
-          <button
-            onClick={onCloseMobile}
-            className="p-1.5 ml-auto rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition ui-focus"
-            title="Close Sidebar"
-            aria-label="Close Sidebar"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        ) : (
-          <button
-            onClick={() => setIsCollapsed(!isCollapsed)}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition mx-auto ui-focus"
-            title={isCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
-            aria-label={isCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
-          >
-            {isCollapsed ? <ChevronRight className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />}
-          </button>
-        )}
-      </div>
-
-      {/* Sidebar Navigation Items */}
-      <div className="flex-1 overflow-y-auto px-3 py-4 space-y-1 custom-scrollbar">
         {currentNavConfig.map((item) => {
+          if (item.type === 'header') {
+            if (isCollapsed) return null;
+            return (
+              <p key={`header-${item.label}`} className="px-3 pt-3 pb-1 text-[10px] font-mono font-bold uppercase tracking-widest text-slate-600 select-none">
+                {item.label}
+              </p>
+            );
+          }
+
           if (item.type === 'item') {
             const Icon = item.icon;
             return (
@@ -305,7 +313,7 @@ function SidebarBody({
         })}
       </div>
 
-      {/* Sidebar Footer User Info & Logout */}
+      {/* Sidebar Footer User Info, Logout & Collapse Toggle */}
       <div className="p-3 border-t border-slate-800 bg-slate-950/60 flex-shrink-0">
         {!isCollapsed ? (
           <div className="flex items-center justify-between">
@@ -320,24 +328,44 @@ function SidebarBody({
                 </span>
               </div>
             </div>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={onLogout}
+                className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-slate-800 rounded-lg transition ui-focus"
+                title="Logout"
+                aria-label="Logout"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setIsCollapsed(!isCollapsed)}
+                className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition ui-focus"
+                title="Collapse Sidebar"
+                aria-label="Collapse Sidebar"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center gap-1.5">
             <button
               onClick={onLogout}
-              className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-slate-800 rounded-lg transition ui-focus"
+              className="w-full flex justify-center py-1.5 text-slate-400 hover:text-rose-400 hover:bg-slate-800 rounded-lg transition"
               title="Logout"
               aria-label="Logout"
             >
               <LogOut className="w-4 h-4" />
             </button>
+            <button
+              onClick={() => setIsCollapsed(!isCollapsed)}
+              className="w-full flex justify-center py-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition"
+              title="Expand Sidebar"
+              aria-label="Expand Sidebar"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
           </div>
-        ) : (
-          <button
-            onClick={onLogout}
-            className="w-full flex justify-center py-2 text-slate-400 hover:text-rose-400 hover:bg-slate-800 rounded-lg transition"
-            title="Logout"
-            aria-label="Logout"
-          >
-            <LogOut className="w-4 h-4" />
-          </button>
         )}
       </div>
     </>

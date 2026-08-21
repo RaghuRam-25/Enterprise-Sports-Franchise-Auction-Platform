@@ -103,11 +103,13 @@ const updateProfileSchema = z.object({
   matchesPlayed: z.union([z.number().int().min(0).max(99), z.string(), z.null()]).optional(),
   goals: z.union([z.number().int().min(0).max(99), z.string(), z.null()]).optional(),
   assists: z.union([z.number().int().min(0).max(99), z.string(), z.null()]).optional(),
+  yellowCards: z.union([z.number().int().min(0).max(99), z.string(), z.null()]).optional(),
+  redCards: z.union([z.number().int().min(0).max(99), z.string(), z.null()]).optional(),
   cleanSheets: z.union([z.number().int().min(0).max(99), z.string(), z.null()]).optional()
 }).partial();
 
 // ── Public player fields (visible to Spectators / unauthenticated) ────────────
-const PUBLIC_PLAYER_FIELDS = 'name jerseyName studentId basePrice positions primaryPosition category session imageUrl status';
+const PUBLIC_PLAYER_FIELDS = 'name jerseyName studentId basePrice positions primaryPosition category session imageUrl status soldToTeam finalPrice tShirtNumber';
 
 // ── REGISTER PLAYER ───────────────────────────────────────────────────────────
 export const registerPlayer = async (req, res, next) => {
@@ -401,7 +403,7 @@ export const updatePlayerProfile = async (req, res, next) => {
     delete parsed.email;
 
     const allowedFields = req.user?.role === 'PLAYER'
-      ? ['name', 'phone', 'bio', 'address', 'session', 'jerseyName', 'positions', 'primaryPosition', 'tShirtSize', 'tShirtNumber', 'imageUrl', 'age', 'height', 'preferredFoot', 'nationality', 'matchesPlayed', 'goals', 'assists', 'cleanSheets']
+      ? ['name', 'phone', 'bio', 'address', 'session', 'jerseyName', 'positions', 'primaryPosition', 'tShirtSize', 'tShirtNumber', 'imageUrl', 'age', 'height', 'preferredFoot', 'nationality', 'matchesPlayed', 'goals', 'assists', 'yellowCards', 'redCards', 'cleanSheets']
       : Object.keys(parsed);
 
     const update = {};
@@ -418,7 +420,7 @@ export const updatePlayerProfile = async (req, res, next) => {
     }
 
     // Performance stats — FormData sends them as strings; coerce to non-negative ints.
-    ['matchesPlayed', 'goals', 'assists', 'cleanSheets'].forEach((key) => {
+    ['matchesPlayed', 'goals', 'assists', 'yellowCards', 'redCards', 'cleanSheets'].forEach((key) => {
       if (update[key] === undefined || update[key] === null || update[key] === '') return;
       const n = Number(update[key]);
       update[key] = Number.isFinite(n) ? Math.max(0, Math.min(99, Math.floor(n))) : 0;
@@ -446,14 +448,14 @@ export const updatePlayerProfile = async (req, res, next) => {
   } catch (e) { next(e); }
 };
 
-// ── REQUEST TEAM MANAGER ROLE (Player -> Team Manager Request) ─────────────
+// ── REQUEST TEAM MANAGER ROLE (Player or General User -> Team Manager Request) ─────
 export const requestManagerRole = async (req, res, next) => {
   try {
     const user = await User.findById(req.user._id);
     if (!user) return res.status(404).json({ success: false, message: 'User account not found' });
 
-    if (user.role === 'TEAM_MANAGER') {
-      return res.status(400).json({ success: false, message: 'You are already a Team Manager.' });
+    if (user.role === 'TEAM_MANAGER' || user.role === 'SUPER_ADMIN') {
+      return res.status(400).json({ success: false, message: 'You are already a Team Manager or Admin.' });
     }
 
     if (user.managerRequestStatus === 'PENDING') {
@@ -475,3 +477,34 @@ export const requestManagerRole = async (req, res, next) => {
     });
   } catch (e) { next(e); }
 };
+
+// ── REQUEST PLAYER ROLE (General User -> Player Request) ────────────────────
+export const requestPlayerRole = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ success: false, message: 'User account not found' });
+
+    if (user.role === 'PLAYER' || user.role === 'TEAM_MANAGER' || user.role === 'SUPER_ADMIN') {
+      return res.status(400).json({ success: false, message: 'You are already a player or higher role.' });
+    }
+
+    if (user.playerRequestStatus === 'PENDING') {
+      return res.status(400).json({ success: false, message: 'Your request for Player role is already PENDING review.' });
+    }
+
+    const { note } = req.body;
+    user.playerRequestStatus = 'PENDING';
+    user.playerRequestNote = note || 'Interested in entering the player pool.';
+    await user.save();
+
+    res.json({
+      success: true,
+      message: 'Player request submitted successfully to Super Admin.',
+      data: {
+        playerRequestStatus: user.playerRequestStatus,
+        playerRequestNote: user.playerRequestNote
+      }
+    });
+  } catch (e) { next(e); }
+};
+

@@ -402,6 +402,7 @@ export const AuctionProvider = ({ children }) => {
     socket.on('teams:updated', handleSingleTeamUpdate);
     socket.on('teams:deleted', handleTeamDeleted);
     socket.on('category:created', handleCategoryChange);
+    socket.on('category:updated', handleCategoryChange);
     socket.on('category:deleted', handleCategoryChange);
     socket.on('registration:freeze-toggled', handleFreezeToggle);
     socket.on('podium:video-control', handleVideoBroadcast);
@@ -635,9 +636,19 @@ export const AuctionProvider = ({ children }) => {
   };
   const addCategory = async (cat) => {
     try {
-      const res = await api.post('/admin/categories', { name: cat.name, priorityLevel: cat.priority || 1, basePrice: cat.basePrice });
+      const res = await api.post('/admin/categories', { name: cat.name, priorityLevel: cat.priority || 1, basePrice: cat.basePrice, color: cat.color, icon: cat.icon });
       if (res.data?.data) setCategories(prev => [...prev, { ...res.data.data, id: res.data.data._id }]);
     } catch (err) { triggerToast(err.response?.data?.message || 'Failed to add category', 'error'); }
+  };
+  const updateCategory = async (id, updated) => {
+    try {
+      const res = await api.put(`/admin/categories/${id}`, updated);
+      if (res.data?.data) {
+        const data = res.data.data;
+        setCategories(prev => prev.map(c => (c.id === id || c._id === id) ? { ...c, ...data, id: data._id || id } : c));
+        triggerToast('Category updated successfully', 'success');
+      }
+    } catch (err) { triggerToast(err.response?.data?.message || 'Failed to update category', 'error'); }
   };
   const deleteCategory = async (id) => {
     try {
@@ -661,7 +672,7 @@ export const AuctionProvider = ({ children }) => {
     <AuctionContext.Provider
       value={{
         sessions, positions, categories, biddingTiers, isRegistrationFrozen, setIsRegistrationFrozen,
-        addSession, deleteSession, addPosition, deletePosition, addCategory, deleteCategory, updateBiddingTier,
+        addSession, deleteSession, addPosition, deletePosition, addCategory, updateCategory, deleteCategory, updateBiddingTier,
         teams, setTeams, players, setPlayers, managers, setManagers, isDataLoading, loadManagers, refetchPlayers, refetchTeams, loadAllData,
         podiumPlayer, currentBid, highestBidder, biddingMode, timerDuration, timerRemaining, timerStatus, bidHistory, lastActionToast,
         systemAuctionState, hasStartedAuction,

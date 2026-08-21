@@ -5,10 +5,7 @@ import { useAuth, ROLE_MAP } from '../context/AuthContext';
 /**
  * Determine the most appropriate login redirect based on the current path.
  */
-const getLoginRedirect = (pathname) => {
-  if (pathname.startsWith('/player')) return '/player/login';
-  return '/manager/login';
-};
+const getLoginRedirect = () => '/login';
 
 /**
  * <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PODIUM_ADMIN']} />

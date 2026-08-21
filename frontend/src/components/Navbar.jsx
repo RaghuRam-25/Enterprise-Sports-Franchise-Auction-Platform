@@ -1,17 +1,16 @@
 import 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Trophy, Radio, LogOut, Sun, Moon, Info, Calendar, Menu } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
+import { Trophy, Radio, Sun, Moon, Info, Calendar, Menu } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useAuction } from '../context/AuctionContext';
 import { usePhase } from '../context/PhaseContext';
 import { useTheme } from '../context/ThemeContext';
 
 export default function Navbar({ onOpenMobileSidebar }) {
-  const { user, logout } = useAuth();
-  const {  timerStatus, podiumPlayer, currentBid, formatCurrency, isRegistrationFrozen } = useAuction();
+  const { user } = useAuth();
+  const { timerStatus, podiumPlayer, currentBid, formatCurrency, isRegistrationFrozen } = useAuction();
   const { phase } = usePhase();
   const { isDark, toggleTheme } = useTheme();
-  const navigate = useNavigate();
   const location = useLocation();
 
   return (
@@ -74,26 +73,7 @@ export default function Navbar({ onOpenMobileSidebar }) {
           {/* Public Top Nav Menu (Only for SPECTATOR / Unauthenticated) */}
           <div className="flex items-center space-x-2 shrink-0">
             {/* User Auth Buttons */}
-            {user ? (
-              <div className="flex items-center space-x-2 pl-2 border-l border-slate-800">
-                <div className="hidden sm:block text-right min-w-0">
-                  <span className="block text-xs font-semibold text-slate-200">{user.name}</span>
-                  <span className="block text-[10px] text-blue-400 font-mono uppercase tracking-wide font-bold truncate">
-                    {user.role?.replace('_', ' ')}
-                  </span>
-                </div>
-                <button
-                  onClick={() => {
-                    logout();
-                    navigate('/login');
-                  }}
-                  title="Logout"
-                  className="p-2 text-slate-400 hover:text-rose-400 hover:bg-slate-800 rounded-lg transition ui-focus"
-                >
-                  <LogOut className="w-4 h-4" />
-                </button>
-              </div>
-            ) : (
+            {user ? null : (
               <div className="hidden md:flex items-center gap-4">
                 {/* Public Navigation */}
                 <div className="flex items-center space-x-1 bg-slate-950/80 p-1 rounded-xl border border-slate-800 text-xs">
@@ -104,9 +84,9 @@ export default function Navbar({ onOpenMobileSidebar }) {
                     <Radio className="w-3.5 h-3.5" />
                     Live Auction
                   </Link>
-                  <Link to="/matches" className={`flex items-center gap-1 px-3 py-1.5 rounded-lg transition font-semibold ${location.pathname === '/matches' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'}`}>
+                  <Link to="/matches" className={`flex items-center gap-1 px-3 py-1.5 rounded-lg transition font-semibold ${location.pathname === '/matches' || location.pathname.startsWith('/matches/') ? 'bg-blue-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'}`}>
                     <Calendar className="w-3.5 h-3.5" />
-                    Matches
+                    Tournament
                   </Link>
                   <Link to="/about" className={`flex items-center gap-1 px-3 py-1.5 rounded-lg transition font-semibold ${location.pathname === '/about' ? 'bg-purple-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'}`}>
                     <Info className="w-3.5 h-3.5" />

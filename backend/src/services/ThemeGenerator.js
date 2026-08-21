@@ -41,3 +41,17 @@ export function buildCategoryTheme(categoryName, existingCategories = []) {
     badgeColor: `bg-[${palette.primaryColor}]/15 text-slate-100 border-[${palette.primaryColor}]/40`
   };
 }
+
+/**
+ * Builds a category theme from a manually selected hex color (#RRGGBB).
+ * Used when a Super Admin explicitly picks a color instead of auto-generation.
+ */
+export function buildCategoryThemeFromColor(hex) {
+  return {
+    color: hex.toLowerCase(),
+    gradient: `from-[${hex}] via-[${hex}] to-slate-950`,
+    borderColor: 'border-slate-700/60',
+    glowColor: `${hex}4d`,
+    badgeColor: `text-slate-100`
+  };
+}

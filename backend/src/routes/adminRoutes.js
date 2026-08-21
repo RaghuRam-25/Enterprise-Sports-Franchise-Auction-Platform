@@ -3,14 +3,15 @@ import { protect, optionalAuth, authorize } from '../middleware/auth.js';
 import {
   getSessions, createSession, deleteSession,
   getPositions, createPosition, deletePosition,
-  getCategories, createCategory, deleteCategory,
+  getCategories, createCategory, updateCategory, deleteCategory,
   getBiddingTiers, createBiddingTier, updateBiddingTier, deleteBiddingTier,
   getTeams, createTeam, editTeam, deleteTeam,
-  getManagers, createManager, editManager, deleteManager, resetManagerPassword, handleManagerRequest,
+  getManagers, createManager, editManager, deleteManager, resetManagerPassword, handleManagerRequest, handlePlayerRequest,
   createPodiumAdmin,
   getAdminPlayers, editPlayer, approvePlayer, banPlayer,
   getReports, exportReports
 } from '../controllers/adminController.js';
+import { getDisplayOverrides, saveDisplayOverrides } from '../controllers/displayController.js';
 
 const router = express.Router();
 
@@ -25,6 +26,7 @@ router.delete('/positions/:id', protect, authorize('SUPER_ADMIN'), deletePositio
 
 router.get('/categories',    protect, authorize('SUPER_ADMIN'), getCategories);
 router.post('/categories',   protect, authorize('SUPER_ADMIN'), createCategory);
+router.put('/categories/:id', protect, authorize('SUPER_ADMIN'), updateCategory);
 router.delete('/categories/:id', protect, authorize('SUPER_ADMIN'), deleteCategory);
 
 router.get('/bidding-tiers', protect, authorize('SUPER_ADMIN'), getBiddingTiers);
@@ -43,6 +45,8 @@ router.get('/managers',                       protect, authorize('SUPER_ADMIN'),
 router.post('/managers',                      protect, authorize('SUPER_ADMIN'), createManager);
 router.put('/managers/:id',                   protect, authorize('SUPER_ADMIN'), editManager);
 router.put('/managers/:id/request',           protect, authorize('SUPER_ADMIN'), handleManagerRequest);
+router.put('/managers/:id/player-request',    protect, authorize('SUPER_ADMIN'), handlePlayerRequest);
+router.put('/users/:id/player-request',       protect, authorize('SUPER_ADMIN'), handlePlayerRequest);
 router.delete('/managers/:id',                protect, authorize('SUPER_ADMIN'), deleteManager);
 router.put('/managers/:id/reset-password',    protect, authorize('SUPER_ADMIN'), resetManagerPassword);
 router.post('/podium-admins',                 protect, authorize('SUPER_ADMIN'), createPodiumAdmin);
@@ -56,5 +60,28 @@ router.put('/players/:id/ban',     protect, authorize('SUPER_ADMIN'), banPlayer)
 // ── Reports & System Analytics (SUPER_ADMIN ONLY) ─────────────────────────────
 router.get('/reports',         protect, authorize('SUPER_ADMIN'), getReports);
 router.get('/reports/export',  protect, authorize('SUPER_ADMIN'), exportReports);
+
+// ── Display Overrides (Table / Stats page manual content) ──
+router.get('/display', protect, authorize('SUPER_ADMIN'), async (req, res, next) => {
+  try {
+    const overrides = await getDisplayOverrides();
+    res.json({ success: true, data: overrides });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.put('/display', protect, authorize('SUPER_ADMIN'), async (req, res, next) => {
+  try {
+    const result = await saveDisplayOverrides(req.body || {}, req.user?.email || 'super-admin');
+    if (!result.success) {
+      return res.status(500).json({ success: false, message: result.error });
+    }
+    const overrides = await getDisplayOverrides();
+    res.json({ success: true, data: overrides });
+  } catch (error) {
+    next(error);
+  }
+});
 
 export default router;

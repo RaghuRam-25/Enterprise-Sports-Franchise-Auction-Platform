@@ -62,10 +62,12 @@ export const configAPI = {
 // ─── Auth ─────────────────────────────────────────────────────────────────────
 export const authAPI = {
   login: (credentials) => api.post('/auth/login', credentials),
+  registerGeneral: (data) => api.post('/auth/register/general', data),
   getMe: () => api.get('/auth/me'),
   refreshToken: (token) => api.post('/auth/refresh-token', { refreshToken: token }),
   forgotPassword: (email) => api.post('/auth/forgot-password', { email }),
   resetPassword: (data) => api.post('/auth/reset-password', data),
+  updateMe: (data) => api.put('/auth/me', data),
 };
 
 // ─── Phase (Global Event State Machine — SETUP/REGISTRATION/AUCTION/TOURNAMENT)
@@ -89,6 +91,7 @@ export const adminAPI = {
   // Categories
   getCategories: () => api.get('/admin/categories'),
   createCategory: (data) => api.post('/admin/categories', data),
+  updateCategory: (id, data) => api.put(`/admin/categories/${id}`, data),
   deleteCategory: (id) => api.delete(`/admin/categories/${id}`),
 
   // Bidding Tiers
@@ -110,6 +113,7 @@ export const adminAPI = {
   deleteManager: (id) => api.delete(`/admin/managers/${id}`),
   resetManagerPassword: (id, data) => api.put(`/admin/managers/${id}/reset-password`, data),
   updateManagerRequest: (id, action) => api.put(`/admin/managers/${id}/request`, { action }),
+  updatePlayerRequest: (id, action) => api.put(`/admin/users/${id}/player-request`, { action }),
   createPodiumAdmin: (data) => api.post('/admin/podium-admins', data),
 
   // Player Management
@@ -123,7 +127,7 @@ export const adminAPI = {
   exportReports: () => api.get('/admin/reports/export'),
 };
 
-// ─── Players (Public + Player self-service) ────────────────────────────────────
+// ─── Players (Public + Player / General User self-service) ────────────────────
 export const playerAPI = {
   register: (formData) => api.post('/players/register', formData, {
     headers: { 'Content-Type': 'multipart/form-data' }
@@ -137,6 +141,8 @@ export const playerAPI = {
     headers: { 'Content-Type': 'multipart/form-data' }
   }),
   toggleFreeze: () => api.post('/players/toggle-freeze'),
+  requestManagerRole: (note) => api.post('/players/request-manager', { note }),
+  requestPlayerRole: (note) => api.post('/players/request-player', { note }),
 };
 
 // ─── Manager (TEAM_MANAGER + SUPER_ADMIN) ─────────────────────────────────────

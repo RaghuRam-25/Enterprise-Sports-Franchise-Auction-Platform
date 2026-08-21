@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { useAuction } from '../../context/AuctionContext';
 import { useAuth } from '../../context/AuthContext';
+import { useSocket } from '../../context/SocketContext';
 import api from '../../services/api';
 import { playerFallback } from '../../utils/playerFallback';
 import PlayerCardCard from '../../components/common/PlayerCardCard';
@@ -74,7 +75,8 @@ export default function TargetPlayersView() {
       setIsLoading(true);
       const res = await api.get('/manager/targets');
       const raw = Array.isArray(res?.data) ? res.data : Array.isArray(res) ? res : [];
-      setTargetList(raw);
+      // Safety net: sold players are auto-removed server-side; filter any stragglers.
+      setTargetList(raw.filter(t => t?.playerId?.status !== 'SOLD'));
     } catch (err) {
       triggerToast('Failed to load Target Players list', 'error');
     } finally {
@@ -85,6 +87,23 @@ export default function TargetPlayersView() {
   useEffect(() => {
     fetchTargetList();
   }, [fetchTargetList]);
+
+  // Live removal: the moment a targeted player is sold in the auction, drop them
+  // from the list without waiting for a refetch.
+  const { socket } = useSocket();
+  useEffect(() => {
+    if (!socket) return;
+    const handlePlayerSold = (payload) => {
+      const pid = String(payload?._id || payload?.id || '');
+      if (!pid) return;
+      setTargetList(prev => prev.filter(t => {
+        const tid = String(t.playerId?._id || t.playerId?.id || t.playerId || '');
+        return tid !== pid;
+      }));
+    };
+    socket.on('player:updated', handlePlayerSold);
+    return () => socket.off('player:updated', handlePlayerSold);
+  }, [socket]);
 
   // Set of target player IDs for fast lookup
   const targetPlayerIds = useMemo(() => {
@@ -186,6 +205,9 @@ export default function TargetPlayersView() {
         return false;
       }
 
+      // Hide players already added to the target list
+      if (targetPlayerIds.has(p._id || p.id)) return false;
+
       // Search
       const nameMatch =
         p.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -207,7 +229,7 @@ export default function TargetPlayersView() {
 
       return true;
     });
-  }, [players, searchQuery, selectedPosition, selectedCategory, selectedSession, maxBasePriceFilter]);
+  }, [players, targetPlayerIds, searchQuery, selectedPosition, selectedCategory, selectedSession, maxBasePriceFilter]);
 
   return (
     <div className="space-y-6">
@@ -222,9 +244,6 @@ export default function TargetPlayersView() {
                 Target Players
               </h1>
             </div>
-            <p className="text-xs text-slate-300 mt-1 max-w-2xl">
-              Your confidential auction preparation shortlist. Rank your preferred targets, set budget limits, and attach private strategy notes.
-            </p>
           </div>
 
           <div className="flex items-center gap-2 bg-slate-950/70 p-1.5 rounded-2xl border border-slate-800 self-stretch sm:self-auto">
@@ -322,9 +341,6 @@ export default function TargetPlayersView() {
             <h2 className="text-sm font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
               <Star className="w-4 h-4 text-amber-400 fill-amber-400" /> Ranked Target Shortlist
             </h2>
-            <span className="text-xs text-slate-500">
-              Priority controls enable ranking. Reminders auto-popup during live bidding.
-            </span>
           </div>
 
           {isLoading ? (
@@ -348,14 +364,14 @@ export default function TargetPlayersView() {
             </div>
           ) : (
             /* Card Grid — matches PublicPlayersView layout */
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 auto-rows-fr">
               {targetList.map((target, idx) => {
                 const player = target.playerId || {};
                 const pId = player._id || player.id;
                 if (!pId) return null;
 
                 return (
-                  <div key={target._id || target.id} className="relative">
+                  <div key={target._id || target.id} className="relative h-full">
                     {/* Priority Badge — floats over the top-left corner of the card */}
                     <div className="absolute -top-2.5 -left-2.5 z-20 flex items-center gap-1">
                       <span className="w-8 h-8 rounded-xl bg-amber-500 text-slate-950 font-black font-mono text-xs flex items-center justify-center shadow-lg border-2 border-slate-950">
@@ -437,7 +453,7 @@ export default function TargetPlayersView() {
             </h2>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 auto-rows-fr">
             {filteredPlayers.map((player) => {
               const pId = player._id || player.id;
               const isTargeted = targetPlayerIds.has(pId);

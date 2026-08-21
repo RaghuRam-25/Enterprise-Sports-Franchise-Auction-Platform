@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Shield, Trophy, Zap, Star, CheckCircle, Ban, Clock, UserX, Edit3, Lock, Tag, DollarSign, Award, Layers } from 'lucide-react';
+import { Trophy, Zap, Star, CheckCircle, Ban, Clock, UserX, Edit3, Lock, Tag, DollarSign, Award } from 'lucide-react';
 import { getCategoryTheme } from '../../utils/themeConfig';
 import { getImageUrl } from '../../utils/imageUrl';
 import { playerFallback } from '../../utils/playerFallback';
@@ -43,7 +43,7 @@ export default function PlayerCardCard({
   const soldToTeam = isSold ? teams.find(t => String(t._id || t.id) === String(player?.soldToTeam?._id || player?.soldToTeam)) : null;
 
   return (
-    <div className={`relative flex flex-col justify-between rounded-2xl border bg-slate-950/80 backdrop-blur-md overflow-hidden transition-all duration-300 group hover:-translate-y-1.5 ${theme.border} ${theme.cardGlow}`}>
+    <div className={`relative h-full flex flex-col justify-between rounded-2xl border bg-slate-950/80 backdrop-blur-md overflow-hidden transition-all duration-300 group hover:-translate-y-1.5 ${theme.border} ${theme.cardGlow}`}>
       
       {/* Sports Accreditation Header Strip */}
       <div className={`h-2.5 w-full ${theme.headerBg}`} />
@@ -82,13 +82,11 @@ export default function PlayerCardCard({
               )}
             </div>
 
-            {/* Jersey Number Overlay Badge (If available) */}
-            {(player?.jerseyNumber != null || player?.jerseyName) && (
-              <div className="absolute -bottom-1.5 -right-1.5 bg-slate-900 text-white font-mono font-black text-[10px] px-1.5 py-0.5 rounded-md border border-slate-700 shadow flex items-center gap-0.5">
-                <span className={theme.accentText}>#</span>
-                {player?.jerseyNumber ?? player?.jerseyName}
-              </div>
-            )}
+            {/* Jersey Number Overlay Badge */}
+            <div className="absolute -bottom-1.5 -right-1.5 bg-slate-900 text-white font-mono font-black text-[10px] px-1.5 py-0.5 rounded-md border border-slate-700 shadow flex items-center gap-0.5">
+              <span className={theme.accentText}>#</span>
+              {player?.jerseyNumber ?? player?.jerseyName ?? '—'}
+            </div>
           </div>
 
           {/* Name & Academic Session */}
@@ -96,16 +94,12 @@ export default function PlayerCardCard({
             <h3 className="font-black text-white text-sm sm:text-base leading-snug truncate group-hover:text-sky-300 transition-colors">
               {player?.name || 'Unknown Player'}
             </h3>
-            {player?.studentId && (
-              <p className="text-[10px] font-mono text-slate-400 truncate mt-0.5">
-                ID: {player.studentId}
-              </p>
-            )}
-            {player?.session && (
-              <p className="text-[10px] font-medium text-slate-400 mt-0.5 truncate">
-                Session: <span className="text-slate-200">{player.session}</span>
-              </p>
-            )}
+            <p className="text-[10px] font-mono text-slate-400 truncate mt-0.5">
+              ID: {player?.studentId || 'N/A'}
+            </p>
+            <p className="text-[10px] font-medium text-slate-400 mt-0.5 truncate">
+              Session: <span className="text-slate-200">{player?.session || 'N/A'}</span>
+            </p>
           </div>
         </div>
 
@@ -133,16 +127,14 @@ export default function PlayerCardCard({
             </span>
           </div>
 
-          {isSold && (
-            <div className="flex items-center justify-between pt-1 border-t border-slate-800">
-              <span className="text-[11px] text-slate-400 font-medium flex items-center gap-1">
-                <Award className="w-3 h-3 text-amber-400" /> Sold Price
-              </span>
-              <span className="font-mono font-black text-amber-400 text-xs sm:text-sm">
-                {formatCurrency(player?.finalPrice || 0)}
-              </span>
-            </div>
-          )}
+          <div className="flex items-center justify-between pt-1 border-t border-slate-800">
+            <span className="text-[11px] text-slate-400 font-medium flex items-center gap-1">
+              <Award className="w-3 h-3 text-amber-400" /> Sold Price
+            </span>
+            <span className={`font-mono font-black text-xs sm:text-sm ${isSold ? 'text-amber-400' : 'text-slate-600'}`}>
+              {isSold ? formatCurrency(player?.finalPrice || 0) : '—'}
+            </span>
+          </div>
         </div>
 
         {/* Team Banner (If acquired) */}
@@ -166,7 +158,7 @@ export default function PlayerCardCard({
                   id={`approve-${id}`}
                   onClick={() => onApprove(id, player?.name)}
                   title="Approve Player"
-                  className="px-2.5 py-1 bg-emerald-600/90 hover:bg-emerald-500 text-white rounded-lg text-[11px] font-bold flex items-center gap-1 transition shadow"
+                  className="btn-primary text-[11px] py-1 px-3"
                 >
                   <CheckCircle className="w-3 h-3" /> Approve
                 </button>

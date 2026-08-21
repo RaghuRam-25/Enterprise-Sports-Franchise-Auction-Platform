@@ -1,7 +1,27 @@
 import  { useState } from 'react';
 import {  useParams } from 'react-router-dom';
-import {  Plus, Trash2, Calculator } from 'lucide-react';
+import {  Plus, Trash2, Calculator, PenLine, X, Save, Medal, Diamond, Coins, Sparkle, BadgeCheck, StarHalf, CircleDollarSign, Banknote, Pentagon, Hexagon, Octagon, Triangle, Square, CircleDot, Circle } from 'lucide-react';
 import { useAuction } from '../../context/AuctionContext';
+
+/* Tier/rank-flavoured category icons (Diamond/Gold-style) — deliberately a
+   different set from the Team icons so the two never collide. */
+const CATEGORY_ICON_OPTIONS = [
+  { name: 'Diamond', Icon: Diamond },
+  { name: 'Medal', Icon: Medal },
+  { name: 'Coins', Icon: Coins },
+  { name: 'Sparkle', Icon: Sparkle },
+  { name: 'Badge Check', Icon: BadgeCheck },
+  { name: 'Half Star', Icon: StarHalf },
+  { name: 'Dollar', Icon: CircleDollarSign },
+  { name: 'Banknote', Icon: Banknote },
+  { name: 'Pentagon', Icon: Pentagon },
+  { name: 'Hexagon', Icon: Hexagon },
+  { name: 'Octagon', Icon: Octagon },
+  { name: 'Triangle', Icon: Triangle },
+  { name: 'Square', Icon: Square },
+  { name: 'Circle Dot', Icon: CircleDot },
+  { name: 'Circle', Icon: Circle },
+];
 
 export default function AdminConfigurations() {
   const { subtab } = useParams();
@@ -17,6 +37,7 @@ export default function AdminConfigurations() {
     deletePosition,
     categories,
     addCategory,
+    updateCategory,
     deleteCategory,
     biddingTiers,
     updateBiddingTier,
@@ -33,6 +54,15 @@ export default function AdminConfigurations() {
   const [newCatName, setNewCatName] = useState('');
   const [newCatPriority, setNewCatPriority] = useState(1);
   const [newCatBasePrice, setNewCatBasePrice] = useState('');
+  const [newCatColor, setNewCatColor] = useState('#3b82f6');
+  const [newCatIcon, setNewCatIcon] = useState('Medal');
+  const [catIconMenuOpen, setCatIconMenuOpen] = useState(false);
+  const [editCatIconMenuOpen, setEditCatIconMenuOpen] = useState(false);
+
+  // Edit Category modal state (same pattern as player edit)
+  const [editingCat, setEditingCat] = useState(null);
+  const [editForm, setEditForm] = useState({});
+  const [saving, setSaving] = useState(false);
 
   // Interactive Test Calculator state
   const [testPurse, setTestPurse] = useState(100000000);
@@ -61,11 +91,45 @@ export default function AdminConfigurations() {
     addCategory({
       name: newCatName,
       priority: Number(newCatPriority),
-      basePrice: Number(newCatBasePrice)
+      basePrice: Number(newCatBasePrice),
+      color: newCatColor,
+      icon: newCatIcon
     });
     setNewCatName('');
     setNewCatBasePrice('');
+    setNewCatColor('#3b82f6');
+    setNewCatIcon('Medal');
     triggerToast(`Added category: ${newCatName}`, 'success');
+  };
+
+  const openEditCategory = (c) => {
+    setEditingCat(c);
+    setEditForm({
+      name: c.name || '',
+      priorityLevel: c.priority || c.priorityLevel || 1,
+      basePrice: c.basePrice || 0,
+      color: (c.color || '#3b82f6').toLowerCase(),
+      icon: c.icon || 'Medal'
+    });
+    setEditCatIconMenuOpen(false);
+  };
+
+  const handleSaveCategoryEdit = async () => {
+    if (!editingCat) return;
+    if (!editForm.name?.trim() || !editForm.basePrice) {
+      triggerToast('Name and Base Price are required', 'error');
+      return;
+    }
+    setSaving(true);
+    await updateCategory(editingCat.id, {
+      name: editForm.name.trim(),
+      priorityLevel: Number(editForm.priorityLevel),
+      basePrice: Number(editForm.basePrice),
+      color: editForm.color,
+      icon: editForm.icon || 'Medal'
+    });
+    setSaving(false);
+    setEditingCat(null);
   };
 
   return (
@@ -177,7 +241,7 @@ export default function AdminConfigurations() {
               Player Categories, Priority Levels & Base Prices
             </h3>
 
-            <form onSubmit={handleAddCategory} className="grid grid-cols-1 sm:grid-cols-4 gap-3 max-w-2xl">
+            <form onSubmit={handleAddCategory} className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-6 gap-3 max-w-4xl">
               <input
                 type="text"
                 placeholder="Category Name"
@@ -201,6 +265,52 @@ export default function AdminConfigurations() {
                 onChange={e => setNewCatBasePrice(e.target.value)}
                 className="glass-input rounded-xl px-4 py-2 text-xs"
               />
+              <label className="glass-input rounded-xl px-4 py-2 text-xs flex items-center justify-between gap-2 cursor-pointer hover:border-slate-600 transition">
+                <span className="text-slate-400 font-semibold whitespace-nowrap">Color</span>
+                <input
+                  type="color"
+                  value={newCatColor}
+                  onChange={e => setNewCatColor(e.target.value)}
+                  className="w-8 h-6 rounded cursor-pointer bg-transparent border-0 p-0"
+                  title={`Selected: ${newCatColor}`}
+                />
+              </label>
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setCatIconMenuOpen(prev => !prev)}
+                  className="glass-input w-full rounded-xl px-4 py-2 text-xs flex items-center justify-between gap-2 hover:border-slate-600 transition"
+                  title={`Icon: ${newCatIcon}`}
+                >
+                  <span className="text-slate-400 font-semibold whitespace-nowrap">Icon</span>
+                  <span className="flex items-center gap-1.5 text-slate-200 font-semibold">
+                    {(() => {
+                      const Selected = (CATEGORY_ICON_OPTIONS.find(o => o.name === newCatIcon) || CATEGORY_ICON_OPTIONS[0]).Icon;
+                      return <Selected className="w-4 h-4" />;
+                    })()}
+                    {newCatIcon}
+                  </span>
+                </button>
+                {catIconMenuOpen && (
+                  <>
+                    <div className="fixed inset-0 z-20" onClick={() => setCatIconMenuOpen(false)} />
+                    <div className="absolute z-30 top-full mt-1 left-0 bg-slate-950 border border-slate-700 rounded-xl p-2 shadow-2xl flex flex-col gap-1 max-h-[280px] overflow-y-auto custom-scrollbar">
+                      {CATEGORY_ICON_OPTIONS.map(({ name: iconName, Icon }) => (
+                        <button
+                          key={iconName}
+                          type="button"
+                          onClick={() => { setNewCatIcon(iconName); setCatIconMenuOpen(false); }}
+                          title={iconName}
+                          className={`h-8 px-2 rounded-md flex items-center gap-2 text-[11px] font-semibold whitespace-nowrap transition ${newCatIcon === iconName ? 'bg-amber-600 text-white shadow-md' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}
+                        >
+                          <Icon className="w-4 h-4" />
+                          {iconName}
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
               <button
                 type="submit"
                 className="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1 shadow-md"
@@ -215,29 +325,56 @@ export default function AdminConfigurations() {
                   <tr>
                     <th className="py-3 px-4">Priority</th>
                     <th className="py-3 px-4">Category Name</th>
+                    <th className="py-3 px-4">Color</th>
                     <th className="py-3 px-4">Base Price</th>
                     <th className="py-3 px-4">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800/60">
-                  {categories.map(c => (
+                  {categories.map(c => {
+                    const CatIcon = (CATEGORY_ICON_OPTIONS.find(o => o.name === c.icon) || CATEGORY_ICON_OPTIONS.find(o => o.name === 'Medal')).Icon;
+                    return (
                     <tr key={c.id} className="hover:bg-slate-800/30">
-                      <td className="py-3 px-4 font-bold text-amber-400">Level {c.priority}</td>
-                      <td className="py-3 px-4 font-extrabold text-white">{c.name}</td>
+                      <td className="py-3 px-4 font-bold text-amber-400">Level {c.priority || c.priorityLevel}</td>
+                      <td className="py-3 px-4 font-extrabold text-white">
+                        <span className="flex items-center gap-2">
+                          <CatIcon className="w-4 h-4 text-amber-400" />
+                          {c.name}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4">
+                        <div className="flex items-center gap-2">
+                          <span
+                            className="w-6 h-6 rounded-lg border border-slate-600 shadow-inner shrink-0"
+                            style={{ backgroundColor: c.color || '#3b82f6' }}
+                          />
+                          <span className="font-mono text-[11px] text-slate-400 uppercase">{(c.color || '#3b82f6').toUpperCase()}</span>
+                        </div>
+                      </td>
                       <td className="py-3 px-4 font-mono font-semibold text-emerald-400">{formatCurrency(c.basePrice)}</td>
                       <td className="py-3 px-4">
-                        <button
-                          onClick={() => {
-                            deleteCategory(c.id);
-                            triggerToast(`Deleted category ${c.name}`, 'info');
-                          }}
-                          className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => openEditCategory(c)}
+                            className="p-1.5 text-slate-400 hover:text-sky-400 hover:bg-sky-500/10 rounded-lg transition"
+                            title={`Edit ${c.name}`}
+                          >
+                            <PenLine className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => {
+                              deleteCategory(c.id);
+                              triggerToast(`Deleted category ${c.name}`, 'info');
+                            }}
+                            className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
                       </td>
-                    </tr>
-                  ))}
+                     </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -337,6 +474,133 @@ export default function AdminConfigurations() {
         )}
 
       </div>
+
+      {/* ── Edit Category Modal (same pattern as player edit) ─────────────────── */}
+      {editingCat && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="glass-card w-full max-w-md rounded-2xl p-6 border border-slate-700 space-y-5 shadow-2xl max-h-[90vh] overflow-y-auto custom-scrollbar">
+            <div className="flex justify-between items-center">
+              <div>
+                <h2 className="text-lg font-black text-white">Edit Category</h2>
+                <p className="text-xs text-slate-400">Level {editForm.priorityLevel} · {formatCurrency(Number(editForm.basePrice) || 0)}</p>
+              </div>
+              <button
+                onClick={() => setEditingCat(null)}
+                className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-400 mb-1">Category Name</label>
+                <input
+                  type="text"
+                  value={editForm.name || ''}
+                  onChange={e => setEditForm(prev => ({ ...prev, name: e.target.value }))}
+                  className="glass-input w-full px-3 py-2 rounded-xl text-xs"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-400 mb-1">Priority Level (1-5)</label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="5"
+                    value={editForm.priorityLevel || ''}
+                    onChange={e => setEditForm(prev => ({ ...prev, priorityLevel: e.target.value }))}
+                    className="glass-input w-full px-3 py-2 rounded-xl text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-400 mb-1">Base Price (BDT)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={editForm.basePrice || ''}
+                    onChange={e => setEditForm(prev => ({ ...prev, basePrice: e.target.value }))}
+                    className="glass-input w-full px-3 py-2 rounded-xl text-xs"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-400 mb-1">Color</label>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="color"
+                    value={/^#[0-9a-fA-F]{6}$/.test(editForm.color || '') ? editForm.color : '#3b82f6'}
+                    onChange={e => setEditForm(prev => ({ ...prev, color: e.target.value }))}
+                    className="w-14 h-9 rounded-xl cursor-pointer bg-transparent border border-slate-700 p-1"
+                  />
+                  <span
+                    className="w-8 h-8 rounded-lg border border-slate-600 shrink-0"
+                    style={{ backgroundColor: /^#[0-9a-fA-F]{6}$/.test(editForm.color || '') ? editForm.color : '#3b82f6' }}
+                  />
+                  <span className="font-mono text-[11px] text-slate-400 uppercase">{(editForm.color || '#3b82f6').toUpperCase()}</span>
+                </div>
+              </div>
+
+              <div className="relative">
+                <label className="block text-[11px] font-semibold text-slate-400 mb-1">Icon</label>
+                <button
+                  type="button"
+                  onClick={() => setEditCatIconMenuOpen(prev => !prev)}
+                  className="w-full h-[36px] flex items-center justify-between gap-2 bg-slate-900/60 border border-slate-800 hover:border-slate-600 rounded-xl px-3 transition"
+                  title={`Icon: ${editForm.icon || 'Medal'}`}
+                >
+                  <span className="flex items-center gap-2 text-xs text-slate-200 font-semibold">
+                    {(() => {
+                      const Selected = (CATEGORY_ICON_OPTIONS.find(o => o.name === (editForm.icon || 'Medal')) || CATEGORY_ICON_OPTIONS[0]).Icon;
+                      return <Selected className="w-4 h-4" />;
+                    })()}
+                    {editForm.icon || 'Medal'}
+                  </span>
+                </button>
+                {editCatIconMenuOpen && (
+                  <>
+                    <div className="fixed inset-0 z-20" onClick={() => setEditCatIconMenuOpen(false)} />
+                    <div className="absolute z-30 top-full mt-1 left-0 right-0 bg-slate-950 border border-slate-700 rounded-xl p-2 shadow-2xl flex flex-col gap-1 max-h-[280px] overflow-y-auto custom-scrollbar">
+                      {CATEGORY_ICON_OPTIONS.map(({ name: iconName, Icon }) => (
+                        <button
+                          key={iconName}
+                          type="button"
+                          onClick={() => { setEditForm(prev => ({ ...prev, icon: iconName })); setEditCatIconMenuOpen(false); }}
+                          title={iconName}
+                          className={`h-8 px-2 rounded-md flex items-center gap-2 text-[11px] font-semibold whitespace-nowrap transition ${(editForm.icon || 'Medal') === iconName ? 'bg-amber-600 text-white shadow-md' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}
+                        >
+                          <Icon className="w-4 h-4" />
+                          {iconName}
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+
+            <div className="flex gap-3 pt-2">
+              <button
+                onClick={() => setEditingCat(null)}
+                className="flex-1 py-2.5 border border-slate-700 text-slate-300 hover:bg-slate-800 rounded-xl text-xs font-semibold transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveCategoryEdit}
+                disabled={saving}
+                className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-60 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition"
+              >
+                {saving ? <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+                Save Changes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

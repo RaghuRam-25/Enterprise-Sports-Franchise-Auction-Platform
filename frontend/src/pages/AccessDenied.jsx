@@ -8,6 +8,7 @@ const ROLE_HOME = {
   PODIUM_ADMIN:  '/podium/dashboard',
   TEAM_MANAGER:  '/manager/dashboard',
   PLAYER:        '/player/dashboard',
+  GENERAL_USER:  '/general/dashboard',
   SPECTATOR:     '/',
 };
 
@@ -16,6 +17,7 @@ const ROLE_LABELS = {
   PODIUM_ADMIN:  'Podium Admin',
   TEAM_MANAGER:  'Team Manager',
   PLAYER:        'Player',
+  GENERAL_USER:  'General User',
   SPECTATOR:     'Spectator',
 };
 

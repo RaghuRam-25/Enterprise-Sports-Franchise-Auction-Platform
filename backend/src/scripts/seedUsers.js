@@ -53,7 +53,7 @@ const userSchema = new mongoose.Schema({
   passwordHash: { type: String, required: true },
   role: {
     type: String,
-    enum: ['SUPER_ADMIN', 'PODIUM_ADMIN', 'TEAM_MANAGER', 'PLAYER', 'SPECTATOR'],
+    enum: ['SUPER_ADMIN', 'PODIUM_ADMIN', 'TEAM_MANAGER', 'PLAYER', 'SPECTATOR', 'GENERAL_USER'],
     default: 'SPECTATOR'
   },
   teamId: { type: mongoose.Schema.Types.ObjectId, ref: 'Team', default: null },
