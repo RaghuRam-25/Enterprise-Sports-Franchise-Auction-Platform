@@ -624,7 +624,13 @@ export default function LandingPage() {
                       </div>
                       <div className="col-span-5">
                         <div className="w-full bg-slate-800/50 rounded-full h-2 border border-slate-700/50 overflow-hidden">
-                          <div className={`${theme.accent} h-full rounded-full transition-all duration-500`} style={{ width: `${spentPercentage}%` }}></div>
+                          <div
+                            className={`h-full rounded-full transition-all duration-500 ${theme.accent}`}
+                            style={{
+                              background: theme.customAccentStyle?.background || undefined,
+                              width: `${spentPercentage}%`
+                            }}
+                          />
                         </div>
                         <div className="flex justify-between mt-1.5 text-[10px] font-mono">
                           <span className="text-emerald-400 font-bold">{formatCurrency(team.remainingBudget)} Left</span>
@@ -666,16 +672,23 @@ export default function LandingPage() {
                   key={id}
                   onClick={() => setSelectedTeam(team)}
                   whileHover={{ y: -6 }}
-                  className={`group relative overflow-hidden rounded-2xl border ${theme.border} cursor-pointer h-full transition-all duration-300 hover:shadow-2xl ${theme.ring} bg-gradient-to-br ${theme.gradient}`}
+                  style={{ ...(theme.customStyle || {}), ...(theme.customBorderStyle || {}) }}
+                  className={`group relative overflow-hidden rounded-2xl cursor-pointer h-full transition-all duration-300 hover:shadow-2xl ${theme.ring} ${theme.customStyle ? '' : `border ${theme.border} bg-gradient-to-br ${theme.gradient}`}`}
                 >
                   {/* Colored top accent bar */}
-                  <div className={`h-1 w-full ${theme.accent}`} />
+                  <div
+                    style={theme.customAccentStyle || undefined}
+                    className={`h-1 w-full ${theme.accent}`}
+                  />
 
                   <div className="p-5 space-y-4 flex flex-col h-full">
                     {/* Top Team Badge Header */}
                     <div className="flex items-start justify-between gap-3">
                       <TeamBadge team={team} size="md" showManager={true} managerName={managerName} />
-                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold border ${theme.badgeBg}`}>
+                      <span
+                        style={theme.customBadgeStyle || undefined}
+                        className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold border ${theme.badgeBg}`}
+                      >
                         {team.shortCode || team.code || 'TEAM'}
                       </span>
                     </div>
@@ -684,7 +697,10 @@ export default function LandingPage() {
                     <div className="grid grid-cols-2 gap-3 text-xs pt-1 flex-grow">
                       <div className="bg-slate-950/70 p-2.5 rounded-xl border border-slate-800/80">
                         <span className="text-[10px] text-slate-400 font-medium uppercase block">Remaining Purse</span>
-                        <span className={`font-mono font-bold text-xs sm:text-sm mt-0.5 block ${theme.stat}`}>
+                        <span
+                          style={theme.customStatStyle || undefined}
+                          className={`font-mono font-bold text-xs sm:text-sm mt-0.5 block ${theme.stat}`}
+                        >
                           {formatCurrency(team.remainingBudget)}
                         </span>
                       </div>
@@ -700,7 +716,10 @@ export default function LandingPage() {
                     {/* Click Card Footer */}
                     <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400 group-hover:text-white transition">
                       <span className="font-medium">View Team Profile</span>
-                      <ExternalLink className={`w-3.5 h-3.5 transition ${theme.stat}`} />
+                      <ExternalLink
+                        style={theme.customStatStyle || undefined}
+                        className={`w-3.5 h-3.5 transition ${theme.stat}`}
+                      />
                     </div>
                   </div>
                 </motion.div>
