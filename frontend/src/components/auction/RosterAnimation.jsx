@@ -23,17 +23,17 @@ import { getImageUrl } from '../../utils/imageUrl';
 const PLAYER_FALLBACK_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="320" height="320" viewBox="0 0 320 320">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#022c22"/><stop offset="100%" stop-color="#064e3b"/>
+      <stop offset="0%" stop-color="#0B0B0B"/><stop offset="100%" stop-color="#12200E"/>
     </linearGradient>
     <linearGradient id="sk" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0%" stop-color="#e8b58a"/><stop offset="100%" stop-color="#b9835a"/>
     </linearGradient>
     <linearGradient id="js" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#34d399"/><stop offset="100%" stop-color="#059669"/>
+      <stop offset="0%" stop-color="#58D20A"/><stop offset="100%" stop-color="#35C759"/>
     </linearGradient>
   </defs>
   <rect width="320" height="320" fill="url(#bg)"/>
-  <circle cx="160" cy="150" r="120" fill="rgba(52,211,153,0.10)"/>
+  <circle cx="160" cy="150" r="120" fill="rgba(88,210,10,0.10)"/>
   <path d="M120 96 a40 40 0 0 1 80 0 a40 40 0 0 1 -80 0" fill="url(#sk)"/>
   <path d="M112 100 a48 44 0 0 1 96 -6 c0 -6 -10 -34 -48 -34 s-48 24 -48 40 z" fill="#241a13"/>
   <path d="M96 250 q64 -44 128 0 l6 70 h-140 z" fill="url(#js)"/>
@@ -71,7 +71,7 @@ export default function RosterAnimation({
 
       if (counterRef.current) {
         tl.fromTo(counterRef.current,
-          { scale: 1.5, color: '#34d399' },
+          { scale: 1.5, color: '#58D20A' },
           { scale: 1, color: '#ffffff', duration: 0.4, ease: 'elastic.out(1, 0.3)' },
           0.5
         );
@@ -103,18 +103,18 @@ export default function RosterAnimation({
           exit={{ opacity: 0 }}
           transition={{ duration: 0.3 }}
         >
-          <div className="absolute inset-0 bg-gradient-to-b from-emerald-950/40 via-slate-950 to-slate-950" />
+          <div className="absolute inset-0 bg-gradient-to-b from-successGreen/40 via-darkBg to-darkBg" />
 
-          <div className="relative z-10 glass-card rounded-3xl p-8 border-2 border-emerald-400/40 shadow-2xl shadow-emerald-500/20 bg-gradient-to-b from-slate-900 via-slate-900/95 to-emerald-950/20 max-w-lg w-full mx-4">
+          <div className="relative z-10 glass-card rounded-3xl p-8 border-2 border-neonGreen/40 shadow-2xl shadow-neonGreen/20 bg-gradient-to-b from-cardBg via-cardBg/95 to-successGreen/20 max-w-lg w-full mx-4">
             <div className="text-center mb-6">
               <motion.div
-                className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500/20 border border-emerald-500/40 rounded-full mb-4"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-neonGreen/20 border border-neonGreen/40 rounded-full mb-4"
                 initial={{ scale: 0, rotate: -180 }}
                 animate={{ scale: 1, rotate: 0 }}
                 transition={{ delay: 0.2, type: 'spring', stiffness: 100 }}
               >
-                <Trophy className="w-5 h-5 text-emerald-400" />
-                <span className="text-xs font-black text-emerald-400 uppercase tracking-wider">
+                <Trophy className="w-5 h-5 text-neonGreen" />
+                <span className="text-xs font-black text-neonGreen uppercase tracking-wider">
                   Player Acquired
                 </span>
               </motion.div>
@@ -122,42 +122,42 @@ export default function RosterAnimation({
               <h2 className="text-2xl font-black font-heading text-white">
                 {player?.name || 'Player'}
               </h2>
-              <p className="text-sm text-slate-400 mt-1">
-                Sold to <span className="text-emerald-400 font-bold">{team?.name || 'Team'}</span>
+              <p className="text-sm text-secondaryText mt-1">
+                Sold to <span className="text-neonGreen font-bold">{team?.name || 'Team'}</span>
               </p>
             </div>
 
             <motion.div
               ref={cardRef}
-              className="flex items-center gap-4 bg-slate-950/80 rounded-2xl p-4 border border-slate-800"
+              className="flex items-center gap-4 bg-darkBg/80 rounded-2xl p-4 border border-cardBorder"
             >
               <img
                 src={(player?.imageUrl) ? getImageUrl(player.imageUrl) : 'data:image/svg+xml;utf8,' + encodeURIComponent(PLAYER_FALLBACK_SVG)}
                 alt={player?.name}
-                className="w-16 h-16 rounded-xl object-cover border-2 border-emerald-400/30"
+                className="w-16 h-16 rounded-xl object-cover border-2 border-neonGreen/30"
               />
               <div className="flex-1">
                 <p className="font-bold text-white text-sm">{player?.name}</p>
-                <p className="text-xs text-slate-400">{player?.jerseyName} • {player?.category}</p>
-                <p className="text-xs text-emerald-400 font-mono font-bold mt-1">
+                <p className="text-xs text-secondaryText">{player?.jerseyName} • {player?.category}</p>
+                <p className="text-xs text-neonGreen font-mono font-bold mt-1">
                   ৳{(price || 0).toLocaleString('en-IN')}
                 </p>
               </div>
-              <ArrowRight className="w-5 h-5 text-emerald-400" />
+              <ArrowRight className="w-5 h-5 text-neonGreen" />
             </motion.div>
 
             <motion.div
               ref={counterRef}
               className="mt-4 grid grid-cols-2 gap-3"
             >
-              <div className="bg-slate-900/60 rounded-xl p-3 border border-slate-800 text-center">
-                <span className="text-[10px] font-bold text-slate-400 uppercase">Budget Left</span>
-                <p className="text-lg font-black font-mono text-emerald-400 mt-1">
+              <div className="bg-cardBg/60 rounded-xl p-3 border border-cardBorder text-center">
+                <span className="text-[10px] font-bold text-secondaryText uppercase">Budget Left</span>
+                <p className="text-lg font-black font-mono text-neonGreen mt-1">
                   ৳{((team?.remainingBudget || 0) - (price || 0)).toLocaleString('en-IN')}
                 </p>
               </div>
-              <div className="bg-slate-900/60 rounded-xl p-3 border border-slate-800 text-center">
-                <span className="text-[10px] font-bold text-slate-400 uppercase">Roster</span>
+              <div className="bg-cardBg/60 rounded-xl p-3 border border-cardBorder text-center">
+                <span className="text-[10px] font-bold text-secondaryText uppercase">Roster</span>
                 <p className="text-lg font-black font-mono text-white mt-1">
                   {(team?.currentRosterCount || 0) + 1} / {team?.minRoster || 11}
                 </p>

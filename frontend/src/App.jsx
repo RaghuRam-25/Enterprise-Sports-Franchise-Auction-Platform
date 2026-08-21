@@ -77,9 +77,9 @@ const AccessDenied = lazy(() => import('./pages/AccessDenied'));
 // Branded fallback shown while a route chunk is fetched.
 function RouteFallback() {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-slate-950 text-slate-300">
-      <div className="w-10 h-10 rounded-full border-2 border-slate-700 border-t-emerald-400 animate-spin" />
-      <span className="text-xs font-mono uppercase tracking-widest text-slate-500">Loading</span>
+    <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-darkBg text-secondaryText">
+      <div className="w-10 h-10 rounded-full border-2 border-cardBorder border-t-neonGreen animate-spin" />
+      <span className="text-xs font-mono uppercase tracking-widest text-mutedText">Loading</span>
     </div>
   );
 }

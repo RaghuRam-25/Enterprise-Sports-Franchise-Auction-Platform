@@ -44,12 +44,12 @@ const POSITION_CODE_MAP = {
 };
 
 const CATEGORY_TONE = {
-  "Icon Category": { text: "text-amber-400", bg: "bg-amber-500/10", border: "border-amber-500/30" },
-  "A Grade": { text: "text-blue-400", bg: "bg-blue-500/10", border: "border-blue-500/30" },
-  "B Grade": { text: "text-teal-400", bg: "bg-teal-500/10", border: "border-teal-500/30" },
-  "Emerging Youth": { text: "text-purple-400", bg: "bg-purple-500/10", border: "border-purple-500/30" },
+  "Icon Category": { text: "text-warningGold", bg: "bg-warningGold/10", border: "border-warningGold/30" },
+  "A Grade": { text: "text-neonGreen", bg: "bg-neonGreen/10", border: "border-neonGreen/30" },
+  "B Grade": { text: "text-neonGreen", bg: "bg-neonGreen/10", border: "border-neonGreen/30" },
+  "Emerging Youth": { text: "text-warningGold", bg: "bg-warningGold/10", border: "border-warningGold/30" },
 };
-const getCategoryTone = (cat) => CATEGORY_TONE[cat] || { text: "text-slate-400", bg: "bg-slate-800/60", border: "border-slate-700" };
+const getCategoryTone = (cat) => CATEGORY_TONE[cat] || { text: "text-secondaryText", bg: "bg-surfaceHover/60", border: "border-borderStrong" };
 
 export default function PlayerDashboard() {
   const { user, setUser } = useAuth();
@@ -230,14 +230,14 @@ export default function PlayerDashboard() {
     } finally { setSaving(false); }
   };
 
-  if (loading) return <div className="flex items-center justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-purple-400" /></div>;
+  if (loading) return <div className="flex items-center justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-warningGold" /></div>;
 
   if (!myPlayer) return (
     <div className="max-w-5xl w-full mx-auto px-4 py-8">
-      <div className="glass-card rounded-2xl p-10 border border-slate-800 text-center text-slate-400 space-y-2">
-        <User className="w-12 h-12 mx-auto text-slate-600" />
+      <div className="glass-card rounded-2xl p-10 border border-cardBorder text-center text-secondaryText space-y-2">
+        <User className="w-12 h-12 mx-auto text-mutedText" />
         <p className="font-bold">No player profile found.</p>
-        <Link to="/player/register" className="inline-block mt-2 px-4 py-2 bg-purple-600 text-white text-xs font-bold rounded-xl">Register Now</Link>
+        <Link to="/player/register" className="inline-block mt-2 px-4 py-2 bg-warningGold text-darkBg text-xs font-bold rounded-xl">Register Now</Link>
       </div>
     </div>
   );
@@ -264,13 +264,13 @@ export default function PlayerDashboard() {
 
   // Bid status → label + tone (every status the backend can emit).
   const AUCTION_STATUS_META = {
-    REGISTERED: { label: "Registered", tone: "text-sky-400 bg-sky-500/10 border-sky-500/30" },
-    APPROVED: { label: "Verified", tone: "text-cyan-400 bg-cyan-500/10 border-cyan-500/30" },
-    ON_PODIUM: { label: "On Podium", tone: "text-amber-400 bg-amber-500/10 border-amber-500/30" },
-    SOLD: { label: "Sold", tone: "text-emerald-400 bg-emerald-500/10 border-emerald-500/30" },
-    UNSOLD: { label: "Unsold", tone: "text-rose-400 bg-rose-500/10 border-rose-500/30" },
-    WITHDRAWN: { label: "Withdrawn", tone: "text-slate-400 bg-slate-500/10 border-slate-500/30" },
-    BANNED: { label: "Banned", tone: "text-rose-400 bg-rose-500/10 border-rose-500/30" },
+    REGISTERED: { label: "Registered", tone: "text-neonGreen bg-neonGreen/10 border-neonGreen/30" },
+    APPROVED: { label: "Verified", tone: "text-neonGreen bg-neonGreen/10 border-neonGreen/30" },
+    ON_PODIUM: { label: "On Podium", tone: "text-warningGold bg-warningGold/10 border-warningGold/30" },
+    SOLD: { label: "Sold", tone: "text-neonGreen bg-neonGreen/10 border-neonGreen/30" },
+    UNSOLD: { label: "Unsold", tone: "text-urgentRedText bg-urgentRed/10 border-urgentRed/30" },
+    WITHDRAWN: { label: "Withdrawn", tone: "text-secondaryText bg-surfaceActive/10 border-borderStrong/30" },
+    BANNED: { label: "Banned", tone: "text-urgentRedText bg-urgentRed/10 border-urgentRed/30" },
   };
   const statusMeta = AUCTION_STATUS_META[myPlayer.status] || AUCTION_STATUS_META.REGISTERED;
 
@@ -314,7 +314,7 @@ export default function PlayerDashboard() {
     <div className="max-w-6xl mx-auto space-y-6">
 
       {/* ── Top Player Section ────────────────────────────────────────── */}
-      <div className="group relative overflow-hidden rounded-3xl border border-slate-800 bg-gradient-to-br from-slate-950 via-purple-950/20 to-slate-900 shadow-2xl transition-shadow duration-300 hover:shadow-purple-950/40">
+      <div className="group relative overflow-hidden rounded-3xl border border-cardBorder bg-gradient-to-br from-darkBg via-warningGold/20 to-cardBg shadow-2xl transition-shadow duration-300 hover:shadow-warningGold/40">
         {/* Ambient glow + faint dot texture */}
         <div
           className="absolute inset-0 opacity-[0.05] pointer-events-none"
@@ -323,26 +323,26 @@ export default function PlayerDashboard() {
             backgroundSize: '16px 16px',
           }}
         />
-        <div className="absolute -top-24 -right-16 w-72 h-72 bg-purple-600/20 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-24 -left-16 w-72 h-72 bg-indigo-500/15 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -top-24 -right-16 w-72 h-72 bg-warningGold/20 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-24 -left-16 w-72 h-72 bg-warningGold/15 rounded-full blur-3xl pointer-events-none" />
 
         {/* Top bar: portal label + status/edit controls */}
         <div className="relative z-20 flex items-center justify-between px-5 pt-5">
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] font-bold tracking-wider uppercase text-purple-300 backdrop-blur-sm">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] font-bold tracking-wider uppercase text-warningGold backdrop-blur-sm">
             Player Portal
           </span>
 
           {isRegistrationFrozen ? (
-            <span className="w-8 h-8 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center" title="Read-only — registration frozen">
-              <Lock className="w-3.5 h-3.5 text-amber-400" />
+            <span className="w-8 h-8 rounded-xl bg-warningGold/10 border border-warningGold/20 flex items-center justify-center" title="Read-only — registration frozen">
+              <Lock className="w-3.5 h-3.5 text-warningGold" />
             </span>
           ) : (
             <button
               onClick={openEdit}
               title="Edit Profile"
-              className="w-8 h-8 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-slate-300 hover:text-white transition"
+              className="btn-secondary w-9 h-9 p-0 rounded-xl flex items-center justify-center text-[#58D20A] transition"
             >
-              <Edit3 className="w-3.5 h-3.5" />
+              <Edit3 className="w-4 h-4" />
             </button>
           )}
         </div>
@@ -360,11 +360,11 @@ export default function PlayerDashboard() {
             </span>
 
             {/* Glow halo */}
-            <div className="absolute h-52 w-52 sm:h-64 sm:w-64 rounded-full bg-purple-600/25 blur-3xl pointer-events-none transition-opacity duration-300 group-hover:opacity-100 opacity-70" />
+            <div className="absolute h-52 w-52 sm:h-64 sm:w-64 rounded-full bg-warningGold/25 blur-3xl pointer-events-none transition-opacity duration-300 group-hover:opacity-100 opacity-70" />
 
             {/* Framed photograph */}
             <div className="relative rounded-[1.75rem] bg-white/5 p-[3px] shadow-[0_20px_60px_rgba(0,0,0,0.55)] ring-1 ring-white/10 transition-transform duration-300 group-hover:scale-[1.02]">
-              <div className="rounded-[1.6rem] bg-gradient-to-tr from-purple-600/40 via-indigo-500/20 to-emerald-400/30 p-[2px]">
+              <div className="rounded-[1.6rem] bg-gradient-to-tr from-neonGreen/40 via-neonGreen/20 to-successGreen/30 p-[2px]">
                 <img
                   src={getImageUrl(myPlayer.imageUrl, myPlayer.imageUrl ? playerFallback('emerald') : `${DEFAULT_AVATAR}${encodeURIComponent(myPlayer.name)}`)}
                   alt={myPlayer.name}
@@ -378,16 +378,16 @@ export default function PlayerDashboard() {
           <div className="flex flex-col justify-center gap-3.5 text-center md:text-left py-2">
             {/* PLAYER label */}
             <span className="inline-flex items-center justify-center gap-2 md:justify-start">
-              <span className="h-px w-5 bg-purple-500/60" />
+              <span className="h-px w-5 bg-warningGold/60" />
             </span>
 
             {/* Name — hero typography */}
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black uppercase tracking-tight leading-none text-white [text-shadow:0_0_40px_rgba(139,92,246,0.35)]">
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black uppercase tracking-tight leading-none text-white [text-shadow:0_0_40px_rgba(244,197,66,0.35)]">
               {myPlayer.name}
             </h1>
 
             {/* Position */}
-            <p className="text-xs sm:text-sm font-black uppercase tracking-[0.3em] text-cyan-300">
+            <p className="text-xs sm:text-sm font-black uppercase tracking-[0.3em] text-neonGreenHover">
               {primaryName || "Position Not Set"}
             </p>
 
@@ -397,8 +397,8 @@ export default function PlayerDashboard() {
                 <Award className="h-3 w-3" />
                 {myPlayer.category || 'Unranked'}
               </span>
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-200 backdrop-blur-sm">
-                <span className={`inline-block h-1.5 w-1.5 rounded-full ${isSold ? 'bg-emerald-400' : 'bg-cyan-400'} animate-pulse`} />
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-wider text-primaryText backdrop-blur-sm">
+                <span className={`inline-block h-1.5 w-1.5 rounded-full ${isSold ? 'bg-neonGreen' : 'bg-neonGreen'} animate-pulse`} />
                 {isSold ? "Sold" : "Registered"}
               </span>
             </div>
@@ -409,73 +409,73 @@ export default function PlayerDashboard() {
       {/* ── Bottom Section: Player Information & Position on Pitch ────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
         {/* Left Card: PLAYER INFORMATION */}
-        <div className="glass-card rounded-2xl border border-slate-800 p-5 sm:p-6 flex flex-col justify-between h-full">
-          <div className="flex items-center justify-between mb-4 border-b border-slate-800/80 pb-3">
-            <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
-              <User className="w-4 h-4 text-purple-400" /> Player Information
+        <div className="glass-card rounded-2xl border border-cardBorder p-5 sm:p-6 flex flex-col justify-between h-full">
+          <div className="flex items-center justify-between mb-4 border-b border-cardBorder/80 pb-3">
+            <h3 className="text-xs font-black uppercase tracking-widest text-secondaryText flex items-center gap-2">
+              <User className="w-4 h-4 text-warningGold" /> Player Information
             </h3>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 flex-1">
-            <div className="rounded-xl border border-white/10 bg-slate-950/50 p-3.5 flex flex-col justify-center">
-              <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-500">
-                <Hash className="w-3.5 h-3.5 text-amber-400" /> Student ID
+            <div className="rounded-xl border border-white/10 bg-darkBg/50 p-3.5 flex flex-col justify-center">
+              <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-mutedText">
+                <Hash className="w-3.5 h-3.5 text-warningGold" /> Student ID
               </span>
               <span className="mt-1 block text-sm font-bold text-white font-mono truncate">
                 {myPlayer.studentId || "—"}
               </span>
             </div>
 
-            <div className="rounded-xl border border-white/10 bg-slate-950/50 p-3.5 flex flex-col justify-center">
-              <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-500">
-                <GraduationCap className="w-3.5 h-3.5 text-emerald-400" /> Session
+            <div className="rounded-xl border border-white/10 bg-darkBg/50 p-3.5 flex flex-col justify-center">
+              <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-mutedText">
+                <GraduationCap className="w-3.5 h-3.5 text-neonGreen" /> Session
               </span>
               <span className="mt-1 block text-sm font-bold text-white truncate">
                 {myPlayer.session || "—"}
               </span>
             </div>
 
-            <div className="rounded-xl border border-white/10 bg-slate-950/50 p-3.5 flex flex-col justify-center sm:col-span-2">
-              <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-500">
-                <Mail className="w-3.5 h-3.5 text-blue-400" /> Email Address
+            <div className="rounded-xl border border-white/10 bg-darkBg/50 p-3.5 flex flex-col justify-center sm:col-span-2">
+              <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-mutedText">
+                <Mail className="w-3.5 h-3.5 text-neonGreen" /> Email Address
               </span>
-              <span className="mt-1 block text-sm font-bold text-blue-300 font-mono truncate">
+              <span className="mt-1 block text-sm font-bold text-neonGreenHover font-mono truncate">
                 {myPlayer.email || "—"}
               </span>
             </div>
 
-            <div className="rounded-xl border border-white/10 bg-slate-950/50 p-3.5 flex flex-col justify-center">
-              <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-500">
-                <Activity className="w-3.5 h-3.5 text-cyan-400" /> Phone Number
+            <div className="rounded-xl border border-white/10 bg-darkBg/50 p-3.5 flex flex-col justify-center">
+              <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-mutedText">
+                <Activity className="w-3.5 h-3.5 text-neonGreen" /> Phone Number
               </span>
               <span className="mt-1 block text-sm font-bold text-white font-mono truncate">
                 {myPlayer.phone || "—"}
               </span>
             </div>
 
-            <div className="rounded-xl border border-white/10 bg-slate-950/50 p-3.5 flex flex-col justify-center">
-              <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-500">
-                <Shirt className="w-3.5 h-3.5 text-purple-400" /> Jersey Name
+            <div className="rounded-xl border border-white/10 bg-darkBg/50 p-3.5 flex flex-col justify-center">
+              <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-mutedText">
+                <Shirt className="w-3.5 h-3.5 text-warningGold" /> Jersey Name
               </span>
               <span className="mt-1 block text-sm font-bold text-white uppercase font-mono truncate">
                 {myPlayer.jerseyName || "—"}
               </span>
             </div>
 
-            <div className="rounded-xl border border-white/10 bg-slate-950/50 p-3.5 flex flex-col justify-center">
-              <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-500">
-                <List className="w-3.5 h-3.5 text-indigo-400" /> Kit Size
+            <div className="rounded-xl border border-white/10 bg-darkBg/50 p-3.5 flex flex-col justify-center">
+              <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-mutedText">
+                <List className="w-3.5 h-3.5 text-warningGold" /> Kit Size
               </span>
               <span className="mt-1 block text-sm font-bold text-white uppercase truncate">
                 {myPlayer.tShirtSize || "—"}
               </span>
             </div>
 
-            <div className="rounded-xl border border-white/10 bg-slate-950/50 p-3.5 flex flex-col justify-center">
-              <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-500">
-                <Award className="w-3.5 h-3.5 text-amber-400" /> Base Price
+            <div className="rounded-xl border border-white/10 bg-darkBg/50 p-3.5 flex flex-col justify-center">
+              <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-mutedText">
+                <Award className="w-3.5 h-3.5 text-warningGold" /> Base Price
               </span>
-              <span className="mt-1 block text-sm font-black text-emerald-400 truncate">
+              <span className="mt-1 block text-sm font-black text-neonGreen truncate">
                 {myPlayer.basePrice != null ? formatCurrency(myPlayer.basePrice) : "—"}
               </span>
             </div>
@@ -483,19 +483,19 @@ export default function PlayerDashboard() {
         </div>
 
         {/* Right Card: POSITION ON PITCH */}
-        <div className="glass-card rounded-2xl border border-slate-800 p-5 sm:p-6 flex flex-col justify-between h-full">
-          <div className="flex items-center justify-between mb-4 border-b border-slate-800/80 pb-3">
-            <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
-              <MapPin className="w-4 h-4 text-emerald-400" /> Position on Pitch
+        <div className="glass-card rounded-2xl border border-cardBorder p-5 sm:p-6 flex flex-col justify-between h-full">
+          <div className="flex items-center justify-between mb-4 border-b border-cardBorder/80 pb-3">
+            <h3 className="text-xs font-black uppercase tracking-widest text-secondaryText flex items-center gap-2">
+              <MapPin className="w-4 h-4 text-neonGreen" /> Position on Pitch
             </h3>
             {myPlayer.primaryPosition && (
-              <span className="text-[10px] font-bold text-amber-400 flex items-center gap-1">
-                <Star className="w-3 h-3 text-yellow-400" /> {primaryName}
+              <span className="text-[10px] font-bold text-warningGold flex items-center gap-1">
+                <Star className="w-3 h-3 text-warningGold" /> {primaryName}
               </span>
             )}
           </div>
 
-          <div className="relative w-full aspect-[105/68] rounded-xl overflow-hidden border border-emerald-900/60 bg-slate-950 flex items-center justify-center my-auto">
+          <div className="relative w-full aspect-[105/68] rounded-xl overflow-hidden border border-successGreen/60 bg-darkBg flex items-center justify-center my-auto">
             <FootballField width="100%" height="100%" preserveAspectRatio="xMidYMid meet" className="w-full h-full" />
 
             {/* Player markers overlay */}
@@ -516,7 +516,7 @@ export default function PlayerDashboard() {
                         {[0, 1, 2].map(i => (
                           <motion.span
                             key={i}
-                            className="pointer-events-none absolute top-1/2 left-1/2 h-3 w-3 rounded-full border border-amber-400/60"
+                            className="pointer-events-none absolute top-1/2 left-1/2 h-3 w-3 rounded-full border border-warningGold/60"
                             style={{ margin: '-6px 0 0 -6px' }}
                             initial={{ scale: 0.6, opacity: 0.9 }}
                             animate={{ scale: [0.6, 2.6], opacity: [0.9, 0] }}
@@ -524,7 +524,7 @@ export default function PlayerDashboard() {
                           />
                         ))}
                         <motion.span
-                          className="relative flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-full border-2 border-amber-300/80 bg-slate-950/70 shadow-[0_0_20px_rgba(251,191,36,0.65)] backdrop-blur-sm"
+                          className="relative flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-full border-2 border-warningGold/80 bg-darkBg/70 shadow-[0_0_20px_rgba(244,197,66,0.65)] backdrop-blur-sm"
                           animate={{ scale: [1, 1.12, 1] }}
                           transition={{ duration: 0.45, repeat: Infinity, ease: "easeInOut" }}
                         >
@@ -538,12 +538,12 @@ export default function PlayerDashboard() {
                     ) : (
                       <>
                         <motion.span
-                          className="pointer-events-none absolute top-1/2 left-1/2 h-8 w-8 rounded-full bg-emerald-300/20"
+                          className="pointer-events-none absolute top-1/2 left-1/2 h-8 w-8 rounded-full bg-neonGreenHover/20"
                           style={{ margin: '-16px 0 0 -16px' }}
                           animate={{ opacity: [0.3, 0.7, 0.3], scale: [0.8, 1.3, 0.8] }}
                           transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                         />
-                        <span className="relative block h-8 w-8 sm:h-9 sm:w-9 rounded-full border-2 border-white/90 bg-slate-950/70 p-0.5 shadow-[0_0_10px_rgba(52,211,153,0.45)] backdrop-blur-sm">
+                        <span className="relative block h-8 w-8 sm:h-9 sm:w-9 rounded-full border-2 border-white/90 bg-darkBg/70 p-0.5 shadow-[0_0_10px_rgba(88,210,10,0.45)] backdrop-blur-sm">
                           <img
                             src={getImageUrl(myPlayer.imageUrl, myPlayer.imageUrl ? playerFallback('emerald') : `${DEFAULT_AVATAR}${encodeURIComponent(myPlayer.name)}`)}
                             alt={mark.name}
@@ -552,7 +552,7 @@ export default function PlayerDashboard() {
                         </span>
                       </>
                     )}
-                    <span className={`pointer-events-none mt-1 rounded px-1 py-px text-[9px] font-black uppercase tracking-widest shadow-sm ${isPrimary ? "bg-amber-300/90 text-amber-950" : "bg-slate-950/75 text-emerald-300/90"}`}>
+                    <span className={`pointer-events-none mt-1 rounded px-1 py-px text-[9px] font-black uppercase tracking-widest shadow-sm ${isPrimary ? "bg-warningGold/90 text-warningGold" : "bg-darkBg/75 text-neonGreenHover/90"}`}>
                       {mark.code}
                     </span>
                   </button>
@@ -560,7 +560,7 @@ export default function PlayerDashboard() {
               })
             ) : (
               <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-[11px] text-white/45 font-semibold bg-slate-950/40 rounded-full px-3 py-1">No positions set</span>
+                <span className="text-[11px] text-white/45 font-semibold bg-darkBg/40 rounded-full px-3 py-1">No positions set</span>
               </div>
             )}
 
@@ -575,22 +575,22 @@ export default function PlayerDashboard() {
                   exit={{ opacity: 0, y: 16 }}
                   transition={{ duration: 0.28, ease: "easeOut" }}
                 >
-                  <div className="flex w-full max-w-sm items-center gap-3 rounded-2xl border border-white/10 bg-slate-950/90 p-3 shadow-2xl backdrop-blur-md">
+                  <div className="flex w-full max-w-sm items-center gap-3 rounded-2xl border border-white/10 bg-darkBg/90 p-3 shadow-2xl backdrop-blur-md">
                     <img
                       src={getImageUrl(myPlayer.imageUrl, myPlayer.imageUrl ? playerFallback('emerald') : `${DEFAULT_AVATAR}${encodeURIComponent(myPlayer.name)}`)}
                       alt={myPlayer.name}
-                      className="h-10 w-10 rounded-xl object-cover border border-slate-700"
+                      className="h-10 w-10 rounded-xl object-cover border border-borderStrong"
                     />
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-xs font-black text-white">{myPlayer.name}</p>
-                      <p className="truncate text-[10px] font-semibold text-cyan-300">
-                        {resolvePosition(activePos)?.name || activePos} <span className="text-slate-500">· {activePos}</span>
+                      <p className="truncate text-[10px] font-semibold text-neonGreenHover">
+                        {resolvePosition(activePos)?.name || activePos} <span className="text-mutedText">· {activePos}</span>
                       </p>
                     </div>
                     <button
                       type="button"
                       onClick={() => setActivePos(null)}
-                      className="shrink-0 rounded-full border border-slate-700 p-1 text-slate-400 transition hover:bg-slate-800 hover:text-white"
+                      className="shrink-0 rounded-full border border-borderStrong p-1 text-secondaryText transition hover:bg-surfaceHover hover:text-white"
                       aria-label="Close player info"
                     >
                       <X className="h-3 w-3" />
@@ -604,12 +604,12 @@ export default function PlayerDashboard() {
       </div>
 
       {/* ── Franchise Management ──────────────────────────────────────── */}
-      <div className="glass-card rounded-2xl p-6 border border-slate-800 space-y-4">
+      <div className="glass-card rounded-2xl p-6 border border-cardBorder space-y-4">
         <div className="flex items-center justify-between">
           <div><h3 className="text-sm font-bold text-white uppercase tracking-wider">Franchise Management</h3></div>
-          {user?.managerRequestStatus === "PENDING" && <span className="px-3 py-1 bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-lg text-xs font-bold animate-pulse">Pending</span>}
-          {user?.managerRequestStatus === "APPROVED" && <span className="px-3 py-1 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-lg text-xs font-bold">Approved</span>}
-          {user?.managerRequestStatus === "REJECTED" && <span className="px-3 py-1 bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded-lg text-xs font-bold">Declined</span>}
+          {user?.managerRequestStatus === "PENDING" && <span className="px-3 py-1 bg-warningGold/20 text-warningGold border border-warningGold/30 rounded-lg text-xs font-bold animate-pulse">Pending</span>}
+          {user?.managerRequestStatus === "APPROVED" && <span className="px-3 py-1 bg-neonGreen/20 text-neonGreen border border-neonGreen/30 rounded-lg text-xs font-bold">Approved</span>}
+          {user?.managerRequestStatus === "REJECTED" && <span className="px-3 py-1 bg-urgentRed/20 text-urgentRedText border border-urgentRed/30 rounded-lg text-xs font-bold">Declined</span>}
         </div>
         {(!user?.managerRequestStatus || user?.managerRequestStatus === "NONE" || user?.managerRequestStatus === "REJECTED") && (
           <button onClick={async () => {
@@ -629,7 +629,7 @@ export default function PlayerDashboard() {
             } catch (e) {
               triggerToast(e?.response?.data?.message || "Failed to submit request.", "error");
             }
-          }} className="px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl transition shadow-lg">
+          }} className="px-4 py-2.5 bg-gradient-to-r from-neonGreen to-successGreen hover:from-neonGreen hover:to-neonGreen text-darkBg font-black text-xs uppercase tracking-wider rounded-xl transition shadow-lg">
             Request Team Manager Role
           </button>
         )}
@@ -637,17 +637,17 @@ export default function PlayerDashboard() {
 
       {editing && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-start justify-center p-4 overflow-y-auto">
-          <div className="glass-card w-full max-w-2xl rounded-2xl border border-slate-700 shadow-2xl my-6">
-            <div className="flex justify-between items-center px-6 py-4 border-b border-slate-800">
+          <div className="glass-card w-full max-w-2xl rounded-2xl border border-borderStrong shadow-2xl my-6">
+            <div className="flex justify-between items-center px-6 py-4 border-b border-cardBorder">
               <div>
-                <h2 className="text-lg font-black text-white flex items-center gap-2"><Edit3 className="w-5 h-5 text-purple-400" /> Edit My Profile</h2>
-                <p className="text-[11px] text-slate-400 mt-0.5">Update your player information</p>
+                <h2 className="text-lg font-black text-white flex items-center gap-2"><Edit3 className="w-5 h-5 text-warningGold" /> Edit My Profile</h2>
+                <p className="text-[11px] text-secondaryText mt-0.5">Update your player information</p>
               </div>
-              <button onClick={() => setEditing(false)} className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl transition"><X className="w-5 h-5" /></button>
+              <button onClick={() => setEditing(false)} className="btn-secondary w-8 h-8 flex items-center justify-center rounded-xl"><X className="w-5 h-5" /></button>
             </div>
-            <div className="flex border-b border-slate-800 px-6 overflow-x-auto">
+            <div className="flex border-b border-cardBorder px-6 overflow-x-auto">
               {[{ id: "stats", label: "Stats", icon: Goal }, { id: "personal", label: "Personal", icon: User }, { id: "photo", label: "Photo", icon: Camera }, { id: "sports", label: "Positions", icon: Shield }, { id: "kit", label: "Kit & Jersey", icon: Shirt }].map(tab => (
-                <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex items-center gap-1.5 px-4 py-3 text-xs font-bold border-b-2 whitespace-nowrap transition ${activeTab === tab.id ? "border-purple-500 text-purple-400" : "border-transparent text-slate-500 hover:text-slate-300"}`}>
+                <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex items-center gap-1.5 px-4 py-3 text-xs font-bold border-b-2 whitespace-nowrap transition ${activeTab === tab.id ? "border-[#58D20A] text-[#58D20A]" : "border-transparent text-[#F5F5F5] bg-transparent hover:text-[#58D20A]"}`}>
                   <tab.icon className="w-3.5 h-3.5" />{tab.label}
                 </button>
               ))}
@@ -657,41 +657,41 @@ export default function PlayerDashboard() {
                 <div className="space-y-4 text-xs">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block font-semibold text-slate-400 mb-1.5 flex items-center gap-1.5"><User className="w-3.5 h-3.5 text-blue-400" /> Full Name</label>
+                      <label className="block font-semibold text-secondaryText mb-1.5 flex items-center gap-1.5"><User className="w-3.5 h-3.5 text-neonGreen" /> Full Name</label>
                       <input type="text" value={editForm.name} onChange={e => setEditForm(prev => ({ ...prev, name: e.target.value }))} className="glass-input w-full px-3 py-2.5 rounded-xl text-white" placeholder="Your full name" />
                     </div>
                     <div>
-                      <label className="block font-semibold text-slate-400 mb-1.5 flex items-center gap-1.5"><Hash className="w-3.5 h-3.5 text-amber-400" /> Student ID <span className="text-slate-600 font-normal ml-1">(read-only)</span></label>
-                      <input type="text" value={myPlayer.studentId || ""} readOnly disabled className="glass-input w-full px-3 py-2.5 rounded-xl text-slate-400 font-mono cursor-not-allowed opacity-70" placeholder="—" />
+                      <label className="block font-semibold text-secondaryText mb-1.5 flex items-center gap-1.5"><Hash className="w-3.5 h-3.5 text-warningGold" /> Student ID <span className="text-mutedText font-normal ml-1">(read-only)</span></label>
+                      <input type="text" value={myPlayer.studentId || ""} readOnly disabled className="glass-input w-full px-3 py-2.5 rounded-xl text-secondaryText font-mono cursor-not-allowed opacity-70" placeholder="—" />
                     </div>
                   </div>
                   <div>
-                    <label className="block font-semibold text-slate-400 mb-1.5 flex items-center gap-1.5"><GraduationCap className="w-3.5 h-3.5 text-emerald-400" /> Academic Session</label>
+                    <label className="block font-semibold text-secondaryText mb-1.5 flex items-center gap-1.5"><GraduationCap className="w-3.5 h-3.5 text-neonGreen" /> Academic Session</label>
                     <input type="text" value={editForm.session} onChange={e => setEditForm(prev => ({ ...prev, session: e.target.value }))} className="glass-input w-full px-3 py-2.5 rounded-xl text-white" placeholder="e.g. 2020-2021" />
                   </div>
-                  <div className="p-3 bg-slate-950/60 rounded-xl border border-slate-800 flex items-start gap-2">
-                    <Mail className="w-3.5 h-3.5 text-slate-500 mt-0.5 flex-shrink-0" />
-                    <div><span className="text-slate-500 font-semibold">Email (read-only)</span><p className="text-blue-300 font-mono mt-0.5">{myPlayer.email}</p></div>
+                  <div className="p-3 bg-darkBg/60 rounded-xl border border-cardBorder flex items-start gap-2">
+                    <Mail className="w-3.5 h-3.5 text-mutedText mt-0.5 flex-shrink-0" />
+                    <div><span className="text-mutedText font-semibold">Email (read-only)</span><p className="text-neonGreenHover font-mono mt-0.5">{myPlayer.email}</p></div>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div>
-                      <label className="block font-semibold text-slate-400 mb-1.5 flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5 text-purple-400" /> Age</label>
+                      <label className="block font-semibold text-secondaryText mb-1.5 flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5 text-warningGold" /> Age</label>
                       <input type="number" min="5" max="120" value={editForm.age ?? ""} onChange={e => setEditForm(prev => ({ ...prev, age: e.target.value.replace(/\D/g, "").slice(0, 3) }))} className="glass-input w-full px-3 py-2.5 rounded-xl text-white" placeholder="e.g. 21" />
                     </div>
                     <div>
-                      <label className="block font-semibold text-slate-400 mb-1.5 flex items-center gap-1.5"><Ruler className="w-3.5 h-3.5 text-purple-400" /> Height</label>
+                      <label className="block font-semibold text-secondaryText mb-1.5 flex items-center gap-1.5"><Ruler className="w-3.5 h-3.5 text-warningGold" /> Height</label>
                       <input type="text" value={editForm.height} onChange={e => setEditForm(prev => ({ ...prev, height: e.target.value }))} className="glass-input w-full px-3 py-2.5 rounded-xl text-white" placeholder="e.g. 5ft 10in / 178cm" />
                     </div>
                     <div>
-                      <label className="block font-semibold text-slate-400 mb-1.5 flex items-center gap-1.5"><Footprints className="w-3.5 h-3.5 text-purple-400" /> Preferred Foot</label>
+                      <label className="block font-semibold text-secondaryText mb-1.5 flex items-center gap-1.5"><Footprints className="w-3.5 h-3.5 text-warningGold" /> Preferred Foot</label>
                       <select value={editForm.preferredFoot} onChange={e => setEditForm(prev => ({ ...prev, preferredFoot: e.target.value }))} className="glass-input w-full px-3 py-2.5 rounded-xl text-white appearance-none">
                         <option value="">Select foot</option>
                         {FOOT_PREFERENCES.map(f => <option key={f} value={f}>{f}</option>)}
                       </select>
                     </div>
                     <div className="sm:col-span-1">
-                      <label className="block font-semibold text-slate-400 mb-1.5 flex items-center gap-1.5"><Globe className="w-3.5 h-3.5 text-purple-400" /> Nationality</label>
+                      <label className="block font-semibold text-secondaryText mb-1.5 flex items-center gap-1.5"><Globe className="w-3.5 h-3.5 text-warningGold" /> Nationality</label>
                       <input type="text" value={editForm.nationality} onChange={e => setEditForm(prev => ({ ...prev, nationality: e.target.value }))} className="glass-input w-full px-3 py-2.5 rounded-xl text-white" placeholder="e.g. Bangladesh" />
                     </div>
                   </div>
@@ -700,35 +700,35 @@ export default function PlayerDashboard() {
               {activeTab === "stats" && (
                 <div className="space-y-4 text-xs">
                   <div>
-                    <p className="text-[11px] text-slate-500 mb-3 flex items-center gap-1.5"><Activity className="w-3.5 h-3.5 text-emerald-400" /> Match performance stats — used in the Player Overview.</p>
+                    <p className="text-[11px] text-mutedText mb-3 flex items-center gap-1.5"><Activity className="w-3.5 h-3.5 text-neonGreen" /> Match performance stats — used in the Player Overview.</p>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block font-semibold text-slate-400 mb-1.5 flex items-center gap-1.5"><Activity className="w-3.5 h-3.5 text-emerald-400" /> Matches Played</label>
+                        <label className="block font-semibold text-secondaryText mb-1.5 flex items-center gap-1.5"><Activity className="w-3.5 h-3.5 text-neonGreen" /> Matches Played</label>
                         <input type="number" min="0" max="9999" value={editForm.matchesPlayed === 0 ? "" : editForm.matchesPlayed ?? ""} onChange={e => setEditForm(prev => ({ ...prev, matchesPlayed: e.target.value.replace(/\D/g, "").slice(0, 4) }))} className="glass-input w-full px-3 py-2.5 rounded-xl text-white" placeholder="e.g. 25" />
                       </div>
                       <div>
-                        <label className="block font-semibold text-slate-400 mb-1.5 flex items-center gap-1.5"><Goal className="w-3.5 h-3.5 text-emerald-400" /> Goals</label>
+                        <label className="block font-semibold text-secondaryText mb-1.5 flex items-center gap-1.5"><Goal className="w-3.5 h-3.5 text-neonGreen" /> Goals</label>
                         <input type="number" min="0" max="9999" value={editForm.goals === 0 ? "" : editForm.goals ?? ""} onChange={e => setEditForm(prev => ({ ...prev, goals: e.target.value.replace(/\D/g, "").slice(0, 4) }))} className="glass-input w-full px-3 py-2.5 rounded-xl text-white" placeholder="e.g. 15" />
                       </div>
                       <div>
-                        <label className="block font-semibold text-slate-400 mb-1.5 flex items-center gap-1.5"><Footprints className="w-3.5 h-3.5 text-emerald-400" /> Assists</label>
+                        <label className="block font-semibold text-secondaryText mb-1.5 flex items-center gap-1.5"><Footprints className="w-3.5 h-3.5 text-neonGreen" /> Assists</label>
                         <input type="number" min="0" max="9999" value={editForm.assists === 0 ? "" : editForm.assists ?? ""} onChange={e => setEditForm(prev => ({ ...prev, assists: e.target.value.replace(/\D/g, "").slice(0, 4) }))} className="glass-input w-full px-3 py-2.5 rounded-xl text-white" placeholder="e.g. 10" />
                       </div>
                       <div>
-                        <label className="block font-semibold text-slate-400 mb-1.5 flex items-center gap-1.5"><Shield className="w-3.5 h-3.5 text-amber-400" /> Yellow Cards</label>
+                        <label className="block font-semibold text-secondaryText mb-1.5 flex items-center gap-1.5"><Shield className="w-3.5 h-3.5 text-warningGold" /> Yellow Cards</label>
                         <input type="number" min="0" max="9999" value={editForm.yellowCards === 0 ? "" : editForm.yellowCards ?? ""} onChange={e => setEditForm(prev => ({ ...prev, yellowCards: e.target.value.replace(/\D/g, "").slice(0, 4) }))} className="glass-input w-full px-3 py-2.5 rounded-xl text-white" placeholder="e.g. 5" />
                       </div>
                       <div>
-                        <label className="block font-semibold text-slate-400 mb-1.5 flex items-center gap-1.5"><Shield className="w-3.5 h-3.5 text-rose-400" /> Red Cards</label>
+                        <label className="block font-semibold text-secondaryText mb-1.5 flex items-center gap-1.5"><Shield className="w-3.5 h-3.5 text-urgentRedText" /> Red Cards</label>
                         <input type="number" min="0" max="9999" value={editForm.redCards === 0 ? "" : editForm.redCards ?? ""} onChange={e => setEditForm(prev => ({ ...prev, redCards: e.target.value.replace(/\D/g, "").slice(0, 4) }))} className="glass-input w-full px-3 py-2.5 rounded-xl text-white" placeholder="e.g. 1" />
                       </div>
                       <div>
-                        <label className="block font-semibold text-slate-400 mb-1.5 flex items-center gap-1.5"><Shield className="w-3.5 h-3.5 text-emerald-400" /> Clean Sheets</label>
+                        <label className="block font-semibold text-secondaryText mb-1.5 flex items-center gap-1.5"><Shield className="w-3.5 h-3.5 text-neonGreen" /> Clean Sheets</label>
                         <input type="number" min="0" max="9999" value={editForm.cleanSheets === 0 ? "" : editForm.cleanSheets ?? ""} onChange={e => setEditForm(prev => ({ ...prev, cleanSheets: e.target.value.replace(/\D/g, "").slice(0, 4) }))} className="glass-input w-full px-3 py-2.5 rounded-xl text-white" placeholder="e.g. 8" />
                       </div>
                     </div>
                   </div>
-                  <div className="p-3 bg-slate-950/60 rounded-xl border border-slate-800 text-[10px] text-slate-500">
+                  <div className="p-3 bg-darkBg/60 rounded-xl border border-cardBorder text-[10px] text-mutedText">
                     Total Bids and Highest Bid are pulled live from the auction engine and are not manually editable.
                   </div>
                 </div>
@@ -737,97 +737,97 @@ export default function PlayerDashboard() {
                 <div className="space-y-5 text-xs">
                   <div className="flex flex-col items-center gap-3">
                     <div className="relative">
-                      <img src={getImageUrl(currentAvatar, playerFallback('emerald'))} alt="Preview" className="w-28 h-28 rounded-2xl object-cover border-2 border-purple-500/40 shadow-2xl" />
-                      {filePreview && !removeImage && <span className="absolute -top-2 -right-2 px-1.5 py-0.5 bg-emerald-600 text-white text-[9px] font-bold rounded-full">NEW</span>}
+                      <img src={getImageUrl(currentAvatar, playerFallback('emerald'))} alt="Preview" className="w-28 h-28 rounded-2xl object-cover border-2 border-warningGold/40 shadow-2xl" />
+                      {filePreview && !removeImage && <span className="absolute -top-2 -right-2 px-1.5 py-0.5 bg-successGreen text-darkBg text-[9px] font-bold rounded-full">NEW</span>}
                     </div>
-                    <p className="text-slate-500">Profile photo preview</p>
+                    <p className="text-mutedText">Profile photo preview</p>
                   </div>
-                  <div className="border-2 border-dashed border-slate-700 hover:border-purple-500/50 rounded-2xl p-8 text-center cursor-pointer transition group" onClick={() => fileInputRef.current?.click()} onDragOver={e => e.preventDefault()} onDrop={e => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f && f.type.startsWith("image/")) { if (f.size > 5 * 1024 * 1024) { triggerToast("Max 5MB", "error"); return; } setSelectedFile(f); setFilePreview(URL.createObjectURL(f)); setRemoveImage(false); } }}>
-                    <Upload className="w-10 h-10 mx-auto text-slate-600 group-hover:text-purple-400 transition mb-2" />
-                    <p className="font-semibold text-slate-400 group-hover:text-slate-200 transition">Click or drag and drop to upload</p>
-                    <p className="text-slate-600 mt-1">PNG, JPG, WEBP up to 5MB</p>
+                  <div className="border-2 border-dashed border-borderStrong hover:border-warningGold/50 rounded-2xl p-8 text-center cursor-pointer transition group" onClick={() => fileInputRef.current?.click()} onDragOver={e => e.preventDefault()} onDrop={e => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f && f.type.startsWith("image/")) { if (f.size > 5 * 1024 * 1024) { triggerToast("Max 5MB", "error"); return; } setSelectedFile(f); setFilePreview(URL.createObjectURL(f)); setRemoveImage(false); } }}>
+                    <Upload className="w-10 h-10 mx-auto text-mutedText group-hover:text-warningGold transition mb-2" />
+                    <p className="font-semibold text-secondaryText group-hover:text-primaryText transition">Click or drag and drop to upload</p>
+                    <p className="text-mutedText mt-1">PNG, JPG, WEBP up to 5MB</p>
                     <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
                   </div>
                   {selectedFile && !removeImage && (
-                    <div className="flex items-center justify-between p-3 bg-purple-500/10 border border-purple-500/30 rounded-xl">
-                      <span className="text-purple-300 font-semibold truncate max-w-[200px]">{selectedFile.name} ({(selectedFile.size / 1024).toFixed(0)} KB)</span>
-                      <button onClick={() => { setSelectedFile(null); setFilePreview(null); }} className="text-rose-400 hover:text-rose-300"><X className="w-4 h-4" /></button>
+                    <div className="flex items-center justify-between p-3 bg-warningGold/10 border border-warningGold/30 rounded-xl">
+                      <span className="text-warningGold font-semibold truncate max-w-[200px]">{selectedFile.name} ({(selectedFile.size / 1024).toFixed(0)} KB)</span>
+                      <button onClick={() => { setSelectedFile(null); setFilePreview(null); }} className="text-urgentRedText hover:text-urgentRedText"><X className="w-4 h-4" /></button>
                     </div>
                   )}
                   {myPlayer.imageUrl && !removeImage && (
-                    <button onClick={() => { setSelectedFile(null); setFilePreview(null); setRemoveImage(true); }} className="w-full py-2.5 border border-rose-800/50 text-rose-400 hover:bg-rose-950/30 rounded-xl font-bold transition flex items-center justify-center gap-2">
+                    <button onClick={() => { setSelectedFile(null); setFilePreview(null); setRemoveImage(true); }} className="w-full py-2.5 border border-urgentRed/50 text-urgentRedText hover:bg-urgentRed/30 rounded-xl font-bold transition flex items-center justify-center gap-2">
                       <Trash2 className="w-3.5 h-3.5" /> Remove Current Photo
                     </button>
                   )}
-                  {removeImage && <div className="p-3 bg-rose-950/20 border border-rose-800/40 rounded-xl text-center text-rose-400 text-xs font-semibold">Photo will be removed on save. <button onClick={() => setRemoveImage(false)} className="underline ml-1 hover:text-rose-300">Undo</button></div>}
+                  {removeImage && <div className="p-3 bg-urgentRed/20 border border-urgentRed/40 rounded-xl text-center text-urgentRedText text-xs font-semibold">Photo will be removed on save. <button onClick={() => setRemoveImage(false)} className="underline ml-1 hover:text-urgentRedText">Undo</button></div>}
                 </div>
               )}
               {activeTab === "sports" && (
                 <div className="space-y-5 text-xs">
                   <div>
-                    <label className="block font-semibold text-slate-400 mb-2 flex items-center gap-1.5"><List className="w-3.5 h-3.5 text-purple-400" /> Select Positions</label>
+                    <label className="block font-semibold text-secondaryText mb-2 flex items-center gap-1.5"><List className="w-3.5 h-3.5 text-warningGold" /> Select Positions</label>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                       {POSITIONS.map(pos => (
-                        <button key={pos} type="button" onClick={() => togglePosition(pos)} className={`py-2 px-3 rounded-xl border text-left font-semibold transition ${editForm.positions.includes(pos) ? "bg-purple-600/20 border-purple-500/50 text-purple-300" : "bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-600 hover:text-slate-200"}`}>
-                          {editForm.positions.includes(pos) && <CheckCircle2 className="w-3 h-3 inline mr-1 text-purple-400" />}{pos}
+                        <button key={pos} type="button" onClick={() => togglePosition(pos)} className={`py-2 px-3 rounded-xl border text-left font-semibold transition ${editForm.positions.includes(pos) ? "bg-warningGold/20 border-warningGold/50 text-warningGold" : "bg-[#151515] border-[#333333] text-[#F5F5F5] hover:border-warningGold/50 hover:text-warningGold"}`}>
+                          {editForm.positions.includes(pos) && <CheckCircle2 className="w-3 h-3 inline mr-1 text-warningGold" />}{pos}
                         </button>
                       ))}
                     </div>
                   </div>
                   {editForm.positions.length > 0 && (
                     <div>
-                      <label className="block font-semibold text-slate-400 mb-2 flex items-center gap-1.5"><Star className="w-3.5 h-3.5 text-yellow-400" /> Choose Primary Position</label>
+                      <label className="block font-semibold text-secondaryText mb-2 flex items-center gap-1.5"><Star className="w-3.5 h-3.5 text-warningGold" /> Choose Primary Position</label>
                       <div className="flex flex-wrap gap-2">
                         {editForm.positions.map(pos => (
-                          <button key={pos} type="button" onClick={() => setEditForm(prev => ({ ...prev, primaryPosition: pos }))} className={`py-1.5 px-3 rounded-xl border font-bold transition ${editForm.primaryPosition === pos ? "bg-yellow-500/20 border-yellow-500/50 text-yellow-300" : "bg-slate-900 border-slate-700 text-slate-400 hover:border-yellow-500/30"}`}>
-                            {editForm.primaryPosition === pos && <Star className="w-3 h-3 inline mr-1 text-yellow-400" />}{pos}
+                          <button key={pos} type="button" onClick={() => setEditForm(prev => ({ ...prev, primaryPosition: pos }))} className={`py-1.5 px-3 rounded-xl border font-bold transition ${editForm.primaryPosition === pos ? "bg-warningGold/20 border-warningGold/50 text-warningGold" : "bg-[#151515] border-[#333333] text-[#F5F5F5] hover:border-warningGold/50"}`}>
+                            {editForm.primaryPosition === pos && <Star className="w-3 h-3 inline mr-1 text-warningGold" />}{pos}
                           </button>
                         ))}
                       </div>
                     </div>
                   )}
-                  {editForm.positions.length === 0 && <p className="text-amber-400 text-xs font-semibold text-center p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl">Select at least one position above.</p>}
+                  {editForm.positions.length === 0 && <p className="text-warningGold text-xs font-semibold text-center p-3 bg-warningGold/10 border border-warningGold/20 rounded-xl">Select at least one position above.</p>}
                 </div>
               )}
               {activeTab === "kit" && (
                 <div className="space-y-4 text-xs">
                   <div>
-                    <label className="block font-semibold text-slate-400 mb-1.5 flex items-center gap-1.5"><BadgeCheck className="w-3.5 h-3.5 text-purple-400" /> Jersey Name <span className="text-slate-600 font-normal ml-1">(max 15 chars)</span></label>
+                    <label className="block font-semibold text-secondaryText mb-1.5 flex items-center gap-1.5"><BadgeCheck className="w-3.5 h-3.5 text-warningGold" /> Jersey Name <span className="text-mutedText font-normal ml-1">(max 15 chars)</span></label>
                     <input type="text" maxLength={15} value={editForm.jerseyName} onChange={e => setEditForm(prev => ({ ...prev, jerseyName: e.target.value.toUpperCase() }))} className="glass-input w-full px-3 py-2.5 rounded-xl text-white font-mono uppercase tracking-wider" placeholder="E.G. RONALDO" />
-                    <p className="text-slate-600 mt-1">{editForm.jerseyName.length}/15</p>
+                    <p className="text-mutedText mt-1">{editForm.jerseyName.length}/15</p>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block font-semibold text-slate-400 mb-1.5 flex items-center gap-1.5"><Shirt className="w-3.5 h-3.5 text-blue-400" /> T-Shirt Size</label>
+                      <label className="block font-semibold text-secondaryText mb-1.5 flex items-center gap-1.5"><Shirt className="w-3.5 h-3.5 text-neonGreen" /> T-Shirt Size</label>
                       <div className="flex gap-1.5">
                         {TSHIRT_SIZES.map(s => (
-                          <button key={s} type="button" onClick={() => setEditForm(prev => ({ ...prev, tShirtSize: s }))} className={`flex-1 py-2 rounded-xl border font-bold transition text-xs ${editForm.tShirtSize === s ? "bg-blue-600/20 border-blue-500/50 text-blue-300" : "bg-slate-900 border-slate-800 text-slate-500 hover:border-slate-600 hover:text-slate-300"}`}>{s}</button>
+                          <button key={s} type="button" onClick={() => setEditForm(prev => ({ ...prev, tShirtSize: s }))} className={`flex-1 py-2 rounded-xl border font-bold transition text-xs ${editForm.tShirtSize === s ? "bg-[#58D20A]/20 border-[#58D20A]/50 text-[#58D20A]" : "bg-[#151515] border-[#333333] text-[#F5F5F5] hover:border-[#58D20A]/50"}`}>{s}</button>
                         ))}
                       </div>
                     </div>
                     <div>
-                      <label className="block font-semibold text-slate-400 mb-1.5 flex items-center gap-1.5"><Hash className="w-3.5 h-3.5 text-amber-400" /> T-Shirt Number</label>
+                      <label className="block font-semibold text-secondaryText mb-1.5 flex items-center gap-1.5"><Hash className="w-3.5 h-3.5 text-warningGold" /> T-Shirt Number</label>
                       <input type="text" value={editForm.tShirtNumber} onChange={e => setEditForm(prev => ({ ...prev, tShirtNumber: e.target.value.replace(/\D/g, "") }))} className="glass-input w-full px-3 py-2.5 rounded-xl text-white font-mono text-lg text-center" placeholder="7" maxLength={3} />
                     </div>
                   </div>
-                  <div className="p-4 bg-slate-950/60 rounded-2xl border border-slate-800">
-                    <span className="text-[10px] font-bold text-slate-500 uppercase">Kit Preview</span>
+                  <div className="p-4 bg-darkBg/60 rounded-2xl border border-cardBorder">
+                    <span className="text-[10px] font-bold text-mutedText uppercase">Kit Preview</span>
                     <div className="flex items-center gap-4 mt-2">
-                      <div className="w-14 h-14 rounded-xl bg-purple-500/10 border-2 border-purple-500/30 flex items-center justify-center">
-                        <span className="text-2xl font-black text-purple-300 font-mono">{editForm.tShirtNumber || "#"}</span>
+                      <div className="w-14 h-14 rounded-xl bg-warningGold/10 border-2 border-warningGold/30 flex items-center justify-center">
+                        <span className="text-2xl font-black text-warningGold font-mono">{editForm.tShirtNumber || "#"}</span>
                       </div>
                       <div>
                         <p className="font-black font-mono text-white text-base uppercase tracking-wider">{editForm.jerseyName || "JERSEY NAME"}</p>
-                        <p className="text-slate-500 text-[11px]">Size: <strong className="text-slate-300">{editForm.tShirtSize}</strong></p>
+                        <p className="text-mutedText text-[11px]">Size: <strong className="text-secondaryText">{editForm.tShirtSize}</strong></p>
                       </div>
                     </div>
                   </div>
                 </div>
               )}
             </div>
-            <div className="flex gap-3 px-6 py-4 border-t border-slate-800 bg-slate-950/40 rounded-b-2xl">
-              <button onClick={() => setEditing(false)} className="flex-1 py-2.5 border border-slate-700 text-slate-300 hover:bg-slate-800 rounded-xl text-xs font-semibold transition">Cancel</button>
-              <button onClick={handleSave} disabled={saving} className="flex-1 py-2.5 bg-purple-600 hover:bg-purple-500 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition disabled:opacity-60 shadow-lg">
+            <div className="flex gap-3 px-6 py-4 border-t border-cardBorder bg-darkBg/40 rounded-b-2xl">
+              <button onClick={() => setEditing(false)} className="btn-secondary flex-1 py-2.5 rounded-xl text-xs">Cancel</button>
+              <button onClick={handleSave} disabled={saving} className="btn-primary flex-1 py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 disabled:opacity-60 shadow-lg">
                 {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
                 {saving ? "Saving..." : "Save All Changes"}
               </button>

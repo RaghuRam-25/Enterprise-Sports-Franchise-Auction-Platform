@@ -14,7 +14,7 @@ export default function DashboardLayout() {
   }, [location.pathname]);
 
   return (
-    <div className="h-dvh flex flex-col bg-slate-950 text-slate-100 font-sans antialiased overflow-hidden">
+    <div className="h-dvh flex flex-col bg-darkBg text-primaryText font-sans antialiased overflow-hidden">
       {/* Top Navbar (hamburger shown only on small screens) */}
       <Navbar onOpenMobileSidebar={() => setIsMobileSidebarOpen(true)} />
 
@@ -37,7 +37,7 @@ export default function DashboardLayout() {
         )}
 
         {/* Main Content View Container */}
-        <main className="flex-1 min-w-0 overflow-y-auto bg-slate-950 p-4 md:p-6">
+        <main className="flex-1 min-w-0 overflow-y-auto bg-darkBg p-4 md:p-6">
           {/* key on pathname → content fades up on every route change */}
           <div key={location.pathname} className="ui-fade-up">
             <Outlet />

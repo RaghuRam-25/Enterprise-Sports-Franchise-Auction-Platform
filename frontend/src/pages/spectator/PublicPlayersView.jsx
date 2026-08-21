@@ -14,29 +14,29 @@ import PlayerCardCard from '../../components/common/PlayerCardCard';
 
 // ── Status badge config ──────────────────────────────────────────────────────
 const STATUS_CONFIG = {
-  REGISTERED: { label: 'Registered', color: 'text-blue-400', bg: 'bg-blue-500/10', border: 'border-blue-500/30', icon: UserCheck },
-  SOLD: { label: 'Sold', color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/30', icon: Trophy },
-  UNSOLD: { label: 'Unsold', color: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-500/30', icon: Clock },
-  WITHDRAWN: { label: 'Withdrawn', color: 'text-rose-400', bg: 'bg-rose-500/10', border: 'border-rose-500/30', icon: UserX },
-  PENDING: { label: 'Pending', color: 'text-slate-400', bg: 'bg-slate-500/10', border: 'border-slate-500/30', icon: Clock },
-  AVAILABLE: { label: 'Available', color: 'text-teal-400', bg: 'bg-teal-500/10', border: 'border-teal-500/30', icon: Zap },
+  REGISTERED: { label: 'Registered', color: 'text-neonGreen', bg: 'bg-neonGreen/10', border: 'border-neonGreen/30', icon: UserCheck },
+  SOLD: { label: 'Sold', color: 'text-neonGreen', bg: 'bg-neonGreen/10', border: 'border-neonGreen/30', icon: Trophy },
+  UNSOLD: { label: 'Unsold', color: 'text-warningGold', bg: 'bg-warningGold/10', border: 'border-warningGold/30', icon: Clock },
+  WITHDRAWN: { label: 'Withdrawn', color: 'text-urgentRedText', bg: 'bg-urgentRed/10', border: 'border-urgentRed/30', icon: UserX },
+  PENDING: { label: 'Pending', color: 'text-secondaryText', bg: 'bg-surfaceActive/10', border: 'border-borderStrong/30', icon: Clock },
+  AVAILABLE: { label: 'Available', color: 'text-neonGreen', bg: 'bg-neonGreen/10', border: 'border-neonGreen/30', icon: Zap },
 };
 
 const ROLE_BADGE = {
-  SUPER_ADMIN: { label: 'Super Admin', color: 'text-blue-300', bg: 'bg-blue-900/60', border: 'border-blue-700' },
-  PODIUM_ADMIN: { label: 'Podium Admin', color: 'text-rose-300', bg: 'bg-rose-900/60', border: 'border-rose-700' },
-  TEAM_MANAGER: { label: 'Team Manager', color: 'text-emerald-300', bg: 'bg-emerald-900/60', border: 'border-emerald-700' },
-  PLAYER: { label: 'Player', color: 'text-purple-300', bg: 'bg-purple-900/60', border: 'border-purple-700' },
-  null: { label: 'Spectator', color: 'text-slate-300', bg: 'bg-slate-800/60', border: 'border-slate-700' },
+  SUPER_ADMIN: { label: 'Super Admin', color: 'text-neonGreenHover', bg: 'bg-successGreen/60', border: 'border-successGreen' },
+  PODIUM_ADMIN: { label: 'Podium Admin', color: 'text-urgentRedText', bg: 'bg-urgentRed/60', border: 'border-urgentRed' },
+  TEAM_MANAGER: { label: 'Team Manager', color: 'text-neonGreenHover', bg: 'bg-successGreen/60', border: 'border-successGreen' },
+  PLAYER: { label: 'Player', color: 'text-warningGold', bg: 'bg-warningGold/60', border: 'border-warningGold' },
+  null: { label: 'Spectator', color: 'text-secondaryText', bg: 'bg-surfaceHover/60', border: 'border-borderStrong' },
 };
 
 const getCategoryRowStyle = (category) => {
   switch (category) {
-    case 'Icon Category': return 'bg-amber-950/20 hover:bg-amber-950/40 border-l-4 border-amber-500';
-    case 'A Grade': return 'bg-blue-950/20 hover:bg-blue-950/40 border-l-4 border-blue-500';
-    case 'B Grade': return 'bg-teal-950/20 hover:bg-teal-950/40 border-l-4 border-teal-500';
-    case 'Emerging Youth': return 'bg-purple-950/20 hover:bg-purple-950/40 border-l-4 border-purple-500';
-    default: return 'hover:bg-slate-800/30 border-l-4 border-slate-700';
+    case 'Icon Category': return 'bg-warningGold/20 hover:bg-warningGold/40 border-l-4 border-warningGold';
+    case 'A Grade': return 'bg-successGreen/20 hover:bg-successGreen/40 border-l-4 border-neonGreen';
+    case 'B Grade': return 'bg-successGreen/20 hover:bg-successGreen/40 border-l-4 border-neonGreen';
+    case 'Emerging Youth': return 'bg-warningGold/20 hover:bg-warningGold/40 border-l-4 border-warningGold';
+    default: return 'hover:bg-surfaceHover/30 border-l-4 border-borderStrong';
   }
 };
 
@@ -65,10 +65,10 @@ function PlayerListRow({ player, formatCurrency, teams = [] }) {
             src={getImageUrl(player.imageUrl)}
             alt={player.name}
             onError={() => setImgErr(true)}
-            className="w-9 h-9 rounded-lg object-cover border border-slate-700"
+            className="w-9 h-9 rounded-lg object-cover border border-borderStrong"
           />
         ) : (
-          <div className="w-9 h-9 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white font-black text-sm border border-slate-700">
+          <div className="w-9 h-9 rounded-lg bg-gradient-to-tr from-neonGreen to-successGreen flex items-center justify-center text-darkBg font-black text-sm border border-borderStrong">
             {(player.name || 'P')[0].toUpperCase()}
           </div>
         )}
@@ -83,35 +83,35 @@ function PlayerListRow({ player, formatCurrency, teams = [] }) {
           <span
             key={pos}
             className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase ${pos === player.primaryPosition
-              ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30'
-              : 'bg-slate-800 text-slate-400 border border-slate-700'
+              ? 'bg-warningGold/15 text-warningGold border border-warningGold/30'
+              : 'bg-surfaceHover text-secondaryText border border-borderStrong'
               }`}
           >
             {pos === player.primaryPosition && '* '}{pos}
           </span>
         ))}
         {positions.length > 3 && (
-          <span className="px-1.5 py-0.5 rounded text-[9px] text-slate-500 bg-slate-800 border border-slate-700">
+          <span className="px-1.5 py-0.5 rounded text-[9px] text-mutedText bg-surfaceHover border border-borderStrong">
             +{positions.length - 3}
           </span>
         )}
       </div>
 
       <div className="col-span-2">
-        <span className={`text-xs font-semibold ${player.category?.includes('A') ? 'text-amber-400' :
-          player.category?.includes('S') ? 'text-purple-400' :
-            'text-slate-400'
+        <span className={`text-xs font-semibold ${player.category?.includes('A') ? 'text-warningGold' :
+          player.category?.includes('S') ? 'text-warningGold' :
+            'text-secondaryText'
           }`}>{player.category || '--'}</span>
       </div>
 
       <div className="col-span-2 text-xs">
         {isSold ? (
           <>
-            <p className="font-mono font-bold text-amber-400">{formatCurrency(player.finalPrice || 0)}</p>
-            <p className="text-[10px] text-slate-400">to {soldToTeam?.name || 'N/A'}</p>
+            <p className="font-mono font-bold text-warningGold">{formatCurrency(player.finalPrice || 0)}</p>
+            <p className="text-[10px] text-secondaryText">to {soldToTeam?.name || 'N/A'}</p>
           </>
         ) : (
-          <p className="font-mono font-bold text-emerald-400">{formatCurrency(player.basePrice)}</p>
+          <p className="font-mono font-bold text-neonGreen">{formatCurrency(player.basePrice)}</p>
         )}
       </div>
 
@@ -203,7 +203,7 @@ export default function PublicPlayersView() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-darkBg text-slate-100">
+    <div className="min-h-screen flex flex-col bg-darkBg text-primaryText">
       {/* Only show Navbar for public, unauthenticated view. Authenticated views get Navbar from DashboardLayout. */}
       {!user && <Navbar />}
 
@@ -220,7 +220,7 @@ export default function PublicPlayersView() {
         />
 
         {/* ── Page Header ─────────────────────────────────────────────────── */}
-        <div className="glass-card rounded-2xl p-4 border border-slate-600">
+        <div className="glass-card rounded-2xl p-4 border border-borderStrong">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <div className="flex items-center gap-2 mb-1">
@@ -236,25 +236,25 @@ export default function PublicPlayersView() {
             <div className="flex items-center gap-3">
               {/* Showing count */}
               <div className="text-right">
-                <span className="block text-2xl font-black font-mono text-blue-400">{filtered.length}</span>
-                <span className="text-[10px] text-slate-500 uppercase font-bold">of {players.length} Players</span>
+                <span className="block text-2xl font-black font-mono text-neonGreen">{filtered.length}</span>
+                <span className="text-[10px] text-mutedText uppercase font-bold">of {players.length} Players</span>
               </div>
 
               {/* View mode toggle */}
-              <div className="flex rounded-xl overflow-hidden border border-slate-700 bg-slate-900">
+              <div className="flex rounded-xl overflow-hidden border border-[#333333] bg-[#151515] p-0.5">
                 <button
                   onClick={() => setViewMode('grid')}
-                  className={`px-3 py-2 text-xs transition ${viewMode === 'grid' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${viewMode === 'grid' ? 'bg-[#58D20A] text-[#050505] shadow-md' : 'text-[#F5F5F5] hover:text-[#58D20A] hover:bg-[#1A1A1A]'}`}
                   title="Grid view"
                 >
-                  ⊞
+                  ⊞ Grid
                 </button>
                 <button
                   onClick={() => setViewMode('list')}
-                  className={`px-3 py-2 text-xs transition ${viewMode === 'list' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${viewMode === 'list' ? 'bg-[#58D20A] text-[#050505] shadow-md' : 'text-[#F5F5F5] hover:text-[#58D20A] hover:bg-[#1A1A1A]'}`}
                   title="List view"
                 >
-                  ≡
+                  ≡ List
                 </button>
               </div>
             </div>
@@ -264,18 +264,18 @@ export default function PublicPlayersView() {
         {/* ── Stats Strip ──────────────────────────────────────────────────── */}
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
           {[
-            { label: 'Total', value: stats.total, color: 'text-blue-400', icon: Users },
-            { label: 'Active', value: stats.registered, color: 'text-sky-400', icon: UserCheck },
-            { label: 'Sold', value: stats.sold, color: 'text-emerald-400', icon: Trophy },
-            { label: 'Unsold', value: stats.unsold, color: 'text-amber-400', icon: TrendingUp },
-            { label: 'Withdrawn', value: stats.withdrawn, color: 'text-rose-400', icon: UserX },
+            { label: 'Total', value: stats.total, color: 'text-neonGreen', icon: Users },
+            { label: 'Active', value: stats.registered, color: 'text-neonGreen', icon: UserCheck },
+            { label: 'Sold', value: stats.sold, color: 'text-neonGreen', icon: Trophy },
+            { label: 'Unsold', value: stats.unsold, color: 'text-warningGold', icon: TrendingUp },
+            { label: 'Withdrawn', value: stats.withdrawn, color: 'text-urgentRedText', icon: UserX },
           ].map(({ label, value, color, icon: Icon }) => (
-            <div key={label} className="glass-card rounded-xl p-3 border border-slate-800 text-center">
+            <div key={label} className="glass-card rounded-xl p-3 border border-cardBorder text-center">
               <div className="flex items-center justify-center gap-1.5 mb-1">
                 <Icon className={`w-3.5 h-3.5 ${color}`} />
                 <span className={`text-xl font-black font-mono ${color}`}>{value}</span>
               </div>
-              <p className="text-[10px] text-slate-500 font-bold uppercase">{label}</p>
+              <p className="text-[10px] text-mutedText font-bold uppercase">{label}</p>
             </div>
           ))}
         </div>
@@ -285,16 +285,16 @@ export default function PublicPlayersView() {
           <div className="flex flex-col sm:flex-row gap-3">
             {/* Search */}
             <div className="relative flex-1">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-mutedText" />
               <input
                 type="text"
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 placeholder="Search by name, jersey, student ID or session..."
-                className="glass-input w-full pl-10 pr-4 py-2.5 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/40"
+                className="glass-input w-full pl-10 pr-4 py-2.5 rounded-xl text-sm focus:ring-2 focus:ring-neonGreen/40"
               />
               {search && (
-                <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300">
+                <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-mutedText hover:text-secondaryText">
                   <X className="w-4 h-4" />
                 </button>
               )}
@@ -303,9 +303,9 @@ export default function PublicPlayersView() {
             {/* Filter Toggle */}
             <button
               onClick={() => setShowFilters(v => !v)}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-semibold transition ${showFilters || activeFiltersCount > 0
-                ? 'bg-blue-600 border-blue-500 text-white'
-                : 'glass-input border-slate-700 text-slate-300 hover:text-white hover:border-slate-600'
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-xs font-bold transition ${showFilters || activeFiltersCount > 0
+                ? 'bg-[#58D20A] border-[#58D20A] text-[#050505] shadow-md font-extrabold'
+                : 'btn-secondary'
                 }`}
             >
               <SlidersHorizontal className="w-4 h-4" />
@@ -322,7 +322,7 @@ export default function PublicPlayersView() {
             {(activeFiltersCount > 0 || search) && (
               <button
                 onClick={clearAllFilters}
-                className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl border border-rose-800/50 bg-rose-500/10 text-rose-400 text-xs font-semibold hover:bg-rose-500/20 transition"
+                className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl border border-urgentRed/50 bg-urgentRed/10 text-urgentRedText text-xs font-semibold hover:bg-urgentRed/20 transition"
               >
                 <X className="w-3.5 h-3.5" />
                 Clear
@@ -332,18 +332,18 @@ export default function PublicPlayersView() {
 
           {/* Expanded Filters */}
           {showFilters && (
-            <div className="glass-card rounded-xl border border-slate-800 p-4 grid grid-cols-1 sm:grid-cols-3 gap-4 animate-slide-in-right">
+            <div className="glass-card rounded-xl border border-cardBorder p-4 grid grid-cols-1 sm:grid-cols-3 gap-4 animate-slide-in-right">
               {/* Status Filter */}
               <div>
-                <label className="block text-[10px] text-slate-500 font-bold uppercase mb-1.5">Status</label>
+                <label className="block text-[10px] text-mutedText font-bold uppercase mb-1.5">Status</label>
                 <div className="flex flex-wrap gap-1.5">
                   {statusOptions.map(s => (
                     <button
                       key={s}
                       onClick={() => setFilterStatus(s)}
                       className={`px-2.5 py-1 rounded-lg text-xs font-semibold border transition ${filterStatus === s
-                        ? 'bg-blue-600 border-blue-500 text-white'
-                        : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-white hover:border-slate-500'
+                        ? 'bg-successGreen border-neonGreen text-darkBg'
+                        : 'bg-surfaceHover border-borderStrong text-secondaryText hover:text-white hover:border-borderStrong'
                         }`}
                     >
                       {s === 'ALL' ? 'All' : s}
@@ -354,15 +354,15 @@ export default function PublicPlayersView() {
 
               {/* Category Filter */}
               <div>
-                <label className="block text-[10px] text-slate-500 font-bold uppercase mb-1.5">Category</label>
+                <label className="block text-[10px] text-mutedText font-bold uppercase mb-1.5">Category</label>
                 <div className="flex flex-wrap gap-1.5">
                   {categoryOptions.map(c => (
                     <button
                       key={c}
                       onClick={() => setFilterCategory(c)}
                       className={`px-2.5 py-1 rounded-lg text-xs font-semibold border transition ${filterCategory === c
-                        ? 'bg-amber-600 border-amber-500 text-white'
-                        : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-white hover:border-slate-500'
+                        ? 'bg-warningGold border-warningGold text-darkBg'
+                        : 'bg-surfaceHover border-borderStrong text-secondaryText hover:text-white hover:border-borderStrong'
                         }`}
                     >
                       {c}
@@ -373,15 +373,15 @@ export default function PublicPlayersView() {
 
               {/* Position Filter */}
               <div>
-                <label className="block text-[10px] text-slate-500 font-bold uppercase mb-1.5">Position</label>
+                <label className="block text-[10px] text-mutedText font-bold uppercase mb-1.5">Position</label>
                 <div className="flex flex-wrap gap-1.5 max-h-20 overflow-y-auto pr-1">
                   {positionOptions.map(p => (
                     <button
                       key={p}
                       onClick={() => setFilterPosition(p)}
                       className={`px-2.5 py-1 rounded-lg text-xs font-semibold border transition ${filterPosition === p
-                        ? 'bg-purple-600 border-purple-500 text-white'
-                        : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-white hover:border-slate-500'
+                        ? 'bg-warningGold border-warningGold text-darkBg'
+                        : 'bg-surfaceHover border-borderStrong text-secondaryText hover:text-white hover:border-borderStrong'
                         }`}
                     >
                       {p}
@@ -397,31 +397,31 @@ export default function PublicPlayersView() {
         {loading || isDataLoading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
             {[...Array(8)].map((_, i) => (
-              <div key={i} className="glass-card rounded-2xl border border-slate-800 p-5 animate-pulse">
+              <div key={i} className="glass-card rounded-2xl border border-cardBorder p-5 animate-pulse">
                 <div className="flex items-start gap-3 mb-4">
-                  <div className="w-14 h-14 rounded-xl bg-slate-800" />
+                  <div className="w-14 h-14 rounded-xl bg-surfaceHover" />
                   <div className="flex-1 space-y-2">
-                    <div className="h-4 bg-slate-800 rounded w-3/4" />
-                    <div className="h-3 bg-slate-800 rounded w-1/2" />
-                    <div className="h-5 bg-slate-800 rounded w-20" />
+                    <div className="h-4 bg-surfaceHover rounded w-3/4" />
+                    <div className="h-3 bg-surfaceHover rounded w-1/2" />
+                    <div className="h-5 bg-surfaceHover rounded w-20" />
                   </div>
                 </div>
                 <div className="flex gap-1 mb-3">
-                  <div className="h-5 bg-slate-800 rounded w-10" />
-                  <div className="h-5 bg-slate-800 rounded w-12" />
+                  <div className="h-5 bg-surfaceHover rounded w-10" />
+                  <div className="h-5 bg-surfaceHover rounded w-12" />
                 </div>
-                <div className="h-3 bg-slate-800 rounded w-full" />
+                <div className="h-3 bg-surfaceHover rounded w-full" />
               </div>
             ))}
           </div>
         ) : filtered.length === 0 ? (
-          <div className="glass-card rounded-2xl border border-slate-800 p-16 flex flex-col items-center justify-center text-center space-y-4">
-            <div className="w-16 h-16 rounded-2xl bg-slate-800 flex items-center justify-center">
-              <Users className="w-8 h-8 text-slate-600" />
+          <div className="glass-card rounded-2xl border border-cardBorder p-16 flex flex-col items-center justify-center text-center space-y-4">
+            <div className="w-16 h-16 rounded-2xl bg-surfaceHover flex items-center justify-center">
+              <Users className="w-8 h-8 text-mutedText" />
             </div>
             <div>
-              <h3 className="text-lg font-black text-slate-300">No Players Found</h3>
-              <p className="text-sm text-slate-500 mt-1">
+              <h3 className="text-lg font-black text-secondaryText">No Players Found</h3>
+              <p className="text-sm text-mutedText mt-1">
                 {search || activeFiltersCount > 0
                   ? 'Try adjusting your search or filters.'
                   : 'No players have registered yet.'}
@@ -430,7 +430,7 @@ export default function PublicPlayersView() {
             {(search || activeFiltersCount > 0) && (
               <button
                 onClick={clearAllFilters}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold rounded-xl transition"
+                className="flex items-center gap-2 px-4 py-2 bg-successGreen hover:bg-neonGreen text-darkBg text-sm font-bold rounded-xl transition"
               >
                 <RefreshCw className="w-4 h-4" />
                 Reset Filters
@@ -451,9 +451,9 @@ export default function PublicPlayersView() {
           </div>
         ) : (
           /* ── List View ───────────────────────────────────────────────────── */
-          <div className="glass-card rounded-2xl border border-slate-800 overflow-hidden">
+          <div className="glass-card rounded-2xl border border-cardBorder overflow-hidden">
             {/* List header */}
-            <div className="grid grid-cols-12 gap-3 px-4 py-3 bg-slate-900/70 border-b border-slate-800 text-[10px] font-bold uppercase tracking-widest text-slate-500">
+            <div className="grid grid-cols-12 gap-3 px-4 py-3 bg-cardBg/70 border-b border-cardBorder text-[10px] font-bold uppercase tracking-widest text-mutedText">
               <div className="col-span-1" />
               <div className="col-span-3">Player</div>
               <div className="col-span-2">Positions</div>
@@ -462,7 +462,7 @@ export default function PublicPlayersView() {
               <div className="col-span-2 text-center">Status</div>
             </div>
 
-            <div className="divide-y divide-slate-800/60">
+            <div className="divide-y divide-cardBorder/60">
               {filtered.map((player, idx) => (
                 <PlayerListRow
                   key={player._id || player.id || idx}
@@ -477,9 +477,9 @@ export default function PublicPlayersView() {
 
         {/* ── Footer note for non-privileged users ─────────────────────────── */}
         {!isPrivileged && (
-          <div className="flex items-center justify-center gap-2 py-3 text-xs text-slate-600">
+          <div className="flex items-center justify-center gap-2 py-3 text-xs text-mutedText">
             <Shield className="w-3.5 h-3.5" />
-            <span>Some player details are only visible to authenticated staff. <a href="/login" className="text-blue-500 hover:text-blue-400 underline">Sign in</a> for full access.</span>
+            <span>Some player details are only visible to authenticated staff. <a href="/login" className="text-neonGreen hover:text-neonGreen underline">Sign in</a> for full access.</span>
           </div>
         )}
 

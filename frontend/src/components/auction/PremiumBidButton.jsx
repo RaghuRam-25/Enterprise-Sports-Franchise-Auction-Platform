@@ -37,40 +37,40 @@ export default function PremiumBidButton({
 
   const variantStyles = {
     bid: {
-      base: 'bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-500',
-      hover: 'hover:bg-[length:200%_100%] hover:bg-[position:100%_0]',
-      text: 'text-slate-950',
-      shadow: 'shadow-emerald-900/60 hover:shadow-emerald-500/40',
-      border: 'border-emerald-400/50',
+      base: 'bg-[#58D20A]',
+      hover: 'hover:bg-[#72F21A]',
+      text: 'text-[#050505]',
+      shadow: 'shadow-[0_0_20px_rgba(88,210,10,0.3)] hover:shadow-[0_0_30px_rgba(114,242,26,0.5)]',
+      border: 'border-[#58D20A]/50',
       shine: 'via-white/40',
-      ring: 'ring-emerald-500/30',
+      ring: 'ring-[#58D20A]/30',
     },
     out: {
-      base: 'bg-rose-500/15 border border-rose-500/30',
-      hover: 'hover:bg-rose-500/25 hover:border-rose-500/60',
-      text: 'text-rose-400',
-      shadow: 'hover:shadow-rose-500/40',
-      border: 'border-rose-500/30',
+      base: 'bg-[#B00012]/15 border border-[#B00012]/30',
+      hover: 'hover:bg-[#B00012]/25 hover:border-[#B00012]/60',
+      text: 'text-urgentRedText',
+      shadow: 'hover:shadow-[#B00012]/40',
+      border: 'border-[#B00012]/30',
       shine: 'via-white/10',
-      ring: 'ring-rose-500/30',
+      ring: 'ring-[#B00012]/30',
     },
     sell: {
-      base: 'bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400',
+      base: 'bg-gradient-to-r from-[#F4C542] via-warningGold to-[#F4C542]',
       hover: 'hover:brightness-110',
-      text: 'text-slate-950',
-      shadow: 'shadow-amber-500/60 hover:shadow-amber-400/50',
-      border: 'border-amber-400/60',
+      text: 'text-[#050505]',
+      shadow: 'shadow-[#F4C542]/60 hover:shadow-[#F4C542]/50',
+      border: 'border-[#F4C542]/60',
       shiny: 'via-white/50',
-      ring: 'ring-amber-500/40',
+      ring: 'ring-[#F4C542]/40',
     },
     pause: {
-      base: 'bg-gradient-to-r from-amber-500 via-orange-400 to-amber-500',
+      base: 'bg-gradient-to-r from-[#F4C542] via-warningGold to-[#F4C542]',
       hover: 'hover:brightness-110',
-      text: 'text-slate-950',
-      shadow: 'shadow-amber-900/60 hover:shadow-amber-500/40',
-      border: 'border-amber-400/50',
+      text: 'text-[#050505]',
+      shadow: 'shadow-[#F4C542]/60 hover:shadow-[#F4C542]/40',
+      border: 'border-[#F4C542]/50',
       shiny: 'via-white/40',
-      ring: 'ring-amber-500/30',
+      ring: 'ring-[#F4C542]/30',
     },
   };
 
@@ -103,9 +103,9 @@ export default function PremiumBidButton({
     if (pulseGlow && !disabled) {
       controls.start({
         boxShadow: [
-          '0 0 15px rgba(34,211,238,0.4)',
-          '0 0 25px rgba(34,211,238,0.6)',
-          '0 0 15px rgba(34,211,238,0.4)',
+          '0 0 15px rgba(88,210,10,0.4)',
+          '0 0 25px rgba(88,210,10,0.6)',
+          '0 0 15px rgba(88,210,10,0.4)',
         ],
         transition: { duration: 2, repeat: Infinity, ease: 'easeInOut' },
       });
@@ -124,7 +124,7 @@ export default function PremiumBidButton({
         relative group overflow-hidden rounded-2xl font-black text-sm sm:text-base
         uppercase tracking-wider transition-all duration-300 flex items-center justify-center gap-2.5
         ${style.base} ${style.hover} ${style.text} ${style.shadow} ${style.border}
-        ${pulseGlow ? 'ring-2 ring-offset-2 ring-offset-slate-950' : ''}
+        ${pulseGlow ? 'ring-2 ring-offset-2 ring-offset-darkBg' : ''}
         disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none
         ${isPressed ? 'scale-95' : 'hover:scale-[1.03] active:scale-97'}
       `}
@@ -172,10 +172,10 @@ export default function PremiumBidButton({
         className="absolute -inset-0.5 rounded-2xl opacity-0 group-hover:opacity-100 blur-xl -z-10"
         style={{
           background: variant === 'bid'
-            ? 'radial-gradient(circle, rgba(34,211,238,0.3) 0%, transparent 70%)'
+            ? 'radial-gradient(circle, rgba(88,210,10,0.3) 0%, transparent 70%)'
             : variant === 'out'
-              ? 'radial-gradient(circle, rgba(248,113,113,0.3) 0%, transparent 70%)'
-              : 'radial-gradient(circle, rgba(251,191,36,0.3) 0%, transparent 70%)',
+              ? 'radial-gradient(circle, rgba(176,0,18,0.3) 0%, transparent 70%)'
+              : 'radial-gradient(circle, rgba(244,197,66,0.3) 0%, transparent 70%)',
         }}
         animate={{ opacity: [0, 0.5, 0] }}
         transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}

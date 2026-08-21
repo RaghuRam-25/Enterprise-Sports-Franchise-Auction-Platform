@@ -8,27 +8,27 @@ import { getImageUrl } from '../../utils/imageUrl';
 import PlayerCardCard from '../../components/common/PlayerCardCard';
 
 const STATUS_STYLES = {
-  SOLD: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
-  ON_PODIUM: 'bg-blue-500/20 text-blue-400 border-blue-500/30 animate-pulse',
-  BANNED: 'bg-rose-500/20 text-rose-400 border-rose-500/30',
-  WITHDRAWN: 'bg-slate-700/50 text-slate-400 border-slate-600/30',
-  APPROVED: 'bg-teal-500/20 text-teal-400 border-teal-500/30',
-  REGISTERED: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
-  UNSOLD: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
+  SOLD: 'bg-neonGreen/20 text-neonGreen border-neonGreen/30',
+  ON_PODIUM: 'bg-neonGreen/20 text-neonGreen border-neonGreen/30 animate-pulse',
+  BANNED: 'bg-urgentRed/20 text-urgentRedText border-urgentRed/30',
+  WITHDRAWN: 'bg-surfaceHover/50 text-secondaryText border-borderStrong/30',
+  APPROVED: 'bg-neonGreen/20 text-neonGreen border-neonGreen/30',
+  REGISTERED: 'bg-warningGold/20 text-warningGold border-warningGold/30',
+  UNSOLD: 'bg-warningGold/20 text-warningGold border-warningGold/30',
 };
 
 const getCategoryRowStyle = (category) => {
   switch (category) {
     case 'Icon Category':
-      return 'bg-amber-950/20 hover:bg-amber-950/40 border-l-4 border-amber-500';
+      return 'bg-warningGold/20 hover:bg-warningGold/40 border-l-4 border-warningGold';
     case 'A Grade':
-      return 'bg-blue-950/20 hover:bg-blue-950/40 border-l-4 border-blue-500';
+      return 'bg-successGreen/20 hover:bg-successGreen/40 border-l-4 border-neonGreen';
     case 'B Grade':
-      return 'bg-teal-950/20 hover:bg-teal-950/40 border-l-4 border-teal-500';
+      return 'bg-successGreen/20 hover:bg-successGreen/40 border-l-4 border-neonGreen';
     case 'Emerging Youth':
-      return 'bg-purple-950/20 hover:bg-purple-950/40 border-l-4 border-purple-500';
+      return 'bg-warningGold/20 hover:bg-warningGold/40 border-l-4 border-warningGold';
     default:
-      return 'hover:bg-slate-800/30 border-l-4 border-slate-700';
+      return 'hover:bg-surfaceHover/30 border-l-4 border-borderStrong';
   }
 };
 
@@ -135,7 +135,7 @@ export default function AdminPlayers() {
     <div className="space-y-6">
 
       {/* ── HEADER (Admin / Manager / Podium view) ─────────────────────────────── */}
-      <div className="glass-card rounded-2xl p-6 border border-slate-800 flex items-center justify-between">
+      <div className="glass-card rounded-2xl p-6 border border-cardBorder flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-black font-heading text-white">Player List</h1>
         </div>
@@ -143,27 +143,27 @@ export default function AdminPlayers() {
       </div>
 
       {/* ── Search & Filters ─────────────────────────────────────────────────── */}
-      <div className="glass-card rounded-2xl p-4 border border-slate-800 space-y-3">
+      <div className="glass-card rounded-2xl p-4 border border-cardBorder space-y-3">
         <div className="flex items-center gap-3">
-          <Search className="w-4 h-4 text-slate-400 flex-shrink-0" />
+          <Search className="w-4 h-4 text-secondaryText flex-shrink-0" />
           <input
             type="text"
             placeholder="Search by player name or student ID..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="bg-transparent border-none outline-none text-xs text-white w-full placeholder-slate-500"
+            className="bg-transparent border-none outline-none text-xs text-white w-full placeholder-mutedText"
           />
           {search && (
-            <button onClick={() => setSearch('')} className="text-slate-500 hover:text-slate-300">
+            <button onClick={() => setSearch('')} className="text-mutedText hover:text-secondaryText">
               <X className="w-3.5 h-3.5" />
             </button>
           )}
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 pt-3 border-t border-slate-800">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 pt-3 border-t border-cardBorder">
           <select
             value={categoryFilter}
             onChange={e => setCategoryFilter(e.target.value)}
-            className="glass-input w-full px-3 py-1.5 rounded-lg text-[11px] text-slate-300"
+            className="glass-input w-full px-3 py-1.5 rounded-lg text-[11px] text-secondaryText"
           >
             <option value="ALL">All Categories</option>
             {categories.map(c => <option key={c.id || c._id} value={c.name}>{c.name}</option>)}
@@ -171,7 +171,7 @@ export default function AdminPlayers() {
           <select
             value={positionFilter}
             onChange={e => setPositionFilter(e.target.value)}
-            className="glass-input w-full px-3 py-1.5 rounded-lg text-[11px] text-slate-300"
+            className="glass-input w-full px-3 py-1.5 rounded-lg text-[11px] text-secondaryText"
           >
             <option value="ALL">All Positions</option>
             {positions.map(p => <option key={p.id || p._id} value={p.code}>{p.name} ({p.code})</option>)}
@@ -179,7 +179,7 @@ export default function AdminPlayers() {
           <select
             value={statusFilter}
             onChange={e => setStatusFilter(e.target.value)}
-            className="glass-input w-full px-3 py-1.5 rounded-lg text-[11px] text-slate-300"
+            className="glass-input w-full px-3 py-1.5 rounded-lg text-[11px] text-secondaryText"
           >
             <option value="ALL">All Statuses</option>
             {Object.keys(STATUS_STYLES).map(s => <option key={s} value={s}>{s}</option>)}
@@ -188,15 +188,15 @@ export default function AdminPlayers() {
       </div>
 
       {/* ── Players Card Grid ─────────────────────────────────────────────────────── */}
-      <div className="glass-card rounded-2xl p-6 border border-slate-800 space-y-4">
+      <div className="glass-card rounded-2xl p-6 border border-cardBorder space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-bold uppercase tracking-wider text-slate-300">
+          <h3 className="text-sm font-bold uppercase tracking-wider text-secondaryText">
             All Registered Players ({filtered.length})
           </h3>
         </div>
 
         {filtered.length === 0 ? (
-          <div className="py-16 text-center text-slate-500 font-medium">
+          <div className="py-16 text-center text-mutedText font-medium">
             No players found matching current filters.
           </div>
         ) : (
@@ -220,15 +220,15 @@ export default function AdminPlayers() {
       {/* ── Edit Player Modal (SUPER_ADMIN ONLY) ──────────────────────────────── */}
       {canManage && editingPlayer && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="glass-card w-full max-w-md rounded-2xl p-6 border border-slate-700 space-y-5 shadow-2xl max-h-[90vh] overflow-y-auto custom-scrollbar">
+          <div className="glass-card w-full max-w-md rounded-2xl p-6 border border-borderStrong space-y-5 shadow-2xl max-h-[90vh] overflow-y-auto custom-scrollbar">
             <div className="flex justify-between items-center">
               <div>
                 <h2 className="text-lg font-black text-white">Edit Player</h2>
-                <p className="text-xs text-slate-400">{editingPlayer.name} · {editingPlayer.studentId}</p>
+                <p className="text-xs text-secondaryText">{editingPlayer.name} · {editingPlayer.studentId}</p>
               </div>
               <button
                 onClick={() => setEditingPlayer(null)}
-                className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition"
+                className="p-2 text-secondaryText hover:text-white hover:bg-surfaceHover rounded-lg transition"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -236,7 +236,7 @@ export default function AdminPlayers() {
 
             <div className="space-y-3">
               <div>
-                <label className="block text-[11px] font-semibold text-slate-400 mb-1">Category</label>
+                <label className="block text-[11px] font-semibold text-secondaryText mb-1">Category</label>
                 <select
                   value={editForm.category || ''}
                   onChange={e => setEditForm(prev => ({ ...prev, category: e.target.value }))}
@@ -250,7 +250,7 @@ export default function AdminPlayers() {
               </div>
 
               <div>
-                <label className="block text-[11px] font-semibold text-slate-400 mb-1">Base Price (BDT)</label>
+                <label className="block text-[11px] font-semibold text-secondaryText mb-1">Base Price (BDT)</label>
                 <input
                   type="number"
                   value={editForm.basePrice || ''}
@@ -260,7 +260,7 @@ export default function AdminPlayers() {
               </div>
 
               <div>
-                <label className="block text-[11px] font-semibold text-slate-400 mb-1">Status</label>
+                <label className="block text-[11px] font-semibold text-secondaryText mb-1">Status</label>
                 <select
                   value={editForm.status || ''}
                   onChange={e => setEditForm(prev => ({ ...prev, status: e.target.value }))}
@@ -276,7 +276,7 @@ export default function AdminPlayers() {
             <div className="flex gap-3 pt-2">
               <button
                 onClick={() => setEditingPlayer(null)}
-                className="flex-1 py-2.5 border border-slate-700 text-slate-300 hover:bg-slate-800 rounded-xl text-xs font-semibold transition"
+                className="btn-secondary flex-1 py-2.5 text-xs"
               >
                 Cancel
               </button>
@@ -284,9 +284,9 @@ export default function AdminPlayers() {
                 id="save-player-edit"
                 onClick={handleSaveEdit}
                 disabled={saving}
-                className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-60 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition"
+                className="btn-primary flex-1 py-2.5 text-xs flex items-center justify-center gap-2"
               >
-                {saving ? <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+                {saving ? <span className="w-3.5 h-3.5 border-2 border-black border-t-transparent rounded-full animate-spin" /> : <Save className="w-3.5 h-3.5" />}
                 Save Changes
               </button>
             </div>

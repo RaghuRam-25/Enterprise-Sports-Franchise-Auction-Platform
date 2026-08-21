@@ -30,9 +30,9 @@ export default function FloatingParticles({ count = 30, theme = 'default', class
       case 'winner':
         return ['255,215,0', '255,215,0', '255,165,0'];
       case 'urgent':
-        return ['248,80,80', '252,103,103', '245,158,112'];
+        return ['248,80,80', '252,103,103', '244,197,662'];
       default:
-        return ['56,189,248', '96,165,250', '147,197,253'];
+        return ['88,210,10', '88,210,10', '114,242,26'];
     }
   }, [theme]);
 

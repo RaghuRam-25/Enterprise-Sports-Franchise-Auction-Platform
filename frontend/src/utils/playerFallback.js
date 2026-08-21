@@ -14,9 +14,9 @@
  * @returns {string} a data:image/svg+xml URI
  */
 const THEMES = {
-  slate: { a: '#0f172a', b: '#1e1b4b', ring: 'rgba(56,189,248,0.08)', jersey: '#4f46e5', num: '#e2e8f0' },
-  gold: { a: '#1c1000', b: '#2a1a00', ring: 'rgba(251,191,36,0.10)', jersey: '#d97706', num: '#ffe9b3' },
-  emerald: { a: '#022c22', b: '#064e3b', ring: 'rgba(52,211,153,0.10)', jersey: '#059669', num: '#d1fae5' },
+  slate: { a: '#0B0B0B', b: '#12200E', ring: 'rgba(88,210,10,0.08)', jersey: '#1A1A1A', num: '#F5F5F5' },
+  gold: { a: '#1c1000', b: '#2a1a00', ring: 'rgba(244,197,66,0.10)', jersey: '#3a2f10', num: '#F4C542' },
+  emerald: { a: '#050505', b: '#12200E', ring: 'rgba(88,210,10,0.10)', jersey: '#12200E', num: '#72F21A' },
 };
 
 import { getImageUrl } from './imageUrl.js';

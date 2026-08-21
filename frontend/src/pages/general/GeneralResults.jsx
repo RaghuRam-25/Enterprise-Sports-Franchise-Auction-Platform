@@ -90,45 +90,45 @@ export default function GeneralResults() {
     <div className="space-y-6">
       <div>
         <h1 className="flex items-center gap-2 text-xl font-black text-white">
-          <History className="w-5 h-5 text-emerald-400" /> Results
+          <History className="w-5 h-5 text-neonGreen" /> Results
         </h1>
-        <p className="text-xs text-slate-400 mt-1">Completed matches and final scores.</p>
+        <p className="text-xs text-secondaryText mt-1">Completed matches and final scores.</p>
       </div>
 
       {loading ? (
-        <div className="glass-card rounded-2xl p-10 border border-slate-800 text-center">
-          <span className="inline-block w-6 h-6 border-2 border-slate-700 border-t-emerald-400 rounded-full animate-spin" />
+        <div className="glass-card rounded-2xl p-10 border border-cardBorder text-center">
+          <span className="inline-block w-6 h-6 border-2 border-borderStrong border-t-neonGreen rounded-full animate-spin" />
         </div>
       ) : grouped.length === 0 ? (
-        <div className="glass-card rounded-2xl p-10 border border-slate-800 text-center space-y-2">
-          <CalendarDays className="w-8 h-8 mx-auto text-slate-600" />
-          <p className="text-sm font-bold text-slate-300">No results published yet</p>
-          <p className="text-xs text-slate-500">Check back after the first match day.</p>
+        <div className="glass-card rounded-2xl p-10 border border-cardBorder text-center space-y-2">
+          <CalendarDays className="w-8 h-8 mx-auto text-mutedText" />
+          <p className="text-sm font-bold text-secondaryText">No results published yet</p>
+          <p className="text-xs text-mutedText">Check back after the first match day.</p>
         </div>
       ) : (
         grouped.map(([dayLabelStr, dayMatches]) => (
-          <section key={dayLabelStr} className="glass-card rounded-2xl border border-slate-800 overflow-hidden">
-            <div className="px-5 py-3 bg-slate-900/80 border-b border-slate-800">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-300">{dayLabelStr}</h3>
+          <section key={dayLabelStr} className="glass-card rounded-2xl border border-cardBorder overflow-hidden">
+            <div className="px-5 py-3 bg-cardBg/80 border-b border-cardBorder">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-secondaryText">{dayLabelStr}</h3>
             </div>
-            <ul className="divide-y divide-slate-800/70">
+            <ul className="divide-y divide-cardBorder/70">
               {dayMatches.map(m => {
                 const sa = Number(m.scoreA) || 0;
                 const sb = Number(m.scoreB) || 0;
                 const aWon = sa > sb;
                 const bWon = sb > sa;
                 return (
-                  <li key={m._id || m.id} className="px-5 py-3.5 flex items-center justify-between gap-4 hover:bg-slate-800/30 transition">
+                  <li key={m._id || m.id} className="px-5 py-3.5 flex items-center justify-between gap-4 hover:bg-surfaceHover/30 transition">
                     <div className="flex-1 min-w-0 text-right sm:text-left sm:flex sm:items-center sm:justify-end sm:gap-3">
-                      <span className={`block sm:text-right text-xs font-bold truncate ${aWon ? 'text-white' : 'text-slate-400'}`}>
+                      <span className={`block sm:text-right text-xs font-bold truncate ${aWon ? 'text-white' : 'text-secondaryText'}`}>
                         {teamNameOf(m, 'a')}
                       </span>
                     </div>
-                    <span className={`font-mono font-black text-base px-3 py-1 rounded-lg border shrink-0 ${m.calculatedStatus === 'Finished' ? 'bg-slate-950 border-slate-700 text-emerald-400' : ''}`}>
+                    <span className={`font-mono font-black text-base px-3 py-1 rounded-lg border shrink-0 ${m.calculatedStatus === 'Finished' ? 'bg-darkBg border-borderStrong text-neonGreen' : ''}`}>
                       {sa} : {sb}
                     </span>
                     <div className="flex-1 min-w-0">
-                      <span className={`block text-xs font-bold truncate ${bWon ? 'text-white' : 'text-slate-400'}`}>
+                      <span className={`block text-xs font-bold truncate ${bWon ? 'text-white' : 'text-secondaryText'}`}>
                         {teamNameOf(m, 'b')}
                       </span>
                     </div>

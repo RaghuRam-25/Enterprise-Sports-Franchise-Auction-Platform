@@ -148,26 +148,26 @@ export default function PodiumVideoControl() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="glass-card rounded-2xl p-6 border border-slate-800">
+      <div className="glass-card rounded-2xl p-6 border border-cardBorder">
         <h1 className="text-2xl font-black font-heading text-white flex items-center gap-3">
-          <Video className="w-6 h-6 text-blue-400" />
+          <Video className="w-6 h-6 text-neonGreen" />
           Podium Video &amp; Player Intro Controls
         </h1>
       </div>
 
       {/* ── SECTION 1: VIDEO BROADCAST CONTROL ───────────────────────────── */}
-      <div className="glass-card rounded-2xl p-6 border border-slate-800 space-y-4">
-        <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+      <div className="glass-card rounded-2xl p-6 border border-cardBorder space-y-4">
+        <div className="flex items-center justify-between border-b border-cardBorder pb-3">
           <h3 className="text-sm font-black font-heading text-white uppercase tracking-wider flex items-center gap-2">
-            <Video className="w-4 h-4 text-emerald-400" />
+            <Video className="w-4 h-4 text-neonGreen" />
             Live Video Broadcast Control
           </h3>
           {activeVideoUrl ? (
-            <span className="px-3 py-1 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-mono font-bold rounded-full animate-pulse flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-emerald-400" /> BROADCASTING LIVE
+            <span className="px-3 py-1 bg-neonGreen/10 border border-neonGreen/30 text-neonGreen text-xs font-mono font-bold rounded-full animate-pulse flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-neonGreen" /> BROADCASTING LIVE
             </span>
           ) : (
-            <span className="px-3 py-1 bg-slate-900 text-slate-500 border border-slate-800 text-xs font-bold rounded-full">
+            <span className="px-3 py-1 bg-cardBg text-mutedText border border-cardBorder text-xs font-bold rounded-full">
               OFFLINE
             </span>
           )}
@@ -188,7 +188,7 @@ export default function PodiumVideoControl() {
             <button
               onClick={handlePlayVideo}
               disabled={!inputUrl.trim()}
-              className="flex-1 min-w-[120px] flex items-center justify-center gap-2 px-4 py-3 bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl transition disabled:opacity-40 shadow-lg"
+              className="btn-primary flex-1 min-w-[120px] flex items-center justify-center gap-2 px-4 py-3 text-xs uppercase tracking-wider rounded-xl shadow-lg disabled:opacity-40"
             >
               <Play className="w-4 h-4 fill-current" /> Play Everywhere
             </button>
@@ -197,13 +197,13 @@ export default function PodiumVideoControl() {
               <>
                 <button
                   onClick={handlePauseVideo}
-                  className="flex-1 min-w-[120px] flex items-center justify-center gap-2 px-4 py-3 bg-amber-600 hover:bg-amber-500 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl transition shadow-lg"
+                  className="btn-secondary flex-1 min-w-[120px] flex items-center justify-center gap-2 px-4 py-3 text-xs uppercase tracking-wider rounded-xl shadow-lg"
                 >
                   <Pause className="w-4 h-4 fill-current" /> Pause
                 </button>
                 <button
                   onClick={handleResumeVideo}
-                  className="flex-1 min-w-[120px] flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 hover:bg-blue-500 text-white font-black text-xs uppercase tracking-wider rounded-xl transition shadow-lg"
+                  className="btn-primary flex-1 min-w-[120px] flex items-center justify-center gap-2 px-4 py-3 text-xs uppercase tracking-wider rounded-xl shadow-lg"
                 >
                   <Play className="w-4 h-4 fill-current" /> Resume
                 </button>
@@ -213,7 +213,7 @@ export default function PodiumVideoControl() {
             <button
               onClick={handleStopVideo}
               disabled={!activeVideoUrl && !inputUrl.trim()}
-              className="flex-1 min-w-[120px] flex items-center justify-center gap-2 px-4 py-3 bg-rose-600 hover:bg-rose-500 text-white font-black text-xs uppercase tracking-wider rounded-xl transition disabled:opacity-40 shadow-lg"
+              className="btn-danger flex-1 min-w-[120px] flex items-center justify-center gap-2 px-4 py-3 text-xs uppercase tracking-wider rounded-xl shadow-lg disabled:opacity-40"
             >
               <StopCircle className="w-4 h-4" /> Stop Broadcast
             </button>
@@ -221,11 +221,11 @@ export default function PodiumVideoControl() {
         </div>
 
         {activeVideoUrl && (
-          <div className="p-3 bg-slate-900/80 rounded-xl border border-slate-800 text-xs flex items-center justify-between">
-            <span className="text-slate-400 font-mono truncate">Active URL: {activeVideoUrl}</span>
+          <div className="p-3 bg-cardBg/80 rounded-xl border border-cardBorder text-xs flex items-center justify-between">
+            <span className="text-secondaryText font-mono truncate">Active URL: {activeVideoUrl}</span>
             <button
               onClick={handleStopVideo}
-              className="text-rose-400 hover:text-rose-300 font-bold underline text-[11px] ml-2 flex-shrink-0"
+              className="text-urgentRedText hover:text-urgentRedText font-bold underline text-[11px] ml-2 flex-shrink-0"
             >
               Kill Feed
             </button>
@@ -234,33 +234,33 @@ export default function PodiumVideoControl() {
       </div>
 
       {/* ── SECTION 2: AUTOMATED PLAYER INTRO ANIMATION SEQUENCE ───────── */}
-      <div className="glass-card rounded-2xl p-6 border border-slate-800 space-y-4">
-        <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+      <div className="glass-card rounded-2xl p-6 border border-cardBorder space-y-4">
+        <div className="flex items-center justify-between border-b border-cardBorder pb-3">
           <h3 className="text-sm font-black font-heading text-white uppercase tracking-wider flex items-center gap-2">
-            <Film className="w-4 h-4 text-purple-400" />
+            <Film className="w-4 h-4 text-warningGold" />
             Automated Player Intro Sequence
           </h3>
           {introState.isPlaying ? (
             <span className={`px-3 py-1 border text-xs font-mono font-bold rounded-full flex items-center gap-1.5 ${
               introState.isPaused
-                ? 'bg-amber-500/10 border-amber-500/30 text-amber-400'
-                : 'bg-purple-500/10 border-purple-500/30 text-purple-400 animate-pulse'
+                ? 'bg-warningGold/10 border-warningGold/30 text-warningGold'
+                : 'bg-warningGold/10 border-warningGold/30 text-warningGold animate-pulse'
             }`}>
-              <span className={`w-2 h-2 rounded-full ${introState.isPaused ? 'bg-amber-400' : 'bg-purple-400'}`} />
+              <span className={`w-2 h-2 rounded-full ${introState.isPaused ? 'bg-warningGold' : 'bg-warningGold'}`} />
               {introState.isPaused ? 'INTRO PAUSED' : 'INTRO RUNNING'}
             </span>
           ) : (
-            <span className="px-3 py-1 bg-slate-900 text-slate-500 border border-slate-800 text-xs font-bold rounded-full">
+            <span className="px-3 py-1 bg-cardBg text-mutedText border border-cardBorder text-xs font-bold rounded-full">
               INTRO IDLE
             </span>
           )}
         </div>
 
         {/* Configuration Bar */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-950/60 p-4 rounded-xl border border-slate-800">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-darkBg/60 p-4 rounded-xl border border-cardBorder">
           <div>
-            <label className="block text-xs font-semibold text-slate-400 mb-1 flex items-center gap-1.5">
-              <Clock className="w-3.5 h-3.5 text-blue-400" /> Card Display Duration (seconds)
+            <label className="block text-xs font-semibold text-secondaryText mb-1 flex items-center gap-1.5">
+              <Clock className="w-3.5 h-3.5 text-neonGreen" /> Card Display Duration (seconds)
             </label>
             <input
               type="number"
@@ -273,14 +273,14 @@ export default function PodiumVideoControl() {
           </div>
 
           <div className="flex items-center justify-between sm:justify-start sm:gap-6 pt-2">
-            <label className="flex items-center gap-2 cursor-pointer text-xs text-slate-300 font-semibold">
+            <label className="flex items-center gap-2 cursor-pointer text-xs text-secondaryText font-semibold">
               <input
                 type="checkbox"
                 checked={repeatMode}
                 onChange={(e) => setRepeatMode(e.target.checked)}
-                className="w-4 h-4 accent-purple-600 rounded"
+                className="w-4 h-4 accent-warningGold rounded"
               />
-              <Repeat className="w-4 h-4 text-purple-400" />
+              <Repeat className="w-4 h-4 text-warningGold" />
               Repeat Playlist
             </label>
           </div>
@@ -291,21 +291,21 @@ export default function PodiumVideoControl() {
           {!introState.isPlaying ? (
             <button
               onClick={handleStartIntro}
-              className="flex-1 min-w-[140px] flex items-center justify-center gap-2 px-4 py-3 bg-purple-600 hover:bg-purple-500 text-white font-black text-xs uppercase tracking-wider rounded-xl transition shadow-lg"
+              className="btn-primary flex-1 min-w-[140px] flex items-center justify-center gap-2 px-4 py-3 text-xs uppercase tracking-wider rounded-xl shadow-lg"
             >
               <Play className="w-4 h-4 fill-current" /> Start Intro Sequence
             </button>
           ) : introState.isPaused ? (
             <button
               onClick={handleResumeIntro}
-              className="flex-1 min-w-[140px] flex items-center justify-center gap-2 px-4 py-3 bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl transition shadow-lg"
+              className="btn-primary flex-1 min-w-[140px] flex items-center justify-center gap-2 px-4 py-3 text-xs uppercase tracking-wider rounded-xl shadow-lg"
             >
               <Play className="w-4 h-4 fill-current" /> Resume Sequence
             </button>
           ) : (
             <button
               onClick={handlePauseIntro}
-              className="flex-1 min-w-[140px] flex items-center justify-center gap-2 px-4 py-3 bg-amber-600 hover:bg-amber-500 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl transition shadow-lg"
+              className="btn-secondary flex-1 min-w-[140px] flex items-center justify-center gap-2 px-4 py-3 text-xs uppercase tracking-wider rounded-xl shadow-lg"
             >
               <Pause className="w-4 h-4 fill-current" /> Pause Sequence
             </button>
@@ -314,7 +314,7 @@ export default function PodiumVideoControl() {
           <button
             onClick={handleSkipPrev}
             disabled={!introState.isPlaying}
-            className="flex items-center justify-center gap-1 px-3 py-3 bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 font-bold text-xs rounded-xl transition disabled:opacity-40"
+            className="btn-secondary flex items-center justify-center gap-1 px-3 py-3 text-xs rounded-xl disabled:opacity-40"
             title="Previous Player"
           >
             <SkipBack className="w-4 h-4" />
@@ -323,7 +323,7 @@ export default function PodiumVideoControl() {
           <button
             onClick={handleSkipNext}
             disabled={!introState.isPlaying}
-            className="flex items-center justify-center gap-1 px-3 py-3 bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 font-bold text-xs rounded-xl transition disabled:opacity-40"
+            className="btn-secondary flex items-center justify-center gap-1 px-3 py-3 text-xs rounded-xl disabled:opacity-40"
             title="Next Player"
           >
             <SkipForward className="w-4 h-4" />
@@ -332,7 +332,7 @@ export default function PodiumVideoControl() {
           <button
             onClick={handleRestartIntro}
             disabled={!introState.isPlaying}
-            className="flex items-center justify-center gap-1 px-3 py-3 bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 font-bold text-xs rounded-xl transition disabled:opacity-40"
+            className="btn-secondary flex items-center justify-center gap-1 px-3 py-3 text-xs rounded-xl disabled:opacity-40"
             title="Restart from First Player"
           >
             <RotateCcw className="w-4 h-4" />
@@ -341,7 +341,7 @@ export default function PodiumVideoControl() {
           <button
             onClick={handleStopIntro}
             disabled={!introState.isPlaying}
-            className="flex-1 min-w-[120px] flex items-center justify-center gap-2 px-4 py-3 bg-rose-600 hover:bg-rose-500 text-white font-black text-xs uppercase tracking-wider rounded-xl transition disabled:opacity-40 shadow-lg"
+            className="btn-danger flex-1 min-w-[120px] flex items-center justify-center gap-2 px-4 py-3 text-xs uppercase tracking-wider rounded-xl shadow-lg disabled:opacity-40"
           >
             <StopCircle className="w-4 h-4" /> Stop Intro
           </button>
@@ -349,27 +349,27 @@ export default function PodiumVideoControl() {
 
         {/* Current Active Intro Card Status */}
         {introState.isPlaying && currentIntroPlayer && (
-          <div className="p-4 bg-slate-900/90 rounded-2xl border border-purple-500/40 flex items-center justify-between shadow-xl">
+          <div className="p-4 bg-cardBg/90 rounded-2xl border border-warningGold/40 flex items-center justify-between shadow-xl">
             <div className="flex items-center gap-3">
               <img
                 src={getImageUrl(currentIntroPlayer.imageUrl, playerFallback('emerald'))}
                 alt={currentIntroPlayer.name}
-                className="w-12 h-12 rounded-xl object-cover border border-purple-400"
+                className="w-12 h-12 rounded-xl object-cover border border-warningGold"
               />
               <div>
-                <span className="text-[10px] font-mono text-purple-400 uppercase font-bold">
+                <span className="text-[10px] font-mono text-warningGold uppercase font-bold">
                   Player {introState.currentIndex + 1} of {introState.players.length}
                 </span>
                 <h4 className="font-black text-white text-base leading-tight">{currentIntroPlayer.name}</h4>
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-secondaryText">
                   {currentIntroPlayer.category || 'B Grade'} &bull; {currentIntroPlayer.primaryPosition || 'Player'}
                 </p>
               </div>
             </div>
 
             <div className="text-right">
-              <span className="text-[10px] text-slate-500 font-bold uppercase">Base Price</span>
-              <p className="font-mono font-black text-emerald-400 text-sm">
+              <span className="text-[10px] text-mutedText font-bold uppercase">Base Price</span>
+              <p className="font-mono font-black text-neonGreen text-sm">
                 ৳{(currentIntroPlayer.basePrice || 2000000).toLocaleString('en-IN')}
               </p>
             </div>

@@ -90,14 +90,14 @@ export default function GeneralDashboard() {
       label: 'Live Matches',
       value: loading ? '—' : liveMatches.length,
       icon: Radio,
-      accent: 'text-rose-400 bg-rose-500/10 border-rose-500/30',
+      accent: 'text-urgentRedText bg-urgentRed/10 border-urgentRed/30',
       to: '/general/matches',
     },
     {
       label: 'Active Tournament',
       value: PHASE_LABELS[phase] || 'Coming Soon',
       icon: Trophy,
-      accent: 'text-amber-400 bg-amber-500/10 border-amber-500/30',
+      accent: 'text-warningGold bg-warningGold/10 border-warningGold/30',
       to: '/general/tournaments',
       small: true,
     },
@@ -105,14 +105,14 @@ export default function GeneralDashboard() {
       label: 'Upcoming Matches',
       value: loading ? '—' : processed.filter(m => m.calculatedStatus === 'Upcoming').length,
       icon: CalendarClock,
-      accent: 'text-sky-400 bg-sky-500/10 border-sky-500/30',
+      accent: 'text-neonGreen bg-neonGreen/10 border-neonGreen/30',
       to: '/general/schedule',
     },
     {
       label: 'Recent Results',
       value: loading ? '—' : processed.filter(m => m.calculatedStatus === 'Finished').length,
       icon: History,
-      accent: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30',
+      accent: 'text-neonGreen bg-neonGreen/10 border-neonGreen/30',
       to: '/general/results',
     },
   ];
@@ -120,14 +120,14 @@ export default function GeneralDashboard() {
   return (
     <div className="space-y-6">
       {/* ── Welcome Area ─────────────────────────────────────────────── */}
-      <div className="relative overflow-hidden rounded-2xl border border-slate-800 bg-gradient-to-r from-sky-950/60 via-slate-900 to-slate-950 p-6 sm:p-8">
-        <div className="absolute -top-16 -right-16 w-64 h-64 rounded-full bg-sky-500/10 blur-3xl pointer-events-none" />
+      <div className="relative overflow-hidden rounded-2xl border border-cardBorder bg-gradient-to-r from-successGreen/60 via-cardBg to-darkBg p-6 sm:p-8">
+        <div className="absolute -top-16 -right-16 w-64 h-64 rounded-full bg-neonGreen/10 blur-3xl pointer-events-none" />
         <div className="relative space-y-2">
-          <p className="flex items-center gap-1.5 text-[11px] font-mono font-bold uppercase tracking-widest text-sky-400">
+          <p className="flex items-center gap-1.5 text-[11px] font-mono font-bold uppercase tracking-widest text-neonGreen">
             <Sparkles className="w-3.5 h-3.5" /> Fan Zone
           </p>
           <h1 className="text-2xl sm:text-3xl font-black text-white">Welcome back, {firstName}</h1>
-          <p className="text-xs sm:text-sm text-slate-400 max-w-2xl leading-relaxed">
+          <p className="text-xs sm:text-sm text-secondaryText max-w-2xl leading-relaxed">
             Follow the latest tournament action — live auctions, matches, standings, and team rosters, all updated in real time.
           </p>
         </div>
@@ -135,7 +135,7 @@ export default function GeneralDashboard() {
 
       {/* ── Quick Overview ───────────────────────────────────────────── */}
       <section className="space-y-3">
-        <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400">Quick Overview</h2>
+        <h2 className="text-xs font-bold uppercase tracking-wider text-secondaryText">Quick Overview</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
           {overviewCards.map(card => {
             const Icon = card.icon;
@@ -143,10 +143,10 @@ export default function GeneralDashboard() {
               <Link
                 key={card.label}
                 to={card.to}
-                className="glass-card glass-card-hover rounded-2xl p-5 border border-slate-800 flex items-start justify-between gap-3 group"
+                className="glass-card glass-card-hover rounded-2xl p-5 border border-borderStrong flex items-start justify-between gap-3 group"
               >
                 <div className="min-w-0">
-                  <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">{card.label}</p>
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-mutedText">{card.label}</p>
                   <p className={`mt-1.5 font-black text-white truncate ${card.small ? 'text-sm' : 'text-2xl'}`}>
                     {card.value}
                   </p>
@@ -163,30 +163,30 @@ export default function GeneralDashboard() {
       {/* ── Upcoming + Recent row ────────────────────────────────────── */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         {/* Upcoming Matches */}
-        <section className="glass-card rounded-2xl p-5 border border-slate-800 space-y-4">
+        <section className="glass-card rounded-2xl p-5 border border-cardBorder space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-300">
-              <CalendarClock className="w-4 h-4 text-sky-400" /> Upcoming Matches
+            <h3 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-secondaryText">
+              <CalendarClock className="w-4 h-4 text-neonGreen" /> Upcoming Matches
             </h3>
-            <Link to="/general/schedule" className="flex items-center gap-1 text-[11px] font-bold text-sky-400 hover:text-sky-300">
+            <Link to="/general/schedule" className="flex items-center gap-1 text-[11px] font-bold text-neonGreen hover:text-neonGreenHover">
               Schedule <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
           {upcoming.length === 0 ? (
-            <p className="text-xs text-slate-500 py-6 text-center">No upcoming matches scheduled yet.</p>
+            <p className="text-xs text-mutedText py-6 text-center">No upcoming matches scheduled yet.</p>
           ) : (
-            <ul className="divide-y divide-slate-800/70">
+            <ul className="divide-y divide-cardBorder/70">
               {upcoming.map(m => (
                 <li key={m._id || m.id} className="py-2.5 flex items-center justify-between gap-3">
                   <div className="min-w-0 text-xs">
-                    <p className="font-bold text-slate-200 truncate">
-                      {teamNameOf(m, 'a')} <span className="text-slate-500 font-medium">vs</span> {teamNameOf(m, 'b')}
+                    <p className="font-bold text-primaryText truncate">
+                      {teamNameOf(m, 'a')} <span className="text-mutedText font-medium">vs</span> {teamNameOf(m, 'b')}
                     </p>
-                    <p className="text-[11px] text-slate-500 mt-0.5">
+                    <p className="text-[11px] text-mutedText mt-0.5">
                       {m.matchDate || 'TBD'}{m.matchTime ? ` · ${m.matchTime}` : ''}
                     </p>
                   </div>
-                  <Volleyball className="w-4 h-4 text-slate-600 shrink-0" />
+                  <Volleyball className="w-4 h-4 text-mutedText shrink-0" />
                 </li>
               ))}
             </ul>
@@ -194,28 +194,28 @@ export default function GeneralDashboard() {
         </section>
 
         {/* Recent Results */}
-        <section className="glass-card rounded-2xl p-5 border border-slate-800 space-y-4">
+        <section className="glass-card rounded-2xl p-5 border border-cardBorder space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-300">
-              <History className="w-4 h-4 text-emerald-400" /> Recent Results
+            <h3 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-secondaryText">
+              <History className="w-4 h-4 text-neonGreen" /> Recent Results
             </h3>
-            <Link to="/general/results" className="flex items-center gap-1 text-[11px] font-bold text-emerald-400 hover:text-emerald-300">
+            <Link to="/general/results" className="flex items-center gap-1 text-[11px] font-bold text-neonGreen hover:text-neonGreenHover">
               All results <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
           {recentResults.length === 0 ? (
-            <p className="text-xs text-slate-500 py-6 text-center">No results published yet.</p>
+            <p className="text-xs text-mutedText py-6 text-center">No results published yet.</p>
           ) : (
-            <ul className="divide-y divide-slate-800/70">
+            <ul className="divide-y divide-cardBorder/70">
               {recentResults.map(m => (
                 <li key={m._id || m.id} className="py-2.5 flex items-center justify-between gap-3">
                   <div className="min-w-0 text-xs">
-                    <p className="font-bold text-slate-200 truncate">
-                      {teamNameOf(m, 'a')} <span className="text-slate-500 font-medium">vs</span> {teamNameOf(m, 'b')}
+                    <p className="font-bold text-primaryText truncate">
+                      {teamNameOf(m, 'a')} <span className="text-mutedText font-medium">vs</span> {teamNameOf(m, 'b')}
                     </p>
-                    <p className="text-[11px] text-slate-500 mt-0.5">{m.matchDate || ''}</p>
+                    <p className="text-[11px] text-mutedText mt-0.5">{m.matchDate || ''}</p>
                   </div>
-                  <span className="font-mono font-black text-sm text-emerald-400 shrink-0">
+                  <span className="font-mono font-black text-sm text-neonGreen shrink-0">
                     {m.scoreA ?? 0} : {m.scoreB ?? 0}
                   </span>
                 </li>

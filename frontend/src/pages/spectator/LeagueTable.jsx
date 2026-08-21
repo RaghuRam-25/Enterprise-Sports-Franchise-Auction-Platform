@@ -65,7 +65,7 @@ function TeamCrest({ team, size = 'md' }) {
     <div
       className={`relative flex-shrink-0 flex items-center justify-center font-black overflow-hidden border shadow-md ${dims} ${avatarConfig.borderColor}`}
       style={customColors
-        ? { backgroundImage: `linear-gradient(135deg, ${teamRef.primaryColor || '#3b82f6'}, ${teamRef.secondaryColor || '#0f172a'})` }
+        ? { backgroundImage: `linear-gradient(135deg, ${teamRef.primaryColor || '#58D20A'}, ${teamRef.secondaryColor || '#050505'})` }
         : undefined}
     >
       {showImg ? (
@@ -153,7 +153,7 @@ export default function LeagueTable() {
   const maxPoints = standings[0]?.pts || 0;
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#0b0f19] text-slate-100 font-sans selection:bg-blue-500 selection:text-white">
+    <div className="min-h-screen flex flex-col bg-[#0b0f19] text-primaryText font-sans selection:bg-neonGreen selection:text-darkBg">
       {!user && <Navbar />}
 
       <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 space-y-4">
@@ -168,68 +168,64 @@ export default function LeagueTable() {
         {/* Standings Card */}
         <section className="glass-card rounded-3xl overflow-hidden ui-fade-up shadow-lg shadow-black/30">
           {/* Card header — slim bar instead of a big hero */}
-          <div className="flex items-center justify-between gap-3 px-4 sm:px-6 py-3.5 border-b border-slate-800/80">
+          <div className="flex items-center justify-between gap-3 px-4 sm:px-6 py-3.5 border-b border-cardBorder/80">
             <div className="flex items-center gap-2.5 min-w-0">
-              <div className="p-2 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 shrink-0">
+              <div className="p-2 rounded-xl bg-warningGold/10 border border-warningGold/20 text-warningGold shrink-0">
                 <Trophy className="w-4 h-4" />
               </div>
               <div className="min-w-0">
                 <h1 className="font-heading font-black text-lg tracking-wide text-white leading-tight">League Table</h1>
-                <p className="text-[10px] text-slate-500 truncate">{competitionName} &bull; {sessionName}</p>
+                <p className="text-[10px] text-mutedText truncate">{competitionName} &bull; {sessionName}</p>
               </div>
             </div>
             <div className="flex items-center gap-2 shrink-0">
               {manualRows && (
-                <span className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30">Manual</span>
+                <span className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-warningGold/15 text-warningGold border border-warningGold/30">Manual</span>
               )}
-              <span className="hidden sm:inline text-[10px] font-bold uppercase tracking-widest text-slate-500">{teams.length} Franchises</span>
-              <button
-                type="button"
-                onClick={fetchMatches}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-800 bg-slate-950/50 text-[11px] font-bold text-slate-400 hover:text-white hover:border-slate-600 transition"
-              >
-                <RefreshCw className="w-3.5 h-3.5" /> Refresh
-              </button>
+              <span className="hidden sm:inline text-[10px] font-bold uppercase tracking-widest text-mutedText">{teams.length} Franchises</span>
+              <button onClick={fetchMatches} className="btn-secondary p-2.5 rounded-xl transition shrink-0" title="Refresh Table">
+              <RefreshCw className="w-4 h-4" />
+            </button>
             </div>
           </div>
 
           {loading ? (
             <div className="space-y-3 p-5">
               {[0, 1, 2, 3, 4].map(i => (
-                <div key={i} className="h-12 rounded-xl bg-slate-800/40 animate-pulse" />
+                <div key={i} className="h-12 rounded-xl bg-surfaceHover/40 animate-pulse" />
               ))}
             </div>
           ) : error ? (
-            <p className="text-xs text-rose-400 bg-rose-500/10 border border-rose-500/30 rounded-2xl p-6 text-center my-5 mx-5">
+            <p className="text-xs text-urgentRedText bg-urgentRed/10 border border-urgentRed/30 rounded-2xl p-6 text-center my-5 mx-5">
               {error}
             </p>
           ) : standings.length === 0 ? (
-            <p className="text-xs text-slate-500 bg-slate-950/50 border border-dashed border-slate-700 rounded-2xl p-8 text-center my-5 mx-5">
+            <p className="text-xs text-mutedText bg-darkBg/50 border border-dashed border-borderStrong rounded-2xl p-8 text-center my-5 mx-5">
               Standings appear once the tournament phase begins and matches are finished.
             </p>
           ) : (
             <div className="overflow-x-auto custom-scrollbar">
               <table className="w-full min-w-[880px] text-sm border-collapse">
                 <thead>
-                  <tr className="text-[10px] font-black uppercase tracking-wider bg-slate-950/60">
-                    <th className="text-left py-3 pl-4 sm:pl-6 pr-2 text-slate-500">#</th>
-                    <th className="text-left py-3 pr-2 text-slate-500">Team</th>
-                    <th className="text-center py-3 px-2 text-slate-400">Played</th>
-                    <th className="text-center py-3 px-2 text-emerald-400">Won</th>
-                    <th className="text-center py-3 px-2 text-sky-400">Drawn</th>
-                    <th className="text-center py-3 px-2 text-rose-400">Lost</th>
-                    <th className="text-center py-3 px-2 text-slate-400">Goals For</th>
-                    <th className="text-center py-3 px-2 text-slate-400">Goals Against</th>
-                    <th className="text-center py-3 pl-2 pr-4 sm:pr-6 text-amber-400">Points</th>
+                  <tr className="text-[10px] font-black uppercase tracking-wider bg-darkBg/60">
+                    <th className="text-left py-3 pl-4 sm:pl-6 pr-2 text-mutedText">#</th>
+                    <th className="text-left py-3 pr-2 text-mutedText">Team</th>
+                    <th className="text-center py-3 px-2 text-secondaryText">Played</th>
+                    <th className="text-center py-3 px-2 text-neonGreen">Won</th>
+                    <th className="text-center py-3 px-2 text-neonGreen">Drawn</th>
+                    <th className="text-center py-3 px-2 text-urgentRedText">Lost</th>
+                    <th className="text-center py-3 px-2 text-secondaryText">Goals For</th>
+                    <th className="text-center py-3 px-2 text-secondaryText">Goals Against</th>
+                    <th className="text-center py-3 pl-2 pr-4 sm:pr-6 text-warningGold">Points</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/50">
+                <tbody className="divide-y divide-cardBorder/50">
                   {standings.map((row, idx) => {
-                    const posClass = idx === 0 ? 'text-emerald-400' : idx === 1 ? 'text-sky-400' : idx === 2 ? 'text-amber-400' : 'text-slate-500';
-                    const promotionTint = idx <= 2 ? 'bg-blue-500/[0.04]' : '';
+                    const posClass = idx === 0 ? 'text-neonGreen' : idx === 1 ? 'text-neonGreen' : idx === 2 ? 'text-warningGold' : 'text-mutedText';
+                    const promotionTint = idx <= 2 ? 'bg-neonGreen/[0.04]' : '';
                     const pct = maxPoints > 0 ? (row.pts / maxPoints) * 100 : 0;
                     return (
-                      <tr key={row.team._id || row.team.id || idx} className={`hover:bg-slate-800/30 transition ${promotionTint}`}>
+                      <tr key={row.team._id || row.team.id || idx} className={`hover:bg-surfaceHover/30 transition ${promotionTint}`}>
                         <td className="py-3 pl-4 sm:pl-6 pr-2">
                           <span className={`inline-flex w-7 h-7 items-center justify-center rounded-lg font-mono font-black text-sm ${posClass}`}>
                             {idx + 1}
@@ -239,20 +235,20 @@ export default function LeagueTable() {
                           <div className="flex items-center gap-2.5 min-w-0">
                             <TeamCrest team={row.team} size="xs" />
                             <span className="font-bold text-white truncate">{row.team.name}</span>
-                            <span className="font-mono text-[9px] text-slate-500 hidden sm:inline">{row.team.shortCode || row.team.code}</span>
+                            <span className="font-mono text-[9px] text-mutedText hidden sm:inline">{row.team.shortCode || row.team.code}</span>
                           </div>
                         </td>
-                        <td className="text-center py-3 px-2 font-mono font-bold text-base text-slate-300">{row.mp}</td>
-                        <td className="text-center py-3 px-2 font-mono font-bold text-base text-emerald-400">{row.w}</td>
-                        <td className="text-center py-3 px-2 font-mono font-bold text-base text-slate-300">{row.d}</td>
-                        <td className="text-center py-3 px-2 font-mono font-bold text-base text-rose-400">{row.l}</td>
-                        <td className="text-center py-3 px-2 font-mono font-bold text-base text-slate-300">{row.gf}</td>
-                        <td className="text-center py-3 px-2 font-mono font-bold text-base text-slate-300">{row.ga}</td>
+                        <td className="text-center py-3 px-2 font-mono font-bold text-base text-secondaryText">{row.mp}</td>
+                        <td className="text-center py-3 px-2 font-mono font-bold text-base text-neonGreen">{row.w}</td>
+                        <td className="text-center py-3 px-2 font-mono font-bold text-base text-secondaryText">{row.d}</td>
+                        <td className="text-center py-3 px-2 font-mono font-bold text-base text-urgentRedText">{row.l}</td>
+                        <td className="text-center py-3 px-2 font-mono font-bold text-base text-secondaryText">{row.gf}</td>
+                        <td className="text-center py-3 px-2 font-mono font-bold text-base text-secondaryText">{row.ga}</td>
                         <td className="py-3 pl-2 pr-4 sm:pr-6">
                           <div className="inline-flex flex-col items-center gap-1">
                             <span className="font-mono font-black text-white text-lg leading-none">{row.pts}</span>
-                            <span className="block w-14 h-1 rounded-full bg-slate-800 overflow-hidden">
-                              <span className="block h-full bg-gradient-to-r from-amber-500 to-orange-500 rounded-full" style={{ width: `${pct}%` }} />
+                            <span className="block w-14 h-1 rounded-full bg-surfaceHover overflow-hidden">
+                              <span className="block h-full bg-gradient-to-r from-warningGold to-warningGold rounded-full" style={{ width: `${pct}%` }} />
                             </span>
                           </div>
                         </td>
@@ -266,10 +262,10 @@ export default function LeagueTable() {
         </section>
 
         {/* Legend */}
-        <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest pb-2">
-          <span className="flex items-center gap-1.5"><ArrowUp className="w-3 h-3 text-emerald-400" /> Points = 3 win / 1 draw</span>
-          <span className="flex items-center gap-1.5"><Shield className="w-3 h-3 text-sky-400" /> Top 3 shaded</span>
-          {maxPoints > 0 && <span className="flex items-center gap-1.5"><Trophy className="w-3 h-3 text-amber-400" /> Max {maxPoints} pts</span>}
+        <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[10px] font-bold text-mutedText uppercase tracking-widest pb-2">
+          <span className="flex items-center gap-1.5"><ArrowUp className="w-3 h-3 text-neonGreen" /> Points = 3 win / 1 draw</span>
+          <span className="flex items-center gap-1.5"><Shield className="w-3 h-3 text-neonGreen" /> Top 3 shaded</span>
+          {maxPoints > 0 && <span className="flex items-center gap-1.5"><Trophy className="w-3 h-3 text-warningGold" /> Max {maxPoints} pts</span>}
         </div>
       </main>
     </div>

@@ -12,15 +12,15 @@ import { playerFallback } from '../../utils/playerFallback';
 const getCategoryStyles = (category) => {
   switch (category) {
     case 'Icon Category':
-      return 'bg-amber-950/50 border-amber-700/50';
+      return 'bg-warningGold/50 border-warningGold/50';
     case 'A Grade':
-      return 'bg-blue-950/50 border-blue-800/60';
+      return 'bg-successGreen/50 border-successGreen/60';
     case 'B Grade':
-      return 'bg-teal-950/50 border-teal-800/50';
+      return 'bg-successGreen/50 border-successGreen/50';
     case 'Emerging Youth':
-      return 'bg-purple-950/50 border-purple-800/50';
+      return 'bg-warningGold/50 border-warningGold/50';
     default:
-      return 'bg-slate-900/60 border-slate-800';
+      return 'bg-cardBg/60 border-cardBorder';
   }
 };
 
@@ -68,8 +68,8 @@ export default function AdminTeams() {
   const [budget, setBudget] = useState(eventConfig?.defaultTeamBudget?.toString() || '100000000');
   const [selectedExistingManagerId, setSelectedExistingManagerId] = useState('');
   const [creating, setCreating] = useState(false);
-  const [primaryColor, setPrimaryColor] = useState('#3b82f6');
-  const [secondaryColor, setSecondaryColor] = useState('#0f172a');
+  const [primaryColor, setPrimaryColor] = useState('#58D20A');
+  const [secondaryColor, setSecondaryColor] = useState('#050505');
   const [icon, setIcon] = useState('Shield');
   const [iconMenuOpen, setIconMenuOpen] = useState(false);
   const [editIconMenuOpen, setEditIconMenuOpen] = useState(false);
@@ -178,7 +178,7 @@ export default function AdminTeams() {
 
       // Reset form
       setName(''); setCode(''); setBudget(eventConfig?.defaultTeamBudget?.toString() || '100000000'); setSelectedExistingManagerId('');
-      setPrimaryColor('#3b82f6'); setSecondaryColor('#0f172a'); setIcon('Shield');
+      setPrimaryColor('#58D20A'); setSecondaryColor('#050505'); setIcon('Shield');
       triggerToast(`Franchise "${name}" created successfully!`, 'success');
 
     } catch (err) {
@@ -228,8 +228,8 @@ export default function AdminTeams() {
       shortCode: team.shortCode || team.code || '',
       totalBudget: team.totalBudget || 0,
       managerId: team.managerId || '',
-      primaryColor: (team.primaryColor || '#3b82f6').toLowerCase(),
-      secondaryColor: (team.secondaryColor || '#0f172a').toLowerCase(),
+      primaryColor: (team.primaryColor || '#58D20A').toLowerCase(),
+      secondaryColor: (team.secondaryColor || '#050505').toLowerCase(),
       icon: team.icon || 'Shield',
     });
   };
@@ -306,22 +306,22 @@ export default function AdminTeams() {
   };
 
   return (
-    <div className={!user ? "min-h-screen flex flex-col bg-darkBg text-slate-100" : ""}>
+    <div className={!user ? "min-h-screen flex flex-col bg-darkBg text-primaryText" : ""}>
       {!user && <Navbar />}
       <main className={`space-y-6 ${!user ? 'max-w-5xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8' : ''}`}>
 
         {!isSuperAdmin && (
-          <div className="mb-6 border-b border-gray-700 pb-3">
+          <div className="mb-6 border-b border-borderStrong pb-3">
             <h1 className="text-2xl font-bold text-white">All Teams</h1>
           </div>
         )}
 
         {isSuperAdmin && !isSetupPhase && (
-          <div className="p-4 bg-rose-500/10 border border-rose-500/30 rounded-2xl flex items-center gap-3 text-rose-300 text-xs font-semibold">
-            <Lock className="w-5 h-5 flex-shrink-0 text-rose-400" />
+          <div className="p-4 bg-urgentRed/10 border border-urgentRed/30 rounded-2xl flex items-center gap-3 text-urgentRedText text-xs font-semibold">
+            <Lock className="w-5 h-5 flex-shrink-0 text-urgentRedText" />
             <div>
               <p className="font-bold">Franchise Creation Locked</p>
-              <p className="text-[11px] text-rose-400/80 font-normal">
+              <p className="text-[11px] text-urgentRedText/80 font-normal">
                 Teams can only be created or have their budget changed during the SETUP phase. Current phase: {eventPhase}.
               </p>
             </div>
@@ -329,9 +329,9 @@ export default function AdminTeams() {
         )}
 
         {isSuperAdmin && isSetupPhase && (
-          <div className="glass-card relative z-30 rounded-2xl p-6 border border-slate-800 space-y-4">
+          <div className="glass-card relative z-30 rounded-2xl p-6 border border-cardBorder space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <h3 className="text-sm font-bold uppercase tracking-wider text-slate-300">Create New Franchise</h3>
+              <h3 className="text-sm font-bold uppercase tracking-wider text-secondaryText">Create New Franchise</h3>
             </div>
 
             <form onSubmit={handleCreateFranchise} className="flex items-end gap-3">
@@ -339,7 +339,7 @@ export default function AdminTeams() {
                 <input type="text" placeholder="Short Code (e.g. DHD)*" maxLength={4} value={code} onChange={e => setCode(e.target.value.toUpperCase())} className="glass-input rounded-lg px-3 py-2 text-xs font-mono uppercase w-48" required disabled={!isSetupPhase} />
                 <input type="number" min="1" placeholder="Total Budget (BDT)*" value={budget} onChange={e => setBudget(e.target.value)} className="glass-input rounded-lg px-3 py-2 text-xs w-36" required disabled={!isSetupPhase} />
                 <div className="w-full sm:w-60">
-                  <label className="block text-[11px] font-semibold text-slate-400 mb-1">Assign Manager (Optional)</label>
+                  <label className="block text-[11px] font-semibold text-secondaryText mb-1">Assign Manager (Optional)</label>
                   <select
                     value={selectedExistingManagerId}
                     onChange={e => setSelectedExistingManagerId(e.target.value)}
@@ -355,48 +355,48 @@ export default function AdminTeams() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-400 mb-1">Primary</label>
+                  <label className="block text-[11px] font-semibold text-secondaryText mb-1">Primary</label>
                   <input
                     type="color"
                     value={primaryColor}
                     onChange={e => setPrimaryColor(e.target.value)}
-                    className="w-14 h-[34px] rounded-lg cursor-pointer bg-transparent border border-slate-700 p-0.5"
+                    className="w-14 h-[34px] rounded-lg cursor-pointer bg-transparent border border-borderStrong p-0.5"
                     title={`Primary: ${primaryColor.toUpperCase()}`}
                     disabled={!isSetupPhase}
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-400 mb-1">Secondary</label>
+                  <label className="block text-[11px] font-semibold text-secondaryText mb-1">Secondary</label>
                   <input
                     type="color"
                     value={secondaryColor}
                     onChange={e => setSecondaryColor(e.target.value)}
-                    className="w-14 h-[34px] rounded-lg cursor-pointer bg-transparent border border-slate-700 p-0.5"
+                    className="w-14 h-[34px] rounded-lg cursor-pointer bg-transparent border border-borderStrong p-0.5"
                     title={`Secondary: ${secondaryColor.toUpperCase()}`}
                     disabled={!isSetupPhase}
                   />
                 </div>
                 <div className="relative">
-                  <label className="block text-[11px] font-semibold text-slate-400 mb-1">Icon</label>
+                  <label className="block text-[11px] font-semibold text-secondaryText mb-1">Icon</label>
                   <button
                     type="button"
                     onClick={() => setIconMenuOpen(prev => !prev)}
                     disabled={!isSetupPhase}
-                    className="h-[34px] flex items-center gap-1.5 bg-slate-900/60 border border-slate-800 hover:border-slate-600 rounded-lg px-2.5 transition disabled:opacity-60"
+                    className="h-[34px] flex items-center gap-1.5 bg-cardBg/60 border border-cardBorder hover:border-borderStrong rounded-lg px-2.5 transition disabled:opacity-60"
                     title={`Icon: ${icon}`}
                   >
                     {(() => {
                       const Selected = (TEAM_ICON_OPTIONS.find(o => o.name === icon) || TEAM_ICON_OPTIONS[0]).Icon;
                       return <Selected className="w-4 h-4 text-white" />;
                     })()}
-                    <span className="text-xs text-slate-300 font-semibold">{icon}</span>
+                    <span className="text-xs text-secondaryText font-semibold">{icon}</span>
                   </button>
                   {iconMenuOpen && (
                     <>
                       <div className="fixed inset-0 z-20" onClick={() => setIconMenuOpen(false)} />
-                      <div className="absolute z-30 top-full mt-1 left-0 bg-slate-950 border border-slate-700 rounded-xl p-2 shadow-2xl flex flex-col gap-1">
+                      <div className="absolute z-30 top-full mt-1 left-0 bg-darkBg border border-borderStrong rounded-xl p-2 shadow-2xl flex flex-col gap-1">
                         {availableIcons.length === 0 && (
-                          <span className="text-[11px] text-slate-500 px-1 py-1 whitespace-nowrap">All icons are already in use</span>
+                          <span className="text-[11px] text-mutedText px-1 py-1 whitespace-nowrap">All icons are already in use</span>
                         )}
                         {availableIcons.map(({ name: iconName, Icon }) => (
                           <button
@@ -404,7 +404,7 @@ export default function AdminTeams() {
                             type="button"
                             onClick={() => { setIcon(iconName); setIconMenuOpen(false); }}
                             title={iconName}
-                            className={`w-8 h-8 rounded-md flex items-center justify-center transition ${icon === iconName ? 'bg-blue-600 text-white shadow-md' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}
+                            className={`w-8 h-8 rounded-md flex items-center justify-center transition ${icon === iconName ? 'bg-successGreen text-darkBg shadow-md' : 'text-secondaryText hover:text-white hover:bg-surfaceHover'}`}
                           >
                             <Icon className="w-4 h-4" />
                           </button>
@@ -413,7 +413,7 @@ export default function AdminTeams() {
                     </>
                   )}
                 </div>
-                <button type="submit" id="create-team-btn" disabled={creating || !isSetupPhase} className="px-4 h-[34px] bg-blue-600 hover:bg-blue-500 disabled:opacity-60 text-white font-bold text-xs rounded-lg flex items-center justify-center gap-1 shadow-md transition">
+                <button type="submit" id="create-team-btn" disabled={creating || !isSetupPhase} className="btn-primary h-[36px] px-5 text-xs shadow-lg flex items-center justify-center gap-1.5 disabled:opacity-50">
                   <Plus className="w-4 h-4" />
                   {creating ? 'Creating...' : 'Create Franchise'}
                 </button>
@@ -422,20 +422,20 @@ export default function AdminTeams() {
         )}
 
         {isSuperAdmin && selectedManager && (
-          <div className="bg-emerald-950/90 border border-emerald-500/40 rounded-2xl p-5 space-y-3">
-            <div className="flex justify-between items-center text-emerald-300 font-bold text-xs">
+          <div className="bg-successGreen/90 border border-neonGreen/40 rounded-2xl p-5 space-y-3">
+            <div className="flex justify-between items-center text-neonGreenHover font-bold text-xs">
               <span className="flex items-center gap-1.5"><CheckCircle className="w-4 h-4" /> Credentials Created</span>
-              <button onClick={() => setSelectedManager(null)} className="text-xs text-slate-400 hover:text-white">Dismiss</button>
+              <button onClick={() => setSelectedManager(null)} className="text-xs text-secondaryText hover:text-white">Dismiss</button>
             </div>
-            <div className="bg-slate-950 p-4 rounded-xl font-mono text-xs text-slate-200 flex items-center justify-between">
+            <div className="bg-darkBg p-4 rounded-xl font-mono text-xs text-primaryText flex items-center justify-between">
               <div>
-                <p><strong className="text-slate-400">Account Name:</strong> {selectedManager.name}</p>
-                <p><strong className="text-slate-400">Username/Email:</strong> {selectedManager.email || selectedManager.username}</p>
-                <p><strong className="text-emerald-400">Generated Password:</strong> {tempPass}</p>
+                <p><strong className="text-secondaryText">Account Name:</strong> {selectedManager.name}</p>
+                <p><strong className="text-secondaryText">Username/Email:</strong> {selectedManager.email || selectedManager.username}</p>
+                <p><strong className="text-neonGreen">Generated Password:</strong> {tempPass}</p>
               </div>
               <button
                 onClick={() => copyCredentials(`Username: ${selectedManager.email || selectedManager.username}\nPassword: ${tempPass}`)}
-                className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-bold flex items-center gap-1"
+                className="px-3 py-1.5 bg-successGreen hover:bg-neonGreen text-darkBg rounded-lg font-bold flex items-center gap-1"
               >
                 <Copy className="w-3.5 h-3.5" /> Copy
               </button>
@@ -481,52 +481,52 @@ export default function AdminTeams() {
                     </div>
 
                     {isSuperAdmin && (
-                      <div className="flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="flex gap-1.5 opacity-100 transition-opacity">
                         <button
                           id={`edit-team-${id}`}
                           onClick={(e) => { e.stopPropagation(); openEdit(team); }}
                           title="Edit Team"
-                          className="p-2 text-slate-400 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition"
+                          className="btn-secondary p-1.5 rounded-lg text-[#58D20A] transition"
                         >
-                          <Edit3 className="w-4 h-4" />
+                          <Edit3 className="w-3.5 h-3.5" />
                         </button>
                         <button
                           id={`delete-team-${id}`}
                           onClick={(e) => { e.stopPropagation(); confirmDeleteTeam(id, team.name); }}
                           disabled={isDeleting}
                           title="Delete Team"
-                          className="p-2 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition disabled:opacity-50"
+                          className="btn-secondary p-1.5 rounded-lg text-rose-400 hover:text-rose-300 transition disabled:opacity-50"
                         >
                           {isDeleting
-                            ? <span className="w-4 h-4 border-2 border-rose-400 border-t-transparent rounded-full animate-spin block" />
-                            : <Trash2 className="w-4 h-4" />}
+                            ? <span className="w-3.5 h-3.5 border-2 border-rose-500 border-t-transparent rounded-full animate-spin block" />
+                            : <Trash2 className="w-3.5 h-3.5" />}
                         </button>
                       </div>
                     )}
                   </div>
 
                   <div className="grid grid-cols-2 gap-3 pt-2 text-xs">
-                    <div className="bg-slate-950/70 p-3 rounded-xl border border-slate-800">
-                      <span className="text-[11px] text-slate-400 uppercase">Total Purse:</span>
+                    <div className="bg-darkBg/70 p-3 rounded-xl border border-cardBorder">
+                      <span className="text-[11px] text-secondaryText uppercase">Total Purse:</span>
                       <p className="font-mono font-bold text-white mt-0.5">{formatCurrency(team.totalBudget)}</p>
                     </div>
-                    <div className="bg-slate-950/70 p-3 rounded-xl border border-slate-800">
-                      <span className="text-[11px] text-slate-400 uppercase">Remaining Purse:</span>
+                    <div className="bg-darkBg/70 p-3 rounded-xl border border-cardBorder">
+                      <span className="text-[11px] text-secondaryText uppercase">Remaining Purse:</span>
                       <p className={`font-mono font-bold mt-0.5 ${theme.stat}`}>{formatCurrency(team.remainingBudget)}</p>
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-3 text-xs">
-                    <div className={`p-3 rounded-xl border ${manager ? 'bg-slate-950/70 border-slate-800' : 'bg-amber-500/10 border-amber-500/30'}`}>
-                      <span className={`text-[11px] uppercase flex items-center gap-1 ${manager ? 'text-slate-400' : 'text-amber-400 font-bold'}`}>
+                    <div className={`p-3 rounded-xl border ${manager ? 'bg-darkBg/70 border-cardBorder' : 'bg-warningGold/10 border-warningGold/30'}`}>
+                      <span className={`text-[11px] uppercase flex items-center gap-1 ${manager ? 'text-secondaryText' : 'text-warningGold font-bold'}`}>
                         {!manager && <AlertTriangle className="w-3 h-3" />} Manager:
                       </span>
-                      <p className={`font-bold mt-0.5 truncate ${manager ? 'text-white' : 'text-amber-300'}`}>
+                      <p className={`font-bold mt-0.5 truncate ${manager ? 'text-white' : 'text-warningGold'}`}>
                         {manager ? manager.name : 'Unassigned'}
                       </p>
                     </div>
-                    <div className="bg-slate-950/70 p-3 rounded-xl border border-slate-800">
-                      <span className="text-[11px] text-slate-400 uppercase">Roster:</span>
+                    <div className="bg-darkBg/70 p-3 rounded-xl border border-cardBorder">
+                      <span className="text-[11px] text-secondaryText uppercase">Roster:</span>
                       <p className="font-bold text-white mt-0.5">{rosterCount} / {team.minRoster ?? '—'} min</p>
                     </div>
                   </div>
@@ -536,13 +536,13 @@ export default function AdminTeams() {
           })}
 
           {teams.length === 0 && (
-            <div className="col-span-2 py-12 text-center text-slate-500 glass-card rounded-2xl border border-slate-800">
+            <div className="col-span-2 py-12 text-center text-mutedText glass-card rounded-2xl border border-cardBorder">
               No teams created yet
             </div>
           )}
 
           {teams.length > 0 && filteredTeams.length === 0 && (
-            <div className="col-span-2 py-12 text-center text-slate-500 glass-card rounded-2xl border border-slate-800">
+            <div className="col-span-2 py-12 text-center text-mutedText glass-card rounded-2xl border border-cardBorder">
               No teams match "{search}"
             </div>
           )}
@@ -560,9 +560,9 @@ export default function AdminTeams() {
                       <span className="text-2xl">{viewingRoster.logo || '🏆'}</span>
                       {viewingRoster.name} Roster
                     </h2>
-                    <p className="text-xs text-slate-400">Players acquired in the auction.</p>
+                    <p className="text-xs text-secondaryText">Players acquired in the auction.</p>
                   </div>
-                  <button onClick={() => setViewingRoster(null)} className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition">
+                  <button onClick={() => setViewingRoster(null)} className="p-2 text-secondaryText hover:text-white hover:bg-surfaceHover rounded-lg transition">
                     <X className="w-4 h-4" />
                   </button>
                 </div>
@@ -577,20 +577,20 @@ export default function AdminTeams() {
         {/* Edit Team Modal (SUPER_ADMIN ONLY) */}
         {isSuperAdmin && editingTeam && (
           <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="glass-card w-full max-w-md rounded-2xl p-6 border border-slate-700 space-y-5 shadow-2xl">
+            <div className="glass-card w-full max-w-md rounded-2xl p-6 border border-borderStrong space-y-5 shadow-2xl">
               <div className="flex justify-between items-center">
                 <div>
                   <h2 className="text-lg font-black text-white">Edit Team</h2>
-                  <p className="text-xs text-slate-400">{editingTeam.name}</p>
+                  <p className="text-xs text-secondaryText">{editingTeam.name}</p>
                 </div>
-                <button onClick={() => setEditingTeam(null)} className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition">
+                <button onClick={() => setEditingTeam(null)} className="p-2 text-secondaryText hover:text-white hover:bg-surfaceHover rounded-lg transition">
                   <X className="w-4 h-4" />
                 </button>
               </div>
 
               <div className="space-y-3">
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-400 mb-1">Team Name</label>
+                  <label className="block text-[11px] font-semibold text-secondaryText mb-1">Team Name</label>
                   <input
                     type="text"
                     value={editForm.name ?? ''}
@@ -599,7 +599,7 @@ export default function AdminTeams() {
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-400 mb-1">Short Code (max 4 chars)</label>
+                  <label className="block text-[11px] font-semibold text-secondaryText mb-1">Short Code (max 4 chars)</label>
                   <input
                     type="text"
                     maxLength={4}
@@ -609,7 +609,7 @@ export default function AdminTeams() {
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-400 mb-1">Total Budget</label>
+                  <label className="block text-[11px] font-semibold text-secondaryText mb-1">Total Budget</label>
                   <input
                     type="number"
                     min="1"
@@ -619,7 +619,7 @@ export default function AdminTeams() {
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-400 mb-1">Assign Manager</label>
+                  <label className="block text-[11px] font-semibold text-secondaryText mb-1">Assign Manager</label>
                   <select
                     value={editForm.managerId || ''}
                     onChange={e => setEditForm(prev => ({ ...prev, managerId: e.target.value }))}
@@ -637,39 +637,39 @@ export default function AdminTeams() {
 
                 {/* Team Colors */}
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-400 mb-1">Team Colors</label>
+                  <label className="block text-[11px] font-semibold text-secondaryText mb-1">Team Colors</label>
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="flex items-center gap-2 bg-slate-900/60 border border-slate-800 rounded-xl px-3 py-2">
+                    <div className="flex items-center gap-2 bg-cardBg/60 border border-cardBorder rounded-xl px-3 py-2">
                       <input
                         type="color"
-                        value={/^#[0-9a-fA-F]{6}$/.test(editForm.primaryColor || '') ? editForm.primaryColor : '#3b82f6'}
+                        value={/^#[0-9a-fA-F]{6}$/.test(editForm.primaryColor || '') ? editForm.primaryColor : '#58D20A'}
                         onChange={e => setEditForm(prev => ({ ...prev, primaryColor: e.target.value }))}
-                        className="w-9 h-7 rounded-lg cursor-pointer bg-transparent border border-slate-700 p-0.5"
+                        className="w-9 h-7 rounded-lg cursor-pointer bg-transparent border border-borderStrong p-0.5"
                         title="Primary Color"
                       />
                       <div className="leading-tight">
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Primary</p>
-                        <p className="font-mono text-[11px] text-slate-300 uppercase">{(editForm.primaryColor || '#3b82f6').toUpperCase()}</p>
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-secondaryText">Primary</p>
+                        <p className="font-mono text-[11px] text-secondaryText uppercase">{(editForm.primaryColor || '#58D20A').toUpperCase()}</p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 bg-slate-900/60 border border-slate-800 rounded-xl px-3 py-2">
+                    <div className="flex items-center gap-2 bg-cardBg/60 border border-cardBorder rounded-xl px-3 py-2">
                       <input
                         type="color"
-                        value={/^#[0-9a-fA-F]{6}$/.test(editForm.secondaryColor || '') ? editForm.secondaryColor : '#0f172a'}
+                        value={/^#[0-9a-fA-F]{6}$/.test(editForm.secondaryColor || '') ? editForm.secondaryColor : '#050505'}
                         onChange={e => setEditForm(prev => ({ ...prev, secondaryColor: e.target.value }))}
-                        className="w-9 h-7 rounded-lg cursor-pointer bg-transparent border border-slate-700 p-0.5"
+                        className="w-9 h-7 rounded-lg cursor-pointer bg-transparent border border-borderStrong p-0.5"
                         title="Secondary Color"
                       />
                       <div className="leading-tight">
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Secondary</p>
-                        <p className="font-mono text-[11px] text-slate-300 uppercase">{(editForm.secondaryColor || '#0f172a').toUpperCase()}</p>
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-secondaryText">Secondary</p>
+                        <p className="font-mono text-[11px] text-secondaryText uppercase">{(editForm.secondaryColor || '#050505').toUpperCase()}</p>
                       </div>
                     </div>
                   </div>
                   {/* ── Live Card Preview ──────────────────────────────── */}
                   {(() => {
-                    const p = editForm.primaryColor || '#3b82f6';
-                    const s = editForm.secondaryColor || '#0f172a';
+                    const p = editForm.primaryColor || '#58D20A';
+                    const s = editForm.secondaryColor || '#050505';
                     const SelectedIcon = (TEAM_ICON_OPTIONS.find(o => o.name === (editForm.icon || 'Shield')) || TEAM_ICON_OPTIONS[0]).Icon;
                     return (
                       <div className="mt-3 rounded-xl overflow-hidden border-[1.5px] shadow-lg" style={{ borderColor: s }}>
@@ -689,7 +689,7 @@ export default function AdminTeams() {
                               {editForm.shortCode || 'CODE'}
                             </span>
                           </div>
-                          <span className="text-[9px] text-slate-500 font-medium">Preview</span>
+                          <span className="text-[9px] text-mutedText font-medium">Preview</span>
                         </div>
                       </div>
                     );
@@ -698,23 +698,23 @@ export default function AdminTeams() {
 
                 {/* Team Icon */}
                 <div className="relative">
-                  <label className="block text-[11px] font-semibold text-slate-400 mb-1">Team Icon</label>
+                  <label className="block text-[11px] font-semibold text-secondaryText mb-1">Team Icon</label>
                   <button
                     type="button"
                     onClick={() => setEditIconMenuOpen(prev => !prev)}
-                    className="w-full h-[34px] flex items-center gap-2 bg-slate-900/60 border border-slate-800 hover:border-slate-600 rounded-xl px-3 transition"
+                    className="w-full h-[34px] flex items-center gap-2 bg-cardBg/60 border border-cardBorder hover:border-borderStrong rounded-xl px-3 transition"
                     title={`Icon: ${editForm.icon || 'Shield'}`}
                   >
                     {(() => {
                       const Selected = (TEAM_ICON_OPTIONS.find(o => o.name === (editForm.icon || 'Shield')) || TEAM_ICON_OPTIONS[0]).Icon;
                       return <Selected className="w-4 h-4 text-white" />;
                     })()}
-                    <span className="text-xs text-slate-300 font-semibold">{editForm.icon || 'Shield'}</span>
+                    <span className="text-xs text-secondaryText font-semibold">{editForm.icon || 'Shield'}</span>
                   </button>
                   {editIconMenuOpen && (
                     <>
                       <div className="fixed inset-0 z-20" onClick={() => setEditIconMenuOpen(false)} />
-                      <div className="absolute z-30 top-full mt-1 left-0 bg-slate-950 border border-slate-700 rounded-xl p-2 shadow-2xl flex flex-col gap-1">
+                      <div className="absolute z-30 top-full mt-1 left-0 bg-darkBg border border-borderStrong rounded-xl p-2 shadow-2xl flex flex-col gap-1">
                         {TEAM_ICON_OPTIONS
                           .filter(o => o.name === (editForm.icon || 'Shield') || !usedIcons.has(o.name))
                           .map(({ name: iconName, Icon }) => (
@@ -723,7 +723,7 @@ export default function AdminTeams() {
                             type="button"
                             onClick={() => { setEditForm(prev => ({ ...prev, icon: iconName })); setEditIconMenuOpen(false); }}
                             title={iconName}
-                            className={`w-8 h-8 rounded-md flex items-center justify-center transition ${(editForm.icon || 'Shield') === iconName ? 'bg-blue-600 text-white shadow-md' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}
+                            className={`w-8 h-8 rounded-md flex items-center justify-center transition ${(editForm.icon || 'Shield') === iconName ? 'bg-successGreen text-darkBg shadow-md' : 'text-secondaryText hover:text-white hover:bg-surfaceHover'}`}
                           >
                             <Icon className="w-4 h-4" />
                           </button>
@@ -735,14 +735,14 @@ export default function AdminTeams() {
               </div>
 
               <div className="flex gap-3 pt-2">
-                <button onClick={() => setEditingTeam(null)} className="flex-1 py-2.5 border border-slate-700 text-slate-300 hover:bg-slate-800 rounded-xl text-xs font-semibold transition">
+                <button onClick={() => setEditingTeam(null)} className="flex-1 py-2.5 border border-borderStrong text-secondaryText hover:bg-surfaceHover rounded-xl text-xs font-semibold transition">
                   Cancel
                 </button>
                 <button
                   id="save-team-edit"
                   onClick={handleSaveEdit}
                   disabled={saving}
-                  className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-60 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition"
+                  className="flex-1 py-2.5 bg-successGreen hover:bg-neonGreen disabled:opacity-60 text-darkBg rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition"
                 >
                   {saving ? <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Save className="w-3.5 h-3.5" />}
                   Save Changes
@@ -755,31 +755,31 @@ export default function AdminTeams() {
         {/* Custom Delete Confirmation Modal (replaces window.confirm for visual consistency) */}
         {deleteTarget && (
           <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="glass-card w-full max-w-sm rounded-2xl p-6 border border-rose-500/30 space-y-5 shadow-2xl">
-              <div className="flex items-center gap-3 text-rose-400">
-                <div className="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-center flex-shrink-0">
+            <div className="glass-card w-full max-w-sm rounded-2xl p-6 border border-urgentRed/30 space-y-5 shadow-2xl">
+              <div className="flex items-center gap-3 text-urgentRedText">
+                <div className="w-10 h-10 rounded-xl bg-urgentRed/10 border border-urgentRed/30 flex items-center justify-center flex-shrink-0">
                   <Trash2 className="w-5 h-5" />
                 </div>
                 <div>
                   <h2 className="text-base font-black text-white">Delete Franchise?</h2>
-                  <p className="text-xs text-slate-400">This cannot be undone.</p>
+                  <p className="text-xs text-secondaryText">This cannot be undone.</p>
                 </div>
               </div>
-              <p className="text-sm text-slate-300">
+              <p className="text-sm text-secondaryText">
                 Are you sure you want to permanently delete <span className="font-bold text-white">"{deleteTarget.name}"</span>? All roster and bidding history tied to this team may be affected.
               </p>
               <div className="flex gap-3">
                 <button
                   onClick={() => setDeleteTarget(null)}
                   disabled={deletingId === deleteTarget.id}
-                  className="flex-1 py-2.5 border border-slate-700 text-slate-300 hover:bg-slate-800 rounded-xl text-xs font-semibold transition disabled:opacity-60"
+                  className="flex-1 py-2.5 border border-borderStrong text-secondaryText hover:bg-surfaceHover rounded-xl text-xs font-semibold transition disabled:opacity-60"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={executeDeleteTeam}
                   disabled={deletingId === deleteTarget.id}
-                  className="flex-1 py-2.5 bg-rose-600 hover:bg-rose-500 disabled:opacity-60 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition"
+                  className="flex-1 py-2.5 bg-urgentRed hover:bg-urgentRed disabled:opacity-60 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition"
                 >
                   {deletingId === deleteTarget.id
                     ? <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -810,8 +810,8 @@ function RosterModalContent({ team }) {
 
   if (rosterPlayers.length === 0) {
     return (
-      <div className="text-center py-12 text-slate-500 text-sm flex flex-col items-center gap-3">
-        <Users className="w-10 h-10 text-slate-600" />
+      <div className="text-center py-12 text-mutedText text-sm flex flex-col items-center gap-3">
+        <Users className="w-10 h-10 text-mutedText" />
         This team has not acquired any players yet.
       </div>
     );
@@ -826,16 +826,16 @@ function RosterModalContent({ team }) {
             <img
               src={getImageUrl(player.imageUrl, playerFallback('emerald'))}
               alt={player.name}
-              className="w-10 h-10 rounded-full object-cover border-2 border-slate-700 flex-shrink-0"
+              className="w-10 h-10 rounded-full object-cover border-2 border-borderStrong flex-shrink-0"
             />
             <div className="min-w-0">
               <p className="font-bold text-sm text-white truncate">{player.name}</p>
-              <p className="text-xs text-slate-400">{player.primaryPosition || 'N/A'}</p>
+              <p className="text-xs text-secondaryText">{player.primaryPosition || 'N/A'}</p>
             </div>
           </div>
           <div className="text-right flex-shrink-0">
-            <p className="font-mono font-bold text-sm text-emerald-400">{formatCurrency(player.finalPrice || player.soldPrice || 0)}</p>
-            <p className="text-[10px] text-slate-500">Sold Price</p>
+            <p className="font-mono font-bold text-sm text-neonGreen">{formatCurrency(player.finalPrice || player.soldPrice || 0)}</p>
+            <p className="text-[10px] text-mutedText">Sold Price</p>
           </div>
         </div>);
       })}

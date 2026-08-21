@@ -170,25 +170,25 @@ export default function PlayerRegister() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-darkBg text-slate-100">
+    <div className="min-h-screen flex flex-col bg-darkBg text-primaryText">
       <Navbar />
 
       <main className="flex-1 max-w-3xl w-full mx-auto px-4 py-8">
         
-        <div className="glass-card rounded-2xl p-8 border border-slate-800 space-y-6 shadow-2xl">
+        <div className="glass-card rounded-2xl p-8 border border-cardBorder space-y-6 shadow-2xl">
           
-          <div className="text-center space-y-2 border-b border-slate-800 pb-6">
-            <div className="w-14 h-14 bg-blue-500/10 text-blue-400 rounded-2xl border border-blue-500/20 flex items-center justify-center mx-auto shadow-lg">
+          <div className="text-center space-y-2 border-b border-cardBorder pb-6">
+            <div className="w-14 h-14 bg-neonGreen/10 text-neonGreen rounded-2xl border border-neonGreen/20 flex items-center justify-center mx-auto shadow-lg">
               <UserPlus className="w-7 h-7" />
             </div>
             <h1 className="text-2xl font-black font-heading text-white">Player Registration Portal</h1>
-            <p className="text-xs text-slate-400">Enterprise Franchise Sports Draft Onboarding</p>
+            <p className="text-xs text-secondaryText">Enterprise Franchise Sports Draft Onboarding</p>
           </div>
 
           {/* Registration Freeze Alert */}
           {isRegistrationFrozen && (
-            <div className="p-4 bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs rounded-xl flex items-center gap-3">
-              <Lock className="w-5 h-5 text-rose-400 flex-shrink-0" />
+            <div className="p-4 bg-urgentRed/10 border border-urgentRed/30 text-urgentRedText text-xs rounded-xl flex items-center gap-3">
+              <Lock className="w-5 h-5 text-urgentRedText flex-shrink-0" />
               <div>
                 <strong className="block font-bold">Registration Frozen:</strong>
                 Super Admin has locked registrations for the upcoming auction. Form submission is disabled.
@@ -201,7 +201,7 @@ export default function PlayerRegister() {
             {/* Name & Email */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-400 mb-1">Full Name*</label>
+                <label className="block text-xs font-semibold text-secondaryText mb-1">Full Name*</label>
                 <input
                   type="text"
                   value={name}
@@ -214,7 +214,7 @@ export default function PlayerRegister() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-400 mb-1">Gmail/Email*</label>
+                <label className="block text-xs font-semibold text-secondaryText mb-1">Gmail/Email*</label>
                 <input
                   type="email"
                   value={email}
@@ -230,7 +230,7 @@ export default function PlayerRegister() {
             {/* Student ID & Academic Session */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-400 mb-1">Student ID *</label>
+                <label className="block text-xs font-semibold text-secondaryText mb-1">Student ID *</label>
                 <input
                   type="text"
                   value={studentId}
@@ -243,11 +243,11 @@ export default function PlayerRegister() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-400 mb-1">Session *</label>
+                <label className="block text-xs font-semibold text-secondaryText mb-1">Session *</label>
                 <select
                   value={selectedSession}
                   onChange={e => setSelectedSession(e.target.value)}
-                  className="glass-input w-full px-4 py-2.5 rounded-xl text-xs text-slate-200"
+                  className="glass-input w-full px-4 py-2.5 rounded-xl text-xs text-primaryText"
                   disabled={isRegistrationFrozen}
                 >
                   {availableSessions.map(s => (
@@ -260,7 +260,7 @@ export default function PlayerRegister() {
             {/* Jersey Name, T-Shirt Size & T-Shirt Number */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-400 mb-1">
+                <label className="block text-xs font-semibold text-secondaryText mb-1">
                   Jersey Name*
                 </label>
                 <input
@@ -273,15 +273,15 @@ export default function PlayerRegister() {
                   disabled={isRegistrationFrozen}
                   required
                 />
-                <span className="text-[10px] text-slate-500 float-right mt-1">{jerseyName.length}/15</span>
+                <span className="text-[10px] text-mutedText float-right mt-1">{jerseyName.length}/15</span>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-400 mb-1">T-Shirt Size *</label>
+                <label className="block text-xs font-semibold text-secondaryText mb-1">T-Shirt Size *</label>
                 <select
                   value={tShirtSize}
                   onChange={e => setTShirtSize(e.target.value)}
-                  className="glass-input w-full px-4 py-2.5 rounded-xl text-xs text-slate-200"
+                  className="glass-input w-full px-4 py-2.5 rounded-xl text-xs text-primaryText"
                   disabled={isRegistrationFrozen}
                 >
                   <option value="S">Small (S)</option>
@@ -293,7 +293,7 @@ export default function PlayerRegister() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-400 mb-1">T-Shirt Number *</label>
+                <label className="block text-xs font-semibold text-secondaryText mb-1">T-Shirt Number *</label>
                 <input
                   type="text"
                   pattern="[0-9]*"
@@ -309,7 +309,7 @@ export default function PlayerRegister() {
 
             {/* Positions Multi-Select with Primary Flag (PRD Section 2.B) */}
             <div className="space-y-3">
-              <label className="block text-xs font-semibold text-slate-400">
+              <label className="block text-xs font-semibold text-secondaryText">
                 Positions*
               </label>
 
@@ -325,13 +325,13 @@ export default function PlayerRegister() {
                       onClick={() => !isRegistrationFrozen && handlePositionToggle(posKey)}
                       className={`p-3 rounded-xl border text-xs cursor-pointer transition flex flex-col justify-between ${
                         isSelected
-                          ? 'bg-blue-600/20 border-blue-500/50 text-white'
-                          : 'bg-slate-900/60 border-slate-800 text-slate-400 hover:border-slate-700'
+                          ? 'bg-successGreen/20 border-neonGreen/50 text-white'
+                          : 'bg-cardBg/60 border-cardBorder text-secondaryText hover:border-borderStrong'
                       }`}
                     >
                       <div className="flex justify-between items-center">
-                        <span className="font-mono font-bold text-blue-400">{p.code}</span>
-                        {isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-blue-400" />}
+                        <span className="font-mono font-bold text-neonGreen">{p.code}</span>
+                        {isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-neonGreen" />}
                       </div>
                       <span className="font-semibold mt-1">{p.name}</span>
 
@@ -343,7 +343,7 @@ export default function PlayerRegister() {
                             setPrimaryPosId(posKey);
                           }}
                           className={`mt-2 py-0.5 px-2 rounded text-[10px] font-bold text-center transition ${
-                            isPrimary ? 'bg-emerald-500 text-slate-950' : 'bg-slate-800 text-slate-400 hover:text-white'
+                            isPrimary ? 'bg-neonGreen text-darkBg' : 'bg-surfaceHover text-secondaryText hover:text-white'
                           }`}
                         >
                           {isPrimary ? '★ Primary Position' : 'Set as Primary'}
@@ -357,29 +357,29 @@ export default function PlayerRegister() {
 
             {/* Picture Upload with WebP Optimization Badge (PRD Section 4.A) */}
             <div className="space-y-3">
-              <label className="block text-xs font-semibold text-slate-400">
+              <label className="block text-xs font-semibold text-secondaryText">
                 Profile Photo Upload*
               </label>
 
-              <div className="border-2 border-dashed border-slate-800 hover:border-blue-500/40 rounded-2xl p-6 text-center space-y-3 bg-slate-950/60 transition">
+              <div className="border-2 border-dashed border-borderStrong hover:border-neonGreen/40 rounded-2xl p-6 text-center space-y-3 bg-darkBg/60 transition">
                 {imagePreview ? (
                   <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                    <img src={imagePreview} alt="" className="w-20 h-20 rounded-2xl object-cover border-2 border-blue-500/40" />
+                    <img src={imagePreview} alt="" className="w-20 h-20 rounded-2xl object-cover border-2 border-neonGreen/40" />
                     {optimizationInfo && (
-                      <div className="text-left bg-slate-900 p-3 rounded-xl border border-slate-800 text-xs space-y-1">
-                        <p className="text-emerald-400 font-bold flex items-center gap-1">
+                      <div className="text-left bg-cardBg p-3 rounded-xl border border-cardBorder text-xs space-y-1">
+                        <p className="text-neonGreen font-bold flex items-center gap-1">
                           <CheckCircle2 className="w-3.5 h-3.5" /> Client-Side WebP Compression Ready
                         </p>
-                        <p className="text-slate-400">Original Upload: <span className="text-white font-mono">{optimizationInfo.originalSize}</span></p>
-                        <p className="text-slate-400">Optimized WebP Storage: <span className="text-emerald-400 font-mono font-bold">{optimizationInfo.compressedSize}</span> ({optimizationInfo.saved})</p>
+                        <p className="text-secondaryText">Original Upload: <span className="text-white font-mono">{optimizationInfo.originalSize}</span></p>
+                        <p className="text-secondaryText">Optimized WebP Storage: <span className="text-neonGreen font-mono font-bold">{optimizationInfo.compressedSize}</span> ({optimizationInfo.saved})</p>
                       </div>
                     )}
                   </div>
                 ) : (
                   <div>
-                    <FileImage className="w-10 h-10 text-slate-500 mx-auto" />
-                    <p className="text-xs font-bold text-slate-300 mt-2">Click to select photo or drag & drop</p>
-                    <p className="text-[10px] text-slate-500">Supports JPEG, PNG & WebP up to 10MB</p>
+                    <FileImage className="w-10 h-10 text-mutedText mx-auto" />
+                    <p className="text-xs font-bold text-secondaryText mt-2">Click to select photo or drag & drop</p>
+                    <p className="text-[10px] text-mutedText">Supports JPEG, PNG & WebP up to 10MB</p>
                   </div>
                 )}
 
@@ -393,7 +393,7 @@ export default function PlayerRegister() {
                 />
                 <label
                   htmlFor="picture-upload"
-                  className={`inline-block px-4 py-2 bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 text-xs font-bold rounded-xl cursor-pointer transition ${
+                  className={`btn-secondary inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl cursor-pointer transition ${
                     isRegistrationFrozen ? 'opacity-50 cursor-not-allowed' : ''
                   }`}
                 >
@@ -406,7 +406,7 @@ export default function PlayerRegister() {
             {/* Password & Confirm Password */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-400 mb-1">Password *</label>
+                <label className="block text-xs font-semibold text-secondaryText mb-1">Password *</label>
                 <input
                   type="password"
                   value={password}
@@ -419,7 +419,7 @@ export default function PlayerRegister() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-400 mb-1">Confirm Password *</label>
+                <label className="block text-xs font-semibold text-secondaryText mb-1">Confirm Password *</label>
                 <input
                   type="password"
                   value={confirmPassword}
@@ -435,10 +435,8 @@ export default function PlayerRegister() {
             <button
               type="submit"
               disabled={isRegistrationFrozen}
-              className={`w-full py-3.5 text-xs shadow-xl ${
-                isRegistrationFrozen
-                  ? 'bg-slate-800 text-slate-500 cursor-not-allowed'
-                  : 'btn-primary'
+              className={`btn-primary w-full py-3.5 text-xs shadow-xl ${
+                isRegistrationFrozen ? 'opacity-50 cursor-not-allowed' : ''
               }`}
             >
               Submit Player Registration

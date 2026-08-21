@@ -59,7 +59,7 @@ export default function ManagerMyTeamView() {
     if (loading) {
         return (
             <div className="flex items-center justify-center min-h-[400px]">
-                <Loader2 className="w-8 h-8 animate-spin text-emerald-400" />
+                <Loader2 className="w-8 h-8 animate-spin text-neonGreen" />
             </div>
         );
     }
@@ -67,7 +67,7 @@ export default function ManagerMyTeamView() {
     if (!team) {
         return (
             <div className="flex items-center justify-center min-h-[400px]">
-                <p className="text-slate-400">Could not load team information.</p>
+                <p className="text-secondaryText">Could not load team information.</p>
             </div>
         );
     }
@@ -78,35 +78,35 @@ export default function ManagerMyTeamView() {
     return (
         <div className="space-y-6">
             {/* Team Header */}
-            <div className="glass-card rounded-2xl p-6 border border-slate-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+            <div className="glass-card rounded-2xl p-6 border border-cardBorder flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
                 {/* Left: Team identity */}
                 <div className="flex flex-col gap-1">
                     <TeamBadge team={team} size="xl" showManager={false} />
-                    {team.motto && <p className="text-sm text-emerald-400/80 italic mt-1">"{team.motto}"</p>}
+                    {team.motto && <p className="text-sm text-neonGreen/80 italic mt-1">"{team.motto}"</p>}
                 </div>
 
                 {/* Right: Manager profile card */}
-                <div className="flex items-center gap-3 bg-slate-900/70 border border-slate-800 rounded-2xl px-4 py-3 self-stretch md:self-auto shadow-inner">
+                <div className="flex items-center gap-3 bg-cardBg/70 border border-cardBorder rounded-2xl px-4 py-3 self-stretch md:self-auto shadow-inner">
                     {user?.avatarUrl || user?.profilePicture ? (
                         <img
                             src={user.avatarUrl || user.profilePicture}
                             alt={user?.name || 'Manager'}
-                            className="w-12 h-12 rounded-xl object-cover border-2 border-emerald-500/40 flex-shrink-0"
+                            className="w-12 h-12 rounded-xl object-cover border-2 border-neonGreen/40 flex-shrink-0"
                         />
                     ) : (
-                        <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-emerald-500 to-blue-500 flex items-center justify-center text-white font-black text-lg border-2 border-emerald-500/40 flex-shrink-0">
+                        <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-neonGreen to-neonGreen flex items-center justify-center text-darkBg font-black text-lg border-2 border-neonGreen/40 flex-shrink-0">
                             {managerInitial}
                         </div>
                     )}
                     <div className="min-w-0">
-                        <span className="text-[9px] font-bold uppercase tracking-widest text-slate-500 flex items-center gap-1">
-                            <UserCircle2 className="w-3 h-3 text-emerald-400" /> Franchise Manager
+                        <span className="text-[9px] font-bold uppercase tracking-widest text-mutedText flex items-center gap-1">
+                            <UserCircle2 className="w-3 h-3 text-neonGreen" /> Franchise Manager
                         </span>
                         <p className="text-sm font-extrabold text-white truncate max-w-[160px]">
                             {user?.name || 'Team Manager'}
                         </p>
                         {user?.email && (
-                            <p className="text-[10px] text-slate-500 truncate max-w-[160px] flex items-center gap-1 mt-0.5">
+                            <p className="text-[10px] text-mutedText truncate max-w-[160px] flex items-center gap-1 mt-0.5">
                                 <Mail className="w-2.5 h-2.5 flex-shrink-0" />
                                 {user.email}
                             </p>
@@ -117,17 +117,17 @@ export default function ManagerMyTeamView() {
 
             {/* Budget Summary */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="glass-card rounded-xl p-4 border border-slate-800">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase">Initial Purse</span>
+                <div className="glass-card rounded-xl p-4 border border-cardBorder">
+                    <span className="text-[10px] font-bold text-secondaryText uppercase">Initial Purse</span>
                     <p className="text-xl font-black font-mono text-white mt-1">{formatCurrency(team.totalBudget)}</p>
                 </div>
-                <div className="glass-card rounded-xl p-4 border border-slate-800">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase">Total Spent</span>
-                    <p className="text-xl font-black font-mono text-rose-400 mt-1">{formatCurrency(spentBudget)}</p>
+                <div className="glass-card rounded-xl p-4 border border-cardBorder">
+                    <span className="text-[10px] font-bold text-secondaryText uppercase">Total Spent</span>
+                    <p className="text-xl font-black font-mono text-urgentRedText mt-1">{formatCurrency(spentBudget)}</p>
                 </div>
-                <div className="glass-card rounded-xl p-4 border border-slate-800">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase">Remaining Purse</span>
-                    <p className="text-xl font-black font-mono text-emerald-400 mt-1">{formatCurrency(team.remainingBudget)}</p>
+                <div className="glass-card rounded-xl p-4 border border-cardBorder">
+                    <span className="text-[10px] font-bold text-secondaryText uppercase">Remaining Purse</span>
+                    <p className="text-xl font-black font-mono text-neonGreen mt-1">{formatCurrency(team.remainingBudget)}</p>
                 </div>
             </div>
 
@@ -135,7 +135,7 @@ export default function ManagerMyTeamView() {
             <div className="flex items-center justify-end">
                 <button
                     onClick={() => fetchTeamDetails(true)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] font-bold transition border border-slate-700"
+                    className="btn-secondary flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px]"
                     title="Refresh roster"
                     aria-label="Refresh roster"
                 >

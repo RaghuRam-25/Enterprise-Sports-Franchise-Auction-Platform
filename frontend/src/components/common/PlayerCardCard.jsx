@@ -6,18 +6,18 @@ import { playerFallback } from '../../utils/playerFallback';
 import TeamBadge from '../common/TeamBadge';
 
 const STATUS_BADGES = {
-  SOLD: { label: 'Sold', color: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40', icon: Trophy },
-  ON_PODIUM: { label: 'On Podium', color: 'bg-blue-500/20 text-blue-300 border-blue-500/40 animate-pulse', icon: Zap },
-  BANNED: { label: 'Banned', color: 'bg-rose-500/20 text-rose-300 border-rose-500/40', icon: Ban },
-  WITHDRAWN: { label: 'Withdrawn', color: 'bg-slate-700/50 text-slate-400 border-slate-600/40', icon: UserX },
-  APPROVED: { label: 'Approved', color: 'bg-teal-500/20 text-teal-300 border-teal-500/40', icon: CheckCircle },
-  REGISTERED: { label: 'Registered', color: 'bg-amber-500/20 text-amber-300 border-amber-500/40', icon: Clock },
-  UNSOLD: { label: 'Unsold', color: 'bg-orange-500/20 text-orange-300 border-orange-500/40', icon: Clock },
-  AVAILABLE: { label: 'Available', color: 'bg-teal-500/20 text-teal-300 border-teal-500/40', icon: Zap },
+  SOLD: { label: 'Sold', color: 'bg-neonGreen/20 text-[#35C759] border-[#35C759]/40', icon: Trophy },
+  ON_PODIUM: { label: 'On Podium', color: 'bg-[#12200E] text-[#58D20A] border-[#58D20A]/40 animate-pulse', icon: Zap },
+  BANNED: { label: 'Banned', color: 'bg-[#B00012]/20 text-urgentRedText border-[#B00012]/40', icon: Ban },
+  WITHDRAWN: { label: 'Withdrawn', color: 'bg-[#151515] text-[#A3A3A3] border-[#222222]', icon: UserX },
+  APPROVED: { label: 'Approved', color: 'bg-[#12200E] text-[#58D20A] border-[#58D20A]/40', icon: CheckCircle },
+  REGISTERED: { label: 'Registered', color: 'bg-[#151515] text-[#F4C542] border-[#F4C542]/40', icon: Clock },
+  UNSOLD: { label: 'Unsold', color: 'bg-[#151515] text-[#A3A3A3] border-[#222222]', icon: Clock },
+  AVAILABLE: { label: 'Available', color: 'bg-[#12200E] text-[#58D20A] border-[#58D20A]/40', icon: Zap },
 };
 
 /**
- * Modern Sports ID Card Component for Players
+ * Premium Dark Football ID Card Component for Players
  */
 export default function PlayerCardCard({
   player,
@@ -47,22 +47,22 @@ export default function PlayerCardCard({
   return (
     <div
       style={theme.customBorderStyle || undefined}
-      className={`relative h-full flex flex-col justify-between rounded-2xl border bg-slate-950/80 backdrop-blur-md overflow-hidden transition-all duration-300 group hover:-translate-y-1.5 ${theme.border} ${theme.cardGlow}`}
+      className={`relative h-full flex flex-col justify-between rounded-2xl border bg-[#101010] overflow-hidden transition-all duration-300 group hover:-translate-y-1.5 hover:shadow-xl ${theme.customBorderStyle ? 'border-[#222222] hover:border-[#58D20A]/40' : `${theme.border} ${theme.cardGlow}`}`}
     >
-      
-      {/* Sports Accreditation Header Strip */}
+
+      {/* Top Accent Header Strip — colored by player category */}
       <div
-        style={theme.customHeaderStyle || undefined}
-        className={`h-2.5 w-full ${theme.headerBg}`}
+        style={theme.customHeaderStyle || { background: theme.stripColor }}
+        className={`h-1.5 w-full`}
       />
 
       <div className="p-4 space-y-3 flex-1 flex flex-col justify-between">
-        
+
         {/* Top Header Row: Category Badge & Status Badge */}
         <div className="flex items-center justify-between gap-2">
           <span
             style={theme.customBadgeStyle || undefined}
-            className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border shadow-sm ${theme.badgeBg}`}
+            className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border shadow-sm ${theme.customBadgeStyle ? '' : theme.badgeBg}`}
           >
             <CategoryIcon className="w-3 h-3" />
             {player?.category || 'Standard'}
@@ -78,7 +78,7 @@ export default function PlayerCardCard({
         <div className="flex items-start gap-3 pt-1">
           {/* Photo Frame */}
           <div className="relative flex-shrink-0">
-            <div className={`w-16 h-16 rounded-xl overflow-hidden border-2 bg-slate-900 shadow-md ${theme.border}`}>
+            <div className={`w-16 h-16 rounded-xl overflow-hidden border border-[#222222] bg-[#050505] shadow-md`}>
               {player?.imageUrl && !imgError ? (
                 <img
                   src={getImageUrl(player.imageUrl, playerFallback('emerald'))}
@@ -87,62 +87,65 @@ export default function PlayerCardCard({
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                 />
               ) : (
-                <div className={`w-full h-full ${theme.headerBg} flex items-center justify-center text-white font-black text-2xl`}>
+                <div
+                  className="w-full h-full flex items-center justify-center font-black text-2xl"
+                  style={{ background: `${theme.stripColor}14`, color: theme.stripColor }}
+                >
                   {(player?.name || 'P')[0].toUpperCase()}
                 </div>
               )}
             </div>
 
             {/* Jersey Number Overlay Badge */}
-            <div className="absolute -bottom-1.5 -right-1.5 bg-slate-900 text-white font-mono font-black text-[10px] px-1.5 py-0.5 rounded-md border border-slate-700 shadow flex items-center gap-0.5">
-              <span className={theme.accentText}>#</span>
+            <div className="absolute -bottom-1.5 -right-1.5 bg-[#050505] text-[#F5F5F5] font-mono font-black text-[10px] px-1.5 py-0.5 rounded-md border border-[#222222] shadow flex items-center gap-0.5">
+              <span className="text-[#58D20A]">#</span>
               {player?.jerseyNumber ?? player?.jerseyName ?? '—'}
             </div>
           </div>
 
           {/* Name & Academic Session */}
           <div className="flex-1 min-w-0">
-            <h3 className="font-black text-white text-sm sm:text-base leading-snug truncate group-hover:text-sky-300 transition-colors">
+            <h3 className="font-black text-[#F5F5F5] text-sm sm:text-base leading-snug truncate group-hover:text-[#58D20A] transition-colors">
               {player?.name || 'Unknown Player'}
             </h3>
-            <p className="text-[10px] font-mono text-slate-400 truncate mt-0.5">
+            <p className="text-[10px] font-mono text-[#A3A3A3] truncate mt-0.5">
               ID: {player?.studentId || 'N/A'}
             </p>
-            <p className="text-[10px] font-medium text-slate-400 mt-0.5 truncate">
-              Session: <span className="text-slate-200">{player?.session || 'N/A'}</span>
+            <p className="text-[10px] font-medium text-[#A3A3A3] mt-0.5 truncate">
+              Session: <span className="text-[#F5F5F5]">{player?.session || 'N/A'}</span>
             </p>
           </div>
         </div>
 
         {/* Position Badges */}
         <div className="flex flex-wrap gap-1 pt-1">
-          <span className={`px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase tracking-wide border shadow-sm bg-slate-900 ${theme.accentText} ${theme.border}`}>
-            <Star className="w-2.5 h-2.5 inline mr-1 -mt-0.5 fill-current" />
+          <span className={`px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase tracking-wide border shadow-sm bg-[#12200E] text-[#58D20A] border-[#58D20A]/40`}>
+            <Star className="w-2.5 h-2.5 inline mr-1 -mt-0.5 fill-current text-[#58D20A]" />
             {primaryPos}
           </span>
           {positions.filter(p => p !== primaryPos).map(pos => (
-            <span key={pos} className="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide bg-slate-900/80 text-slate-400 border border-slate-800">
+            <span key={pos} className="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide bg-[#151515] text-[#A3A3A3] border border-[#222222]">
               {pos}
             </span>
           ))}
         </div>
 
         {/* Financial & Auction Details Strip */}
-        <div className="bg-slate-900/90 rounded-xl p-2.5 border border-slate-800/80 space-y-1.5 text-xs mt-2">
+        <div className="bg-[#050505] rounded-xl p-2.5 border border-[#222222] space-y-1.5 text-xs mt-2">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] text-slate-400 font-medium flex items-center gap-1">
-              <DollarSign className="w-3 h-3 text-slate-500" /> Base Price
+            <span className="text-[11px] text-[#A3A3A3] font-medium flex items-center gap-1">
+              <DollarSign className="w-3 h-3 text-[#666666]" /> Base Price
             </span>
-            <span className="font-mono font-black text-emerald-400 text-xs sm:text-sm">
+            <span className="font-mono font-black text-[#58D20A] text-xs sm:text-sm">
               {formatCurrency(player?.basePrice || 0)}
             </span>
           </div>
 
-          <div className="flex items-center justify-between pt-1 border-t border-slate-800">
-            <span className="text-[11px] text-slate-400 font-medium flex items-center gap-1">
-              <Award className="w-3 h-3 text-amber-400" /> Sold Price
+          <div className="flex items-center justify-between pt-1 border-t border-[#222222]">
+            <span className="text-[11px] text-[#A3A3A3] font-medium flex items-center gap-1">
+              <Award className="w-3 h-3 text-[#F4C542]" /> Sold Price
             </span>
-            <span className={`font-mono font-black text-xs sm:text-sm ${isSold ? 'text-amber-400' : 'text-slate-600'}`}>
+            <span className={`font-mono font-black text-xs sm:text-sm ${isSold ? 'text-[#F4C542]' : 'text-[#666666]'}`}>
               {isSold ? formatCurrency(player?.finalPrice || 0) : '—'}
             </span>
           </div>
@@ -159,7 +162,7 @@ export default function PlayerCardCard({
 
       {/* Card Action Footer */}
       {(canManage || customActions) && (
-        <div className="px-4 py-2.5 bg-slate-900/90 border-t border-slate-800/80 flex items-center justify-end gap-1.5">
+        <div className="px-4 py-2.5 bg-[#050505] border-t border-[#222222] flex items-center justify-end gap-1.5">
           {customActions ? (
             customActions
           ) : canManage && (
@@ -179,7 +182,7 @@ export default function PlayerCardCard({
                   id={`edit-${id}`}
                   onClick={() => onEdit(player)}
                   title="Edit Player Details"
-                  className="p-1.5 text-slate-400 hover:text-sky-300 hover:bg-sky-500/10 rounded-lg transition"
+                  className="p-1.5 text-[#A3A3A3] hover:text-[#58D20A] hover:bg-[#151515] rounded-lg transition"
                 >
                   <Edit3 className="w-3.5 h-3.5" />
                 </button>
@@ -189,7 +192,7 @@ export default function PlayerCardCard({
                   id={`ban-${id}`}
                   onClick={() => onToggleBan(id, player?.status)}
                   title={player?.status === 'BANNED' ? 'Unban Player' : 'Ban Player'}
-                  className={`p-1.5 rounded-lg transition ${player?.status === 'BANNED' ? 'text-amber-400 hover:bg-amber-500/10' : 'text-slate-400 hover:text-rose-400 hover:bg-rose-500/10'}`}
+                  className={`p-1.5 rounded-lg transition ${player?.status === 'BANNED' ? 'text-[#F4C542] hover:bg-[#151515]' : 'text-[#A3A3A3] hover:text-[#B00012] hover:bg-[#151515]'}`}
                 >
                   {player?.status === 'BANNED' ? <Lock className="w-3.5 h-3.5" /> : <Ban className="w-3.5 h-3.5" />}
                 </button>

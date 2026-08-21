@@ -90,24 +90,24 @@ export default function CountdownTimer({
   const theme = getTheme();
 
   const ringColor = {
-    default: '#22d3ee',
-    urgent: '#f87171',
-    amber: '#f59e0b',
-    winner: '#fbbf24',
+    default: '#58D20A',
+    urgent: '#B00012',
+    amber: '#F4C542',
+    winner: '#F4C542',
   }[theme];
 
   const ringBg = {
-    default: 'rgba(34,211,238,0.15)',
-    urgent: 'rgba(248,113,113,0.15)',
-    amber: 'rgba(245,158,11,0.15)',
-    winner: 'rgba(251,191,36,0.15)',
+    default: 'rgba(88,210,10,0.12)',
+    urgent: 'rgba(176,0,18,0.15)',
+    amber: 'rgba(244,197,66,0.15)',
+    winner: 'rgba(244,197,66,0.15)',
   }[theme];
 
   const textColor = {
-    default: 'text-cyan-400',
-    urgent: 'text-rose-400',
-    amber: 'text-amber-400',
-    winner: 'text-amber-300',
+    default: 'text-[#58D20A]',
+    urgent: 'text-[#B00012]',
+    amber: 'text-[#F4C542]',
+    winner: 'text-[#F4C542]',
   }[theme];
 
   const label = {
@@ -165,19 +165,19 @@ export default function CountdownTimer({
       </div>
 
       <div className="flex items-center gap-2">
-        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+        <span className="text-[10px] font-bold text-[#A3A3A3] uppercase tracking-widest">
           {label}
         </span>
         {isRunning && (
           <motion.div
-            className="w-2 h-2 rounded-full bg-emerald-500"
+            className="w-2 h-2 rounded-full bg-[#58D20A]"
             animate={{ opacity: [1, 0.3, 1], scale: [1, 0.8, 1] }}
             transition={{ duration: 1.5, repeat: Infinity }}
           />
         )}
         {isPaused && (
           <motion.div
-            className="w-2 h-2 rounded-full bg-amber-500"
+            className="w-2 h-2 rounded-full bg-warningGold"
             animate={{ opacity: [1, 0.3, 1] }}
             transition={{ duration: 1, repeat: Infinity }}
           />
@@ -186,7 +186,7 @@ export default function CountdownTimer({
 
       {isUrgent && (
         <motion.div
-          className="flex items-center gap-1 text-rose-400"
+          className="flex items-center gap-1 text-urgentRedText"
           initial={{ opacity: 0 }}
           animate={{ opacity: [0, 1, 0] }}
           transition={{ duration: 0.8, repeat: Infinity }}

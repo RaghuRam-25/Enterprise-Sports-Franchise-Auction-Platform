@@ -42,11 +42,11 @@ const PLAYER_FALLBACK_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="320"
       <stop offset="0%" stop-color="#e8b58a"/><stop offset="100%" stop-color="#b9835a"/>
     </linearGradient>
     <linearGradient id="js" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#fbbf24"/><stop offset="100%" stop-color="#d97706"/>
+      <stop offset="0%" stop-color="#F4C542"/><stop offset="100%" stop-color="#F4C542"/>
     </linearGradient>
   </defs>
   <rect width="320" height="320" fill="url(#bg)"/>
-  <circle cx="160" cy="150" r="120" fill="rgba(251,191,36,0.10)"/>
+  <circle cx="160" cy="150" r="120" fill="rgba(244,197,66,0.10)"/>
   <path d="M120 96 a40 40 0 0 1 80 0 a40 40 0 0 1 -80 0" fill="url(#sk)"/>
   <path d="M112 100 a48 44 0 0 1 96 -6 c0 -6 -10 -34 -48 -34 s-48 24 -48 40 z" fill="#241a13"/>
   <path d="M96 250 q64 -44 128 0 l6 70 h-140 z" fill="url(#js)"/>
@@ -210,12 +210,12 @@ export default function WinnerAnimation({
               animate={{ scale: 1, rotate: 0 }}
               transition={{ delay: 0.3, duration: 0.8, type: 'spring', stiffness: 80 }}
             >
-              <Trophy className="mx-auto h-20 w-20 text-amber-400 drop-shadow-[0_0_30px_rgba(255,215,0,0.6)]" />
+              <Trophy className="mx-auto h-20 w-20 text-warningGold drop-shadow-[0_0_30px_rgba(255,215,0,0.6)]" />
             </motion.div>
 
             {/* SOLD */}
             <motion.h1
-              className="mb-2 text-5xl font-black font-heading tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-300 sm:text-7xl"
+              className="mb-2 text-5xl font-black font-heading tracking-wider text-warningGold sm:text-7xl"
               initial={{ opacity: 0, y: 30, scale: 0.8 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               transition={{ delay: 0.45, duration: 0.6, type: 'spring', stiffness: 120 }}
@@ -225,7 +225,7 @@ export default function WinnerAnimation({
 
             {/* Congratulations line */}
             <motion.p
-              className="mb-5 text-sm font-bold uppercase tracking-[0.25em] text-amber-200/80"
+              className="mb-5 text-sm font-bold uppercase tracking-[0.25em] text-warningGold/80"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.7, duration: 0.5 }}
@@ -235,7 +235,7 @@ export default function WinnerAnimation({
 
             {/* Winner card */}
             <motion.div
-              className="glass-card rounded-3xl border-2 border-amber-400/40 bg-gradient-to-b from-slate-900 via-slate-900/95 to-[#1a1200] p-8 shadow-2xl shadow-amber-500/20"
+              className="glass-card rounded-3xl border-2 border-warningGold/40 bg-gradient-to-b from-cardBg via-cardBg/95 to-[#1a1200] p-8 shadow-2xl shadow-warningGold/20"
               initial={{ opacity: 0, scale: 0.5, y: 60, rotate: -5 }}
               animate={{ opacity: 1, scale: 1, y: 0, rotate: 0 }}
               transition={{ delay: 0.3, duration: 0.8, type: 'spring', stiffness: 90, damping: 12 }}
@@ -246,13 +246,13 @@ export default function WinnerAnimation({
                   <motion.img
                     src={imageSrc}
                     alt={player?.name || 'Player'}
-                    className="h-28 w-28 rounded-2xl border-4 border-amber-400/40 object-cover shadow-xl"
+                    className="h-28 w-28 rounded-2xl border-4 border-warningGold/40 object-cover shadow-xl"
                     initial={{ scale: 0, rotate: -180, filter: 'blur(10px)' }}
                     animate={{ scale: 1, rotate: 0, filter: 'blur(0px)' }}
                     transition={{ delay: 0.5, duration: 0.7, ease: 'backOut' }}
                   />
-                  <div className="absolute -right-2 -top-2 flex h-8 w-8 items-center justify-center rounded-full bg-amber-500 shadow-lg">
-                    <Crown className="h-4 w-4 text-slate-950" />
+                  <div className="absolute -right-2 -top-2 flex h-8 w-8 items-center justify-center rounded-full bg-warningGold shadow-lg">
+                    <Crown className="h-4 w-4 text-darkBg" />
                   </div>
                 </div>
 
@@ -266,8 +266,8 @@ export default function WinnerAnimation({
                   >
                     {player?.name || 'Player'}
                   </motion.h2>
-                  <p className="text-xs text-slate-400">
-                    {player?.jerseyName && <span className="font-mono text-amber-400">{player.jerseyName}</span>}
+                  <p className="text-xs text-secondaryText">
+                    {player?.jerseyName && <span className="font-mono text-warningGold">{player.jerseyName}</span>}
                     {player?.jerseyName && ' • '}
                     {player?.category}
                   </p>
@@ -278,11 +278,11 @@ export default function WinnerAnimation({
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: 0.9, duration: 0.5, ease: 'backOut' }}
                   >
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-700 bg-slate-800 text-2xl">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-borderStrong bg-surfaceHover text-2xl">
                       {team?.logo || '🏆'}
                     </div>
                     <div>
-                      <span className="text-[10px] font-bold uppercase text-slate-500">Signed By</span>
+                      <span className="text-[10px] font-bold uppercase text-mutedText">Signed By</span>
                       <p className="text-sm font-bold text-white">{team?.name || 'N/A'}</p>
                     </div>
                   </motion.div>
@@ -291,14 +291,14 @@ export default function WinnerAnimation({
 
               {/* Winning price — count-up ticker */}
               <motion.div
-                className="mt-6 border-t border-amber-500/30 pt-4 text-center"
+                className="mt-6 border-t border-warningGold/30 pt-4 text-center"
                 initial={{ opacity: 0, scale: 0.5 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 1.1, duration: 0.6, type: 'spring', stiffness: 140 }}
               >
-                <span className="text-xs font-bold uppercase text-slate-400">Winning Bid</span>
+                <span className="text-xs font-bold uppercase text-secondaryText">Winning Bid</span>
                 <motion.p
-                  className="mt-1 font-mono text-3xl font-black text-amber-400 sm:text-4xl"
+                  className="mt-1 font-mono text-3xl font-black text-warningGold sm:text-4xl"
                   animate={{ textShadow: ['0 0 0 rgba(255,215,0,0)', '0 0 24px rgba(255,215,0,0.6)', '0 0 0 rgba(255,215,0,0)'] }}
                   transition={{ duration: 1.6, delay: 1.2, repeat: Infinity, ease: 'easeInOut' }}
                 >
@@ -308,7 +308,7 @@ export default function WinnerAnimation({
 
               {/* Manager win / lose banner */}
               <motion.div
-                className={`mt-4 flex items-center justify-center gap-2 ${isManagerWinner ? 'text-emerald-400' : 'text-slate-400'}`}
+                className={`mt-4 flex items-center justify-center gap-2 ${isManagerWinner ? 'text-neonGreen' : 'text-secondaryText'}`}
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 1.5, type: 'spring' }}
@@ -320,7 +320,7 @@ export default function WinnerAnimation({
                   </>
                 ) : (
                   <>
-                    <Star className="h-5 w-5 text-amber-400" />
+                    <Star className="h-5 w-5 text-warningGold" />
                     <span className="text-sm font-bold">Better luck next time!</span>
                   </>
                 )}
@@ -336,8 +336,8 @@ export default function WinnerAnimation({
                   animate={{ opacity: 1, scale: 1, rotate: 0 }}
                   transition={{ type: 'spring', stiffness: 200, damping: 12 }}
                 >
-                  <div className="rounded-xl border border-amber-500/40 bg-amber-500/20 px-6 py-2">
-                    <span className="text-xs font-black uppercase tracking-widest text-amber-400">
+                  <div className="rounded-xl border border-warningGold/40 bg-warningGold/20 px-6 py-2">
+                    <span className="text-xs font-black uppercase tracking-widest text-warningGold">
                       ★ Auction Complete ★
                     </span>
                   </div>
@@ -351,7 +351,7 @@ export default function WinnerAnimation({
             {particles.map((p) => (
               <motion.div
                 key={p.id}
-                className="absolute rounded-full bg-amber-400"
+                className="absolute rounded-full bg-warningGold"
                 style={{
                   left: `${p.left}%`,
                   top: `${p.top}%`,

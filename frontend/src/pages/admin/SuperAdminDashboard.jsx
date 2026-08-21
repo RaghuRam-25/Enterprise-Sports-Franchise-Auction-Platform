@@ -121,7 +121,7 @@ export default function SuperAdminDashboard() {
     <div className="space-y-6">
 
       {/* Top Navigation Tabs: Setup, Registration, Auction, Results */}
-      <div className="glass-card rounded-2xl p-2 border border-slate-800 bg-slate-900/90 flex flex-wrap items-center justify-between gap-2">
+      <div className="glass-card rounded-2xl p-2 border border-cardBorder bg-cardBg/90 flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center space-x-1 sm:space-x-2 overflow-x-auto w-full sm:w-auto">
           {topNavTabs.map((tab) => {
             const isTabActive = activeSection === tab.key;
@@ -137,13 +137,13 @@ export default function SuperAdminDashboard() {
                 }}
                 className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 whitespace-nowrap ${
                   isTabActive
-                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/30'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                    ? 'bg-[#58D20A] text-[#050505] shadow-lg font-black border border-[#58D20A]'
+                    : 'bg-[#151515] text-[#F5F5F5] border border-[#333333] hover:border-[#58D20A] hover:text-[#58D20A]'
                 }`}
               >
                 <span>{tab.label}</span>
                 {isStageCurrent && (
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" title="Active Platform Stage" />
+                  <span className="w-2 h-2 rounded-full bg-[#58D20A] animate-pulse" title="Active Platform Stage" />
                 )}
               </button>
             );
@@ -155,18 +155,18 @@ export default function SuperAdminDashboard() {
           <button
             onClick={toggleStageLock}
             disabled={togglingLock}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold text-xs transition border ${
+            className={`btn-secondary flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold text-xs ${
               isLocked
-                ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 hover:bg-amber-500/30'
-                : 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700'
+                ? 'bg-warningGold/20 text-warningGold border-warningGold/50'
+                : ''
             }`}
           >
-            <Lock className={`w-3.5 h-3.5 ${isLocked ? 'text-amber-400' : 'text-slate-400'}`} />
+            <Lock className={`w-3.5 h-3.5 ${isLocked ? 'text-warningGold' : 'text-[#F5F5F5]'}`} />
             <span>{isLocked ? 'Stage Locked' : 'Stage Unlocked'}</span>
           </button>
           <button
             onClick={() => setShowResetConfirm(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold text-xs transition bg-rose-600/20 text-rose-300 border border-rose-500/30 hover:bg-rose-600 hover:text-white"
+            className="btn-danger flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold text-xs"
           >
             <RotateCcw className="w-3.5 h-3.5" />
             <span>Reset Stage</span>
@@ -175,10 +175,10 @@ export default function SuperAdminDashboard() {
       </div>
 
       {/* Top Banner — Global Phase Control */}
-      <div className="glass-card rounded-2xl p-6 border border-slate-800 bg-gradient-to-r from-slate-900 via-slate-900/90 to-blue-950/40 space-y-5">
+      <div className="glass-card rounded-2xl p-6 border border-cardBorder bg-gradient-to-r from-cardBg via-cardBg/90 to-successGreen/40 space-y-5">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div>
-            <span className="text-xs font-bold uppercase tracking-widest text-blue-400">Architect Dashboard &bull; {activeSection} Section</span>
+            <span className="text-xs font-bold uppercase tracking-widest text-neonGreen">Architect Dashboard &bull; {activeSection} Section</span>
             <h1 className="text-2xl font-black font-heading text-white">Global Event Control</h1>
           </div>
 
@@ -187,14 +187,14 @@ export default function SuperAdminDashboard() {
             <button
               onClick={regressedPhase}
               disabled={currentPhaseIndex === 0 || transitioning || phaseLoading || isLocked}
-              className="flex items-center gap-2 px-3.5 py-2 rounded-xl font-bold text-xs transition shadow-lg bg-slate-800 text-slate-200 border border-slate-700 hover:bg-slate-700 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed"
+              className="btn-secondary flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-xs disabled:opacity-40 disabled:cursor-not-allowed"
             >
               <span>&larr; Previous Stage</span>
             </button>
             <button
               onClick={advancePhase}
               disabled={currentPhaseIndex === phases.length - 1 || transitioning || phaseLoading || isLocked}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-xs transition shadow-lg bg-blue-600 text-white hover:bg-blue-500 disabled:opacity-40 disabled:cursor-not-allowed"
+              className="btn-primary flex items-center gap-2 px-5 py-2 rounded-xl font-bold text-xs shadow-xl disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {transitioning ? <Loader className="w-4 h-4 animate-spin" /> : null}
               <span>Next Stage &rarr;</span>
@@ -214,35 +214,35 @@ export default function SuperAdminDashboard() {
                 onClick={() => !isLocked && handlePhaseChange(p)}
                 className={`rounded-xl p-3 border transition cursor-pointer ${
                   isCurrent
-                    ? 'border-blue-500 bg-blue-500/15 ring-1 ring-blue-500/40'
+                    ? 'border-neonGreen bg-neonGreen/15 ring-1 ring-neonGreen/40'
                     : isDone
-                    ? 'border-emerald-600/40 bg-emerald-500/10 hover:border-emerald-500'
-                    : 'border-slate-800 bg-slate-900/50 hover:border-slate-700'
+                    ? 'border-successGreen/40 bg-neonGreen/10 hover:border-neonGreen'
+                    : 'border-cardBorder bg-cardBg/50 hover:border-borderStrong'
                 }`}
               >
                 <div className="flex items-center justify-between">
-                  <span className={`text-[10px] font-mono font-bold ${isCurrent ? 'text-blue-300' : isDone ? 'text-emerald-400' : 'text-slate-500'}`}>
+                  <span className={`text-[10px] font-mono font-bold ${isCurrent ? 'text-neonGreenHover' : isDone ? 'text-neonGreen' : 'text-mutedText'}`}>
                     {String(i + 1).padStart(2, '0')}
                   </span>
-                  {isCurrent && <span className="text-[9px] font-bold uppercase text-blue-300 tracking-wider">Active</span>}
-                  {isDone && <span className="text-[9px] font-bold uppercase text-emerald-400 tracking-wider">Passed</span>}
+                  {isCurrent && <span className="text-[9px] font-bold uppercase text-neonGreenHover tracking-wider">Active</span>}
+                  {isDone && <span className="text-[9px] font-bold uppercase text-neonGreen tracking-wider">Passed</span>}
                 </div>
-                <p className={`text-sm font-extrabold mt-1 ${isCurrent ? 'text-white' : 'text-slate-300'}`}>
+                <p className={`text-sm font-extrabold mt-1 ${isCurrent ? 'text-white' : 'text-secondaryText'}`}>
                   {PHASE_META[p]?.label || p}
                 </p>
-                <p className="text-[10px] text-slate-500 mt-0.5">{PHASE_META[p]?.desc}</p>
+                <p className="text-[10px] text-mutedText mt-0.5">{PHASE_META[p]?.desc}</p>
               </div>
             );
           })}
         </div>
 
         {/* Quick Registration Status Toggle Box */}
-        <div className="pt-2 border-t border-slate-800/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-slate-950/40 p-3.5 rounded-xl">
+        <div className="pt-2 border-t border-cardBorder/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-darkBg/40 p-3.5 rounded-xl">
           <div className="flex items-center gap-3">
-            <span className={`w-3 h-3 rounded-full ${phase === 'REGISTRATION' ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
+            <span className={`w-3 h-3 rounded-full ${phase === 'REGISTRATION' ? 'bg-neonGreen animate-pulse' : 'bg-urgentRed'}`} />
             <div>
               <p className="text-xs font-extrabold text-white uppercase tracking-wider">
-                Player Registration Status: <span className={phase === 'REGISTRATION' ? 'text-emerald-400' : 'text-rose-400'}>{phase === 'REGISTRATION' ? 'OPEN & ACTIVE' : 'CLOSED / FROZEN'}</span>
+                Player Registration Status: <span className={phase === 'REGISTRATION' ? 'text-neonGreen' : 'text-urgentRedText'}>{phase === 'REGISTRATION' ? 'OPEN & ACTIVE' : 'CLOSED / FROZEN'}</span>
               </p>
             </div>
           </div>
@@ -251,8 +251,8 @@ export default function SuperAdminDashboard() {
             disabled={transitioning || phaseLoading || isLocked}
             className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition shadow-md whitespace-nowrap ${
               phase === 'REGISTRATION'
-                ? 'bg-rose-600/20 text-rose-300 border border-rose-500/40 hover:bg-rose-600 hover:text-white'
-                : 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-emerald-500/20'
+                ? 'bg-urgentRed/20 text-urgentRedText border border-urgentRed/40 hover:bg-urgentRed hover:text-white'
+                : 'bg-neonGreen hover:bg-neonGreen text-darkBg shadow-neonGreen/20'
             }`}
           >
             {transitioning ? (
@@ -269,53 +269,53 @@ export default function SuperAdminDashboard() {
 
       {/* Overview Stat Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="glass-card rounded-2xl p-5 border border-slate-800 relative overflow-hidden">
+        <div className="glass-card rounded-2xl p-5 border border-cardBorder relative overflow-hidden">
           <div className="flex justify-between items-start">
             <div>
-              <p className="text-xs font-semibold text-slate-400 uppercase">Total Registrations</p>
+              <p className="text-xs font-semibold text-secondaryText uppercase">Total Registrations</p>
               <h3 className="text-2xl font-black text-white mt-1">{totalRegistered}</h3>
-              <p className="text-[11px] text-emerald-400 mt-1">{soldPlayers} Sold &bull; {unsoldPlayers} Unsold</p>
+              <p className="text-[11px] text-neonGreen mt-1">{soldPlayers} Sold &bull; {unsoldPlayers} Unsold</p>
             </div>
-            <div className="p-3 bg-blue-500/10 text-blue-400 rounded-xl border border-blue-500/20">
+            <div className="p-3 bg-neonGreen/10 text-neonGreen rounded-xl border border-neonGreen/20">
               <Users className="w-6 h-6" />
             </div>
           </div>
         </div>
 
-        <div className="glass-card rounded-2xl p-5 border border-slate-800 relative overflow-hidden">
+        <div className="glass-card rounded-2xl p-5 border border-cardBorder relative overflow-hidden">
           <div className="flex justify-between items-start">
             <div>
-              <p className="text-xs font-semibold text-slate-400 uppercase">Franchise Teams</p>
+              <p className="text-xs font-semibold text-secondaryText uppercase">Franchise Teams</p>
               <h3 className="text-2xl font-black text-white mt-1">{teams.length}</h3>
-              <p className="text-[11px] text-blue-400 mt-1">Active Franchise Buyers</p>
+              <p className="text-[11px] text-neonGreen mt-1">Active Franchise Buyers</p>
             </div>
-            <div className="p-3 bg-emerald-500/10 text-emerald-400 rounded-xl border border-emerald-500/20">
+            <div className="p-3 bg-neonGreen/10 text-neonGreen rounded-xl border border-neonGreen/20">
               <ShieldCheck className="w-6 h-6" />
             </div>
           </div>
         </div>
 
-        <div className="glass-card rounded-2xl p-5 border border-slate-800 relative overflow-hidden">
+        <div className="glass-card rounded-2xl p-5 border border-cardBorder relative overflow-hidden">
           <div className="flex justify-between items-start">
             <div>
-              <p className="text-xs font-semibold text-slate-400 uppercase">Total Event Purse</p>
+              <p className="text-xs font-semibold text-secondaryText uppercase">Total Event Purse</p>
               <h3 className="text-xl font-black text-white mt-1">{formatCurrency(totalPurse)}</h3>
-              <p className="text-[11px] text-amber-400 mt-1">Combined Franchise Capital</p>
+              <p className="text-[11px] text-warningGold mt-1">Combined Franchise Capital</p>
             </div>
-            <div className="p-3 bg-amber-500/10 text-amber-400 rounded-xl border border-amber-500/20">
+            <div className="p-3 bg-warningGold/10 text-warningGold rounded-xl border border-warningGold/20">
               <DollarSign className="w-6 h-6" />
             </div>
           </div>
         </div>
 
-        <div className="glass-card rounded-2xl p-5 border border-slate-800 relative overflow-hidden">
+        <div className="glass-card rounded-2xl p-5 border border-cardBorder relative overflow-hidden">
           <div className="flex justify-between items-start">
             <div>
-              <p className="text-xs font-semibold text-slate-400 uppercase">Dynamic Configs</p>
+              <p className="text-xs font-semibold text-secondaryText uppercase">Dynamic Configs</p>
               <h3 className="text-2xl font-black text-white mt-1">{biddingTiers.length} Tiers</h3>
-              <p className="text-[11px] text-purple-400 mt-1">{categories.length} Categories &bull; {positions.length} Positions &bull; {sessions.length} Sessions</p>
+              <p className="text-[11px] text-warningGold mt-1">{categories.length} Categories &bull; {positions.length} Positions &bull; {sessions.length} Sessions</p>
             </div>
-            <div className="p-3 bg-purple-500/10 text-purple-400 rounded-xl border border-purple-500/20">
+            <div className="p-3 bg-warningGold/10 text-warningGold rounded-xl border border-warningGold/20">
               <Settings className="w-6 h-6" />
             </div>
           </div>
@@ -323,22 +323,22 @@ export default function SuperAdminDashboard() {
       </div>
 
       {/* Franchise Team Summary Table */}
-      <div className="glass-card rounded-2xl p-6 border border-slate-800 space-y-4">
+      <div className="glass-card rounded-2xl p-6 border border-cardBorder space-y-4">
         <div className="flex justify-between items-center">
-          <h3 className="text-sm font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
-            <Trophy className="w-4 h-4 text-amber-400" /> Active Franchises
+          <h3 className="text-sm font-bold uppercase tracking-wider text-secondaryText flex items-center gap-2">
+            <Trophy className="w-4 h-4 text-warningGold" /> Active Franchises
           </h3>
           <Link
             to="/admin/teams"
-            className="text-xs text-blue-400 hover:text-blue-300 font-semibold flex items-center gap-1"
+            className="text-xs text-neonGreen hover:text-neonGreenHover font-semibold flex items-center gap-1"
           >
             Manage Teams &rarr;
           </Link>
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs text-slate-300">
-            <thead className="bg-slate-900/80 text-slate-400 uppercase font-bold text-[11px] border-b border-slate-800">
+          <table className="w-full text-left text-xs text-secondaryText">
+            <thead className="bg-cardBg/80 text-secondaryText uppercase font-bold text-[11px] border-b border-cardBorder">
               <tr>
                 <th className="py-3 px-4">Franchise</th>
                 <th className="py-3 px-4">Initial Purse</th>
@@ -347,17 +347,17 @@ export default function SuperAdminDashboard() {
                 <th className="py-3 px-4">Min Target</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/60">
+            <tbody className="divide-y divide-cardBorder/60">
               {teams.map(team => (
-                <tr key={team.id} className="hover:bg-slate-800/30">
+                <tr key={team.id} className="hover:bg-surfaceHover/30">
                   <td className="py-3 px-4 font-bold text-white flex items-center gap-2">
                     <span>{team.logo}</span>
                     <span>{team.name}</span>
                   </td>
                   <td className="py-3 px-4 font-mono">{formatCurrency(team.totalBudget)}</td>
-                  <td className="py-3 px-4 font-mono text-emerald-400 font-semibold">{formatCurrency(team.remainingBudget)}</td>
+                  <td className="py-3 px-4 font-mono text-neonGreen font-semibold">{formatCurrency(team.remainingBudget)}</td>
                   <td className="py-3 px-4 font-bold">{team.currentRoster.length} Players</td>
-                  <td className="py-3 px-4 text-slate-400">{team.minRoster} Players</td>
+                  <td className="py-3 px-4 text-secondaryText">{team.minRoster} Players</td>
                 </tr>
               ))}
             </tbody>
@@ -368,21 +368,21 @@ export default function SuperAdminDashboard() {
       {/* Reset Confirmation Modal */}
       {showResetConfirm && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="glass-card w-full max-w-md rounded-2xl p-6 border border-rose-500/30 space-y-5 shadow-2xl">
-            <h2 className="text-lg font-black text-white flex items-center gap-2"><AlertTriangle className="w-5 h-5 text-rose-400" /> Confirm Event Reset</h2>
-            <p className="text-sm text-slate-300">
+          <div className="glass-card w-full max-w-md rounded-2xl p-6 border border-urgentRed/30 space-y-5 shadow-2xl">
+            <h2 className="text-lg font-black text-white flex items-center gap-2"><AlertTriangle className="w-5 h-5 text-urgentRedText" /> Confirm Event Reset</h2>
+            <p className="text-sm text-secondaryText">
               This will reset the entire event lifecycle back to the <strong>SETUP</strong> phase.
               This is a destructive action and should only be used to start a new season.
               Are you absolutely sure you want to proceed?
             </p>
             <div className="flex gap-3">
-              <button onClick={() => setShowResetConfirm(false)} className="flex-1 py-2.5 border border-slate-700 text-slate-300 hover:bg-slate-800 rounded-xl text-xs font-semibold transition">
+              <button onClick={() => setShowResetConfirm(false)} className="flex-1 py-2.5 border border-borderStrong text-secondaryText hover:bg-surfaceHover rounded-xl text-xs font-semibold transition">
                 Cancel
               </button>
               <button
                 onClick={executeReset}
                 disabled={resetting}
-                className="flex-1 py-2.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-2"
+                className="flex-1 py-2.5 bg-urgentRed hover:bg-urgentRed text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-2"
               >
                 {resetting ? <Loader className="w-4 h-4 animate-spin" /> : <RotateCcw className="w-4 h-4" />}
                 Yes, Reset Event

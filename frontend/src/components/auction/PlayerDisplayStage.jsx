@@ -160,7 +160,7 @@ export default function PlayerDisplayStage({
                 {isBroadcastingIntro && !isBroadcastingVideo && currentIntroPlayer && (
                   <motion.div
                     key={`intro-player-${introLoopState.currentIndex}`}
-                    className="absolute inset-0 z-20 flex items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950/40 rounded-2xl overflow-hidden"
+                    className="absolute inset-0 z-20 flex items-center justify-center bg-gradient-to-br from-darkBg via-cardBg to-warningGold/40 rounded-2xl overflow-hidden"
                     initial={{ opacity: 0, scale: 1.04 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.96 }}
@@ -168,16 +168,16 @@ export default function PlayerDisplayStage({
                   >
                     {/* Ambient glow */}
                     <div className="absolute inset-0 pointer-events-none">
-                      <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-indigo-500/10 rounded-full blur-[80px]" />
-                      <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-purple-500/10 rounded-full blur-[80px]" />
+                      <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-warningGold/10 rounded-full blur-[80px]" />
+                      <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-warningGold/10 rounded-full blur-[80px]" />
                     </div>
 
                     {/* Category badge + sequence position */}
                     <div className="absolute top-4 inset-x-0 flex items-center justify-between px-6 z-10">
-                      <span className="px-3 py-1 bg-purple-500/20 border border-purple-500/40 text-purple-300 text-[11px] font-bold uppercase tracking-widest rounded-full">
+                      <span className="px-3 py-1 bg-warningGold/20 border border-warningGold/40 text-warningGold text-[11px] font-bold uppercase tracking-widest rounded-full">
                         {currentIntroPlayer.category || 'B Grade'}
                       </span>
-                      <span className="px-3 py-1 bg-slate-900/80 border border-slate-700 text-slate-400 text-[11px] font-mono font-bold rounded-full">
+                      <span className="px-3 py-1 bg-cardBg/80 border border-borderStrong text-secondaryText text-[11px] font-mono font-bold rounded-full">
                         {introLoopState.currentIndex + 1} / {introLoopState.players.length}
                         {introLoopState.repeat && ' 🔁'}
                       </span>
@@ -192,11 +192,11 @@ export default function PlayerDisplayStage({
                         transition={{ delay: 0.15, duration: 0.5 }}
                         className="relative"
                       >
-                        <div className="absolute -inset-3 rounded-full bg-gradient-to-tr from-indigo-500/30 via-purple-500/20 to-transparent blur-xl" />
+                        <div className="absolute -inset-3 rounded-full bg-gradient-to-tr from-warningGold/30 via-warningGold/20 to-transparent blur-xl" />
                         <img
                           src={getImageUrl(currentIntroPlayer.imageUrl, playerFallback('indigo'))}
                           alt={currentIntroPlayer.name}
-                          className="relative w-32 h-32 sm:w-40 sm:h-40 rounded-2xl object-cover border-2 border-purple-400/60 shadow-2xl"
+                          className="relative w-32 h-32 sm:w-40 sm:h-40 rounded-2xl object-cover border-2 border-warningGold/60 shadow-2xl"
                         />
                       </motion.div>
 
@@ -211,11 +211,11 @@ export default function PlayerDisplayStage({
                           {currentIntroPlayer.name}
                         </h2>
                         {currentIntroPlayer.jerseyName && (
-                          <p className="text-xs font-mono font-bold text-indigo-400 tracking-widest uppercase">
+                          <p className="text-xs font-mono font-bold text-warningGold tracking-widest uppercase">
                             # {currentIntroPlayer.jerseyName}
                           </p>
                         )}
-                        <p className="text-sm text-slate-400 font-medium">
+                        <p className="text-sm text-secondaryText font-medium">
                           {currentIntroPlayer.primaryPosition || 'Player'}
                           {currentIntroPlayer.session && ` · ${currentIntroPlayer.session}`}
                         </p>
@@ -226,19 +226,19 @@ export default function PlayerDisplayStage({
                         initial={{ scale: 0.9, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
                         transition={{ delay: 0.35, duration: 0.4 }}
-                        className="px-5 py-2.5 bg-slate-950/80 border border-indigo-500/30 rounded-2xl"
+                        className="px-5 py-2.5 bg-darkBg/80 border border-warningGold/30 rounded-2xl"
                       >
-                        <span className="block text-[10px] text-slate-500 font-bold uppercase tracking-widest">Base Price</span>
-                        <span className="block text-xl font-black font-mono text-emerald-400 mt-0.5">
+                        <span className="block text-[10px] text-mutedText font-bold uppercase tracking-widest">Base Price</span>
+                        <span className="block text-xl font-black font-mono text-neonGreen mt-0.5">
                           ৳{(currentIntroPlayer.basePrice || 0).toLocaleString('en-IN')}
                         </span>
                       </motion.div>
                     </div>
 
                     {/* Progress bar — fills during the player's display window */}
-                    <div className="absolute bottom-0 inset-x-0 h-1 bg-slate-900/60 z-10">
+                    <div className="absolute bottom-0 inset-x-0 h-1 bg-cardBg/60 z-10">
                       <motion.div
-                        className="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500"
+                        className="h-full bg-gradient-to-r from-warningGold to-urgentRed"
                         initial={{ width: '0%' }}
                         animate={{ width: '100%' }}
                         transition={{
@@ -251,7 +251,7 @@ export default function PlayerDisplayStage({
                     {/* PAUSED indicator */}
                     {introLoopState.isPaused && (
                       <div className="absolute inset-0 z-40 bg-black/60 flex items-center justify-center rounded-2xl backdrop-blur-sm">
-                        <div className="px-6 py-3 bg-amber-500/20 border border-amber-500/40 rounded-2xl text-amber-400 font-black text-sm uppercase tracking-widest">
+                        <div className="px-6 py-3 bg-warningGold/20 border border-warningGold/40 rounded-2xl text-warningGold font-black text-sm uppercase tracking-widest">
                           ⏸ PAUSED
                         </div>
                       </div>

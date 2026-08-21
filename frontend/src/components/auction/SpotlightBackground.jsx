@@ -18,28 +18,28 @@ import { motion } from 'framer-motion';
 
 const THEME_CONFIGS = {
   default: {
-    gradient: 'from-slate-950 via-[#04121f] to-slate-950',
-    radial1: 'radial-gradient(ellipse 60% 50% at 50% 45%, rgba(56,189,248,0.18) 0%, transparent 70%)',
-    radial2: 'radial-gradient(ellipse 40% 35% at 70% 65%, rgba(59,130,246,0.14) 0%, transparent 70%)',
-    spotlight: 'rgba(56,189,248,0.25)',
+    gradient: 'from-darkBg via-[#04121f] to-darkBg',
+    radial1: 'radial-gradient(ellipse 60% 50% at 50% 45%, rgba(88,210,10,0.18) 0%, transparent 70%)',
+    radial2: 'radial-gradient(ellipse 40% 35% at 70% 65%, rgba(88,210,10,0.14) 0%, transparent 70%)',
+    spotlight: 'rgba(88,210,10,0.25)',
   },
   urgent: {
-    gradient: 'from-slate-950 via-[#1a0404] to-slate-950',
+    gradient: 'from-darkBg via-[#1a0404] to-darkBg',
     radial1: 'radial-gradient(ellipse 60% 50% at 50% 45%, rgba(248,56,56,0.22) 0%, transparent 70%)',
     radial2: 'radial-gradient(ellipse 40% 35% at 70% 65%, rgba(248,56,56,0.18) 0%, transparent 70%)',
     spotlight: 'rgba(248,56,56,0.35)',
   },
   winner: {
-    gradient: 'from-slate-950 via-[#180c00] to-slate-950',
+    gradient: 'from-darkBg via-[#180c00] to-darkBg',
     radial1: 'radial-gradient(ellipse 70% 55% at 50% 45%, rgba(255,215,0,0.3) 0%, transparent 65%)',
     radial2: 'radial-gradient(ellipse 50% 40% at 30% 60%, rgba(255,215,0,0.2) 0%, transparent 70%)',
     spotlight: 'rgba(255,215,0,0.4)',
   },
   waiting: {
-    gradient: 'from-slate-950 via-[#0a0a1a] to-slate-950',
-    radial1: 'radial-gradient(ellipse 70% 50% at 50% 50%, rgba(168,85,247,0.12) 0%, transparent 70%)',
-    radial2: 'radial-gradient(ellipse 50% 40% at 30% 60%, rgba(139,92,246,0.1) 0%, transparent 70%)',
-    spotlight: 'rgba(168,85,247,0.2)',
+    gradient: 'from-darkBg via-[#0a0a1a] to-darkBg',
+    radial1: 'radial-gradient(ellipse 70% 50% at 50% 50%, rgba(244,197,66,0.12) 0%, transparent 70%)',
+    radial2: 'radial-gradient(ellipse 50% 40% at 30% 60%, rgba(244,197,66,0.1) 0%, transparent 70%)',
+    spotlight: 'rgba(244,197,66,0.2)',
   },
 };
 

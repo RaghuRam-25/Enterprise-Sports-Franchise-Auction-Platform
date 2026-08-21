@@ -5,22 +5,22 @@ import { useAuction } from '../../context/AuctionContext';
 import TeamBadge from '../../components/common/TeamBadge';
 
 const CATEGORY_STYLES = {
-  'Icon Category': 'bg-amber-950/50 border-amber-700/50 text-amber-300',
-  'A Grade': 'bg-blue-950/50 border-blue-800/60 text-blue-300',
-  'B Grade': 'bg-teal-950/50 border-teal-800/50 text-teal-300',
-  'Emerging Youth': 'bg-purple-950/50 border-purple-800/50 text-purple-300',
-  default: 'bg-slate-900/60 border-slate-800 text-slate-300',
+  'Icon Category': 'bg-warningGold/50 border-warningGold/50 text-warningGold',
+  'A Grade': 'bg-successGreen/50 border-successGreen/60 text-neonGreenHover',
+  'B Grade': 'bg-successGreen/50 border-successGreen/50 text-neonGreenHover',
+  'Emerging Youth': 'bg-warningGold/50 border-warningGold/50 text-warningGold',
+  default: 'bg-cardBg/60 border-cardBorder text-secondaryText',
 };
 
 const STATUS_STYLES = {
-  SOLD: 'bg-emerald-950/50 border-emerald-500/40 text-emerald-300',
-  REGISTERED: 'bg-sky-950/50 border-sky-500/40 text-sky-300',
-  APPROVED: 'bg-sky-950/50 border-sky-500/40 text-sky-300',
-  ON_PODIUM: 'bg-rose-950/50 border-rose-500/40 text-rose-300 animate-pulse',
-  UNSOLD: 'bg-slate-900/60 border-slate-700 text-slate-400',
-  WITHDRAWN: 'bg-slate-900/60 border-slate-700 text-slate-500',
-  BANNED: 'bg-rose-950/60 border-rose-700 text-rose-400',
-  default: 'bg-slate-900/60 border-slate-800 text-slate-400',
+  SOLD: 'bg-successGreen/50 border-neonGreen/40 text-neonGreenHover',
+  REGISTERED: 'bg-successGreen/50 border-neonGreen/40 text-neonGreenHover',
+  APPROVED: 'bg-successGreen/50 border-neonGreen/40 text-neonGreenHover',
+  ON_PODIUM: 'bg-urgentRed/50 border-urgentRed/40 text-urgentRedText animate-pulse',
+  UNSOLD: 'bg-cardBg/60 border-borderStrong text-secondaryText',
+  WITHDRAWN: 'bg-cardBg/60 border-borderStrong text-mutedText',
+  BANNED: 'bg-urgentRed/60 border-urgentRed text-urgentRedText',
+  default: 'bg-cardBg/60 border-cardBorder text-secondaryText',
 };
 
 /**
@@ -73,14 +73,14 @@ export default function GeneralPlayers() {
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
           <h1 className="flex items-center gap-2 text-xl font-black text-white">
-            <UserCheck className="w-5 h-5 text-sky-400" /> Players
+            <UserCheck className="w-5 h-5 text-neonGreen" /> Players
           </h1>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-secondaryText mt-1">
             Every registered player in the league — public profiles only.
           </p>
         </div>
         <div className="relative w-full sm:w-64">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-mutedText" />
           <input
             type="text"
             placeholder="Search players…"
@@ -92,8 +92,8 @@ export default function GeneralPlayers() {
       </div>
 
       {/* Filters */}
-      <div className="glass-card rounded-2xl border border-slate-800 p-4 flex flex-wrap items-center gap-3">
-        <span className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+      <div className="glass-card rounded-2xl border border-cardBorder p-4 flex flex-wrap items-center gap-3">
+        <span className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-mutedText">
           <Filter className="w-3.5 h-3.5" /> Filters
         </span>
         <select
@@ -103,7 +103,7 @@ export default function GeneralPlayers() {
           aria-label="Filter by category"
         >
           {categories.map(c => (
-            <option key={c} value={c} className="bg-slate-900">{c === 'ALL' ? 'All Categories' : c}</option>
+            <option key={c} value={c} className="bg-cardBg">{c === 'ALL' ? 'All Categories' : c}</option>
           ))}
         </select>
         <select
@@ -113,19 +113,19 @@ export default function GeneralPlayers() {
           aria-label="Filter by status"
         >
           {statuses.map(s => (
-            <option key={s} value={s} className="bg-slate-900">{s === 'ALL' ? 'All Statuses' : s.replace('_', ' ')}</option>
+            <option key={s} value={s} className="bg-cardBg">{s === 'ALL' ? 'All Statuses' : s.replace('_', ' ')}</option>
           ))}
         </select>
-        <span className="ml-auto text-[11px] font-bold text-slate-500">
+        <span className="ml-auto text-[11px] font-bold text-mutedText">
           {filtered.length} player{filtered.length === 1 ? '' : 's'}
         </span>
       </div>
 
       {filtered.length === 0 ? (
-        <div className="glass-card rounded-2xl p-10 border border-slate-800 text-center space-y-2">
-          <Info className="w-8 h-8 mx-auto text-slate-600" />
-          <p className="text-sm font-bold text-slate-300">No players found</p>
-          <p className="text-xs text-slate-500">Try adjusting your search or filters.</p>
+        <div className="glass-card rounded-2xl p-10 border border-cardBorder text-center space-y-2">
+          <Info className="w-8 h-8 mx-auto text-mutedText" />
+          <p className="text-sm font-bold text-secondaryText">No players found</p>
+          <p className="text-xs text-mutedText">Try adjusting your search or filters.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -137,25 +137,25 @@ export default function GeneralPlayers() {
               <Link
                 key={player._id || player.id}
                 to={`/general/players/${player._id || player.id}`}
-                className="glass-card glass-card-hover rounded-2xl border border-slate-800 p-4 flex items-center gap-4 group"
+                className="glass-card glass-card-hover rounded-2xl border border-borderStrong p-4 flex items-center gap-4 group"
               >
                 {player.imageUrl ? (
                   <img
                     src={player.imageUrl}
                     alt={player.name}
-                    className="w-14 h-14 rounded-xl object-cover border border-slate-700 shrink-0"
+                    className="w-14 h-14 rounded-xl object-cover border border-borderStrong shrink-0"
                     onError={e => { e.currentTarget.style.visibility = 'hidden'; }}
                   />
                 ) : (
-                  <span className="w-14 h-14 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-sm font-black text-slate-400 shrink-0">
+                  <span className="w-14 h-14 rounded-xl bg-surfaceHover border border-borderStrong flex items-center justify-center text-sm font-black text-secondaryText shrink-0">
                     {(player.jerseyName || player.name || 'P').slice(0, 2).toUpperCase()}
                   </span>
                 )}
                 <div className="min-w-0 flex-1 space-y-1.5">
-                  <p className="text-sm font-black text-white truncate group-hover:text-sky-300 transition">
+                  <p className="text-sm font-black text-white truncate group-hover:text-neonGreenHover transition">
                     {player.jerseyName || player.name}
                   </p>
-                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-slate-500">
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-mutedText">
                     <span className="flex items-center gap-1">
                       <Tag className="w-3 h-3" /> {player.primaryPosition || player.positions?.[0] || '—'}
                     </span>
@@ -179,7 +179,7 @@ export default function GeneralPlayers() {
                     )}
                   </div>
                 </div>
-                <span className="w-8 h-8 rounded-xl bg-slate-900/80 border border-slate-800 flex items-center justify-center text-slate-500 group-hover:text-sky-300 group-hover:border-sky-500/40 transition shrink-0">
+                <span className="w-8 h-8 rounded-xl bg-cardBg/80 border border-cardBorder flex items-center justify-center text-mutedText group-hover:text-neonGreenHover group-hover:border-neonGreen/40 transition shrink-0">
                   <Eye className="w-4 h-4" />
                 </span>
               </Link>

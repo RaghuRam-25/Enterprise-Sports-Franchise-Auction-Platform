@@ -89,18 +89,18 @@ export default function GeneralUserRegister() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-darkBg text-slate-100">
+    <div className="min-h-screen flex flex-col bg-darkBg text-primaryText">
       <Navbar />
       <main className="flex-1 flex items-center justify-center px-4 py-10">
-        <div className="glass-card w-full max-w-md rounded-2xl p-8 border border-slate-800 space-y-6 shadow-2xl">
+        <div className="glass-card w-full max-w-md rounded-2xl p-8 border border-cardBorder space-y-6 shadow-2xl">
           {/* Header */}
           <div className="flex flex-col items-center text-center space-y-3">
-            <div className="w-14 h-14 bg-sky-500/10 text-sky-400 rounded-2xl border border-sky-500/20 flex items-center justify-center">
+            <div className="w-14 h-14 bg-neonGreen/10 text-neonGreen rounded-2xl border border-neonGreen/20 flex items-center justify-center">
               <UserPlus className="w-7 h-7" />
             </div>
             <div>
               <h1 className="text-xl font-black text-white">Join the Fan Zone</h1>
-              <p className="text-xs text-slate-400 mt-1">
+              <p className="text-xs text-secondaryText mt-1">
                 Free spectator account — no approval needed. Follow live auctions, matches and your favourite teams.
               </p>
             </div>
@@ -108,7 +108,7 @@ export default function GeneralUserRegister() {
 
           {/* Error banner */}
           {error && (
-            <div className="flex items-start gap-2 bg-rose-950/50 border border-rose-500/30 rounded-xl p-3 text-xs text-rose-300">
+            <div className="flex items-start gap-2 bg-urgentRed/50 border border-urgentRed/30 rounded-xl p-3 text-xs text-urgentRedText">
               {error.includes('server') || error.includes('port') ? (
                 <Server className="w-4 h-4 mt-0.5 shrink-0" />
               ) : (
@@ -124,18 +124,18 @@ export default function GeneralUserRegister() {
               <label className="relative cursor-pointer group shrink-0" title="Upload profile photo (optional)">
                 <input type="file" accept="image/*" onChange={handlePhotoChange} className="hidden" />
                 {photoPreview ? (
-                  <img src={photoPreview} alt="Profile preview" className="w-12 h-12 rounded-full object-cover border-2 border-sky-500/40" />
+                  <img src={photoPreview} alt="Profile preview" className="w-12 h-12 rounded-full object-cover border-2 border-neonGreen/40" />
                 ) : (
-                  <span className="w-12 h-12 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-500 group-hover:text-sky-400 group-hover:border-sky-500/40 transition">
+                  <span className="w-12 h-12 rounded-full bg-surfaceHover border border-borderStrong flex items-center justify-center text-mutedText group-hover:text-neonGreen group-hover:border-neonGreen/40 transition">
                     <ImagePlus className="w-5 h-5" />
                   </span>
                 )}
               </label>
-              <p className="text-[11px] text-slate-500">Profile photo (optional)</p>
+              <p className="text-[11px] text-mutedText">Profile photo (optional)</p>
             </div>
 
             <div>
-              <label htmlFor="gu-reg-name" className="block text-[11px] font-semibold text-slate-400 mb-1">Full Name</label>
+              <label htmlFor="gu-reg-name" className="block text-[11px] font-semibold text-secondaryText mb-1">Full Name</label>
               <input
                 id="gu-reg-name"
                 type="text"
@@ -148,7 +148,7 @@ export default function GeneralUserRegister() {
             </div>
 
             <div>
-              <label htmlFor="gu-reg-email" className="block text-[11px] font-semibold text-slate-400 mb-1">Email</label>
+              <label htmlFor="gu-reg-email" className="block text-[11px] font-semibold text-secondaryText mb-1">Email</label>
               <input
                 id="gu-reg-email"
                 type="email"
@@ -162,7 +162,7 @@ export default function GeneralUserRegister() {
             </div>
 
             <div>
-              <label htmlFor="gu-reg-phone" className="block text-[11px] font-semibold text-slate-400 mb-1">Mobile Phone Number</label>
+              <label htmlFor="gu-reg-phone" className="block text-[11px] font-semibold text-secondaryText mb-1">Mobile Phone Number</label>
               <input
                 id="gu-reg-phone"
                 type="tel"
@@ -175,7 +175,7 @@ export default function GeneralUserRegister() {
             </div>
 
             <div>
-              <label htmlFor="gu-reg-password" className="block text-[11px] font-semibold text-slate-400 mb-1">Password</label>
+              <label htmlFor="gu-reg-password" className="block text-[11px] font-semibold text-secondaryText mb-1">Password</label>
               <div className="relative">
                 <input
                   id="gu-reg-password"
@@ -191,7 +191,7 @@ export default function GeneralUserRegister() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(prev => !prev)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-200 transition"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-mutedText hover:text-primaryText transition"
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -200,7 +200,7 @@ export default function GeneralUserRegister() {
             </div>
 
             <div>
-              <label htmlFor="gu-reg-confirm" className="block text-[11px] font-semibold text-slate-400 mb-1">Confirm Password</label>
+              <label htmlFor="gu-reg-confirm" className="block text-[11px] font-semibold text-secondaryText mb-1">Confirm Password</label>
               <input
                 id="gu-reg-confirm"
                 type={showPassword ? 'text' : 'password'}
@@ -212,7 +212,7 @@ export default function GeneralUserRegister() {
                 className="glass-input w-full rounded-xl px-4 py-2.5 text-xs"
               />
               {form.confirmPassword && form.password === form.confirmPassword && (
-                <p className="flex items-center gap-1 text-[11px] text-emerald-400 mt-1">
+                <p className="flex items-center gap-1 text-[11px] text-neonGreen mt-1">
                   <CheckCircle className="w-3 h-3" /> Passwords match
                 </p>
               )}
@@ -237,16 +237,16 @@ export default function GeneralUserRegister() {
             </button>
           </form>
 
-          <p className="text-center text-xs text-slate-400">
+          <p className="text-center text-xs text-secondaryText">
             Already have an account?{' '}
-            <Link to="/login" className="text-sky-400 hover:text-sky-300 font-bold">
+            <Link to="/login" className="text-neonGreen hover:text-neonGreenHover font-bold">
               Login
             </Link>
           </p>
 
           <Link
             to="/"
-            className="flex items-center justify-center gap-1.5 text-[11px] text-slate-500 hover:text-slate-300 font-semibold transition"
+            className="flex items-center justify-center gap-1.5 text-[11px] text-secondaryText hover:text-white font-semibold transition"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             Back to main website

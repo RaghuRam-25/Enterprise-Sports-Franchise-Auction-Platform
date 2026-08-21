@@ -30,7 +30,7 @@ export default function FullscreenWrapper({ children, className = "", buttonClas
     };
 
     return (
-        <div ref={wrapperRef} className={["group relative w-full h-full bg-slate-950 [&:fullscreen]:bg-black", className].filter(Boolean).join(" ")}>
+        <div ref={wrapperRef} className={["group relative w-full h-full bg-darkBg [&:fullscreen]:bg-black", className].filter(Boolean).join(" ")}>
             {children}
             <button
                 onClick={toggleFullscreen}

@@ -8,14 +8,14 @@ import { useSocket } from '../context/SocketContext';
 
 // Custom SVG Icons for social networks to avoid lucide icon version export mismatches
 const GithubIcon = (props) => (
-  <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" {...props}>
+  <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" {...props}>
     <path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4" />
     <path d="M9 18c-4.51 2-5-2-7-2" />
   </svg>
 );
 
 const LinkedinIcon = (props) => (
-  <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" {...props}>
+  <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" {...props}>
     <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" />
     <rect x="2" y="9" width="4" height="12" />
     <circle cx="4" cy="4" r="2" />
@@ -23,13 +23,13 @@ const LinkedinIcon = (props) => (
 );
 
 const FacebookIcon = (props) => (
-  <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" {...props}>
+  <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" {...props}>
     <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
   </svg>
 );
 
 const YoutubeIcon = (props) => (
-  <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" {...props}>
+  <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" {...props}>
     <path d="M2.5 17a24.12 24.12 0 0 1 0-10 2 2 0 0 1 1.4-1.4 49.56 49.56 0 0 1 16.2 0A2 2 0 0 1 21.5 7a24.12 24.12 0 0 1 0 10 2 2 0 0 1-1.4 1.4 49.56 49.56 0 0 1-16.2 0A2 2 0 0 1 2.5 17" />
     <polygon points="10 15 15 12 10 9 10 15" fill="currentColor" />
   </svg>
@@ -49,29 +49,29 @@ export default function Footer() {
   const currentSessionName = sessions?.[0]?.name || '2025-2026';
 
   return (
-    <footer className="relative z-6 bg-slate-950 border-t border-slate-900 text-slate-600 text-xs overflow-hidden">
+    <footer className="relative z-6 bg-darkBg border-t border-cardBorder text-mutedText text-xs overflow-hidden">
 
       {/* ── LIVE STATUS BAR (Slim bar above main footer content) ──────────── */}
-      <div className="bg-slate-900/90 border-b border-slate-800/80 px-4 sm:px-6 lg:px-8 py-1.5 backdrop-blur-md">
+      <div className="bg-cardBg/90 border-b border-cardBorder/80 px-4 sm:px-6 lg:px-8 py-1.5 backdrop-blur-md">
         <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3 text-[10.5px] font-mono">
 
           <div className="flex flex-wrap items-center gap-4">
             {/* Registration Status */}
             <div className="flex items-center gap-1.5">
-              <span className="text-slate-500 uppercase font-bold text-[10px]">Registration:</span>
-              <span className={`font-black uppercase flex items-center gap-1 ${isRegistrationFrozen ? 'text-rose-400' : 'text-emerald-400'
+              <span className="text-mutedText uppercase font-bold text-[10px]">Registration:</span>
+              <span className={`font-black uppercase flex items-center gap-1 ${isRegistrationFrozen ? 'text-urgentRedText' : 'text-neonGreen'
                 }`}>
-                <span className={`w-1.5 h-1.5 rounded-full ${isRegistrationFrozen ? 'bg-rose-500' : 'bg-emerald-500 animate-ping'}`} />
+                <span className={`w-1.5 h-1.5 rounded-full ${isRegistrationFrozen ? 'bg-urgentRed' : 'bg-neonGreen animate-ping'}`} />
                 {isRegistrationFrozen ? 'FROZEN' : 'OPEN'}
               </span>
             </div>
 
             {/* Auction Status */}
             <div className="flex items-center gap-1.5">
-              <span className="text-slate-500 uppercase font-bold text-[10px]">Auction Engine:</span>
-              <span className={`font-black uppercase flex items-center gap-1 ${timerStatus === 'running' ? 'text-emerald-400' :
-                  timerStatus === 'paused' ? 'text-amber-400' :
-                    'text-blue-400'
+              <span className="text-mutedText uppercase font-bold text-[10px]">Auction Engine:</span>
+              <span className={`font-black uppercase flex items-center gap-1 ${timerStatus === 'running' ? 'text-neonGreen' :
+                  timerStatus === 'paused' ? 'text-warningGold' :
+                    'text-neonGreen'
                 }`}>
                 <Radio className="w-3 h-3 animate-pulse" />
                 {timerStatus === 'running' ? 'LIVE' : timerStatus.toUpperCase()}
@@ -80,34 +80,34 @@ export default function Footer() {
 
             {/* Franchises */}
             <div className="flex items-center gap-1.5">
-              <span className="text-slate-500 uppercase font-bold text-[10px]">Franchises:</span>
+              <span className="text-mutedText uppercase font-bold text-[10px]">Franchises:</span>
               <span className="font-bold text-white">{teams.length} Teams</span>
             </div>
 
             {/* Registered Players */}
             <div className="flex items-center gap-1.5">
-              <span className="text-slate-500 uppercase font-bold text-[10px]">Registered Players:</span>
-              <span className="font-bold text-blue-400">{players.length}</span>
+              <span className="text-mutedText uppercase font-bold text-[10px]">Registered Players:</span>
+              <span className="font-bold text-neonGreen">{players.length}</span>
             </div>
 
             {/* Players Sold */}
             <div className="flex items-center gap-1.5">
-              <span className="text-slate-500 uppercase font-bold text-[10px]">Players Sold:</span>
-              <span className="font-bold text-emerald-400">{soldCount}</span>
+              <span className="text-mutedText uppercase font-bold text-[10px]">Players Sold:</span>
+              <span className="font-bold text-neonGreen">{soldCount}</span>
             </div>
           </div>
 
           <div className="flex items-center gap-4">
             {/* Session */}
             <div className="flex items-center gap-1.5">
-              <span className="text-slate-500 uppercase font-bold text-[10px]">Session:</span>
-              <span className="font-bold text-purple-400">{currentSessionName}</span>
+              <span className="text-mutedText uppercase font-bold text-[10px]">Session:</span>
+              <span className="font-bold text-warningGold">{currentSessionName}</span>
             </div>
 
             {/* WebSocket Status */}
             <div className="flex items-center gap-1.5">
-              <span className="text-slate-500 uppercase font-bold text-[10px]">Server Status:</span>
-              <span className={`font-bold flex items-center gap-1 ${isConnected ? 'text-emerald-400' : 'text-slate-400'
+              <span className="text-mutedText uppercase font-bold text-[10px]">Server Status:</span>
+              <span className={`font-bold flex items-center gap-1 ${isConnected ? 'text-neonGreen' : 'text-secondaryText'
                 }`}>
                 <Activity className="w-3 h-3" />
                 {isConnected ? 'ONLINE' : 'OFFLINE'}
@@ -125,26 +125,26 @@ export default function Footer() {
           {/* Column 1: Brand & Logo */}
           <div className="space-y-2.5">
             <Link to="/" className="flex items-center space-x-3 group">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-500 to-emerald-400 p-0.5 shadow-lg group-hover:scale-105 transition-transform">
-                <div className="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center">
-                  <Trophy className="w-4 h-4 text-emerald-400" />
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-neonGreen via-neonGreenHover to-successGreen p-0.5 shadow-lg group-hover:scale-105 transition-transform">
+                <div className="w-full h-full bg-darkBg rounded-[10px] flex items-center justify-center">
+                  <Trophy className="w-4 h-4 text-neonGreen" />
                 </div>
               </div>
               <div>
-                <span className="font-heading font-black text-sm tracking-wider bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent uppercase">
-                  FRANCHISE<span className="text-emerald-400">AUCTION</span>
+                <span className="font-heading font-black text-sm tracking-wider bg-gradient-to-r from-white via-primaryText to-secondaryText bg-clip-text text-transparent uppercase">
+                  FRANCHISE<span className="text-neonGreen">AUCTION</span>
                 </span>
-                <span className="block text-[9px] tracking-widest text-slate-400 uppercase font-semibold">Enterprise Platform</span>
+                <span className="block text-[9px] tracking-widest text-secondaryText uppercase font-semibold">Enterprise Platform</span>
               </div>
             </Link>
 
-            <p className="text-slate-400 text-[11px] leading-snug">
+            <p className="text-secondaryText text-[11px] leading-snug">
               Department of Computer Science &amp; Engineering, GSTU.
             </p>
 
-            <div className="pt-0.5 flex items-center justify-between text-[10px] text-slate-500 font-mono">
+            <div className="pt-0.5 flex items-center justify-between text-[10px] text-mutedText font-mono">
               <span>GSTU CSE Hackathon 2026</span>
-              <span className="px-2 py-0.5 rounded bg-slate-900 text-emerald-400 border border-slate-800 font-bold">
+              <span className="px-2 py-0.5 rounded bg-cardBg text-neonGreen border border-cardBorder font-bold">
                 Version 1.0.0
               </span>
             </div>
@@ -157,34 +157,34 @@ export default function Footer() {
             </h4>
             <ul className="space-y-1.5 text-[11px]">
               <li>
-                <Link to="/" className="hover:text-blue-400 transition flex items-center gap-1.5">
-                  <span className="text-blue-500">&rsaquo;</span> Home
+                <Link to="/" className="hover:text-neonGreen transition flex items-center gap-1.5">
+                  <span className="text-neonGreen">&rsaquo;</span> Home
                 </Link>
               </li>
               <li>
-                <Link to="/live" className="hover:text-emerald-400 transition flex items-center gap-1.5">
-                  <span className="text-emerald-500">&rsaquo;</span> Live Auction
+                <Link to="/live" className="hover:text-neonGreen transition flex items-center gap-1.5">
+                  <span className="text-neonGreen">&rsaquo;</span> Live Auction
                 </Link>
               </li>
               <li>
-                <Link to="/teams" className="hover:text-blue-400 transition flex items-center gap-1.5">
-                  <span className="text-blue-500">&rsaquo;</span> Franchise Teams
+                <Link to="/teams" className="hover:text-neonGreen transition flex items-center gap-1.5">
+                  <span className="text-neonGreen">&rsaquo;</span> Franchise Teams
                 </Link>
               </li>
               <li>
-                <Link to="/players" className="hover:text-purple-400 transition flex items-center gap-1.5">
-                  <span className="text-purple-500">&rsaquo;</span> Player Directory
+                <Link to="/players" className="hover:text-warningGold transition flex items-center gap-1.5">
+                  <span className="text-warningGold">&rsaquo;</span> Player Directory
                 </Link>
               </li>
               <li>
-                <Link to="/login" className="hover:text-amber-400 transition flex items-center gap-1.5">
-                  <span className="text-amber-500">&rsaquo;</span> Unified Login
+                <Link to="/login" className="hover:text-warningGold transition flex items-center gap-1.5">
+                  <span className="text-warningGold">&rsaquo;</span> Unified Login
                 </Link>
               </li>
               {!isRegistrationFrozen && (
                 <li>
-                  <Link to="/player/register" className="hover:text-emerald-400 transition flex items-center gap-1.5">
-                    <span className="text-emerald-500">&rsaquo;</span> Player Registration
+                  <Link to="/player/register" className="hover:text-neonGreen transition flex items-center gap-1.5">
+                    <span className="text-neonGreen">&rsaquo;</span> Player Registration
                   </Link>
                 </li>
               )}
@@ -198,23 +198,23 @@ export default function Footer() {
             </h4>
             <ul className="space-y-1.5 text-[11px]">
               <li className="flex items-start gap-2.5">
-                <MapPin className="w-3.5 h-3.5 text-rose-400 flex-shrink-0 mt-0.5" />
+                <MapPin className="w-3.5 h-3.5 text-urgentRedText flex-shrink-0 mt-0.5" />
                 <span>GSTU Campus, Gopalganj</span>
               </li>
               <li className="flex items-center gap-2.5">
-                <Mail className="w-3.5 h-3.5 text-blue-400 flex-shrink-0" />
-                <a href="mailto:cse@gstu.ac.bd" className="hover:text-blue-300 transition">
+                <Mail className="w-3.5 h-3.5 text-neonGreen flex-shrink-0" />
+                <a href="mailto:cse@gstu.ac.bd" className="hover:text-neonGreenHover transition">
                   cse@gstu.ac.bd
                 </a>
               </li>
               <li className="flex items-center gap-2.5">
-                <Globe className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
-                <a href="https://gstu.ac.bd" target="_blank" rel="noopener noreferrer" className="hover:text-emerald-300 transition flex items-center gap-1">
-                  gstu.ac.bd <ExternalLink className="w-3 h-3 text-slate-500" />
+                <Globe className="w-3.5 h-3.5 text-neonGreen flex-shrink-0" />
+                <a href="https://gstu.ac.bd" target="_blank" rel="noopener noreferrer" className="hover:text-neonGreenHover transition flex items-center gap-1">
+                  gstu.ac.bd <ExternalLink className="w-3 h-3 text-mutedText" />
                 </a>
               </li>
               <li className="flex items-center gap-2.5">
-                <Phone className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
+                <Phone className="w-3.5 h-3.5 text-warningGold flex-shrink-0" />
                 <span>+880 2-XXXXXXX</span>
               </li>
             </ul>
@@ -225,20 +225,20 @@ export default function Footer() {
             <h4 className="font-heading font-bold text-white text-xs uppercase tracking-wider">
               Event Info
             </h4>
-            <ul className="space-y-1.5 text-[11px] text-slate-400">
+            <ul className="space-y-1.5 text-[11px] text-secondaryText">
               <li>
-                <span className="text-slate-500 font-medium block text-[10px] uppercase">Organizer</span>
-                <span className="text-slate-200 font-semibold">Dept of CSE, GSTU</span>
+                <span className="text-mutedText font-medium block text-[10px] uppercase">Organizer</span>
+                <span className="text-primaryText font-semibold">Dept of CSE, GSTU</span>
               </li>
               <li>
-                <span className="text-slate-500 font-medium block text-[10px] uppercase">Event</span>
-                <span className="text-slate-200 font-semibold">GSTU Hackathon 2026</span>
+                <span className="text-mutedText font-medium block text-[10px] uppercase">Event</span>
+                <span className="text-primaryText font-semibold">GSTU Hackathon 2026</span>
               </li>
               <li>
-                <span className="text-slate-500 font-medium block text-[10px] uppercase">Registration Status</span>
+                <span className="text-mutedText font-medium block text-[10px] uppercase">Registration Status</span>
                 <span className={`font-bold inline-block mt-0.5 px-2 py-0.5 rounded text-[10px] uppercase border ${isRegistrationFrozen
-                    ? 'bg-rose-500/10 text-rose-400 border-rose-500/30'
-                    : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                    ? 'bg-urgentRed/10 text-urgentRedText border-urgentRed/30'
+                    : 'bg-neonGreen/10 text-neonGreen border-neonGreen/30'
                   }`}>
                   {isRegistrationFrozen ? 'FROZEN' : 'OPEN'}
                 </span>
@@ -251,16 +251,16 @@ export default function Footer() {
             <h4 className="font-heading font-bold text-white text-xs uppercase tracking-wider">
               Connect With Us
             </h4>
-            <p className="text-slate-400 text-[11px] leading-snug">
+            <p className="text-secondaryText text-[11px] leading-snug">
               Follow official GSTU Computer Science &amp; Engineering event updates.
             </p>
 
-            <div className="flex items-center gap-2 pt-1">
+            <div className="flex items-center gap-2.5 pt-2">
               <a
                 href="https://github.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-7 h-7 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-white hover:border-blue-500/50 hover:bg-slate-800 transition transform hover:-translate-y-0.5 shadow-md"
+                className="w-9 h-9 rounded-xl bg-[#151515] border border-[#333333] flex items-center justify-center text-[#F5F5F5] hover:text-[#58D20A] hover:border-[#58D20A] hover:bg-[#58D20A]/10 transition shadow-md"
                 title="GitHub"
               >
                 <GithubIcon />
@@ -270,7 +270,7 @@ export default function Footer() {
                 href="https://linkedin.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-7 h-7 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-blue-400 hover:border-blue-500/50 hover:bg-slate-800 transition transform hover:-translate-y-0.5 shadow-md"
+                className="w-9 h-9 rounded-xl bg-[#151515] border border-[#333333] flex items-center justify-center text-[#0A66C2] hover:border-[#0A66C2] hover:bg-[#0A66C2]/10 transition shadow-md"
                 title="LinkedIn"
               >
                 <LinkedinIcon />
@@ -280,7 +280,7 @@ export default function Footer() {
                 href="https://facebook.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-7 h-7 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-blue-500 hover:border-blue-500/50 hover:bg-slate-800 transition transform hover:-translate-y-0.5 shadow-md"
+                className="w-9 h-9 rounded-xl bg-[#151515] border border-[#333333] flex items-center justify-center text-[#1877F2] hover:border-[#1877F2] hover:bg-[#1877F2]/10 transition shadow-md"
                 title="Facebook"
               >
                 <FacebookIcon />
@@ -290,7 +290,7 @@ export default function Footer() {
                 href="https://youtube.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-7 h-7 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-rose-500 hover:border-rose-500/50 hover:bg-slate-800 transition transform hover:-translate-y-0.5 shadow-md"
+                className="w-9 h-9 rounded-xl bg-[#151515] border border-[#333333] flex items-center justify-center text-[#FF0000] hover:border-[#FF0000] hover:bg-[#FF0000]/10 transition shadow-md"
                 title="YouTube"
               >
                 <YoutubeIcon />
@@ -302,13 +302,13 @@ export default function Footer() {
       </div>
 
       {/* ── BOTTOM COPYRIGHT ────────────────────────────────────────────── */}
-      <div className="bg-slate-950 border-t border-slate-900 px-4 sm:px-6 lg:px-8 py-2.5">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between text-[11px] text-slate-500 gap-1.5">
+      <div className="bg-darkBg border-t border-cardBorder px-4 sm:px-6 lg:px-8 py-2.5">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between text-[11px] text-mutedText gap-1.5">
           <p>
             &copy; 2026 Enterprise Sports Franchise Auction Platform. All Rights Reserved.
           </p>
-          <p className="font-semibold text-slate-400">
-            Developed for <span className="text-blue-400">GSTU CSE</span>
+          <p className="font-semibold text-secondaryText">
+            Developed for <span className="text-neonGreen">GSTU CSE</span>
           </p>
         </div>
       </div>

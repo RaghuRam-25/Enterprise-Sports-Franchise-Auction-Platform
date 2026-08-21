@@ -198,42 +198,42 @@ function BroadcastHUD({ teamsConnected, managersReady, compact }) {
         style={{ boxShadow: '0 8px 30px rgba(0,0,0,0.35)' }}
       >
         <span className="relative flex h-2.5 w-2.5">
-          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-400 opacity-75" />
-          <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-rose-500" />
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-urgentRed opacity-75" />
+          <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-urgentRed" />
         </span>
         <span className="text-[10px] font-black uppercase tracking-[0.25em] text-white/90">
           Live
         </span>
         <span className="h-3 w-px bg-white/20" />
-        <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-300">
-          <Radio className="h-3 w-3 text-emerald-400" /> Auction Centre
+        <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-[0.18em] text-secondaryText">
+          <Radio className="h-3 w-3 text-neonGreen" /> Auction Centre
         </span>
       </motion.div>
 
       {/* Bottom lower-third scoreboard bug */}
       <motion.div
-        className={`pointer-events-none absolute bottom-4 left-4 z-30 flex items-center gap-3 rounded-2xl border border-white/10 bg-slate-950/50 backdrop-blur-xl ${compact ? 'px-3 py-2' : 'px-5 py-3'}`}
+        className={`pointer-events-none absolute bottom-4 left-4 z-30 flex items-center gap-3 rounded-2xl border border-white/10 bg-darkBg/50 backdrop-blur-xl ${compact ? 'px-3 py-2' : 'px-5 py-3'}`}
         initial={{ opacity: 0, x: -24 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.6, delay: 0.35 }}
         style={{ boxShadow: '0 12px 40px rgba(0,0,0,0.45)' }}
       >
         <HudStat
-          icon={<Trophy className="h-3.5 w-3.5 text-emerald-400" />}
+          icon={<Trophy className="h-3.5 w-3.5 text-neonGreen" />}
           label="Teams"
           value={teamsConnected}
           compact={compact}
         />
         <span className="h-8 w-px bg-white/10" />
         <HudStat
-          icon={<Shield className="h-3.5 w-3.5 text-blue-400" />}
+          icon={<Shield className="h-3.5 w-3.5 text-neonGreen" />}
           label="Managers"
           value={managersReady}
           compact={compact}
         />
         <span className="h-8 w-px bg-white/10" />
         <HudStat
-          icon={<Users className="h-3.5 w-3.5 text-purple-400" />}
+          icon={<Users className="h-3.5 w-3.5 text-warningGold" />}
           label="Podium"
           value="1"
           compact={compact}
@@ -250,8 +250,8 @@ function HudStat({ icon, label, value, compact }) {
         {icon}
       </span>
       <div className="text-left">
-        <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400">{label}</p>
-        <p className={`font-mono font-black text-emerald-400 ${compact ? 'text-xs' : 'text-sm'}`}>
+        <p className="text-[9px] font-bold uppercase tracking-widest text-secondaryText">{label}</p>
+        <p className={`font-mono font-black text-neonGreen ${compact ? 'text-xs' : 'text-sm'}`}>
           {value}
         </p>
       </div>
@@ -268,15 +268,15 @@ function StadiumBackdrop({ igniting }) {
   return (
     <div className="absolute inset-0 overflow-hidden">
       {/* Distant crowd tier gradient */}
-      <div className="absolute inset-x-0 top-0 h-1/2 bg-[linear-gradient(to_bottom,rgba(30,27,75,0.55),transparent)]" />
+      <div className="absolute inset-x-0 top-0 h-1/2 bg-[linear-gradient(to_bottom,rgba(11,11,11,0.55),transparent)]" />
       {/* Pitch glow near the bottom */}
-      <div className="absolute inset-x-0 bottom-0 h-2/3 bg-[radial-gradient(ellipse_80%_60%_at_50%_120%,rgba(16,185,129,0.16),transparent_70%)]" />
+      <div className="absolute inset-x-0 bottom-0 h-2/3 bg-[radial-gradient(ellipse_80%_60%_at_50%_120%,rgba(88,210,10,0.16),transparent_70%)]" />
       {/* Pitch stripes for depth */}
       <div
         className="absolute inset-x-0 bottom-0 h-1/3 opacity-25"
         style={{
           background:
-            'repeating-linear-gradient(105deg, rgba(16,185,129,0.10) 0px, rgba(16,185,129,0.10) 40px, transparent 40px, transparent 80px)',
+            'repeating-linear-gradient(105deg, rgba(88,210,10,0.10) 0px, rgba(88,210,10,0.10) 40px, transparent 40px, transparent 80px)',
           maskImage: 'linear-gradient(to top, black, transparent)',
           WebkitMaskImage: 'linear-gradient(to top, black, transparent)',
         }}
@@ -288,10 +288,10 @@ function StadiumBackdrop({ igniting }) {
       {/* Floodlight flares sweeping from the top corners. During ignition they
           snap on with a brief overshoot for a "lights coming up" beat. */}
       {[
-        { left: '10%', delay: 0, hue: 'rgba(147,197,253,0.4)' },
-        { left: '34%', delay: 0.18, hue: 'rgba(168,85,247,0.3)' },
-        { left: '60%', delay: 0.32, hue: 'rgba(96,165,250,0.36)' },
-        { left: '86%', delay: 0.46, hue: 'rgba(129,140,248,0.32)' },
+        { left: '10%', delay: 0, hue: 'rgba(114,242,26,0.4)' },
+        { left: '34%', delay: 0.18, hue: 'rgba(244,197,66,0.3)' },
+        { left: '60%', delay: 0.32, hue: 'rgba(88,210,10,0.36)' },
+        { left: '86%', delay: 0.46, hue: 'rgba(244,197,66,0.32)' },
       ].map((f, i) => (
         <motion.div
           key={i}
@@ -321,12 +321,12 @@ function StadiumBackdrop({ igniting }) {
         {Array.from({ length: 7 }).map((_, i) => (
           <motion.div
             key={i}
-            className="h-2.5 w-9 rounded-b-lg bg-cyan-100"
+            className="h-2.5 w-9 rounded-b-lg bg-neonGreenHover"
             style={{ willChange: 'opacity' }}
             animate={
               igniting
-                ? { opacity: [0.1, 1, 0.85], boxShadow: '0 0 26px 6px rgba(186,230,253,0.75)' }
-                : { opacity: [0.7, 0.9, 0.7], boxShadow: '0 0 18px 4px rgba(186,230,253,0.5)' }
+                ? { opacity: [0.1, 1, 0.85], boxShadow: '0 0 26px 6px rgba(114,242,26,0.75)' }
+                : { opacity: [0.7, 0.9, 0.7], boxShadow: '0 0 18px 4px rgba(114,242,26,0.5)' }
             }
             transition={
               igniting
@@ -346,7 +346,7 @@ function StadiumBackdrop({ igniting }) {
             bottom: `${i * 12}%`,
             height: '38%',
             background:
-              'radial-gradient(ellipse 60% 100% at 50% 100%, rgba(148,163,184,0.10), transparent 70%)',
+              'radial-gradient(ellipse 60% 100% at 50% 100%, rgba(163,163,163,0.10), transparent 70%)',
             filter: 'blur(30px)',
             willChange: 'transform, opacity',
           }}
@@ -431,7 +431,7 @@ function RunScene({ compact }) {
               width: 110 - i * 24,
               marginTop: -14 + i * 14,
               background:
-                'linear-gradient(to left, rgba(56,189,248,0.75), transparent)',
+                'linear-gradient(to left, rgba(88,210,10,0.75), transparent)',
               filter: 'blur(2px)',
               willChange: 'transform, opacity',
             }}
@@ -454,7 +454,7 @@ function RunScene({ compact }) {
 
         {/* Ground contact dust pulses each time the ball lands */}
         <motion.div
-          className="absolute -bottom-1 left-1/2 h-3 w-16 -translate-x-1/2 rounded-full bg-emerald-400/25 blur-md"
+          className="absolute -bottom-1 left-1/2 h-3 w-16 -translate-x-1/2 rounded-full bg-neonGreen/25 blur-md"
           animate={{ opacity: [0, 0.6, 0, 0.4, 0], scaleX: [0.6, 1.3, 0.6, 1.1, 0.6] }}
           transition={{ duration: 0.9, repeat: Infinity, ease: 'easeOut' }}
         />
@@ -484,7 +484,7 @@ function KickScene({ compact }) {
         {[0, 1].map((i) => (
           <motion.div
             key={i}
-            className="absolute left-1/2 top-1/2 rounded-full border-2 border-cyan-300/70"
+            className="absolute left-1/2 top-1/2 rounded-full border-2 border-neonGreenHover/70"
             style={{ width: 20, height: 20, marginLeft: -10, marginTop: -10 }}
             initial={{ scale: 0.6, opacity: 0.9 }}
             animate={{ scale: 6 + i * 2, opacity: 0 }}
@@ -494,7 +494,7 @@ function KickScene({ compact }) {
 
         {/* Charging glow behind the ball */}
         <motion.div
-          className="absolute left-1/2 top-1/2 -z-10 rounded-full bg-cyan-300/60 blur-xl"
+          className="absolute left-1/2 top-1/2 -z-10 rounded-full bg-neonGreenHover/60 blur-xl"
           style={{ width: size, height: size, marginLeft: -size / 2, marginTop: -size / 2 }}
           animate={{ scale: [0.8, 1.6], opacity: [0.5, 0.9] }}
           transition={{ duration: 0.45, ease: 'easeOut' }}
@@ -543,7 +543,7 @@ function BallScene() {
         className="absolute h-1.5 w-[60%] rounded-full"
         style={{
           background:
-            'linear-gradient(to right, transparent, rgba(56,189,248,0.7), rgba(255,255,255,0.95), rgba(56,189,248,0.7), transparent)',
+            'linear-gradient(to right, transparent, rgba(88,210,10,0.7), rgba(255,255,255,0.95), rgba(88,210,10,0.7), transparent)',
           filter: 'blur(4px)',
           willChange: 'transform, opacity',
         }}
@@ -579,8 +579,8 @@ function BallScene() {
       {shards.map((s) => (
         <motion.div
           key={s.id}
-          className="absolute h-2.5 w-2.5 rounded-full bg-cyan-300"
-          style={{ willChange: 'transform, opacity', boxShadow: '0 0 10px rgba(56,189,248,0.95)' }}
+          className="absolute h-2.5 w-2.5 rounded-full bg-neonGreenHover"
+          style={{ willChange: 'transform, opacity', boxShadow: '0 0 10px rgba(88,210,10,0.95)' }}
           initial={{ x: 0, y: 0, scale: 1, opacity: 0 }}
           animate={{ x: s.x, y: s.y, scale: [1, 0.2], opacity: [1, 0] }}
           transition={{ duration: 0.75, delay: 0.62, ease: 'easeOut' }}
@@ -609,8 +609,8 @@ function ParticleAssembly() {
       {motes.map((m) => (
         <motion.span
           key={m.id}
-          className="absolute h-1.5 w-1.5 rounded-full bg-cyan-200"
-          style={{ boxShadow: '0 0 8px rgba(103,232,249,0.9)', willChange: 'transform, opacity' }}
+          className="absolute h-1.5 w-1.5 rounded-full bg-neonGreenHover"
+          style={{ boxShadow: '0 0 8px rgba(114,242,26,0.9)', willChange: 'transform, opacity' }}
           initial={{ x: m.fromX, y: m.fromY, opacity: 0, scale: 1.4 }}
           animate={{ x: 0, y: 0, opacity: [0, 1, 0], scale: 0.3 }}
           transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
@@ -627,13 +627,13 @@ function HeadlineBlock({ compact }) {
   return (
     <div className="relative space-y-4">
       <motion.div
-        className="mx-auto mb-2 h-[3px] w-24 rounded-full bg-gradient-to-r from-transparent via-cyan-400 to-transparent"
+        className="mx-auto mb-2 h-[3px] w-24 rounded-full bg-gradient-to-r from-transparent via-neonGreen to-transparent"
         animate={{ opacity: [0.4, 1, 0.4], scaleX: [0.7, 1, 0.7] }}
         transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
         style={{ willChange: 'transform, opacity' }}
       />
       <motion.h1
-        className={`font-black font-heading tracking-[0.08em] text-transparent bg-clip-text bg-gradient-to-r from-purple-300 via-blue-400 to-emerald-400 ${
+        className={`font-black font-heading tracking-[0.08em] text-neonGreenHover ${
           compact ? 'text-2xl sm:text-3xl' : 'text-4xl sm:text-6xl lg:text-7xl'
         }`}
         initial={{ opacity: 0, y: 20, filter: 'blur(10px)' }}
@@ -644,12 +644,12 @@ function HeadlineBlock({ compact }) {
           filter: { duration: 0.6 },
           scale: { duration: 4, repeat: Infinity, ease: 'easeInOut' },
         }}
-        style={{ willChange: 'transform, filter', textShadow: '0 0 30px rgba(56,189,248,0.35)' }}
+        style={{ willChange: 'transform, filter', textShadow: '0 0 30px rgba(88,210,10,0.35)' }}
       >
         WAITING FOR NEXT PLAYER
       </motion.h1>
       <motion.p
-        className={`font-medium uppercase tracking-[0.35em] text-slate-400 ${compact ? 'text-[11px]' : 'text-sm'}`}
+        className={`font-medium uppercase tracking-[0.35em] text-secondaryText ${compact ? 'text-[11px]' : 'text-sm'}`}
         animate={{ opacity: [0.5, 1, 0.5] }}
         transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
       >
@@ -672,23 +672,23 @@ function SoccerBall({ size = 36 }) {
       <defs>
         <radialGradient id="ball-body" cx="38%" cy="32%" r="72%">
           <stop offset="0%" stopColor="#ffffff" />
-          <stop offset="70%" stopColor="#e2e8f0" />
-          <stop offset="100%" stopColor="#94a3b8" />
+          <stop offset="70%" stopColor="#F5F5F5" />
+          <stop offset="100%" stopColor="#A3A3A3" />
         </radialGradient>
       </defs>
-      <circle cx="20" cy="20" r="18" fill="url(#ball-body)" stroke="#cbd5e1" strokeWidth="1.2" />
+      <circle cx="20" cy="20" r="18" fill="url(#ball-body)" stroke="#A3A3A3" strokeWidth="1.2" />
       {/* central pentagon */}
-      <path d="M20 9 L27 14 L24.5 22 L15.5 22 L13 14 Z" fill="#0f172a" />
+      <path d="M20 9 L27 14 L24.5 22 L15.5 22 L13 14 Z" fill="#050505" />
       {/* connecting seams */}
       <path
         d="M20 9 L13 14 L7 12 M20 9 L27 14 L33 12 M24.5 22 L30 28 M15.5 22 L10 28 M15.5 22 L20 33 L24.5 22"
-        stroke="#334155"
+        stroke="#222222"
         strokeWidth="1.3"
         fill="none"
         strokeLinecap="round"
       />
       {/* outer partial panels */}
-      <path d="M7 12 L10 28 M33 12 L30 28 M10 28 L20 33 L30 28" stroke="#334155" strokeWidth="1.1" fill="none" strokeLinecap="round" />
+      <path d="M7 12 L10 28 M33 12 L30 28 M10 28 L20 33 L30 28" stroke="#222222" strokeWidth="1.1" fill="none" strokeLinecap="round" />
       {/* specular highlight */}
       <ellipse cx="14" cy="13" rx="5" ry="3.2" fill="rgba(255,255,255,0.8)" opacity="0.7" />
     </svg>

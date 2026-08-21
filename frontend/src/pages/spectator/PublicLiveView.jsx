@@ -56,24 +56,24 @@ export default function PublicLiveView() {
   const isUrgent = animState === ANIM_STATES.LAST5 || (timerRemaining <= 5 && timerStatus === 'running');
 
   return (
-    <div className="min-h-screen flex flex-col bg-darkBg text-slate-100 relative overflow-clip">
+    <div className="min-h-screen flex flex-col bg-darkBg text-primaryText relative overflow-clip">
       {!user && <Navbar />}
 
       <main
         className={`flex-1 space-y-6 ${!user ? 'max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6' : ''}`}
       >
-        <div className="glass-card rounded-2xl p-4 border border-slate-800 flex items-center justify-between gap-4 bg-gradient-to-r from-slate-900 via-blue-950/30 to-slate-900">
+        <div className="glass-card rounded-2xl p-4 border border-cardBorder flex items-center justify-between gap-4 bg-gradient-to-r from-cardBg via-successGreen/30 to-cardBg">
           <div className="flex items-center space-x-3 min-w-0">
             <span className="relative flex h-3 w-3 flex-shrink-0">
-              <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${isConnected ? 'bg-emerald-400' : 'bg-amber-400'}`} />
-              <span className={`relative inline-flex rounded-full h-3 w-3 ${isConnected ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+              <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${isConnected ? 'bg-neonGreen' : 'bg-warningGold'}`} />
+              <span className={`relative inline-flex rounded-full h-3 w-3 ${isConnected ? 'bg-neonGreen' : 'bg-warningGold'}`} />
             </span>
-            <span className="text-xs font-black uppercase tracking-widest text-emerald-400 flex items-center gap-1.5">
-              <Radio className="w-4 h-4 text-emerald-400" /> LIVE STADIUM BROADCAST
+            <span className="text-xs font-black uppercase tracking-widest text-neonGreen flex items-center gap-1.5">
+              <Radio className="w-4 h-4 text-neonGreen" /> LIVE STADIUM BROADCAST
             </span>
             <span className={`hidden sm:flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold border ${isConnected
-              ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-              : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+              ? 'bg-neonGreen/10 text-neonGreen border-neonGreen/20'
+              : 'bg-warningGold/10 text-warningGold border-warningGold/20'
               }`}>
               {isConnected ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
               {isConnected ? 'WS LIVE' : 'RECONNECTING'}
@@ -83,9 +83,9 @@ export default function PublicLiveView() {
           <button
             type="button"
             onClick={() => setSoundEnabled((enabled) => !enabled)}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-xs font-bold rounded-xl border border-slate-700 transition flex-shrink-0"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-cardBg hover:bg-surfaceHover text-xs font-bold rounded-xl border border-borderStrong transition flex-shrink-0"
           >
-            {soundEnabled ? <Volume2 className="w-4 h-4 text-emerald-400" /> : <VolumeX className="w-4 h-4 text-slate-500" />}
+            {soundEnabled ? <Volume2 className="w-4 h-4 text-neonGreen" /> : <VolumeX className="w-4 h-4 text-mutedText" />}
             <span className="hidden sm:inline">{soundEnabled ? 'Audio FX Enabled' : 'Audio Muted'}</span>
           </button>
         </div>
@@ -95,11 +95,11 @@ export default function PublicLiveView() {
             SINGLE glass card, separated by smooth dividers. No detached columns
             and no empty gap beneath the animation. */}
         <motion.div
-          className="glass-card rounded-3xl border overflow-hidden bg-gradient-to-b from-slate-900/90 via-slate-900 to-blue-950/20 shadow-2xl"
+          className="glass-card rounded-3xl border overflow-hidden bg-gradient-to-b from-cardBg/90 via-cardBg to-successGreen/20 shadow-2xl"
           animate={{
-            borderColor: isUrgent ? 'rgba(244,63,94,0.6)' : 'rgba(30,41,59,1)',
+            borderColor: isUrgent ? 'rgba(255,92,92,0.6)' : 'rgba(16,16,16,1)',
             boxShadow: isUrgent
-              ? '0 0 40px rgba(244,63,94,0.25)'
+              ? '0 0 40px rgba(255,92,92,0.25)'
               : '0 25px 50px -12px rgba(0,0,0,0.5)',
           }}
           transition={{ duration: 0.4 }}
@@ -130,58 +130,58 @@ export default function PublicLiveView() {
                 exit={{ opacity: 0, scale: 0.96, filter: 'blur(6px)' }}
                 transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
               >
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-6 border-b border-slate-800 pb-6">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-6 border-b border-cardBorder pb-6">
                   <div className="flex flex-col sm:flex-row items-center gap-6">
                     <div className="relative flex-shrink-0">
                       <img
                         src={getImageUrl(podiumPlayer.imageUrl, playerFallback('slate'))}
                         alt={podiumPlayer.name}
-                        className="w-32 h-32 rounded-3xl object-cover border-4 border-emerald-500/50 shadow-2xl"
+                        className="w-32 h-32 rounded-3xl object-cover border-4 border-neonGreen/50 shadow-2xl"
                       />
-                      <span className="absolute -bottom-2 -right-2 px-3 py-1 bg-emerald-400 text-slate-950 font-black text-xs rounded-lg uppercase tracking-wider shadow-lg">
+                      <span className="absolute -bottom-2 -right-2 px-3 py-1 bg-neonGreen text-darkBg font-black text-xs rounded-lg uppercase tracking-wider shadow-lg">
                         {podiumPlayer.category || 'Player'}
                       </span>
                     </div>
 
                     <div className="space-y-1 text-center sm:text-left">
-                      <span className="text-xs font-extrabold text-blue-400 uppercase tracking-widest flex items-center justify-center sm:justify-start gap-1">
-                        <Flame className="w-4 h-4 text-amber-400 animate-bounce" /> CURRENT PLAYER ON PODIUM
+                      <span className="text-xs font-extrabold text-neonGreen uppercase tracking-widest flex items-center justify-center sm:justify-start gap-1">
+                        <Flame className="w-4 h-4 text-warningGold animate-bounce" /> CURRENT PLAYER ON PODIUM
                       </span>
                       <h1 className="text-3xl sm:text-4xl font-black font-heading text-white">{podiumPlayer.name}</h1>
-                      <p className="text-sm text-slate-300 font-semibold">{podiumPlayer.jerseyName}</p>
-                      <p className="text-xs text-slate-400 font-mono">
-                        Base Opening Price: <strong className="text-emerald-400">{formatCurrency(podiumPlayer.basePrice)}</strong>
+                      <p className="text-sm text-secondaryText font-semibold">{podiumPlayer.jerseyName}</p>
+                      <p className="text-xs text-secondaryText font-mono">
+                        Base Opening Price: <strong className="text-neonGreen">{formatCurrency(podiumPlayer.basePrice)}</strong>
                       </p>
                     </div>
                   </div>
 
                   <div className="flex flex-col items-center flex-shrink-0">
                     <motion.div
-                      className={`relative w-28 h-28 rounded-full flex items-center justify-center border-4 shadow-2xl ${isUrgent ? 'border-rose-500 text-rose-400' : 'border-emerald-500 text-emerald-400'}`}
+                      className={`relative w-28 h-28 rounded-full flex items-center justify-center border-4 shadow-2xl ${isUrgent ? 'border-urgentRed text-urgentRedText' : 'border-neonGreen text-neonGreen'}`}
                       animate={isUrgent
-                        ? { scale: [1, 1.08, 1], boxShadow: ['0 0 0 rgba(244,63,94,0)', '0 0 28px rgba(244,63,94,0.7)', '0 0 0 rgba(244,63,94,0)'] }
+                        ? { scale: [1, 1.08, 1], boxShadow: ['0 0 0 rgba(255,92,92,0)', '0 0 28px rgba(255,92,92,0.7)', '0 0 0 rgba(255,92,92,0)'] }
                         : { scale: 1 }}
                       transition={isUrgent ? { duration: 1, repeat: Infinity } : { duration: 0.3 }}
                       style={{ willChange: 'transform' }}
                     >
                       <span className="text-4xl font-black font-mono">{timerRemaining}s</span>
                     </motion.div>
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2">
+                    <span className="text-[10px] font-bold text-secondaryText uppercase tracking-widest mt-2">
                       Mode: <strong className="text-white uppercase">{biddingMode}</strong>
                     </span>
                   </div>
                 </div>
 
-                <div className="bg-slate-950/90 border-2 border-emerald-500/40 rounded-2xl p-6 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-2xl">
+                <div className="bg-darkBg/90 border-2 border-neonGreen/40 rounded-2xl p-6 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-2xl">
                   <div className="text-center sm:text-left">
-                    <span className="text-xs font-extrabold text-slate-400 uppercase tracking-widest">HIGHEST BID AMOUNT</span>
-                    <h2 className="text-4xl sm:text-5xl font-black font-mono text-emerald-400 mt-1">
+                    <span className="text-xs font-extrabold text-secondaryText uppercase tracking-widest">HIGHEST BID AMOUNT</span>
+                    <h2 className="text-4xl sm:text-5xl font-black font-mono text-neonGreen mt-1">
                       {formatCurrency(currentBid)}
                     </h2>
                   </div>
 
                   <div className="text-center sm:text-right">
-                    <span className="text-xs font-extrabold text-slate-400 uppercase tracking-widest">LEADING FRANCHISE</span>
+                    <span className="text-xs font-extrabold text-secondaryText uppercase tracking-widest">LEADING FRANCHISE</span>
                     <div className="flex items-center gap-3 mt-1 justify-center sm:justify-end">
                       <span className="text-3xl">{highestBidder ? highestBidder.logo : '--'}</span>
                       <span className="text-xl font-black text-white">{highestBidder ? highestBidder.name : 'Opening / Base'}</span>
@@ -206,28 +206,28 @@ export default function PublicLiveView() {
           </PlayerDisplayStage>
 
           {/* Live Bid Ledger — same continuous panel, separated by a divider. */}
-          <div className="border-t border-slate-800/80 p-6 sm:p-8 space-y-4">
+          <div className="border-t border-cardBorder/80 p-6 sm:p-8 space-y-4">
             <div>
-              <h3 className="text-sm font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
-                <Clock className="w-4 h-4 text-emerald-400" /> Live Bid Ledger
+              <h3 className="text-sm font-bold uppercase tracking-wider text-secondaryText flex items-center gap-2">
+                <Clock className="w-4 h-4 text-neonGreen" /> Live Bid Ledger
               </h3>
-              <p className="text-[11px] text-slate-400">Real-time audited auction bid stream</p>
+              <p className="text-[11px] text-secondaryText">Real-time audited auction bid stream</p>
             </div>
 
             <div className="max-h-[320px] overflow-y-auto space-y-3 pr-1">
               {safeBidHistory.length === 0 ? (
-                <div className="text-center py-16 text-slate-500 text-xs">No bids logged in ledger yet.</div>
+                <div className="text-center py-16 text-mutedText text-xs">No bids logged in ledger yet.</div>
               ) : (
                 safeBidHistory.slice().reverse().map((log, index) => (
                   <div
                     key={log.id || `${log.bidder}-${log.amount}-${index}`}
-                    className="bg-slate-950/80 border border-slate-800 p-3.5 rounded-xl flex items-center justify-between gap-3 hover:border-emerald-500/30 transition"
+                    className="bg-darkBg/80 border border-cardBorder p-3.5 rounded-xl flex items-center justify-between gap-3 hover:border-neonGreen/30 transition"
                   >
                     <div className="min-w-0">
                       <p className="font-extrabold text-xs text-white truncate">{log.bidder || 'Unknown Team'}</p>
-                      <span className="text-[10px] text-slate-500">{log.time || '--'} &bull; {log.type || 'Normal'}</span>
+                      <span className="text-[10px] text-mutedText">{log.time || '--'} &bull; {log.type || 'Normal'}</span>
                     </div>
-                    <span className="font-mono font-black text-sm text-emerald-400 flex-shrink-0">
+                    <span className="font-mono font-black text-sm text-neonGreen flex-shrink-0">
                       {formatCurrency(log.amount)}
                     </span>
                   </div>

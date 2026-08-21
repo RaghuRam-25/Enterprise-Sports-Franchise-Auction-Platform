@@ -24,7 +24,7 @@ export default function ManagerMyTeam() {
   const [saving, setSaving] = useState(false);
   const [teamForm, setTeamForm] = useState({
     name: '', shortCode: '', description: '', motto: '',
-    ownerName: '', venue: '', contactEmail: '', primaryColor: '#10b981'
+    ownerName: '', venue: '', contactEmail: '', primaryColor: '#58D20A'
   });
   const [teamLogoFile, setTeamLogoFile] = useState(null);
   const [teamLogoPreview, setTeamLogoPreview] = useState(null);
@@ -71,7 +71,7 @@ export default function ManagerMyTeam() {
       ownerName: team.ownerName || '',
       venue: team.venue || '',
       contactEmail: team.contactEmail || '',
-      primaryColor: team.primaryColor || '#10b981'
+      primaryColor: team.primaryColor || '#58D20A'
     });
     setTeamLogoFile(null);
     setTeamLogoPreview(team.logoUrl || null);
@@ -158,7 +158,7 @@ export default function ManagerMyTeam() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="w-8 h-8 animate-spin text-emerald-400" />
+        <Loader2 className="w-8 h-8 animate-spin text-neonGreen" />
       </div>
     );
   }
@@ -166,7 +166,7 @@ export default function ManagerMyTeam() {
   if (!team) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <p className="text-slate-400">Could not load team information.</p>
+        <p className="text-secondaryText">Could not load team information.</p>
       </div>
     );
   }
@@ -183,58 +183,58 @@ export default function ManagerMyTeam() {
       label: 'Total Purse',
       value: formatCurrency ? formatCurrency(totalBudget) : totalBudget,
       icon: Wallet,
-      tone: 'text-blue-300 bg-blue-500/10 border-blue-500/20',
+      tone: 'text-neonGreenHover bg-neonGreen/10 border-neonGreen/20',
     },
     {
       label: 'Spent',
       value: formatCurrency ? formatCurrency(spentBudget) : spentBudget,
       icon: TrendingUp,
-      tone: 'text-amber-300 bg-amber-500/10 border-amber-500/20',
+      tone: 'text-warningGold bg-warningGold/10 border-warningGold/20',
     },
     {
       label: 'Remaining',
       value: formatCurrency ? formatCurrency(remainingBudget) : remainingBudget,
       icon: DollarSign,
-      tone: 'text-emerald-300 bg-emerald-500/10 border-emerald-500/20',
+      tone: 'text-neonGreenHover bg-neonGreen/10 border-neonGreen/20',
     },
     {
       label: 'Squad Size',
       value: squadTarget ? `${squadSize} / ${squadTarget}` : squadSize,
       icon: Users,
-      tone: 'text-purple-300 bg-purple-500/10 border-purple-500/20',
+      tone: 'text-warningGold bg-warningGold/10 border-warningGold/20',
     },
   ];
 
   return (
     <div className="space-y-6">
       {/* ── Profile Header Card ─────────────────────────────────────────── */}
-      <div className="glass-card rounded-2xl border border-slate-800 overflow-hidden shadow-2xl shadow-purple-950/10">
+      <div className="glass-card rounded-2xl border border-cardBorder overflow-hidden shadow-2xl shadow-warningGold/10">
         {/* Banner */}
-        <div className="relative h-40 md:h-52 bg-gradient-to-br from-slate-950 via-indigo-950 to-purple-950 overflow-hidden">
+        <div className="relative h-40 md:h-52 bg-gradient-to-br from-darkBg via-warningGold to-warningGold overflow-hidden">
           <div
             className="absolute inset-0 opacity-40"
             style={{
-              backgroundImage: 'radial-gradient(circle, rgba(148,163,184,0.35) 1px, transparent 1px)',
+              backgroundImage: 'radial-gradient(circle, rgba(163,163,163,0.35) 1px, transparent 1px)',
               backgroundSize: '18px 18px',
             }}
           />
-          <div className="absolute -top-16 -right-16 w-64 h-64 bg-purple-600/20 rounded-full blur-3xl" />
-          <div className="absolute -bottom-20 -left-10 w-56 h-56 bg-emerald-500/10 rounded-full blur-3xl" />
+          <div className="absolute -top-16 -right-16 w-64 h-64 bg-warningGold/20 rounded-full blur-3xl" />
+          <div className="absolute -bottom-20 -left-10 w-56 h-56 bg-neonGreen/10 rounded-full blur-3xl" />
 
           <div className="relative h-full p-6 flex flex-col justify-between">
             <div className="flex items-center justify-between">
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/30 border border-white/10 text-[10px] font-bold tracking-wider uppercase text-slate-200 backdrop-blur-sm">
-                <Sparkles className="w-3 h-3 text-emerald-400" />
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/30 border border-white/10 text-[10px] font-bold tracking-wider uppercase text-primaryText backdrop-blur-sm">
+                <Sparkles className="w-3 h-3 text-neonGreen" />
                 Franchise Profile
               </span>
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/30 border border-white/10 text-[10px] font-bold tracking-wider uppercase text-slate-200 backdrop-blur-sm">
-                <UserCog className="w-3 h-3 text-blue-400" />
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/30 border border-white/10 text-[10px] font-bold tracking-wider uppercase text-primaryText backdrop-blur-sm">
+                <UserCog className="w-3 h-3 text-neonGreen" />
                 {user?.name || 'Team Manager'}
               </span>
             </div>
             <button
               onClick={openEditModal}
-              className="self-end px-4 py-2 bg-white/10 hover:bg-white text-white hover:text-slate-900 border border-white/20 text-xs font-bold rounded-xl transition backdrop-blur-sm flex items-center gap-1.5"
+              className="self-end px-4 py-2 bg-white/10 hover:bg-white text-white hover:text-darkBg border border-white/20 text-xs font-bold rounded-xl transition backdrop-blur-sm flex items-center gap-1.5"
             >
               <Edit3 className="w-3.5 h-3.5" /> Edit Profile
             </button>
@@ -248,10 +248,10 @@ export default function ManagerMyTeam() {
               <TeamBadge team={team} size="xl" showName={false} showCode={false} />
               <button
                 onClick={openEditModal}
-                className="absolute -bottom-2 -right-2 w-9 h-9 rounded-xl bg-emerald-500 hover:bg-emerald-400 border-4 border-slate-900 flex items-center justify-center shadow-lg transition"
+                className="absolute -bottom-2 -right-2 w-9 h-9 rounded-xl bg-neonGreen hover:bg-neonGreen border-4 border-borderStrong flex items-center justify-center shadow-lg transition"
                 title="Change logo"
               >
-                <Camera className="w-4 h-4 text-slate-950" />
+                <Camera className="w-4 h-4 text-darkBg" />
               </button>
             </div>
 
@@ -262,13 +262,13 @@ export default function ManagerMyTeam() {
                   {team.name || 'Franchise Team'}
                 </h1>
                 {(team.shortCode || team.code) && (
-                  <span className="inline-flex w-fit mx-auto md:mx-0 px-2.5 py-1 rounded-lg bg-slate-800 border border-slate-700 text-xs font-mono font-bold text-slate-300 tracking-widest">
+                  <span className="inline-flex w-fit mx-auto md:mx-0 px-2.5 py-1 rounded-lg bg-surfaceHover border border-borderStrong text-xs font-mono font-bold text-secondaryText tracking-widest">
                     {team.shortCode || team.code}
                   </span>
                 )}
               </div>
               {team.motto && (
-                <p className="text-sm text-purple-300/80 italic mt-1 flex items-center gap-1.5 justify-center md:justify-start">
+                <p className="text-sm text-warningGold/80 italic mt-1 flex items-center gap-1.5 justify-center md:justify-start">
                   <Quote className="w-3.5 h-3.5 flex-shrink-0" />
                   {team.motto}
                 </p>
@@ -277,25 +277,25 @@ export default function ManagerMyTeam() {
 
             <button
               onClick={() => setShowPasswordModal(true)}
-              className="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 text-xs font-bold rounded-xl transition shadow flex items-center gap-1.5"
+              className="btn-secondary px-3.5 py-2 rounded-xl text-xs flex items-center gap-1.5"
             >
-              <Key className="w-3.5 h-3.5 text-amber-400" /> Change Password
+              <Key className="w-3.5 h-3.5 text-warningGold" /> Change Password
             </button>
           </div>
         </div>
       </div>
 
       {/* ── Budget Utilization ──────────────────────────────────────────── */}
-      <div className="glass-card rounded-2xl border border-slate-800 p-5 shadow-xl">
+      <div className="glass-card rounded-2xl border border-cardBorder p-5 shadow-xl">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
-            <Award className="w-4 h-4 text-emerald-400" /> Purse Utilization
+          <h3 className="text-xs font-bold uppercase tracking-wider text-secondaryText flex items-center gap-2">
+            <Award className="w-4 h-4 text-neonGreen" /> Purse Utilization
           </h3>
           <span className="text-sm font-black text-white">{utilization}%</span>
         </div>
-        <div className="w-full h-2.5 rounded-full bg-slate-800 overflow-hidden">
+        <div className="w-full h-2.5 rounded-full bg-surfaceHover overflow-hidden">
           <div
-            className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-blue-500 transition-all duration-700"
+            className="h-full rounded-full bg-gradient-to-r from-neonGreen to-neonGreen transition-all duration-700"
             style={{ width: `${utilization}%` }}
           />
         </div>
@@ -304,69 +304,69 @@ export default function ManagerMyTeam() {
       {/* ── Stat Cards ──────────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map(({ label, value, icon: Icon, tone }) => (
-          <div key={label} className="glass-card rounded-2xl border border-slate-800 p-4 shadow-lg">
+          <div key={label} className="glass-card rounded-2xl border border-cardBorder p-4 shadow-lg">
             <div className={`w-9 h-9 rounded-xl border flex items-center justify-center mb-3 ${tone}`}>
               <Icon className="w-4.5 h-4.5" />
             </div>
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">{label}</p>
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-mutedText">{label}</p>
             <p className="text-lg font-black text-white mt-0.5 truncate">{value}</p>
           </div>
         ))}
       </div>
 
       {/* ── Team Details ────────────────────────────────────────────────── */}
-      <div className="glass-card rounded-2xl border border-slate-800 p-6 shadow-xl">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4 flex items-center gap-2">
-          <Info className="w-4 h-4 text-emerald-400" /> Team Details
+      <div className="glass-card rounded-2xl border border-cardBorder p-6 shadow-xl">
+        <h3 className="text-xs font-bold uppercase tracking-wider text-secondaryText mb-4 flex items-center gap-2">
+          <Info className="w-4 h-4 text-neonGreen" /> Team Details
         </h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="flex items-start gap-3">
-            <div className="w-9 h-9 rounded-xl bg-slate-800/60 border border-slate-700 flex items-center justify-center flex-shrink-0">
-              <UserCog className="w-4 h-4 text-slate-400" />
+            <div className="w-9 h-9 rounded-xl bg-surfaceHover/60 border border-borderStrong flex items-center justify-center flex-shrink-0">
+              <UserCog className="w-4 h-4 text-secondaryText" />
             </div>
             <div className="min-w-0">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Owner / Manager</p>
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-mutedText">Owner / Manager</p>
               <p className="text-sm font-semibold text-white truncate">{team.ownerName || 'Not set'}</p>
             </div>
           </div>
 
           <div className="flex items-start gap-3">
-            <div className="w-9 h-9 rounded-xl bg-slate-800/60 border border-slate-700 flex items-center justify-center flex-shrink-0">
-              <MapPin className="w-4 h-4 text-slate-400" />
+            <div className="w-9 h-9 rounded-xl bg-surfaceHover/60 border border-borderStrong flex items-center justify-center flex-shrink-0">
+              <MapPin className="w-4 h-4 text-secondaryText" />
             </div>
             <div className="min-w-0">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Home Venue</p>
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-mutedText">Home Venue</p>
               <p className="text-sm font-semibold text-white truncate">{team.venue || 'Not set'}</p>
             </div>
           </div>
 
           <div className="flex items-start gap-3">
-            <div className="w-9 h-9 rounded-xl bg-slate-800/60 border border-slate-700 flex items-center justify-center flex-shrink-0">
-              <Mail className="w-4 h-4 text-slate-400" />
+            <div className="w-9 h-9 rounded-xl bg-surfaceHover/60 border border-borderStrong flex items-center justify-center flex-shrink-0">
+              <Mail className="w-4 h-4 text-secondaryText" />
             </div>
             <div className="min-w-0">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Contact Email</p>
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-mutedText">Contact Email</p>
               <p className="text-sm font-semibold text-white truncate">{team.contactEmail || 'Not set'}</p>
             </div>
           </div>
 
           <div className="flex items-start gap-3">
-            <div className="w-9 h-9 rounded-xl bg-slate-800/60 border border-slate-700 flex items-center justify-center flex-shrink-0">
-              <CalendarDays className="w-4 h-4 text-slate-400" />
+            <div className="w-9 h-9 rounded-xl bg-surfaceHover/60 border border-borderStrong flex items-center justify-center flex-shrink-0">
+              <CalendarDays className="w-4 h-4 text-secondaryText" />
             </div>
             <div className="min-w-0">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Founded Session</p>
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-mutedText">Founded Session</p>
               <p className="text-sm font-semibold text-white truncate">{team.session || team.foundedSession || 'Not set'}</p>
             </div>
           </div>
 
           <div className="flex items-start gap-3 sm:col-span-2">
-            <div className="w-9 h-9 rounded-xl bg-slate-800/60 border border-slate-700 flex items-center justify-center flex-shrink-0">
-              <Palette className="w-4 h-4 text-slate-400" />
+            <div className="w-9 h-9 rounded-xl bg-surfaceHover/60 border border-borderStrong flex items-center justify-center flex-shrink-0">
+              <Palette className="w-4 h-4 text-secondaryText" />
             </div>
             <div className="min-w-0 flex items-center gap-2">
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Team Color</p>
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-mutedText">Team Color</p>
                 <p className="text-sm font-semibold text-white truncate">{team.primaryColor || 'Not set'}</p>
               </div>
               {team.primaryColor && (
@@ -382,20 +382,20 @@ export default function ManagerMyTeam() {
 
       {/* ── About ───────────────────────────────────────────────────────── */}
       {team.description && (
-        <div className="glass-card rounded-2xl border border-slate-800 p-6 shadow-xl">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2 flex items-center gap-2">
-            <ShieldCheck className="w-4 h-4 text-emerald-400" /> About This Franchise
+        <div className="glass-card rounded-2xl border border-cardBorder p-6 shadow-xl">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-secondaryText mb-2 flex items-center gap-2">
+            <ShieldCheck className="w-4 h-4 text-neonGreen" /> About This Franchise
           </h3>
-          <p className="text-sm text-slate-300 leading-relaxed">{team.description}</p>
+          <p className="text-sm text-secondaryText leading-relaxed">{team.description}</p>
         </div>
       )}
 
       {/* ── My Squad — Acquired Players as Cards ───────────────────────── */}
-      <div className="glass-card rounded-2xl border border-slate-800 p-6 shadow-xl space-y-5">
+      <div className="glass-card rounded-2xl border border-cardBorder p-6 shadow-xl space-y-5">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
-            <Shirt className="w-4 h-4 text-emerald-400" /> My Squad
-            <span className="ml-1 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-[10px] font-mono font-bold normal-case tracking-normal">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-secondaryText flex items-center gap-2">
+            <Shirt className="w-4 h-4 text-neonGreen" /> My Squad
+            <span className="ml-1 px-2 py-0.5 rounded-full bg-neonGreen/10 border border-neonGreen/30 text-neonGreenHover text-[10px] font-mono font-bold normal-case tracking-normal">
               {squadSize}{squadTarget ? ` / ${squadTarget}` : ''} Players
             </span>
           </h3>
@@ -406,7 +406,7 @@ export default function ManagerMyTeam() {
               {Object.entries(positionGroups).map(([pos, count]) => (
                 <span
                   key={pos}
-                  className="px-2.5 py-1 rounded-lg bg-slate-800/80 border border-slate-700 text-[10px] font-bold text-slate-300"
+                  className="px-2.5 py-1 rounded-lg bg-surfaceHover/80 border border-borderStrong text-[10px] font-bold text-secondaryText"
                 >
                   {pos}: <span className="text-white">{count}</span>
                 </span>
@@ -416,10 +416,10 @@ export default function ManagerMyTeam() {
         </div>
 
         {rosterPlayers.length === 0 ? (
-          <div className="py-12 text-center space-y-3 border border-dashed border-slate-800 rounded-2xl">
-            <Users className="w-10 h-10 mx-auto text-slate-700" />
-            <p className="text-sm font-bold text-slate-400">No players acquired yet</p>
-            <p className="text-xs text-slate-600 max-w-sm mx-auto">
+          <div className="py-12 text-center space-y-3 border border-dashed border-cardBorder rounded-2xl">
+            <Users className="w-10 h-10 mx-auto text-mutedText" />
+            <p className="text-sm font-bold text-secondaryText">No players acquired yet</p>
+            <p className="text-xs text-mutedText max-w-sm mx-auto">
               Players you win in the live auction will automatically appear here as part of your squad.
             </p>
           </div>
@@ -440,26 +440,26 @@ export default function ManagerMyTeam() {
       {/* Edit Team Modal */}
       {showEditModal && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="glass-card w-full max-w-md rounded-2xl p-6 border border-slate-700 space-y-5 shadow-2xl max-h-[90vh] overflow-y-auto">
+          <div className="glass-card w-full max-w-md rounded-2xl p-6 border border-borderStrong space-y-5 shadow-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center">
               <h2 className="text-lg font-black text-white flex items-center gap-2">
-                <ShieldCheck className="w-5 h-5 text-emerald-400" /> Edit Franchise Profile
+                <ShieldCheck className="w-5 h-5 text-neonGreen" /> Edit Franchise Profile
               </h2>
-              <button onClick={() => setShowEditModal(false)} className="p-2 text-slate-400 hover:text-white rounded-lg">
+              <button onClick={() => setShowEditModal(false)} className="btn-secondary w-8 h-8 rounded-lg flex items-center justify-center">
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             <form onSubmit={handleSave} className="space-y-4 text-xs">
               <div>
-                <label className="block font-semibold text-slate-400 mb-1">Team Logo</label>
+                <label className="block font-semibold text-secondaryText mb-1">Team Logo</label>
                 <div className="flex items-center gap-3">
                   {removeTeamLogo ? (
-                    <div className="w-14 h-14 rounded-xl bg-slate-800 flex items-center justify-center text-white font-black text-lg">
+                    <div className="w-14 h-14 rounded-xl bg-surfaceHover flex items-center justify-center text-white font-black text-lg">
                       {(teamForm.name || 'T')[0]}
                     </div>
                   ) : (
-                    <div className="w-14 h-14 rounded-xl overflow-hidden border border-slate-700 bg-slate-950 flex items-center justify-center flex-shrink-0">
+                    <div className="w-14 h-14 rounded-xl overflow-hidden border border-borderStrong bg-darkBg flex items-center justify-center flex-shrink-0">
                       {teamLogoPreview ? (
                         <img src={teamLogoPreview} alt="Logo Preview" className="w-full h-full object-contain" />
                       ) : (
@@ -468,7 +468,7 @@ export default function ManagerMyTeam() {
                     </div>
                   )}
                   <div className="flex-1 space-y-1">
-                    <label className="cursor-pointer px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg font-semibold text-xs inline-flex items-center gap-1.5 border border-slate-700">
+                    <label className="cursor-pointer btn-secondary px-3 py-1.5 rounded-lg text-xs inline-flex items-center gap-1.5">
                       <Camera className="w-3.5 h-3.5" />
                       <span>Upload Logo</span>
                       <input
@@ -493,7 +493,7 @@ export default function ManagerMyTeam() {
                           setTeamLogoPreview(null);
                           setRemoveTeamLogo(true);
                         }}
-                        className="block text-[11px] text-rose-400 hover:text-rose-300 font-semibold"
+                        className="block text-[11px] text-urgentRedText hover:text-urgentRedText font-semibold"
                       >
                         Remove Logo
                       </button>
@@ -504,7 +504,7 @@ export default function ManagerMyTeam() {
 
               <div className="grid grid-cols-3 gap-3">
                 <div className="col-span-2">
-                  <label className="block font-semibold text-slate-400 mb-1">Franchise Team Name *</label>
+                  <label className="block font-semibold text-secondaryText mb-1">Franchise Team Name *</label>
                   <input
                     type="text"
                     value={teamForm.name}
@@ -514,7 +514,7 @@ export default function ManagerMyTeam() {
                   />
                 </div>
                 <div>
-                  <label className="block font-semibold text-slate-400 mb-1">Code *</label>
+                  <label className="block font-semibold text-secondaryText mb-1">Code *</label>
                   <input
                     type="text"
                     maxLength={4}
@@ -527,7 +527,7 @@ export default function ManagerMyTeam() {
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-400 mb-1">Description (Optional)</label>
+                <label className="block font-semibold text-secondaryText mb-1">Description (Optional)</label>
                 <textarea
                   rows={2}
                   value={teamForm.description}
@@ -538,7 +538,7 @@ export default function ManagerMyTeam() {
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-400 mb-1">Team Motto (Optional)</label>
+                <label className="block font-semibold text-secondaryText mb-1">Team Motto (Optional)</label>
                 <input
                   type="text"
                   maxLength={80}
@@ -549,11 +549,11 @@ export default function ManagerMyTeam() {
                 />
               </div>
 
-              <div className="pt-1 border-t border-slate-800" />
-              <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Team Details</p>
+              <div className="pt-1 border-t border-cardBorder" />
+              <p className="text-[11px] font-bold uppercase tracking-wider text-mutedText">Team Details</p>
 
               <div>
-                <label className="block font-semibold text-slate-400 mb-1">Owner / Manager Name (Optional)</label>
+                <label className="block font-semibold text-secondaryText mb-1">Owner / Manager Name (Optional)</label>
                 <input
                   type="text"
                   value={teamForm.ownerName}
@@ -564,7 +564,7 @@ export default function ManagerMyTeam() {
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-400 mb-1">Home Venue (Optional)</label>
+                <label className="block font-semibold text-secondaryText mb-1">Home Venue (Optional)</label>
                 <input
                   type="text"
                   value={teamForm.venue}
@@ -576,7 +576,7 @@ export default function ManagerMyTeam() {
 
               <div className="grid grid-cols-3 gap-3">
                 <div className="col-span-2">
-                  <label className="block font-semibold text-slate-400 mb-1">Contact Email (Optional)</label>
+                  <label className="block font-semibold text-secondaryText mb-1">Contact Email (Optional)</label>
                   <input
                     type="email"
                     value={teamForm.contactEmail}
@@ -586,12 +586,12 @@ export default function ManagerMyTeam() {
                   />
                 </div>
                 <div>
-                  <label className="block font-semibold text-slate-400 mb-1">Color</label>
+                  <label className="block font-semibold text-secondaryText mb-1">Color</label>
                   <input
                     type="color"
                     value={teamForm.primaryColor}
                     onChange={e => setTeamForm(prev => ({ ...prev, primaryColor: e.target.value }))}
-                    className="w-full h-[38px] rounded-xl border border-slate-700 bg-slate-900 cursor-pointer"
+                    className="w-full h-[38px] rounded-xl border border-borderStrong bg-cardBg cursor-pointer"
                   />
                 </div>
               </div>
@@ -600,16 +600,16 @@ export default function ManagerMyTeam() {
                 <button
                   type="button"
                   onClick={() => setShowEditModal(false)}
-                  className="flex-1 py-2.5 border border-slate-700 text-slate-300 hover:bg-slate-800 rounded-xl text-xs font-semibold transition"
+                  className="btn-secondary flex-1 py-2.5 rounded-xl text-xs"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={saving}
-                  className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition disabled:opacity-60"
+                  className="btn-primary flex-1 py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 disabled:opacity-60"
                 >
-                  {saving ? <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+                  {saving ? <span className="w-3.5 h-3.5 border-2 border-[#050505] border-t-transparent rounded-full animate-spin" /> : <Save className="w-3.5 h-3.5" />}
                   Save Changes
                 </button>
               </div>
@@ -621,19 +621,19 @@ export default function ManagerMyTeam() {
       {/* Change Password Modal */}
       {showPasswordModal && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="glass-card w-full max-w-sm rounded-2xl p-6 border border-slate-700 space-y-5 shadow-2xl">
+          <div className="glass-card w-full max-w-sm rounded-2xl p-6 border border-borderStrong space-y-5 shadow-2xl">
             <div className="flex justify-between items-center">
               <h2 className="text-lg font-black text-white flex items-center gap-2">
-                <Key className="w-5 h-5 text-amber-400" /> Change Password
+                <Key className="w-5 h-5 text-warningGold" /> Change Password
               </h2>
-              <button onClick={() => setShowPasswordModal(false)} className="p-2 text-slate-400 hover:text-white rounded-lg">
+              <button onClick={() => setShowPasswordModal(false)} className="btn-secondary w-8 h-8 rounded-lg flex items-center justify-center">
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             <form onSubmit={handleChangePassword} className="space-y-4 text-xs">
               <div>
-                <label className="block font-semibold text-slate-400 mb-1">Current Password</label>
+                <label className="block font-semibold text-secondaryText mb-1">Current Password</label>
                 <input
                   type="password"
                   value={currentPass}
@@ -643,7 +643,7 @@ export default function ManagerMyTeam() {
                 />
               </div>
               <div>
-                <label className="block font-semibold text-slate-400 mb-1">New Password</label>
+                <label className="block font-semibold text-secondaryText mb-1">New Password</label>
                 <input
                   type="password"
                   value={newPass}
@@ -654,7 +654,7 @@ export default function ManagerMyTeam() {
                 />
               </div>
               <div>
-                <label className="block font-semibold text-slate-400 mb-1">Confirm New Password</label>
+                <label className="block font-semibold text-secondaryText mb-1">Confirm New Password</label>
                 <input
                   type="password"
                   value={confirmPass}
@@ -664,11 +664,11 @@ export default function ManagerMyTeam() {
                 />
               </div>
               <div className="flex gap-3 pt-1">
-                <button type="button" onClick={() => setShowPasswordModal(false)} className="flex-1 py-2.5 border border-slate-700 text-slate-300 hover:bg-slate-800 rounded-xl text-xs font-semibold transition">
+                <button type="button" onClick={() => setShowPasswordModal(false)} className="btn-secondary flex-1 py-2.5 rounded-xl text-xs">
                   Cancel
                 </button>
-                <button type="submit" disabled={changingPass} className="flex-1 py-2.5 bg-amber-600 hover:bg-amber-500 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition disabled:opacity-60">
-                  {changingPass ? <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Key className="w-3.5 h-3.5" />}
+                <button type="submit" disabled={changingPass} className="btn-primary flex-1 py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 disabled:opacity-60">
+                  {changingPass ? <span className="w-3.5 h-3.5 border-2 border-[#050505] border-t-transparent rounded-full animate-spin" /> : <Key className="w-3.5 h-3.5" />}
                   Update Password
                 </button>
               </div>

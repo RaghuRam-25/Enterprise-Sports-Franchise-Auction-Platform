@@ -37,7 +37,7 @@ export const useBidEffects = (signal, amountEl, cardEl, historyEl) => {
         }, 0);
 
         tl.to(cardEl, {
-          boxShadow: '0 0 40px rgba(34,211,238,0.6), 0 0 80px rgba(34,211,238,0.3)',
+          boxShadow: '0 0 40px rgba(88,210,10,0.6), 0 0 80px rgba(88,210,10,0.3)',
           duration: 0.4,
           repeat: 1,
           yoyo: true,

@@ -27,8 +27,8 @@ export default function TeamBadge({
   // Guarantee an SVG Icon Component (never text/shortcode)
   const FallbackIcon = avatarConfig.IconComponent || Trophy || Shield;
 
-  const primaryCol   = team.primaryColor   || avatarConfig.primaryColor   || '#3b82f6';
-  const secondaryCol = team.secondaryColor || avatarConfig.secondaryColor || '#0f172a';
+  const primaryCol   = team.primaryColor   || avatarConfig.primaryColor   || '#58D20A';
+  const secondaryCol = team.secondaryColor || avatarConfig.secondaryColor || '#050505';
 
   // Avatar background = gradient primary → secondary
   const avatarBgStyle = { background: `linear-gradient(135deg, ${primaryCol}, ${secondaryCol})` };
@@ -57,7 +57,7 @@ export default function TeamBadge({
           ...(showLogo ? undefined : avatarBgStyle),
           ...avatarBorderStyle,
         }}
-        className={`relative flex-shrink-0 flex items-center justify-center overflow-hidden shadow-md transition-transform duration-200 group-hover:scale-105 ${dimensions.avatar} ${!avatarConfig.hasCustomColors ? (avatarConfig.borderColorClass || 'border border-sky-500/40') : ''} ${showLogo ? 'bg-slate-900' : ''}`}
+        className={`relative flex-shrink-0 flex items-center justify-center overflow-hidden shadow-md transition-transform duration-200 group-hover:scale-105 ${dimensions.avatar} ${!avatarConfig.hasCustomColors ? (avatarConfig.borderColorClass || 'border border-neonGreen/40') : ''} ${showLogo ? 'bg-cardBg' : ''}`}
       >
         {showLogo ? (
           <img
@@ -82,14 +82,14 @@ export default function TeamBadge({
 
           <div className="flex items-center gap-2 flex-wrap mt-0.5">
             {showCode && (team.shortCode || team.code) && (
-              <span className={`font-mono font-extrabold px-1.5 py-0.5 rounded border bg-slate-900/90 text-sky-400 border-sky-500/30 ${dimensions.code}`}>
+              <span className={`font-mono font-extrabold px-1.5 py-0.5 rounded border bg-cardBg/90 text-neonGreen border-neonGreen/30 ${dimensions.code}`}>
                 {team.shortCode || team.code}
               </span>
             )}
 
             {showManager && (managerName || team.managerId?.name || team.ownerName) && (
-              <span className="text-[10px] text-slate-400 font-medium truncate flex items-center gap-1">
-                <User className="w-2.5 h-2.5 text-slate-500 flex-shrink-0" />
+              <span className="text-[10px] text-secondaryText font-medium truncate flex items-center gap-1">
+                <User className="w-2.5 h-2.5 text-mutedText flex-shrink-0" />
                 <span className="truncate">{managerName || team.managerId?.name || team.ownerName}</span>
               </span>
             )}

@@ -48,26 +48,26 @@ export default function ManagerLogin() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-darkBg text-slate-100">
+    <div className="min-h-screen flex flex-col bg-darkBg text-primaryText">
       <Navbar />
 
       <main className="flex-1 flex items-center justify-center p-4">
-        <div className="glass-card w-full max-w-md rounded-2xl p-8 border border-slate-800 space-y-6 shadow-2xl">
+        <div className="glass-card w-full max-w-md rounded-2xl p-8 border border-cardBorder space-y-6 shadow-2xl">
 
           {/* Header */}
           <div className="text-center space-y-2">
-            <div className="w-14 h-14 bg-emerald-500/10 text-emerald-400 rounded-2xl border border-emerald-500/20 flex items-center justify-center mx-auto shadow-lg">
+            <div className="w-14 h-14 bg-neonGreen/10 text-neonGreen rounded-2xl border border-neonGreen/20 flex items-center justify-center mx-auto shadow-lg">
               <Shield className="w-7 h-7" />
             </div>
             <h1 className="text-2xl font-black font-heading text-white">Auction Platform Login</h1>
-            <p className="text-xs text-slate-400">Enter your credentials to access your assigned dashboard</p>
+            <p className="text-xs text-secondaryText">Enter your credentials to access your assigned dashboard</p>
           </div>
 
           {/* Error */}
           {error && (
-            <div className="p-3 bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs rounded-xl font-medium flex items-start gap-2">
+            <div className="p-3 bg-urgentRed/10 border border-urgentRed/30 text-urgentRedText text-xs rounded-xl font-medium flex items-start gap-2">
               {error.includes('server') || error.includes('port 5000')
-                ? <Server className="w-4 h-4 flex-shrink-0 mt-0.5 text-amber-400" />
+                ? <Server className="w-4 h-4 flex-shrink-0 mt-0.5 text-warningGold" />
                 : <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
               }
               <span>{error}</span>
@@ -77,7 +77,7 @@ export default function ManagerLogin() {
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-400 mb-1">
+              <label className="block text-xs font-semibold text-secondaryText mb-1">
                 Email Address
               </label>
               <input
@@ -94,8 +94,8 @@ export default function ManagerLogin() {
 
             <div>
               <div className="flex justify-between items-center mb-1">
-                <label className="block text-xs font-semibold text-slate-400">Password</label>
-                <Link to="/forgot-password" className="text-[11px] text-blue-400 hover:text-blue-300 transition font-medium">
+                <label className="block text-xs font-semibold text-secondaryText">Password</label>
+                <Link to="/forgot-password" className="text-[11px] text-neonGreen hover:text-neonGreenHover transition font-medium">
                   Forgot Password?
                 </Link>
               </div>
@@ -113,7 +113,7 @@ export default function ManagerLogin() {
                 <button
                   type="button"
                   onClick={() => setShowPw(v => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-secondaryText hover:text-white transition"
                   tabIndex={-1}
                 >
                   {showPw ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
@@ -125,7 +125,7 @@ export default function ManagerLogin() {
               id="login-submit"
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 disabled:cursor-not-allowed text-white font-extrabold text-xs rounded-xl shadow-lg transition flex items-center justify-center gap-2"
+              className="btn-primary w-full py-3.5 text-xs shadow-xl flex items-center justify-center gap-2"
             >
               {loading
                 ? <><Loader2 className="w-4 h-4 animate-spin" /> Authenticating...</>
@@ -136,36 +136,36 @@ export default function ManagerLogin() {
 
           {/* Credential hints for development */}
           <details className="group">
-            <summary className="text-[11px] text-slate-500 cursor-pointer hover:text-slate-400 transition select-none">
+            <summary className="text-[11px] text-[#A3A3A3] cursor-pointer hover:text-[#F5F5F5] transition select-none font-semibold">
               🔑 Default test credentials (dev only)
             </summary>
             <div className="mt-3 space-y-1.5 text-[11px]">
               {[
-                { role: 'SUPER_ADMIN',  email: 'superadmin@auction.com', pw: 'Admin@1234',   color: 'text-blue-400' },
-                { role: 'PODIUM_ADMIN', email: 'podium@auction.com',     pw: 'Podium@1234',  color: 'text-rose-400' },
-                { role: 'TEAM_MANAGER', email: 'manager@auction.com',    pw: 'Manager@1234', color: 'text-emerald-400' },
-                { role: 'PLAYER',       email: 'player@auction.com',     pw: 'Player@1234',  color: 'text-purple-400' },
+                { role: 'SUPER_ADMIN',  email: 'superadmin@auction.com', pw: 'Admin@1234',   color: 'text-[#58D20A]' },
+                { role: 'PODIUM_ADMIN', email: 'podium@auction.com',     pw: 'Podium@1234',  color: 'text-[#FF5C5C]' },
+                { role: 'TEAM_MANAGER', email: 'manager@auction.com',    pw: 'Manager@1234', color: 'text-[#58D20A]' },
+                { role: 'PLAYER',       email: 'player@auction.com',     pw: 'Player@1234',  color: 'text-[#F4C542]' },
               ].map(c => (
                 <button
                   key={c.role}
                   type="button"
                   onClick={() => { setEmail(c.email); setPassword(c.pw); setError(''); }}
-                  className="w-full text-left p-2 bg-slate-900/60 hover:bg-slate-800/80 rounded-lg border border-slate-800 transition flex items-center justify-between group"
+                  className="w-full text-left p-2.5 bg-[#1C1C1C] hover:bg-[#262626] rounded-xl border border-[#3A3A3A] transition flex items-center justify-between group"
                 >
                   <span className={`font-bold font-mono ${c.color}`}>{c.role}</span>
-                  <span className="text-slate-500 group-hover:text-slate-300 transition">{c.email}</span>
+                  <span className="text-[#A3A3A3] group-hover:text-[#F5F5F5] transition font-medium">{c.email}</span>
                 </button>
               ))}
-              <p className="text-slate-600 text-center pt-1">
-                Run <code className="text-slate-400">node src/scripts/seedUsers.js</code> in backend first
+              <p className="text-[#666666] text-center pt-1">
+                Run <code className="text-[#A3A3A3]">node src/scripts/seedUsers.js</code> in backend first
               </p>
             </div>
           </details>
 
           {/* Player registration link */}
-          <p className="text-center text-xs text-slate-500">
+          <p className="text-center text-xs text-mutedText">
             Registering as a player?{' '}
-            <Link to="/player/register" className="text-purple-400 hover:text-purple-300 font-semibold transition">
+            <Link to="/player/register" className="text-warningGold hover:text-warningGold font-semibold transition">
               Player Registration →
             </Link>
           </p>

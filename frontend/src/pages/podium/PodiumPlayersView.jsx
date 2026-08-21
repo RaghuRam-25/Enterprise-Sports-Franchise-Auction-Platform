@@ -16,21 +16,21 @@ export default function PodiumPlayersView() {
 
     return (
         <div className="space-y-6">
-            <div className="glass-card rounded-2xl p-6 border border-slate-800">
+            <div className="glass-card rounded-2xl p-6 border border-cardBorder">
                 <div className="flex items-center gap-3">
-                    <Icon className="w-6 h-6 text-blue-400" />
+                    <Icon className="w-6 h-6 text-neonGreen" />
                     <div>
                         <h1 className="text-xl font-black text-white">{pageTitle}</h1>
-                        <p className="text-xs text-slate-400">
+                        <p className="text-xs text-secondaryText">
                             {filteredPlayers.length} players found with status: {statusFilter}
                         </p>
                     </div>
                 </div>
             </div>
 
-            <div className="glass-card rounded-2xl p-6 border border-slate-800 space-y-4">
+            <div className="glass-card rounded-2xl p-6 border border-cardBorder space-y-4">
                 {filteredPlayers.length === 0 ? (
-                    <div className="py-12 text-center text-slate-500">
+                    <div className="py-12 text-center text-mutedText">
                         No {statusFilter.toLowerCase()} players found.
                     </div>
                 ) : (

@@ -47,14 +47,14 @@ export default function GeneralTeams() {
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
           <h1 className="flex items-center gap-2 text-xl font-black text-white">
-            <ShieldCheck className="w-5 h-5 text-purple-400" /> Teams
+            <ShieldCheck className="w-5 h-5 text-warningGold" /> Teams
           </h1>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-secondaryText mt-1">
             Browse every franchise in the tournament — tap a team for its full squad profile.
           </p>
         </div>
         <div className="relative w-full sm:w-64">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-mutedText" />
           <input
             type="text"
             placeholder="Search teams…"
@@ -66,16 +66,16 @@ export default function GeneralTeams() {
       </div>
 
       {loading ? (
-        <div className="glass-card rounded-2xl p-10 border border-slate-800 text-center">
-          <span className="inline-block w-6 h-6 border-2 border-slate-700 border-t-purple-400 rounded-full animate-spin" />
+        <div className="glass-card rounded-2xl p-10 border border-cardBorder text-center">
+          <span className="inline-block w-6 h-6 border-2 border-borderStrong border-t-warningGold rounded-full animate-spin" />
         </div>
       ) : filtered.length === 0 ? (
-        <div className="glass-card rounded-2xl p-10 border border-slate-800 text-center space-y-2">
-          <Info className="w-8 h-8 mx-auto text-slate-600" />
-          <p className="text-sm font-bold text-slate-300">
+        <div className="glass-card rounded-2xl p-10 border border-cardBorder text-center space-y-2">
+          <Info className="w-8 h-8 mx-auto text-mutedText" />
+          <p className="text-sm font-bold text-secondaryText">
             {search ? 'No teams match your search' : 'No franchises created yet'}
           </p>
-          <p className="text-xs text-slate-500">Check back once the auction season begins.</p>
+          <p className="text-xs text-mutedText">Check back once the auction season begins.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -86,15 +86,15 @@ export default function GeneralTeams() {
               <Link
                 key={team._id || team.id}
                 to={`/general/teams/${team._id || team.id}`}
-                className="glass-card glass-card-hover rounded-2xl border border-slate-800 p-5 flex items-center gap-4 group"
+                className="glass-card glass-card-hover rounded-2xl border border-borderStrong p-5 flex items-center gap-4 group"
               >
                 <TeamBadge team={team} size="lg" showName={false} showCode={false} />
                 <div className="min-w-0 flex-1 space-y-1.5">
-                  <p className="text-sm font-black text-white truncate group-hover:text-purple-300 transition">
+                  <p className="text-sm font-black text-white truncate group-hover:text-warningGold transition">
                     {team.name}
                   </p>
-                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-slate-500">
-                    <span className="font-mono font-bold px-1.5 py-0.5 rounded bg-purple-500/10 text-purple-300 border border-purple-500/30">
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-mutedText">
+                    <span className="font-mono font-bold px-1.5 py-0.5 rounded bg-warningGold/10 text-warningGold border border-warningGold/30">
                       {team.shortCode || team.code || 'TEAM'}
                     </span>
                     {managerName && (
@@ -107,7 +107,7 @@ export default function GeneralTeams() {
                     </span>
                   </div>
                 </div>
-                <span className="w-8 h-8 rounded-xl bg-slate-900/80 border border-slate-800 flex items-center justify-center text-slate-500 group-hover:text-purple-300 group-hover:border-purple-500/40 transition shrink-0">
+                <span className="w-8 h-8 rounded-xl bg-cardBg/80 border border-cardBorder flex items-center justify-center text-mutedText group-hover:text-warningGold group-hover:border-warningGold/40 transition shrink-0">
                   <Eye className="w-4 h-4" />
                 </span>
               </Link>

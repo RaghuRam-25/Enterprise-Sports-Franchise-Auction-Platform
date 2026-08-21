@@ -120,7 +120,7 @@ export default function PlayerSettings() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="w-8 h-8 animate-spin text-purple-400" />
+        <Loader2 className="w-8 h-8 animate-spin text-warningGold" />
       </div>
     );
   }
@@ -131,7 +131,7 @@ export default function PlayerSettings() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-black font-heading text-white flex items-center gap-2">
-            <Settings className="w-6 h-6 text-purple-400" /> Account Settings
+            <Settings className="w-6 h-6 text-warningGold" /> Account Settings
           </h1>
         </div>
       </div>
@@ -139,31 +139,31 @@ export default function PlayerSettings() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
         {/* 1. Change Password */}
-        <div className="bg-slate-900/90 rounded-2xl p-6 border border-slate-800 space-y-4">
-          <h2 className="text-sm font-extrabold text-white flex items-center gap-2 border-b border-slate-800 pb-3">
-            <Key className="w-4 h-4 text-emerald-400" /> Change Password
+        <div className="bg-cardBg/90 rounded-2xl p-6 border border-cardBorder space-y-4">
+          <h2 className="text-sm font-extrabold text-white flex items-center gap-2 border-b border-cardBorder pb-3">
+            <Key className="w-4 h-4 text-neonGreen" /> Change Password
           </h2>
 
           <form onSubmit={handleChangePassword} className="space-y-4 text-xs">
             <div>
-              <label className="block text-slate-400 font-semibold mb-1">Current Password</label>
+              <label className="block text-secondaryText font-semibold mb-1">Current Password</label>
               <input
                 type="password"
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-emerald-500 font-mono"
+                className="w-full bg-darkBg border border-borderStrong rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-neonGreen font-mono"
                 placeholder="Enter current password"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-slate-400 font-semibold mb-1">New Password</label>
+              <label className="block text-secondaryText font-semibold mb-1">New Password</label>
               <input
                 type="password"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-emerald-500 font-mono"
+                className="w-full bg-darkBg border border-borderStrong rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-neonGreen font-mono"
                 placeholder="Enter new password (min 6 chars)"
                 required
               />
@@ -172,7 +172,7 @@ export default function PlayerSettings() {
             <button
               type="submit"
               disabled={changingPassword}
-              className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold rounded-xl transition flex items-center justify-center gap-2"
+              className="btn-primary w-full py-2.5 rounded-xl flex items-center justify-center gap-2 shadow-lg disabled:opacity-50"
             >
               {changingPassword && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
               Update Password
@@ -181,113 +181,118 @@ export default function PlayerSettings() {
         </div>
 
         {/* 2. Team Manager Access Request */}
-        <div className="bg-slate-900/90 rounded-2xl p-6 border border-slate-800 space-y-4">
-          <h2 className="text-sm font-extrabold text-white flex items-center gap-2 border-b border-slate-800 pb-3">
-            <ShieldCheck className="w-4 h-4 text-purple-400" /> Request Team Manager Access
+        <div className="bg-cardBg/90 rounded-2xl p-6 border border-cardBorder space-y-4">
+          <h2 className="text-sm font-extrabold text-white flex items-center gap-2 border-b border-cardBorder pb-3">
+            <ShieldCheck className="w-4 h-4 text-warningGold" /> Request Team Manager Access
           </h2>
 
           <div className="space-y-3 text-xs">
-            <p className="text-slate-400">
-              Submit a request to Super Admin to upgrade your role to <span className="text-purple-400 font-bold">TEAM_MANAGER</span>.
+            <p className="text-secondaryText">
+              Submit a request to Super Admin to upgrade your role to <span className="text-warningGold font-bold">TEAM_MANAGER</span>.
             </p>
 
-            <div className="p-3 bg-slate-950 border border-slate-800 rounded-xl flex items-center justify-between">
-              <span className="font-semibold text-slate-300">Request Status:</span>
+            <div className="p-3 bg-darkBg border border-cardBorder rounded-xl flex items-center justify-between">
+              <span className="font-semibold text-secondaryText">Request Status:</span>
               {managerRequestStatus === 'PENDING' || managerRequestStatus === 'pending' ? (
-                <span className="flex items-center gap-1 text-amber-400 font-bold px-2 py-0.5 bg-amber-500/10 rounded border border-amber-500/20">
+                <span className="flex items-center gap-1 text-warningGold font-bold px-2 py-0.5 bg-warningGold/10 rounded border border-warningGold/20">
                   <Clock className="w-3.5 h-3.5" /> Pending Review
                 </span>
               ) : managerRequestStatus === 'APPROVED' || managerRequestStatus === 'approved' ? (
-                <span className="flex items-center gap-1 text-emerald-400 font-bold px-2 py-0.5 bg-emerald-500/10 rounded border border-emerald-500/20">
+                <span className="flex items-center gap-1 text-neonGreen font-bold px-2 py-0.5 bg-neonGreen/10 rounded border border-neonGreen/20">
                   <CheckCircle2 className="w-3.5 h-3.5" /> Approved
                 </span>
               ) : managerRequestStatus === 'REJECTED' || managerRequestStatus === 'rejected' ? (
-                <span className="flex items-center gap-1 text-rose-400 font-bold px-2 py-0.5 bg-rose-500/10 rounded border border-rose-500/20">
+                <span className="flex items-center gap-1 text-urgentRedText font-bold px-2 py-0.5 bg-urgentRed/10 rounded border border-urgentRed/20">
                   <XCircle className="w-3.5 h-3.5" /> Declined
                 </span>
               ) : (
-                <span className="text-slate-500 font-bold">None</span>
+                <span className="text-mutedText font-bold">None</span>
               )}
             </div>
 
             <button
               onClick={handleRequestTeamManager}
               disabled={requestingManager || managerRequestStatus === 'PENDING' || managerRequestStatus === 'APPROVED'}
-              className="w-full py-2.5 bg-purple-600 hover:bg-purple-500 disabled:bg-slate-800 disabled:text-slate-500 text-white font-bold rounded-xl transition flex items-center justify-center gap-2"
+              className={`w-full py-2.5 rounded-xl font-bold transition flex items-center justify-center gap-2 ${
+                managerRequestStatus === 'PENDING' || managerRequestStatus === 'APPROVED'
+                  ? 'btn-secondary opacity-60 cursor-not-allowed'
+                  : 'btn-primary'
+              }`}
             >
               {requestingManager && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-              {managerRequestStatus === 'PENDING' ? 'Request Pending Approval' : 'Submit Team Manager Request'}
+              {managerRequestStatus === 'PENDING' ? 'Request Pending Approval' : managerRequestStatus === 'APPROVED' ? 'Access Approved' : 'Submit Team Manager Request'}
             </button>
           </div>
         </div>
 
         {/* 3. Notification Preferences */}
-        <div className="bg-slate-900/90 rounded-2xl p-6 border border-slate-800 space-y-4">
-          <h2 className="text-sm font-extrabold text-white flex items-center gap-2 border-b border-slate-800 pb-3">
-            <Bell className="w-4 h-4 text-blue-400" /> Notification Preferences
+        <div className="bg-cardBg/90 rounded-2xl p-6 border border-cardBorder space-y-4">
+          <h2 className="text-sm font-extrabold text-white flex items-center gap-2 border-b border-cardBorder pb-3">
+            <Bell className="w-4 h-4 text-neonGreen" /> Notification Preferences
           </h2>
 
           <div className="space-y-3 text-xs">
-            <label className="flex items-center justify-between p-3 bg-slate-950 rounded-xl border border-slate-800 cursor-pointer">
-              <span className="text-slate-300 font-semibold">Live Auction Calls</span>
+            <label className="flex items-center justify-between p-3 bg-darkBg rounded-xl border border-borderStrong cursor-pointer">
+              <span className="text-secondaryText font-semibold">Live Auction Calls</span>
               <input
                 type="checkbox"
                 checked={notifications.auctionAlerts}
                 onChange={(e) => setNotifications(p => ({ ...p, auctionAlerts: e.target.checked }))}
-                className="w-4 h-4 rounded accent-purple-600"
+                className="w-4 h-4 rounded accent-warningGold"
               />
             </label>
 
-            <label className="flex items-center justify-between p-3 bg-slate-950 rounded-xl border border-slate-800 cursor-pointer">
-              <span className="text-slate-300 font-semibold">Bid Status Updates</span>
+            <label className="flex items-center justify-between p-3 bg-darkBg rounded-xl border border-borderStrong cursor-pointer">
+              <span className="text-secondaryText font-semibold">Bid Status Updates</span>
               <input
                 type="checkbox"
                 checked={notifications.bidUpdates}
                 onChange={(e) => setNotifications(p => ({ ...p, bidUpdates: e.target.checked }))}
-                className="w-4 h-4 rounded accent-purple-600"
+                className="w-4 h-4 rounded accent-warningGold"
               />
             </label>
 
-            <label className="flex items-center justify-between p-3 bg-slate-950 rounded-xl border border-slate-800 cursor-pointer">
-              <span className="text-slate-300 font-semibold">Email Summary Digest</span>
+            <label className="flex items-center justify-between p-3 bg-darkBg rounded-xl border border-borderStrong cursor-pointer">
+              <span className="text-secondaryText font-semibold">Email Summary Digest</span>
               <input
                 type="checkbox"
                 checked={notifications.emailDigest}
                 onChange={(e) => setNotifications(p => ({ ...p, emailDigest: e.target.checked }))}
-                className="w-4 h-4 rounded accent-purple-600"
+                className="w-4 h-4 rounded accent-warningGold"
               />
             </label>
           </div>
         </div>
 
         {/* 4. Withdraw Registration & Session Actions */}
-        <div className="bg-slate-900/90 rounded-2xl p-6 border border-slate-800 space-y-4">
-          <h2 className="text-sm font-extrabold text-white flex items-center gap-2 border-b border-slate-800 pb-3">
-            <AlertTriangle className="w-4 h-4 text-rose-400" /> Account & Draft Status
+        <div className="bg-cardBg/90 rounded-2xl p-6 border border-cardBorder space-y-4">
+          <h2 className="text-sm font-extrabold text-white flex items-center gap-2 border-b border-cardBorder pb-3">
+            <AlertTriangle className="w-4 h-4 text-urgentRedText" /> Account & Draft Status
           </h2>
 
           <div className="space-y-3 text-xs">
             {isRegistrationFrozen ? (
-              <div className="p-3 bg-slate-950 border border-slate-800 rounded-xl space-y-1">
-                <div className="flex items-center gap-1.5 text-amber-400 font-bold">
+              <div className="p-3 bg-darkBg border border-cardBorder rounded-xl space-y-1">
+                <div className="flex items-center gap-1.5 text-warningGold font-bold">
                   <Lock className="w-3.5 h-3.5" /> Registration Frozen
                 </div>
-                <p className="text-slate-400">
+                <p className="text-secondaryText">
                   Draft participation withdrawal is currently locked because Registration Freeze is active.
                 </p>
               </div>
             ) : (
               <div className="space-y-2">
-                <p className="text-slate-400">
+                <p className="text-secondaryText">
                   Withdrawing will remove your profile from the live auction pool.
                 </p>
                 <button
                   onClick={handleWithdraw}
                   disabled={myPlayer?.status === 'WITHDRAWN' || myPlayer?.status === 'withdrawn' || withdrawing}
-                  className={`w-full py-2.5 rounded-xl font-bold transition border flex items-center justify-center gap-2 ${myPlayer?.status === 'WITHDRAWN' || myPlayer?.status === 'withdrawn'
-                      ? 'bg-slate-800 text-slate-500 border-slate-700 cursor-not-allowed'
-                      : 'bg-rose-600/20 hover:bg-rose-600 text-rose-400 hover:text-white border-rose-500/40'
-                    }`}
+                  className={`w-full py-2.5 rounded-xl font-bold transition flex items-center justify-center gap-2 ${
+                    myPlayer?.status === 'WITHDRAWN' || myPlayer?.status === 'withdrawn'
+                      ? 'btn-secondary opacity-50 cursor-not-allowed'
+                      : 'btn-danger'
+                  }`}
                 >
                   {withdrawing && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                   {myPlayer?.status === 'WITHDRAWN' || myPlayer?.status === 'withdrawn'
@@ -297,15 +302,15 @@ export default function PlayerSettings() {
               </div>
             )}
 
-            <div className="pt-2 border-t border-slate-800">
+            <div className="pt-2 border-t border-cardBorder">
               <button
                 onClick={() => {
                   logout();
                   navigate('/login');
                 }}
-                className="w-full py-2.5 bg-slate-950 hover:bg-rose-950/40 text-slate-300 hover:text-rose-300 border border-slate-800 hover:border-rose-800 rounded-xl font-bold transition flex items-center justify-center gap-2"
+                className="btn-danger w-full py-3 text-xs flex items-center justify-center gap-2"
               >
-                <LogOut className="w-4 h-4 text-rose-400" /> Sign Out of Account
+                <LogOut className="w-4 h-4" /> Sign Out of Account
               </button>
             </div>
           </div>

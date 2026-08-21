@@ -182,28 +182,28 @@ export const PodiumDashboard = () => {
     switch (category) {
       case 'Icon Category':
         return {
-          card: 'bg-amber-950/50 border-amber-700/50 hover:border-amber-500/70',
-          text: 'group-hover:text-amber-400',
+          card: 'bg-warningGold/50 border-warningGold/50 hover:border-warningGold/70',
+          text: 'group-hover:text-warningGold',
         };
       case 'A Grade':
         return {
-          card: 'bg-blue-950/50 border-blue-800/60 hover:border-blue-600/70',
-          text: 'group-hover:text-blue-400',
+          card: 'bg-successGreen/50 border-successGreen/60 hover:border-successGreen/70',
+          text: 'group-hover:text-neonGreen',
         };
       case 'B Grade':
         return {
-          card: 'bg-teal-950/50 border-teal-800/50 hover:border-teal-600/70',
-          text: 'group-hover:text-teal-400',
+          card: 'bg-successGreen/50 border-successGreen/50 hover:border-successGreen/70',
+          text: 'group-hover:text-neonGreen',
         };
       case 'Emerging Youth':
         return {
-          card: 'bg-purple-950/50 border-purple-800/50 hover:border-purple-600/70',
-          text: 'group-hover:text-purple-400',
+          card: 'bg-warningGold/50 border-warningGold/50 hover:border-warningGold/70',
+          text: 'group-hover:text-warningGold',
         };
       default:
         return {
-          card: 'bg-slate-900/70 border-slate-800 hover:border-slate-600',
-          text: 'group-hover:text-slate-300',
+          card: 'bg-cardBg/70 border-cardBorder hover:border-borderStrong',
+          text: 'group-hover:text-secondaryText',
         };
     }
   };
@@ -256,12 +256,12 @@ export const PodiumDashboard = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
         {/* Left Column: Unsold Player Pool */}
-        <div className="glass-card rounded-2xl p-6 border border-slate-800 flex flex-col h-[650px] lg:h-[calc(100vh-8.5rem)] space-y-2 lg:sticky lg:top-2">
+        <div className="glass-card rounded-2xl p-6 border border-cardBorder flex flex-col h-[650px] lg:h-[calc(100vh-8.5rem)] space-y-2 lg:sticky lg:top-2">
           <div>
-            <h3 className="text-sm font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
-              <Search className="w-4 h-4 text-blue-400" /> Unsold Player Pool ({unsoldPlayers.length})
+            <h3 className="text-sm font-bold uppercase tracking-wider text-secondaryText flex items-center gap-2">
+              <Search className="w-4 h-4 text-neonGreen" /> Unsold Player Pool ({unsoldPlayers.length})
             </h3>
-            <p className="text-[11px] text-slate-400">Offline lottery selection pool</p>
+            <p className="text-[11px] text-secondaryText">Offline lottery selection pool</p>
           </div>
 
           {/* Search and Filters */}
@@ -278,7 +278,7 @@ export const PodiumDashboard = () => {
               <select
                 value={selectedCategoryFilter}
                 onChange={e => setSelectedCategoryFilter(e.target.value)}
-                className="glass-input px-2 py-1.5 rounded-lg text-[11px] text-slate-300"
+                className="glass-input px-2 py-1.5 rounded-lg text-[11px] text-secondaryText"
               >
                 <option value="ALL">All Categories</option>
                 <option value="Icon Category">Icon Category</option>
@@ -290,7 +290,7 @@ export const PodiumDashboard = () => {
               <select
                 value={selectedPositionFilter}
                 onChange={e => setSelectedPositionFilter(e.target.value)}
-                className="glass-input px-2 py-1.5 rounded-lg text-[11px] text-slate-300"
+                className="glass-input px-2 py-1.5 rounded-lg text-[11px] text-secondaryText"
               >
                 <option value="ALL">All Positions</option>
                 <option value="pos-1">Striker (ST)</option>
@@ -304,7 +304,7 @@ export const PodiumDashboard = () => {
           {/* Scrollable Player List */}
           <div className="flex-1 overflow-y-auto space-y-3 pr-1">
             {filteredUnsold.length === 0 ? (
-              <div className="text-center py-12 text-slate-500 text-xs">
+              <div className="text-center py-12 text-mutedText text-xs">
                 No unsold players match search criteria.
               </div>
             ) : (
@@ -316,18 +316,18 @@ export const PodiumDashboard = () => {
                     className={`border p-3.5 rounded-xl flex items-center justify-between transition-colors group ${categoryStyles.card}`}
                   >
                     <div className="flex items-center gap-3 min-w-0">
-                      <img src={getImageUrl(player.imageUrl, playerFallback('slate'))} alt="" className="w-10 h-10 rounded-full object-cover border border-slate-700 flex-shrink-0" />
+                      <img src={getImageUrl(player.imageUrl, playerFallback('slate'))} alt="" className="w-10 h-10 rounded-full object-cover border border-borderStrong flex-shrink-0" />
                       <div className="min-w-0">
                         <p className={`font-extrabold text-xs text-white truncate transition ${categoryStyles.text}`}>{player.name}</p>
-                        <p className="text-[11px] text-slate-400">
-                          {player.jerseyName} &bull; <span className="text-emerald-400 font-mono font-bold">{formatCurrency(player.basePrice)}</span>
+                        <p className="text-[11px] text-secondaryText">
+                          {player.jerseyName} &bull; <span className="text-neonGreen font-mono font-bold">{formatCurrency(player.basePrice)}</span>
                         </p>
                       </div>
                     </div>
 
                     <button
                       onClick={() => handlePushPlayer(player)}
-                      className="px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600 text-blue-300 hover:text-white border border-blue-500/30 text-xs font-bold rounded-xl transition shadow"
+                      className="btn-primary px-3.5 py-1.5 text-xs shadow-md"
                     >
                       Push to Podium
                     </button>
@@ -342,14 +342,14 @@ export const PodiumDashboard = () => {
         <div className="lg:col-span-2 space-y-6">
 
           {/* Launchpad Configuration Box */}
-          <div className="glass-card rounded-2xl p-6 border border-slate-800 space-y-4">
-            <h3 className="text-sm font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
-              <Settings2 className="w-4 h-4 text-emerald-400" /> Launchpad Configuration
+          <div className="glass-card rounded-2xl p-6 border border-cardBorder space-y-4">
+            <h3 className="text-sm font-bold uppercase tracking-wider text-secondaryText flex items-center gap-2">
+              <Settings2 className="w-4 h-4 text-neonGreen" /> Launchpad Configuration
             </h3>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-950/80 p-4 rounded-xl border border-slate-800">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-darkBg/80 p-4 rounded-xl border border-cardBorder">
               <div>
-                <label className="block text-xs font-semibold text-slate-400 mb-1">Time(S):</label>
+                <label className="block text-xs font-semibold text-secondaryText mb-1">Time(S):</label>
                 <div className="flex items-center gap-2">
                   {[30, 60, 90].map(dur => (
                     <button
@@ -357,8 +357,8 @@ export const PodiumDashboard = () => {
                       type="button"
                       onClick={() => setCustomDuration(dur)}
                       className={`px-3 py-1.5 text-xs font-bold rounded-lg border transition ${customDuration === dur
-                        ? 'bg-blue-600 text-white border-blue-500'
-                        : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white'
+                        ? 'bg-[#58D20A] text-[#050505] border-[#58D20A] shadow-md font-extrabold'
+                        : 'btn-secondary'
                         }`}
                     >
                       {dur}s
@@ -374,14 +374,14 @@ export const PodiumDashboard = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-400 mb-1">Bidding Mode:</label>
+                <label className="block text-xs font-semibold text-secondaryText mb-1">Bidding Mode:</label>
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
                     onClick={() => setTargetMode('normal')}
                     className={`px-3 py-1.5 text-xs font-bold rounded-lg border transition ${targetMode === 'normal'
-                      ? 'bg-emerald-600 text-white border-emerald-500'
-                      : 'bg-slate-900 text-slate-400 border-slate-800'
+                      ? 'bg-successGreen text-darkBg border-neonGreen'
+                      : 'bg-cardBg text-secondaryText border-cardBorder'
                       }`}
                   >
                     Normal Mode
@@ -390,8 +390,8 @@ export const PodiumDashboard = () => {
                     type="button"
                     onClick={() => setTargetMode('blind')}
                     className={`px-3 py-1.5 text-xs font-bold rounded-lg border transition ${targetMode === 'blind'
-                      ? 'bg-purple-600 text-white border-purple-500'
-                      : 'bg-slate-900 text-slate-400 border-slate-800'
+                      ? 'bg-warningGold text-darkBg border-warningGold'
+                      : 'bg-cardBg text-secondaryText border-cardBorder'
                       }`}
                   >
                     Blind Mode
@@ -405,14 +405,14 @@ export const PodiumDashboard = () => {
               <button
                 onClick={handleSelectRandom}
                 disabled={!!podiumPlayer || unsoldPlayers.length === 0}
-                className="py-2.5 px-4 bg-amber-600/20 hover:bg-amber-600 text-amber-300 hover:text-white border border-amber-500/40 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
+                className="py-2.5 px-4 bg-warningGold/20 hover:bg-warningGold text-warningGold hover:text-darkBg border border-warningGold/40 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <Shuffle className="w-4 h-4" /> Random Lottery Pick
               </button>
               <button
                 onClick={handleMoveNext}
                 disabled={!!podiumPlayer || unsoldPlayers.length === 0}
-                className="py-2.5 px-4 bg-blue-600/20 hover:bg-blue-600 text-blue-300 hover:text-white border border-blue-500/40 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
+                className="py-2.5 px-4 bg-successGreen/20 hover:bg-successGreen text-neonGreenHover hover:text-darkBg border border-neonGreen/40 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <SkipForward className="w-4 h-4" /> Next Player in Queue
               </button>
@@ -424,7 +424,7 @@ export const PodiumDashboard = () => {
                 so there is no detached section or empty gap. Every cinematic
                 stays confined here; the admin's Unsold Pool sidebar and
                 Launchpad remain visible at all times. */}
-          <div className="glass-card rounded-2xl border border-slate-800 overflow-hidden bg-gradient-to-b from-slate-900 via-slate-900/90 to-blue-950/20 min-h-[460px] sm:min-h-[540px] lg:min-h-[600px]">
+          <div className="glass-card rounded-2xl border border-cardBorder overflow-hidden bg-gradient-to-b from-cardBg via-cardBg/90 to-successGreen/20 min-h-[460px] sm:min-h-[540px] lg:min-h-[600px]">
             <FullscreenWrapper>
               <div className="relative h-full">
                 {(broadcastVideoUrl || displayVideoUrl) ? (
@@ -435,7 +435,7 @@ export const PodiumDashboard = () => {
                     pausedAtPosition={videoBroadcastState?.pausedAtPosition}
                   />
                 ) : (introLoopState?.isPlaying || isIntroLoopActive) ? (
-                  <div className="relative h-full overflow-hidden rounded-2xl flex items-center justify-center bg-slate-950 p-6">
+                  <div className="relative h-full overflow-hidden rounded-2xl flex items-center justify-center bg-darkBg p-6">
                     {(() => {
                       const curPlayer = introLoopState?.players?.[introLoopState?.currentIndex] || introPlayer;
                       if (!curPlayer) {
@@ -443,10 +443,10 @@ export const PodiumDashboard = () => {
                       }
                       return (
                         <div key={`podium-intro-${curPlayer._id || curPlayer.id}`} className="text-center space-y-4 max-w-lg mx-auto animate-fade-in">
-                          <span className="px-3 py-1 bg-purple-500/20 text-purple-300 border border-purple-500/40 rounded-full text-xs font-bold uppercase tracking-widest">
+                          <span className="px-3 py-1 bg-warningGold/20 text-warningGold border border-warningGold/40 rounded-full text-xs font-bold uppercase tracking-widest">
                             Player Presentation ({ (introLoopState?.currentIndex || 0) + 1 } / { introLoopState?.players?.length || 1 })
                           </span>
-                          <div className="relative w-36 h-36 mx-auto rounded-2xl overflow-hidden border-2 border-purple-500/50 shadow-2xl shadow-purple-900/50">
+                          <div className="relative w-36 h-36 mx-auto rounded-2xl overflow-hidden border-2 border-warningGold/50 shadow-2xl shadow-warningGold/50">
                             <img
                               src={getImageUrl(curPlayer.imageUrl, playerFallback('indigo'))}
                               alt={curPlayer.name}
@@ -455,12 +455,12 @@ export const PodiumDashboard = () => {
                           </div>
                           <div>
                             <h2 className="text-2xl font-black text-white">{curPlayer.name}</h2>
-                            <p className="text-xs font-bold text-purple-300 uppercase tracking-wider mt-0.5">{curPlayer.category || curPlayer.role || 'DRAFT PLAYER'}</p>
+                            <p className="text-xs font-bold text-warningGold uppercase tracking-wider mt-0.5">{curPlayer.category || curPlayer.role || 'DRAFT PLAYER'}</p>
                           </div>
-                          <div className="flex justify-center gap-4 text-xs font-mono bg-slate-900/90 p-3 rounded-xl border border-slate-800">
-                            <div><span className="text-slate-500 block text-[10px]">ROLE</span><span className="text-white font-bold">{curPlayer.role || curPlayer.primaryRole || 'N/A'}</span></div>
-                            <div className="w-px bg-slate-800" />
-                            <div><span className="text-slate-500 block text-[10px]">BASE PRICE</span><span className="text-emerald-400 font-bold">{formatCurrency(curPlayer.basePrice || 1000000)}</span></div>
+                          <div className="flex justify-center gap-4 text-xs font-mono bg-cardBg/90 p-3 rounded-xl border border-cardBorder">
+                            <div><span className="text-mutedText block text-[10px]">ROLE</span><span className="text-white font-bold">{curPlayer.role || curPlayer.primaryRole || 'N/A'}</span></div>
+                            <div className="w-px bg-surfaceHover" />
+                            <div><span className="text-mutedText block text-[10px]">BASE PRICE</span><span className="text-neonGreen font-bold">{formatCurrency(curPlayer.basePrice || 1000000)}</span></div>
                           </div>
                         </div>
                       );
@@ -495,30 +495,30 @@ export const PodiumDashboard = () => {
                               <img
                                 src={getImageUrl(podiumPlayer.imageUrl, playerFallback('slate'))}
                                 alt=""
-                                className="w-24 h-24 rounded-2xl object-cover border-2 border-emerald-500/40 shadow-xl"
+                                className="w-24 h-24 rounded-2xl object-cover border-2 border-neonGreen/40 shadow-xl"
                               />
-                              <span className="absolute -bottom-2 -right-2 px-2 py-0.5 bg-emerald-500 text-slate-950 font-bold text-[10px] rounded-md">
+                              <span className="absolute -bottom-2 -right-2 px-2 py-0.5 bg-neonGreen text-darkBg font-bold text-[10px] rounded-md">
                                 {podiumPlayer.category}
                               </span>
                             </div>
 
                             <div className="space-y-1">
-                              <span className="text-[11px] font-bold text-blue-400 uppercase tracking-widest">ON THE PODIUM</span>
+                              <span className="text-[11px] font-bold text-neonGreen uppercase tracking-widest">ON THE PODIUM</span>
                               <h2 className="text-2xl font-black font-heading text-white">{podiumPlayer.name}</h2>
-                              <p className="text-xs text-slate-300">
-                                {podiumPlayer.jerseyName} &bull; <span className="font-mono text-emerald-400">Base: {formatCurrency(podiumPlayer.basePrice)}</span>
+                              <p className="text-xs text-secondaryText">
+                                {podiumPlayer.jerseyName} &bull; <span className="font-mono text-neonGreen">Base: {formatCurrency(podiumPlayer.basePrice)}</span>
                               </p>
-                              <p className="text-[11px] text-slate-400 font-mono">ID: {podiumPlayer.studentId} &bull; {podiumPlayer.session}</p>
+                              <p className="text-[11px] text-secondaryText font-mono">ID: {podiumPlayer.studentId} &bull; {podiumPlayer.session}</p>
                             </div>
                           </div>
 
                           {/* Countdown Timer Display */}
                           <div className="flex flex-col items-center">
-                            <div className={`relative w-24 h-24 rounded-full flex items-center justify-center border-4 shadow-xl ${timerRemaining <= 10 ? 'border-rose-500 text-rose-400 animate-pulse' : 'border-emerald-500 text-emerald-400'
+                            <div className={`relative w-24 h-24 rounded-full flex items-center justify-center border-4 shadow-xl ${timerRemaining <= 10 ? 'border-urgentRed text-urgentRedText animate-pulse' : 'border-neonGreen text-neonGreen'
                               }`}>
                               <span className="text-3xl font-black font-mono">{timerRemaining}s</span>
                             </div>
-                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
+                            <span className="text-[10px] font-bold text-secondaryText uppercase tracking-widest mt-1">
                               Mode: <strong className="text-white">{biddingMode}</strong>
                             </span>
                           </div>
@@ -526,14 +526,14 @@ export const PodiumDashboard = () => {
                         </div>
 
                         {/* Current Highest Bidder Banner */}
-                        <div className="bg-slate-950/90 border border-slate-800 p-4 rounded-xl flex items-center justify-between">
+                        <div className="bg-darkBg/90 border border-cardBorder p-4 rounded-xl flex items-center justify-between">
                           <div>
-                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Current Leading Bid</span>
-                            <h3 className="text-2xl font-black font-mono text-emerald-400">{formatCurrency(currentBid)}</h3>
+                            <span className="text-[10px] font-bold text-secondaryText uppercase tracking-widest">Current Leading Bid</span>
+                            <h3 className="text-2xl font-black font-mono text-neonGreen">{formatCurrency(currentBid)}</h3>
                           </div>
 
                           <div className="text-right">
-                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Highest Bidder Team</span>
+                            <span className="text-[10px] font-bold text-secondaryText uppercase tracking-widest">Highest Bidder Team</span>
                             <p className="text-sm font-extrabold text-white flex items-center gap-1.5 justify-end">
                               <span>{highestBidder ? highestBidder.logo : '—'}</span>
                               <span>{highestBidder ? highestBidder.name : 'Opening / Base Price'}</span>
@@ -543,8 +543,8 @@ export const PodiumDashboard = () => {
 
                         {/* Dispute Resolution Control Deck (PRD Section 3.B) */}
                         <div className="space-y-2">
-                          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
-                            <ShieldAlert className="w-3.5 h-3.5 text-rose-400" /> Admin Dispute Controls
+                          <span className="text-[11px] font-bold text-secondaryText uppercase tracking-wider flex items-center gap-1">
+                            <ShieldAlert className="w-3.5 h-3.5 text-urgentRedText" /> Admin Dispute Controls
                           </span>
 
                           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -552,14 +552,14 @@ export const PodiumDashboard = () => {
                             {timerStatus === 'running' ? (
                               <button
                                 onClick={pauseTimer}
-                                className="py-3 px-4 bg-amber-600/20 hover:bg-amber-600 text-amber-300 hover:text-white border border-amber-500/40 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow"
+                                className="py-3 px-4 bg-warningGold/20 hover:bg-warningGold text-warningGold hover:text-darkBg border border-warningGold/40 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow"
                               >
                                 <Pause className="w-4 h-4" /> Pause Clock
                               </button>
                             ) : (
                               <button
                                 onClick={resumeTimer}
-                                className="py-3 px-4 bg-emerald-600/20 hover:bg-emerald-600 text-emerald-300 hover:text-white border border-emerald-500/40 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow"
+                                className="py-3 px-4 bg-successGreen/20 hover:bg-successGreen text-neonGreenHover hover:text-darkBg border border-neonGreen/40 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow"
                               >
                                 <Play className="w-4 h-4" /> Resume Clock
                               </button>
@@ -568,7 +568,7 @@ export const PodiumDashboard = () => {
                             {/* Rollback Bid */}
                             <button
                               onClick={rollbackBid}
-                              className="py-3 px-4 bg-blue-600/20 hover:bg-blue-600 text-blue-300 hover:text-white border border-blue-500/40 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow"
+                              className="py-3 px-4 bg-successGreen/20 hover:bg-successGreen text-neonGreenHover hover:text-darkBg border border-neonGreen/40 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow"
                             >
                               <RotateCcw className="w-4 h-4" /> Rollback Bid
                             </button>
@@ -576,7 +576,7 @@ export const PodiumDashboard = () => {
                             {/* Hammer / Force Sell */}
                             <button
                               onClick={hammerSell}
-                              className="py-3 px-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-black transition flex items-center justify-center gap-2 shadow-lg"
+                              className="py-3 px-4 bg-successGreen hover:bg-neonGreen text-darkBg rounded-xl text-xs font-black transition flex items-center justify-center gap-2 shadow-lg"
                             >
                               <Gavel className="w-4 h-4" /> HAMMER / SELL
                             </button>
@@ -584,7 +584,7 @@ export const PodiumDashboard = () => {
                             {/* Cancel Auction */}
                             <button
                               onClick={cancelAuction}
-                              className="py-3 px-4 bg-rose-600/20 hover:bg-rose-600 text-rose-300 hover:text-white border border-rose-500/40 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow"
+                              className="py-3 px-4 bg-urgentRed/20 hover:bg-urgentRed text-urgentRedText hover:text-white border border-urgentRed/40 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow"
                             >
                               <XCircle className="w-4 h-4" /> Cancel Auction
                             </button>
@@ -606,9 +606,9 @@ export const PodiumDashboard = () => {
                           />
                         ) : (
                           <div className="p-12 text-center space-y-3">
-                            <Gavel className="w-12 h-12 text-slate-600 mx-auto" />
-                            <h3 className="text-base font-bold text-slate-300">Podium is currently empty</h3>
-                            <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                            <Gavel className="w-12 h-12 text-mutedText mx-auto" />
+                            <h3 className="text-base font-bold text-secondaryText">Podium is currently empty</h3>
+                            <p className="text-xs text-mutedText max-w-sm mx-auto">
                               Select an unsold player from the left panel and click "Push to Podium" to start the live bidding timer.
                             </p>
                           </div>
@@ -651,21 +651,21 @@ export const PodiumDashboard = () => {
             {/* end spotlight area */}
 
             {/* Live Bid Log History — same unified card, divider-separated. */}
-            <div className="border-t border-slate-800/80 p-6 space-y-3">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">Live Podium Bid Log</h4>
+            <div className="border-t border-cardBorder/80 p-6 space-y-3">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-secondaryText">Live Podium Bid Log</h4>
               <div className="max-h-48 overflow-y-auto space-y-2 text-xs">
                 {bidHistory.length === 0 ? (
-                  <p className="text-slate-500 text-center py-4">No bids logged yet.</p>
+                  <p className="text-mutedText text-center py-4">No bids logged yet.</p>
                 ) : (
                   bidHistory.map((log) => (
-                    <div key={log.id} className="bg-slate-900/60 p-2.5 rounded-lg border border-slate-800/80 flex items-center justify-between">
+                    <div key={log.id} className="bg-cardBg/60 p-2.5 rounded-lg border border-cardBorder/80 flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <span className="font-bold text-white">{log.bidder}</span>
-                        <span className="text-[10px] text-slate-400">({log.type})</span>
+                        <span className="text-[10px] text-secondaryText">({log.type})</span>
                       </div>
                       <div className="flex items-center gap-3 font-mono">
-                        <span className="text-emerald-400 font-bold">{formatCurrency(log.amount)}</span>
-                        <span className="text-[10px] text-slate-500">{log.time}</span>
+                        <span className="text-neonGreen font-bold">{formatCurrency(log.amount)}</span>
+                        <span className="text-[10px] text-mutedText">{log.time}</span>
                       </div>
                     </div>
                   ))

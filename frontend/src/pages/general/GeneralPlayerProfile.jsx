@@ -6,11 +6,11 @@ import { useAuction } from '../../context/AuctionContext';
 import TeamBadge from '../../components/common/TeamBadge';
 
 const CATEGORY_STYLES = {
-  'Icon Category': 'bg-amber-950/50 border-amber-700/50 text-amber-300',
-  'A Grade': 'bg-blue-950/50 border-blue-800/60 text-blue-300',
-  'B Grade': 'bg-teal-950/50 border-teal-800/50 text-teal-300',
-  'Emerging Youth': 'bg-purple-950/50 border-purple-800/50 text-purple-300',
-  default: 'bg-slate-900/60 border-slate-800 text-slate-300',
+  'Icon Category': 'bg-warningGold/50 border-warningGold/50 text-warningGold',
+  'A Grade': 'bg-successGreen/50 border-successGreen/60 text-neonGreenHover',
+  'B Grade': 'bg-successGreen/50 border-successGreen/50 text-neonGreenHover',
+  'Emerging Youth': 'bg-warningGold/50 border-warningGold/50 text-warningGold',
+  default: 'bg-cardBg/60 border-cardBorder text-secondaryText',
 };
 
 /**
@@ -46,18 +46,18 @@ export default function GeneralPlayerProfile() {
 
   if (loading) {
     return (
-      <div className="glass-card rounded-2xl p-10 border border-slate-800 text-center">
-        <span className="inline-block w-6 h-6 border-2 border-slate-700 border-t-sky-400 rounded-full animate-spin" />
+      <div className="glass-card rounded-2xl p-10 border border-cardBorder text-center">
+        <span className="inline-block w-6 h-6 border-2 border-borderStrong border-t-neonGreen rounded-full animate-spin" />
       </div>
     );
   }
 
   if (!player) {
     return (
-      <div className="glass-card rounded-2xl p-10 border border-slate-800 text-center space-y-3">
-        <Info className="w-8 h-8 mx-auto text-slate-600" />
-        <p className="text-sm font-bold text-slate-300">Player not found</p>
-        <Link to="/general/players" className="inline-flex items-center gap-1.5 text-xs font-bold text-sky-400 hover:text-sky-300">
+      <div className="glass-card rounded-2xl p-10 border border-cardBorder text-center space-y-3">
+        <Info className="w-8 h-8 mx-auto text-mutedText" />
+        <p className="text-sm font-bold text-secondaryText">Player not found</p>
+        <Link to="/general/players" className="inline-flex items-center gap-1.5 text-xs font-bold text-neonGreen hover:text-neonGreenHover">
           <ArrowLeft className="w-3.5 h-3.5" /> Back to Players
         </Link>
       </div>
@@ -78,22 +78,22 @@ export default function GeneralPlayerProfile() {
 
   return (
     <div className="space-y-6">
-      <Link to="/general/players" className="inline-flex items-center gap-1.5 text-[11px] font-bold text-slate-500 hover:text-slate-300 transition">
+      <Link to="/general/players" className="inline-flex items-center gap-1.5 text-[11px] font-bold text-secondaryText hover:text-white transition">
         <ArrowLeft className="w-3.5 h-3.5" /> Back to Players
       </Link>
 
       {/* Player header */}
-      <div className="relative overflow-hidden rounded-2xl border border-slate-800 bg-gradient-to-r from-sky-950/40 via-slate-900 to-slate-950 p-6 sm:p-8">
+      <div className="relative overflow-hidden rounded-2xl border border-cardBorder bg-gradient-to-r from-successGreen/40 via-cardBg to-darkBg p-6 sm:p-8">
         <div className="relative flex flex-col sm:flex-row items-start sm:items-center gap-5">
           {player.imageUrl ? (
             <img
               src={player.imageUrl}
               alt={player.name}
-              className="w-20 h-20 rounded-2xl object-cover border border-slate-700 shrink-0"
+              className="w-20 h-20 rounded-2xl object-cover border border-borderStrong shrink-0"
               onError={e => { e.currentTarget.style.display = 'none'; }}
             />
           ) : (
-            <span className="w-20 h-20 rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-center text-xl font-black text-slate-400 shrink-0">
+            <span className="w-20 h-20 rounded-2xl bg-surfaceHover border border-borderStrong flex items-center justify-center text-xl font-black text-secondaryText shrink-0">
               {(player.jerseyName || player.name || 'P').slice(0, 2).toUpperCase()}
             </span>
           )}
@@ -104,37 +104,37 @@ export default function GeneralPlayerProfile() {
                 <span className={`font-bold uppercase px-2 py-0.5 rounded border ${catStyle}`}>{player.category}</span>
               )}
               {team && (
-                <Link to={`/general/teams/${team._id || team.id}`} className="flex items-center gap-1.5 text-slate-400 hover:text-slate-200 transition">
+                <Link to={`/general/teams/${team._id || team.id}`} className="flex items-center gap-1.5 text-secondaryText hover:text-primaryText transition">
                   <ShieldCheck className="w-3.5 h-3.5" /> {team.name}
                 </Link>
               )}
             </div>
           </div>
-          <span className="sm:ml-auto flex items-center gap-1.5 text-[11px] font-bold text-slate-500 border border-slate-800 rounded-full px-3 py-1 shrink-0">
+          <span className="sm:ml-auto flex items-center gap-1.5 text-[11px] font-bold text-mutedText border border-cardBorder rounded-full px-3 py-1 shrink-0">
             <Eye className="w-3.5 h-3.5" /> Public profile
           </span>
         </div>
       </div>
 
       {/* Public info grid */}
-      <section className="glass-card rounded-2xl p-5 border border-slate-800 space-y-4">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-300">Player Information</h3>
+      <section className="glass-card rounded-2xl p-5 border border-cardBorder space-y-4">
+        <h3 className="text-xs font-bold uppercase tracking-wider text-secondaryText">Player Information</h3>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {facts.map(f => {
             const Icon = f.icon;
             return (
-              <div key={f.label} className="bg-slate-900/60 border border-slate-800 rounded-xl p-4 space-y-1.5">
-                <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-500">
+              <div key={f.label} className="bg-cardBg/60 border border-cardBorder rounded-xl p-4 space-y-1.5">
+                <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-mutedText">
                   <Icon className="w-3 h-3" /> {f.label}
                 </p>
-                <p className="text-sm font-black text-slate-100 truncate">{f.value}</p>
+                <p className="text-sm font-black text-primaryText truncate">{f.value}</p>
               </div>
             );
           })}
         </div>
         {team && (
-          <div className="pt-2 border-t border-slate-800/70 flex items-center justify-between gap-3">
-            <span className="text-[11px] text-slate-500">Franchise</span>
+          <div className="pt-2 border-t border-cardBorder/70 flex items-center justify-between gap-3">
+            <span className="text-[11px] text-mutedText">Franchise</span>
             <Link to={`/general/teams/${team._id || team.id}`} className="hover:opacity-80 transition">
               <TeamBadge team={team} size="sm" />
             </Link>

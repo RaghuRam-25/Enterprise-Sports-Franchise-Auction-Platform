@@ -48,19 +48,19 @@ export default function BidHistory({ history = [], maxHeight = '240px', showHead
 
   return (
     <motion.div
-      className="glass-card rounded-2xl p-4 border border-slate-800 space-y-3"
+      className="rounded-2xl p-4 border border-[#222222] bg-[#101010] space-y-3"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.8, duration: 0.5 }}
     >
       {showHeader && (
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
-            <Clock className="w-4 h-4 text-emerald-400" />
+          <h3 className="text-xs font-bold uppercase tracking-wider text-[#A3A3A3] flex items-center gap-2">
+            <Clock className="w-4 h-4 text-[#58D20A]" />
             Live Bid Ledger ({safeHistory.length})
           </h3>
           {safeHistory.length > 0 && safeHistory.length > 1 && (
-            <span className="text-[10px] font-mono text-slate-500">
+            <span className="text-[10px] font-mono text-[#666666]">
               Latest first
             </span>
           )}
@@ -75,11 +75,11 @@ export default function BidHistory({ history = [], maxHeight = '240px', showHead
         <AnimatePresence>
           {safeHistory.length === 0 ? (
             <motion.div
-              className="text-center py-8 text-slate-500 text-xs"
+              className="text-center py-8 text-mutedText text-xs"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
             >
-              <Zap className="w-6 h-6 mx-auto text-slate-700 mb-2" />
+              <Zap className="w-6 h-6 mx-auto text-[#222222] mb-2" />
               <p>No bids placed yet on this player.</p>
             </motion.div>
           ) : (
@@ -112,8 +112,8 @@ const BidRow = React.forwardRef(({ bid, idx, isLatest }, ref) => {
         flex items-center justify-between px-3 py-2 rounded-lg text-xs
         transition-all duration-200
         ${isLatest
-          ? 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-300'
-          : 'bg-slate-900/60 border border-slate-800/50 text-slate-300'
+          ? 'bg-[#12200E] border border-[#58D20A]/40 text-[#58D20A]'
+          : 'bg-[#0B0B0B] border border-[#222222] text-[#A3A3A3]'
         }
       `}
       initial={{ opacity: 0, x: 30, scale: 0.9 }}
@@ -128,23 +128,23 @@ const BidRow = React.forwardRef(({ bid, idx, isLatest }, ref) => {
       <div className="flex items-center gap-2">
         {isLatest && (
           <motion.span
-            className="w-1.5 h-1.5 rounded-full bg-emerald-400"
+            className="w-1.5 h-1.5 rounded-full bg-[#58D20A]"
             animate={{ scale: [1, 1.5, 1], opacity: [1, 0.7, 1] }}
             transition={{ duration: 1, repeat: Infinity }}
           />
         )}
-        <span className={`font-bold ${isLatest ? 'text-white' : 'text-slate-300'}`}>
+        <span className={`font-bold ${isLatest ? 'text-[#F5F5F5]' : 'text-[#A3A3A3]'}`}>
           {bid.bidder}
         </span>
         {isBlind && (
-          <Shield className="w-3 h-3 text-purple-400" title="Blind Bid" />
+          <Shield className="w-3 h-3 text-[#F4C542]" title="Blind Bid" />
         )}
-        <span className="text-[10px] text-slate-500 font-mono">
+        <span className="text-[10px] text-[#666666] font-mono">
           {bid.time || ''}
         </span>
       </div>
 
-      <span className={`font-mono font-bold ${isLatest ? 'text-emerald-400 text-lg' : 'text-slate-400'}`}>
+      <span className={`font-mono font-bold ${isLatest ? 'text-[#58D20A] text-lg' : 'text-[#666666]'}`}>
         {bid.amount !== undefined ? `৳${Number(bid.amount).toLocaleString('en-IN')}` : '—'}
       </span>
     </motion.div>

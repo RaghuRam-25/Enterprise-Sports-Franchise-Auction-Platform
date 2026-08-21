@@ -41,17 +41,17 @@ function computeStandings(teams, matches) {
 }
 
 const STATUS_STYLES = {
-  REGISTERED: 'text-blue-400 bg-blue-500/10 border-blue-500/30',
-  SOLD: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30',
-  UNSOLD: 'text-amber-400 bg-amber-500/10 border-amber-500/30',
-  WITHDRAWN: 'text-rose-400 bg-rose-500/10 border-rose-500/30',
+  REGISTERED: 'text-neonGreen bg-neonGreen/10 border-neonGreen/30',
+  SOLD: 'text-neonGreen bg-neonGreen/10 border-neonGreen/30',
+  UNSOLD: 'text-warningGold bg-warningGold/10 border-warningGold/30',
+  WITHDRAWN: 'text-urgentRedText bg-urgentRed/10 border-urgentRed/30',
 };
 
 const CATEGORY_COLORS = [
-  'from-amber-500 to-orange-600',
-  'from-blue-500 to-sky-600',
-  'from-teal-500 to-emerald-600',
-  'from-purple-500 to-violet-600',
+  'from-warningGold to-warningGold',
+  'from-neonGreen to-successGreen',
+  'from-neonGreen to-successGreen',
+  'from-warningGold to-warningGold',
 ];
 
 const CATEGORY_ORDER = ['Icon Category', 'A Grade', 'B Grade', 'Emerging Youth'];
@@ -128,10 +128,10 @@ export default function LeagueStats() {
 
   // ── Cards config ─────────────────────────────────────────────────────────
   const statCards = [
-    { label: 'Franchises', value: teams.length, icon: ShieldCheck, tone: 'text-sky-400 bg-sky-500/10 border-sky-500/30' },
-    { label: 'Players', value: playerStats.total, icon: Users, tone: 'text-blue-400 bg-blue-500/10 border-blue-500/30' },
-    { label: 'Players Sold', value: playerStats.statusCounts.SOLD || 0, icon: Trophy, tone: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30' },
-    { label: 'Matches Played', value: finishedMatches.length, icon: Target, tone: 'text-amber-400 bg-amber-500/10 border-amber-500/30' },
+    { label: 'Franchises', value: teams.length, icon: ShieldCheck, tone: 'text-neonGreen bg-neonGreen/10 border-neonGreen/30' },
+    { label: 'Players', value: playerStats.total, icon: Users, tone: 'text-neonGreen bg-neonGreen/10 border-neonGreen/30' },
+    { label: 'Players Sold', value: playerStats.statusCounts.SOLD || 0, icon: Trophy, tone: 'text-neonGreen bg-neonGreen/10 border-neonGreen/30' },
+    { label: 'Matches Played', value: finishedMatches.length, icon: Target, tone: 'text-warningGold bg-warningGold/10 border-warningGold/30' },
   ];
 
   const totalStatus = Object.values(playerStats.statusCounts).reduce((a, b) => a + b, 0) || 1;
@@ -168,7 +168,7 @@ export default function LeagueStats() {
   const activeTab = STAT_TABS.find(t => t.id === statTab) || STAT_TABS[0];
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#0b0f19] text-slate-100 font-sans selection:bg-blue-500 selection:text-white">
+    <div className="min-h-screen flex flex-col bg-[#0b0f19] text-primaryText font-sans selection:bg-neonGreen selection:text-darkBg">
       {!user && <Navbar />}
 
       <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 space-y-4">
@@ -184,11 +184,11 @@ export default function LeagueStats() {
         {loading ? (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {[0, 1, 2, 3].map(i => (
-              <div key={i} className="h-24 rounded-3xl bg-slate-800/40 animate-pulse" />
+              <div key={i} className="h-24 rounded-3xl bg-surfaceHover/40 animate-pulse" />
             ))}
           </div>
         ) : error ? (
-          <p className="text-xs text-rose-400 bg-rose-500/10 border border-rose-500/30 rounded-2xl p-6 text-center">
+          <p className="text-xs text-urgentRedText bg-urgentRed/10 border border-urgentRed/30 rounded-2xl p-6 text-center">
             {error}
           </p>
         ) : (
@@ -198,12 +198,12 @@ export default function LeagueStats() {
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               {statCards.map(({ label, value, icon: Icon }) => (
                 <div key={label} className="glass-card rounded-3xl p-4 flex items-center gap-3">
-                  <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 shrink-0">
+                  <div className="p-2.5 rounded-xl bg-cardBg border border-cardBorder text-secondaryText shrink-0">
                     <Icon className="w-5 h-5" />
                   </div>
                   <div className="min-w-0">
                     <p className="font-mono font-black text-2xl text-white leading-none">{value}</p>
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mt-1">{label}</p>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-mutedText mt-1">{label}</p>
                   </div>
                 </div>
               ))}
@@ -211,18 +211,18 @@ export default function LeagueStats() {
 
             {/* Player stat leaderboard */}
             <section className="glass-card rounded-3xl overflow-hidden">
-              <div className="px-4 sm:px-6 py-3.5 border-b border-slate-800/80 flex flex-wrap items-center justify-between gap-2">
+              <div className="px-4 sm:px-6 py-3.5 border-b border-cardBorder/80 flex flex-wrap items-center justify-between gap-2">
                 <div className="flex items-center gap-2.5">
-                  <div className="p-2 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 shrink-0">
+                  <div className="p-2 rounded-xl bg-neonGreen/10 border border-neonGreen/20 text-neonGreen shrink-0">
                     <activeTab.icon className="w-4 h-4" />
                   </div>
                   <div className="min-w-0">
                     <h1 className="font-heading font-black text-lg tracking-wide text-white leading-tight">{activeTab.label} Leaderboard</h1>
-                    <p className="text-[10px] text-slate-500">{competitionName} &bull; {sessionName}</p>
+                    <p className="text-[10px] text-mutedText">{competitionName} &bull; {sessionName}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="flex rounded-xl overflow-hidden border border-slate-800 bg-slate-950/50 p-0.5">
+                  <div className="flex rounded-xl overflow-hidden border border-cardBorder bg-darkBg/50 p-0.5">
                     {STAT_TABS.map(tab => {
                       const isActive = tab.id === statTab;
                       return (
@@ -231,8 +231,8 @@ export default function LeagueStats() {
                           type="button"
                           onClick={() => setStatTab(tab.id)}
                           className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition ${isActive
-                            ? 'bg-blue-600 text-white'
-                            : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                            ? 'bg-[#58D20A] text-[#050505] font-black shadow-md'
+                            : 'bg-[#151515] text-[#F5F5F5] border border-[#333333] hover:border-[#58D20A] hover:text-[#58D20A]'
                           }`}
                         >
                           {tab.label}
@@ -245,28 +245,28 @@ export default function LeagueStats() {
 
               <div>
                 {leaderboard.length === 0 ? (
-                  <p className="text-xs text-slate-500 border border-dashed border-slate-700 rounded-xl p-8 text-center my-5 mx-5">
+                  <p className="text-xs text-mutedText border border-dashed border-borderStrong rounded-xl p-8 text-center my-5 mx-5">
                     No {activeTab.label.toLowerCase()} recorded yet.
                   </p>
                 ) : (
-                  <ul className="divide-y divide-slate-800/50">
+                  <ul className="divide-y divide-cardBorder/50">
                     {leaderboard.slice(0, 10).map((row, idx) => (
-                      <li key={row.player.id || row.player._id || idx} className="flex items-center gap-3 px-4 sm:px-6 py-3 hover:bg-slate-800/30 transition">
-                        <span className="w-6 text-center font-mono font-black text-sm text-slate-500">{idx + 1}</span>
+                      <li key={row.player.id || row.player._id || idx} className="flex items-center gap-3 px-4 sm:px-6 py-3 hover:bg-surfaceHover/30 transition">
+                        <span className="w-6 text-center font-mono font-black text-sm text-mutedText">{idx + 1}</span>
                         <img
                           src={getImageUrl(row.player.imageUrl, playerFallback('slate'))}
                           alt={row.player.name}
                           onError={e => { e.currentTarget.src = playerFallback('slate'); }}
-                          className="w-9 h-9 rounded-xl object-cover border border-slate-700 bg-slate-800 flex-shrink-0"
+                          className="w-9 h-9 rounded-xl object-cover border border-borderStrong bg-surfaceHover flex-shrink-0"
                         />
                         <div className="flex-1 min-w-0">
                           <p className="font-bold text-white text-sm truncate">{row.player.name}</p>
-                          <p className="text-[10px] text-slate-500 truncate">
+                          <p className="text-[10px] text-mutedText truncate">
                             {row.team?.name || row.player.category || 'No squad'}
                             {row.team && ` (${row.team.shortCode || ''})`}
                           </p>
                         </div>
-                        <span className={`font-mono font-black text-lg ${statTab === 'redCards' ? 'text-rose-400' : statTab === 'yellowCards' ? 'text-amber-400' : 'text-emerald-400'}`}>
+                        <span className={`font-mono font-black text-lg ${statTab === 'redCards' ? 'text-urgentRedText' : statTab === 'yellowCards' ? 'text-warningGold' : 'text-neonGreen'}`}>
                           {row.value}
                         </span>
                       </li>
@@ -283,7 +283,7 @@ export default function LeagueStats() {
               <section className="glass-card rounded-3xl p-5 space-y-4">
                 <h2 className="font-heading font-black text-sm tracking-wide text-white">Players by Category</h2>
                 {sortedCategories.length === 0 ? (
-                  <p className="text-xs text-slate-500 border border-dashed border-slate-700 rounded-xl p-4 text-center">No players registered yet.</p>
+                  <p className="text-xs text-mutedText border border-dashed border-borderStrong rounded-xl p-4 text-center">No players registered yet.</p>
                 ) : (
                   <div className="space-y-3">
                     {sortedCategories.map(({ name, count }, idx) => {
@@ -291,10 +291,10 @@ export default function LeagueStats() {
                       return (
                         <div key={name}>
                           <div className="flex items-center justify-between text-xs mb-1">
-                            <span className="font-bold text-slate-300">{name}</span>
+                            <span className="font-bold text-secondaryText">{name}</span>
                             <span className="font-mono font-black text-white">{count}</span>
                           </div>
-                          <span className="block h-1.5 rounded-full bg-slate-800 overflow-hidden">
+                          <span className="block h-1.5 rounded-full bg-surfaceHover overflow-hidden">
                             <span className={`block h-full bg-gradient-to-r ${color} rounded-full`} style={{ width: `${(count / maxCategory) * 100}%` }} />
                           </span>
                         </div>
@@ -327,13 +327,13 @@ export default function LeagueStats() {
                 <h2 className="font-heading font-black text-sm tracking-wide text-white">Fixtures</h2>
                 <div className="flex items-stretch gap-3">
                   {[
-                    { label: 'Played', value: finishedMatches.length, cls: 'text-emerald-400' },
-                    { label: 'Upcoming', value: upcomingMatches.length, cls: 'text-sky-400' },
-                    { label: 'Goals', value: totalGoals, cls: 'text-amber-400' },
+                    { label: 'Played', value: finishedMatches.length, cls: 'text-neonGreen' },
+                    { label: 'Upcoming', value: upcomingMatches.length, cls: 'text-neonGreen' },
+                    { label: 'Goals', value: totalGoals, cls: 'text-warningGold' },
                   ].map(({ label, value, cls }) => (
-                    <div key={label} className="flex-1 rounded-2xl border border-slate-800 bg-slate-950/50 p-3 text-center">
+                    <div key={label} className="flex-1 rounded-2xl border border-cardBorder bg-darkBg/50 p-3 text-center">
                       <p className={`font-mono font-black text-2xl ${cls}`}>{value}</p>
-                      <p className="text-[9px] font-bold uppercase tracking-widest text-slate-500 mt-1">{label}</p>
+                      <p className="text-[9px] font-bold uppercase tracking-widest text-mutedText mt-1">{label}</p>
                     </div>
                   ))}
                 </div>
@@ -343,17 +343,17 @@ export default function LeagueStats() {
               <section className="glass-card rounded-3xl p-5 space-y-4">
                 <h2 className="font-heading font-black text-sm tracking-wide text-white">Current Leaders</h2>
                 {standings.length === 0 ? (
-                  <p className="text-xs text-slate-500 border border-dashed border-slate-700 rounded-xl p-4 text-center">Standings appear once matches are finished.</p>
+                  <p className="text-xs text-mutedText border border-dashed border-borderStrong rounded-xl p-4 text-center">Standings appear once matches are finished.</p>
                 ) : (
                   <div className="space-y-2.5">
                     {standings.slice(0, 3).map((row, idx) => (
-                      <div key={row.team._id || row.team.id || idx} className="flex items-center gap-3 rounded-xl border border-slate-800 bg-slate-950/50 p-3">
-                        <span className="font-mono font-black text-lg text-amber-400">{idx + 1}</span>
+                      <div key={row.team._id || row.team.id || idx} className="flex items-center gap-3 rounded-xl border border-cardBorder bg-darkBg/50 p-3">
+                        <span className="font-mono font-black text-lg text-warningGold">{idx + 1}</span>
                         <div className="flex-1 min-w-0">
                           <p className="font-bold text-white text-sm truncate">{row.team.name}</p>
-                          <p className="text-[10px] text-slate-500">P {row.mp} &bull; W{row.w} D{row.d} L{row.l}</p>
+                          <p className="text-[10px] text-mutedText">P {row.mp} &bull; W{row.w} D{row.d} L{row.l}</p>
                         </div>
-                        <span className="font-mono font-black text-emerald-400">{row.pts}</span>
+                        <span className="font-mono font-black text-neonGreen">{row.pts}</span>
                       </div>
                     ))}
                   </div>

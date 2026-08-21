@@ -28,15 +28,15 @@ import PlayerCardCard from '../../components/common/PlayerCardCard';
 const getCategoryCardStyle = (category) => {
   switch (category) {
     case 'Icon Category':
-      return 'border-amber-700/50 bg-amber-950/50 hover:border-amber-500/70';
+      return 'border-warningGold/50 bg-warningGold/50 hover:border-warningGold/70';
     case 'A Grade':
-      return 'border-blue-800/60 bg-blue-950/50 hover:border-blue-600/70';
+      return 'border-successGreen/60 bg-successGreen/50 hover:border-successGreen/70';
     case 'B Grade':
-      return 'border-teal-800/50 bg-teal-950/50 hover:border-teal-600/70';
+      return 'border-successGreen/50 bg-successGreen/50 hover:border-successGreen/70';
     case 'Emerging Youth':
-      return 'border-purple-800/50 bg-purple-950/50 hover:border-purple-600/70';
+      return 'border-warningGold/50 bg-warningGold/50 hover:border-warningGold/70';
     default:
-      return 'border-white/5 bg-slate-900/60 hover:border-slate-700';
+      return 'border-white/5 bg-cardBg/60 hover:border-borderStrong';
   }
 };
 
@@ -234,24 +234,24 @@ export default function TargetPlayersView() {
   return (
     <div className="space-y-6">
       {/* Header Band */}
-      <div className="relative overflow-hidden glass-card rounded-3xl p-6 sm:p-7 border border-amber-500/20 bg-gradient-to-br from-slate-900 via-slate-900/90 to-amber-950/30 shadow-2xl">
-        <div className="pointer-events-none absolute -top-16 -right-10 w-72 h-72 bg-amber-500/10 blur-3xl rounded-full" />
+      <div className="relative overflow-hidden glass-card rounded-3xl p-6 sm:p-7 border border-warningGold/20 bg-gradient-to-br from-cardBg via-cardBg/90 to-warningGold/30 shadow-2xl">
+        <div className="pointer-events-none absolute -top-16 -right-10 w-72 h-72 bg-warningGold/10 blur-3xl rounded-full" />
         <div className="relative flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <div className="flex items-center gap-2">
-              <Star className="w-6 h-6 text-amber-400 fill-amber-400 animate-pulse" />
+              <Star className="w-6 h-6 text-warningGold fill-warningGold animate-pulse" />
               <h1 className="text-2xl sm:text-3xl font-black font-heading text-white tracking-tight">
                 Target Players
               </h1>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 bg-slate-950/70 p-1.5 rounded-2xl border border-slate-800 self-stretch sm:self-auto">
+          <div className="flex items-center gap-2 bg-darkBg/70 p-1.5 rounded-2xl border border-cardBorder self-stretch sm:self-auto">
             <button
               onClick={() => setActiveTab('MY_TARGETS')}
               className={`flex-1 sm:flex-initial px-4 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 ${activeTab === 'MY_TARGETS'
-                ? 'bg-amber-500 text-slate-950 shadow-lg font-black'
-                : 'text-slate-400 hover:text-white'
+                ? 'bg-warningGold text-darkBg shadow-lg font-black border border-warningGold'
+                : 'bg-[#151515] text-[#F5F5F5] border border-[#333333] hover:border-[#F4C542] hover:text-[#F4C542]'
                 }`}
             >
               <Star className="w-3.5 h-3.5 fill-current" /> My Target List ({targetList.length})
@@ -259,22 +259,22 @@ export default function TargetPlayersView() {
             <button
               onClick={() => setActiveTab('PLAYER_POOL')}
               className={`flex-1 sm:flex-initial px-4 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 ${activeTab === 'PLAYER_POOL'
-                ? 'bg-amber-500 text-slate-950 shadow-lg font-black'
-                : 'text-slate-400 hover:text-white'
+                ? 'bg-warningGold text-darkBg shadow-lg font-black border border-warningGold'
+                : 'bg-[#151515] text-[#F5F5F5] border border-[#333333] hover:border-[#F4C542] hover:text-[#F4C542]'
                 }`}
             >
-              <Users className="w-3.5 h-3.5" /> Player Pool ({players.length})
+              <Users className="w-3.5 h-3.5" /> Player Pool ({filteredPlayers.length})
             </button>
           </div>
         </div>
       </div>
 
       {/* Filter Bar */}
-      <div className="glass-card rounded-2xl p-4 border border-white/5 bg-slate-900/80 space-y-3">
+      <div className="glass-card rounded-2xl p-4 border border-white/5 bg-cardBg/80 space-y-3">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
           {/* Search */}
           <div className="relative sm:col-span-2">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+            <Search className="w-4 h-4 text-secondaryText absolute left-3 top-3" />
             <input
               type="text"
               value={searchQuery}
@@ -289,7 +289,7 @@ export default function TargetPlayersView() {
             <select
               value={selectedPosition}
               onChange={(e) => setSelectedPosition(e.target.value)}
-              className="glass-input w-full px-3 py-2 rounded-xl text-xs text-slate-200 bg-slate-900"
+              className="glass-input w-full px-3 py-2 rounded-xl text-xs text-primaryText bg-cardBg"
             >
               <option value="ALL">All Positions</option>
               {positions.map((pos) => (
@@ -305,7 +305,7 @@ export default function TargetPlayersView() {
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="glass-input w-full px-3 py-2 rounded-xl text-xs text-slate-200 bg-slate-900"
+              className="glass-input w-full px-3 py-2 rounded-xl text-xs text-primaryText bg-cardBg"
             >
               <option value="ALL">All Categories</option>
               {categories.map((cat) => (
@@ -321,7 +321,7 @@ export default function TargetPlayersView() {
             <select
               value={selectedSession}
               onChange={(e) => setSelectedSession(e.target.value)}
-              className="glass-input w-full px-3 py-2 rounded-xl text-xs text-slate-200 bg-slate-900"
+              className="glass-input w-full px-3 py-2 rounded-xl text-xs text-primaryText bg-cardBg"
             >
               <option value="ALL">All Sessions</option>
               {sessions.map((sess) => (
@@ -338,26 +338,26 @@ export default function TargetPlayersView() {
       {activeTab === 'MY_TARGETS' ? (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
-              <Star className="w-4 h-4 text-amber-400 fill-amber-400" /> Ranked Target Shortlist
+            <h2 className="text-sm font-bold uppercase tracking-wider text-secondaryText flex items-center gap-2">
+              <Star className="w-4 h-4 text-warningGold fill-warningGold" /> Ranked Target Shortlist
             </h2>
           </div>
 
           {isLoading ? (
             <div className="py-20 text-center space-y-3">
-              <div className="w-8 h-8 rounded-full border-2 border-slate-700 border-t-amber-400 animate-spin mx-auto" />
-              <p className="text-xs text-slate-500">Loading your private Target List...</p>
+              <div className="w-8 h-8 rounded-full border-2 border-borderStrong border-t-warningGold animate-spin mx-auto" />
+              <p className="text-xs text-mutedText">Loading your private Target List...</p>
             </div>
           ) : targetList.length === 0 ? (
             <div className="glass-card rounded-3xl p-12 text-center space-y-4 border border-white/5">
-              <Sparkles className="w-12 h-12 text-amber-400/50 mx-auto" />
+              <Sparkles className="w-12 h-12 text-warningGold/50 mx-auto" />
               <h3 className="text-lg font-extrabold text-white">Your Target List is Empty</h3>
-              <p className="text-xs text-slate-400 max-w-md mx-auto">
+              <p className="text-xs text-secondaryText max-w-md mx-auto">
                 No target players added yet. Switch to the <strong>Player Pool</strong> tab to browse and add high-priority targets.
               </p>
               <button
                 onClick={() => setActiveTab('PLAYER_POOL')}
-                className="px-5 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl transition shadow-lg inline-flex items-center gap-2"
+                className="px-5 py-2.5 bg-warningGold hover:bg-warningGold text-darkBg font-black text-xs uppercase tracking-wider rounded-xl transition shadow-lg inline-flex items-center gap-2"
               >
                 <Plus className="w-4 h-4" /> Browse Player Pool
               </button>
@@ -374,7 +374,7 @@ export default function TargetPlayersView() {
                   <div key={target._id || target.id} className="relative h-full">
                     {/* Priority Badge — floats over the top-left corner of the card */}
                     <div className="absolute -top-2.5 -left-2.5 z-20 flex items-center gap-1">
-                      <span className="w-8 h-8 rounded-xl bg-amber-500 text-slate-950 font-black font-mono text-xs flex items-center justify-center shadow-lg border-2 border-slate-950">
+                      <span className="w-8 h-8 rounded-xl bg-warningGold text-darkBg font-black font-mono text-xs flex items-center justify-center shadow-lg border-2 border-cardBorder">
                         #{target.priority ?? idx + 1}
                       </span>
                     </div>
@@ -388,17 +388,17 @@ export default function TargetPlayersView() {
                           {/* Note & Budget Cap badges */}
                           <div className="flex flex-wrap items-center gap-1.5">
                             {target.optionalBudgetLimit ? (
-                              <span className="px-2 py-1 rounded-lg bg-slate-950 border border-amber-500/30 text-amber-300 font-mono text-[10px] font-bold flex items-center gap-1">
-                                <DollarSign className="w-3 h-3 text-amber-400" />
+                              <span className="px-2 py-1 rounded-lg bg-darkBg border border-warningGold/30 text-warningGold font-mono text-[10px] font-bold flex items-center gap-1">
+                                <DollarSign className="w-3 h-3 text-warningGold" />
                                 {formatCurrency(target.optionalBudgetLimit)}
                               </span>
                             ) : (
-                              <span className="text-[10px] text-slate-500 italic">No budget cap</span>
+                              <span className="text-[10px] text-mutedText italic">No budget cap</span>
                             )}
                           </div>
                           {target.note && (
-                            <p className="text-[10px] text-slate-400 italic truncate flex items-center gap-1">
-                              <FileText className="w-3 h-3 text-amber-400 flex-shrink-0" />
+                            <p className="text-[10px] text-secondaryText italic truncate flex items-center gap-1">
+                              <FileText className="w-3 h-3 text-warningGold flex-shrink-0" />
                               "{target.note}"
                             </p>
                           )}
@@ -408,7 +408,7 @@ export default function TargetPlayersView() {
                             <button
                               onClick={() => handleMovePriority(idx, 'up')}
                               disabled={idx === 0}
-                              className="p-1.5 rounded-lg bg-slate-800 text-slate-400 hover:text-amber-400 disabled:opacity-30 disabled:cursor-not-allowed transition border border-slate-700"
+                              className="btn-secondary p-1.5 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed"
                               title="Move Priority Up"
                             >
                               <MoveUp className="w-3.5 h-3.5" />
@@ -416,20 +416,20 @@ export default function TargetPlayersView() {
                             <button
                               onClick={() => handleMovePriority(idx, 'down')}
                               disabled={idx === targetList.length - 1}
-                              className="p-1.5 rounded-lg bg-slate-800 text-slate-400 hover:text-amber-400 disabled:opacity-30 disabled:cursor-not-allowed transition border border-slate-700"
+                              className="btn-secondary p-1.5 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed"
                               title="Move Priority Down"
                             >
                               <MoveDown className="w-3.5 h-3.5" />
                             </button>
                             <button
                               onClick={() => openEditModal(target)}
-                              className="flex-1 px-2 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-[10px] font-bold border border-slate-700 transition flex items-center justify-center gap-1"
+                              className="btn-secondary flex-1 px-2 py-1.5 rounded-lg text-[10px] flex items-center justify-center gap-1"
                             >
-                              <FileText className="w-3 h-3 text-amber-400" /> Edit
+                              <FileText className="w-3 h-3 text-warningGold" /> Edit
                             </button>
                             <button
                               onClick={() => handleRemoveTarget(target._id || target.id, player.name)}
-                              className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 border border-slate-700 hover:border-rose-500/30 transition"
+                              className="btn-danger p-1.5 rounded-lg"
                               title="Remove Target"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
@@ -448,8 +448,8 @@ export default function TargetPlayersView() {
         /* PLAYER POOL TAB */
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
-              <Users className="w-4 h-4 text-emerald-400" /> Available Player Pool ({filteredPlayers.length})
+            <h2 className="text-sm font-bold uppercase tracking-wider text-secondaryText flex items-center gap-2">
+              <Users className="w-4 h-4 text-neonGreen" /> Available Player Pool ({filteredPlayers.length})
             </h2>
           </div>
 
@@ -467,15 +467,15 @@ export default function TargetPlayersView() {
                     isTargeted ? (
                       <button
                         onClick={() => handleRemoveTarget(pId, player.name)}
-                        className="px-2.5 py-1 bg-amber-500/20 text-amber-300 border border-amber-500/40 rounded-lg text-xs font-bold flex items-center gap-1 hover:bg-rose-500/20 hover:text-rose-300 hover:border-rose-500/40 transition"
+                        className="px-2.5 py-1 bg-warningGold/20 text-warningGold border border-warningGold/40 rounded-lg text-xs font-bold flex items-center gap-1 hover:bg-urgentRed/20 hover:text-urgentRedText hover:border-urgentRed/40 transition"
                       >
-                        <Check className="w-3.5 h-3.5 text-amber-400" /> Targeted
+                        <Check className="w-3.5 h-3.5 text-warningGold" /> Targeted
                       </button>
                     ) : (
                       <button
                         onClick={() => handleAddTarget(player)}
                         disabled={player.status === 'SOLD'}
-                        className="px-2.5 py-1 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white rounded-lg text-xs font-bold flex items-center gap-1 transition shadow"
+                        className="px-2.5 py-1 bg-successGreen hover:bg-neonGreen disabled:opacity-50 text-darkBg rounded-lg text-xs font-bold flex items-center gap-1 transition shadow"
                       >
                         <Plus className="w-3.5 h-3.5" /> Target
                       </button>
@@ -491,15 +491,15 @@ export default function TargetPlayersView() {
       {/* Strategy Note & Budget Cap Edit Modal */}
       {editingTarget && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="glass-card max-w-md w-full rounded-3xl p-6 border border-amber-500/30 bg-slate-900 shadow-2xl space-y-5">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+          <div className="glass-card max-w-md w-full rounded-3xl p-6 border border-warningGold/30 bg-cardBg shadow-2xl space-y-5">
+            <div className="flex items-center justify-between border-b border-cardBorder pb-3">
               <div className="flex items-center gap-2">
-                <Star className="w-5 h-5 text-amber-400 fill-amber-400" />
+                <Star className="w-5 h-5 text-warningGold fill-warningGold" />
                 <h3 className="text-base font-extrabold text-white">Target Strategy Config</h3>
               </div>
               <button
                 onClick={() => setEditingTarget(null)}
-                className="text-slate-400 hover:text-white"
+                className="btn-secondary w-8 h-8 rounded-lg flex items-center justify-center"
               >
                 ✕
               </button>
@@ -507,7 +507,7 @@ export default function TargetPlayersView() {
 
             <div className="space-y-4 text-xs">
               <div>
-                <label className="block text-slate-300 font-bold mb-1">
+                <label className="block text-secondaryText font-bold mb-1">
                   Private Strategy Note
                 </label>
                 <textarea
@@ -521,7 +521,7 @@ export default function TargetPlayersView() {
               </div>
 
               <div>
-                <label className="block text-slate-300 font-bold mb-1">
+                <label className="block text-secondaryText font-bold mb-1">
                   Planned Maximum Budget Cap (BDT)
                 </label>
                 <input
@@ -531,7 +531,7 @@ export default function TargetPlayersView() {
                   placeholder="e.g., 15000000"
                   className="glass-input w-full px-3 py-2.5 rounded-xl font-mono text-white text-xs"
                 />
-                <span className="text-[10px] text-slate-500 mt-1 block">
+                <span className="text-[10px] text-mutedText mt-1 block">
                   Optional reminder limit displayed during live auction bidding.
                 </span>
               </div>
@@ -540,13 +540,13 @@ export default function TargetPlayersView() {
             <div className="flex items-center gap-3 pt-2">
               <button
                 onClick={() => setEditingTarget(null)}
-                className="flex-1 py-2.5 rounded-xl border border-slate-700 text-slate-300 hover:text-white text-xs font-bold transition"
+                className="btn-secondary flex-1 py-2.5 rounded-xl text-xs"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSaveModalDetails}
-                className="flex-1 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs uppercase tracking-wider transition shadow-lg"
+                className="btn-primary flex-1 py-2.5 rounded-xl text-xs uppercase tracking-wider shadow-lg"
               >
                 Save Details
               </button>

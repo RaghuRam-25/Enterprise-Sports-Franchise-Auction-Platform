@@ -9,21 +9,21 @@ import { getImageUrl } from '../../utils/imageUrl';
 const PLAYER_FALLBACK_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="320" height="320" viewBox="0 0 320 320">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#0f172a"/><stop offset="100%" stop-color="#1e1b4b"/>
+      <stop offset="0%" stop-color="#050505"/><stop offset="100%" stop-color="#0B0B0B"/>
     </linearGradient>
     <linearGradient id="sk" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0%" stop-color="#e8b58a"/><stop offset="100%" stop-color="#b9835a"/>
     </linearGradient>
     <linearGradient id="js" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#60a5fa"/><stop offset="55%" stop-color="#4f46e5"/><stop offset="100%" stop-color="#312e81"/>
+      <stop offset="0%" stop-color="#58D20A"/><stop offset="55%" stop-color="#F4C542"/><stop offset="100%" stop-color="#1f1a08"/>
     </linearGradient>
   </defs>
   <rect width="320" height="320" fill="url(#bg)"/>
-  <circle cx="160" cy="150" r="120" fill="rgba(56,189,248,0.10)"/>
+  <circle cx="160" cy="150" r="120" fill="rgba(88,210,10,0.10)"/>
   <path d="M120 96 a40 40 0 0 1 80 0 a40 40 0 0 1 -80 0" fill="url(#sk)"/>
   <path d="M112 100 a48 44 0 0 1 96 -6 c0 -6 -10 -34 -48 -34 s-48 24 -48 40 z" fill="#241a13"/>
   <path d="M96 250 q64 -44 128 0 l6 70 h-140 z" fill="url(#js)"/>
-  <text x="160" y="300" text-anchor="middle" font-size="52" font-weight="900" font-family="Arial" fill="#e2e8f0" opacity="0.9">10</text>
+  <text x="160" y="300" text-anchor="middle" font-size="52" font-weight="900" font-family="Arial" fill="#F5F5F5" opacity="0.9">10</text>
 </svg>`;
 
 // Additive step scheduler — each step turns another layer ON and leaves the
@@ -114,7 +114,7 @@ export default function PlayerRevealAnimation({ player, onComplete, isActive = t
             <button
               type="button"
               onClick={onComplete}
-              className="absolute right-3 top-3 z-50 flex items-center gap-1.5 rounded-full border border-white/15 bg-slate-950/60 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-300 backdrop-blur-md transition hover:border-white/30 hover:text-white"
+              className="absolute right-3 top-3 z-50 flex items-center gap-1.5 rounded-full border border-white/15 bg-surfaceActive px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-secondaryText backdrop-blur-md transition hover:border-white/30 hover:text-white"
               style={{ boxShadow: '0 8px 24px rgba(0,0,0,0.4)' }}
             >
               Skip Reveal
@@ -137,7 +137,7 @@ export default function PlayerRevealAnimation({ player, onComplete, isActive = t
             className="pointer-events-none absolute left-1/2 top-0 h-[120%] w-[62%] -translate-x-1/2 origin-top"
             style={{
               background:
-                'linear-gradient(to bottom, rgba(255,255,255,0.14), rgba(56,189,248,0.06) 40%, transparent 75%)',
+                'linear-gradient(to bottom, rgba(255,255,255,0.14), rgba(88,210,10,0.06) 40%, transparent 75%)',
               filter: 'blur(8px)',
               willChange: 'transform, opacity',
             }}
@@ -177,11 +177,11 @@ export default function PlayerRevealAnimation({ player, onComplete, isActive = t
                   >
                     {/* Glassmorphism frame with glowing border */}
                     <div
-                      className="relative overflow-hidden rounded-[2rem] border-2 border-cyan-300/50 p-1.5"
+                      className="relative overflow-hidden rounded-[2rem] border-2 border-neonGreenHover/50 p-1.5"
                       style={{
-                        background: 'linear-gradient(160deg, rgba(56,189,248,0.18), rgba(15,23,42,0.35))',
+                        background: 'linear-gradient(160deg, rgba(88,210,10,0.18), rgba(5,5,5,0.35))',
                         backdropFilter: 'blur(14px)',
-                        boxShadow: '0 0 40px rgba(34,211,238,0.35), inset 0 0 24px rgba(56,189,248,0.25)',
+                        boxShadow: '0 0 40px rgba(88,210,10,0.35), inset 0 0 24px rgba(88,210,10,0.25)',
                       }}
                     >
                       <img
@@ -206,7 +206,7 @@ export default function PlayerRevealAnimation({ player, onComplete, isActive = t
 
                     {/* Rotating halo ring behind the portrait */}
                     <motion.div
-                      className="absolute -inset-5 -z-10 rounded-full border border-cyan-400/25"
+                      className="absolute -inset-5 -z-10 rounded-full border border-neonGreen/25"
                       animate={{ rotate: 360 }}
                       transition={{ duration: 16, repeat: Infinity, ease: 'linear' }}
                     />
@@ -214,7 +214,7 @@ export default function PlayerRevealAnimation({ player, onComplete, isActive = t
 
                   {/* Pulsing glow bloom */}
                   <motion.div
-                    className="absolute -inset-3 -z-20 rounded-[2.5rem] bg-cyan-400/25 blur-2xl"
+                    className="absolute -inset-3 -z-20 rounded-[2.5rem] bg-neonGreen/25 blur-2xl"
                     animate={{ opacity: [0.35, 0.75, 0.35], scale: [0.92, 1.08, 0.92] }}
                     transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
                   />
@@ -223,8 +223,8 @@ export default function PlayerRevealAnimation({ player, onComplete, isActive = t
                   {[0, 1, 2, 3, 4, 5].map((i) => (
                     <motion.span
                       key={i}
-                      className="absolute left-1/2 top-1/2 h-1.5 w-1.5 rounded-full bg-cyan-200"
-                      style={{ boxShadow: '0 0 8px rgba(186,230,253,0.9)', willChange: 'transform, opacity' }}
+                      className="absolute left-1/2 top-1/2 h-1.5 w-1.5 rounded-full bg-neonGreenHover"
+                      style={{ boxShadow: '0 0 8px rgba(114,242,26,0.9)', willChange: 'transform, opacity' }}
                       animate={{
                         x: Math.cos((i / 6) * Math.PI * 2) * 130,
                         y: Math.sin((i / 6) * Math.PI * 2) * 130,
@@ -244,15 +244,15 @@ export default function PlayerRevealAnimation({ player, onComplete, isActive = t
               {showName && (
                 <motion.div key="name" className="relative">
                   <motion.h1
-                    className="flex max-w-full flex-wrap items-center justify-center px-2 text-center text-3xl font-black font-heading tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-blue-400 to-emerald-400 sm:text-5xl lg:text-6xl"
+                    className="flex max-w-full flex-wrap items-center justify-center px-2 text-center text-3xl font-black font-heading tracking-wide text-neonGreenHover sm:text-5xl lg:text-6xl"
                     aria-label={player.name}
                     animate={
                       namePulsing
                         ? {
                           filter: [
-                            'drop-shadow(0 0 0px rgba(56,189,248,0))',
-                            'drop-shadow(0 0 18px rgba(56,189,248,0.65))',
-                            'drop-shadow(0 0 4px rgba(56,189,248,0.2))',
+                            'drop-shadow(0 0 0px rgba(88,210,10,0))',
+                            'drop-shadow(0 0 18px rgba(88,210,10,0.65))',
+                            'drop-shadow(0 0 4px rgba(88,210,10,0.2))',
                           ],
                         }
                         : {}
@@ -275,7 +275,7 @@ export default function PlayerRevealAnimation({ player, onComplete, isActive = t
                   </motion.h1>
                   {/* Underline sweep that highlights the finished title */}
                   <motion.div
-                    className="mx-auto mt-2 h-[3px] rounded-full bg-gradient-to-r from-transparent via-cyan-300 to-transparent"
+                    className="mx-auto mt-2 h-[3px] rounded-full bg-gradient-to-r from-transparent via-neonGreenHover to-transparent"
                     initial={{ scaleX: 0, opacity: 0 }}
                     animate={{ scaleX: namePulsing ? 1 : 0, opacity: namePulsing ? 1 : 0 }}
                     transition={{ duration: 0.6, ease: 'easeOut', delay: 0.1 }}
@@ -283,12 +283,12 @@ export default function PlayerRevealAnimation({ player, onComplete, isActive = t
                   />
                   {player.jerseyName && (
                     <motion.p
-                      className="mt-1 text-center text-sm font-semibold text-slate-300"
+                      className="mt-1 text-center text-sm font-semibold text-secondaryText"
                       initial={{ opacity: 0 }}
                       animate={{ opacity: namePulsing ? 1 : 0 }}
                       transition={{ duration: 0.5, delay: 0.2 }}
                     >
-                      <span className="font-mono text-cyan-300">{player.jerseyName}</span>
+                      <span className="font-mono text-neonGreenHover">{player.jerseyName}</span>
                     </motion.p>
                   )}
                 </motion.div>
@@ -309,7 +309,7 @@ export default function PlayerRevealAnimation({ player, onComplete, isActive = t
                       <motion.div
                         key={item.label}
                         className={`flex items-center gap-3 rounded-xl border px-4 py-2.5 backdrop-blur-md ${item.highlight
-                          ? 'border-emerald-400/50 bg-emerald-500/10'
+                          ? 'border-neonGreen/50 bg-neonGreen/10'
                           : 'border-white/10 bg-white/5'
                           }`}
                         initial={{ opacity: 0, x: -32, filter: 'blur(6px)' }}
@@ -318,13 +318,13 @@ export default function PlayerRevealAnimation({ player, onComplete, isActive = t
                           x: 0,
                           filter: 'blur(0px)',
                           boxShadow: [
-                            '0 0 0px rgba(56,189,248,0)',
+                            '0 0 0px rgba(88,210,10,0)',
                             item.highlight
-                              ? '0 0 22px rgba(16,185,129,0.55)'
-                              : '0 0 18px rgba(56,189,248,0.45)',
+                              ? '0 0 22px rgba(88,210,10,0.55)'
+                              : '0 0 18px rgba(88,210,10,0.45)',
                             item.highlight
-                              ? '0 0 8px rgba(16,185,129,0.25)'
-                              : '0 0 0px rgba(56,189,248,0)',
+                              ? '0 0 8px rgba(88,210,10,0.25)'
+                              : '0 0 0px rgba(88,210,10,0)',
                           ],
                         }}
                         transition={{
@@ -336,15 +336,15 @@ export default function PlayerRevealAnimation({ player, onComplete, isActive = t
                         style={{ willChange: 'transform, opacity, filter' }}
                       >
                         <Icon
-                          className={`h-4 w-4 flex-shrink-0 ${item.highlight ? 'text-emerald-300' : 'text-cyan-300'
+                          className={`h-4 w-4 flex-shrink-0 ${item.highlight ? 'text-neonGreenHover' : 'text-neonGreenHover'
                             }`}
                         />
-                        <span className="whitespace-nowrap text-[11px] font-bold uppercase tracking-widest text-slate-400">
+                        <span className="whitespace-nowrap text-[11px] font-bold uppercase tracking-widest text-secondaryText">
                           {item.label}
                         </span>
                         <span
                           className={`ml-auto min-w-0 truncate text-right font-bold ${item.highlight
-                            ? 'font-mono text-lg text-emerald-300'
+                            ? 'font-mono text-lg text-neonGreenHover'
                             : 'text-base text-white'
                             }`}
                         >
@@ -373,12 +373,12 @@ function FloodlightBank({ active }) {
       {Array.from({ length: 6 }).map((_, i) => (
         <motion.div
           key={i}
-          className="h-3 w-10 rounded-b-lg bg-cyan-200"
+          className="h-3 w-10 rounded-b-lg bg-neonGreenHover"
           style={{ willChange: 'opacity, filter' }}
           initial={{ opacity: 0.15 }}
           animate={
             active
-              ? { opacity: [0.15, 1, 0.8], boxShadow: '0 0 30px 8px rgba(186,230,253,0.7)' }
+              ? { opacity: [0.15, 1, 0.8], boxShadow: '0 0 30px 8px rgba(114,242,26,0.7)' }
               : { opacity: 0.15 }
           }
           transition={{ duration: 0.4, delay: i * 0.05 }}

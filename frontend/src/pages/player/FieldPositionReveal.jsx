@@ -92,7 +92,7 @@ export default function FieldPositionReveal() {
   const soldPrice = data?.soldPrice || 0;
 
   return (
-    <div className="relative h-[calc(100vh-8rem)] min-h-[520px] w-full overflow-hidden rounded-3xl border border-slate-800 bg-slate-950 text-slate-100 shadow-2xl">
+    <div className="relative h-[calc(100vh-8rem)] min-h-[520px] w-full overflow-hidden rounded-3xl border border-cardBorder bg-darkBg text-primaryText shadow-2xl">
       <SpotlightBackground theme="default" spotlightEnabled={state === 'ready' && phase >= 1} />
       <FloatingParticles count={28} theme="default" />
 
@@ -105,8 +105,8 @@ export default function FieldPositionReveal() {
             initial={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
-            <div className="h-10 w-10 rounded-full border-2 border-slate-700 border-t-cyan-400 animate-spin" />
-            <span className="text-xs font-mono uppercase tracking-widest text-slate-400">
+            <div className="h-10 w-10 rounded-full border-2 border-borderStrong border-t-neonGreen animate-spin" />
+            <span className="text-xs font-mono uppercase tracking-widest text-secondaryText">
               Loading field position…
             </span>
           </motion.div>
@@ -122,21 +122,21 @@ export default function FieldPositionReveal() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
           >
-            <div className="glass-card max-w-md rounded-2xl border border-rose-800/60 p-8 text-slate-300">
-              <X className="mx-auto mb-3 h-8 w-8 text-rose-400" />
+            <div className="glass-card max-w-md rounded-2xl border border-urgentRed/60 p-8 text-secondaryText">
+              <X className="mx-auto mb-3 h-8 w-8 text-urgentRedText" />
               <h1 className="text-lg font-black text-white">Couldn't load your reveal</h1>
-              <p className="mt-1 text-sm text-slate-400">{errorMsg}</p>
+              <p className="mt-1 text-sm text-secondaryText">{errorMsg}</p>
               <button
                 type="button"
                 onClick={load}
-                className="mt-5 rounded-xl bg-cyan-600 px-5 py-2 text-xs font-bold text-white transition hover:bg-cyan-500"
+                className="mt-5 rounded-xl bg-successGreen px-5 py-2 text-xs font-bold text-darkBg transition hover:bg-neonGreen"
               >
                 Try Again
               </button>
               <button
                 type="button"
                 onClick={() => navigate('/player/dashboard')}
-                className="mt-2 block w-full rounded-xl border border-slate-700 px-5 py-2 text-xs font-bold text-slate-300 transition hover:bg-slate-800"
+                className="btn-secondary mt-2 block w-full rounded-xl py-2 text-xs"
               >
                 Back to Dashboard
               </button>
@@ -154,10 +154,10 @@ export default function FieldPositionReveal() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
           >
-            <div className="glass-card max-w-md rounded-2xl border border-slate-800 p-8">
-              <Trophy className="mx-auto mb-3 h-10 w-10 text-amber-400/80" />
+            <div className="glass-card max-w-md rounded-2xl border border-cardBorder p-8">
+              <Trophy className="mx-auto mb-3 h-10 w-10 text-warningGold/80" />
               <h1 className="text-xl font-black text-white">You haven't been drafted yet</h1>
-              <p className="mt-2 text-sm text-slate-400">
+              <p className="mt-2 text-sm text-secondaryText">
                 Your field position reveal will appear here once you're sold to a
                 franchise team. Check back after the auction!
               </p>
@@ -165,14 +165,14 @@ export default function FieldPositionReveal() {
                 <button
                   type="button"
                   onClick={() => navigate('/live')}
-                  className="rounded-xl bg-cyan-600 px-5 py-2.5 text-xs font-bold text-white transition hover:bg-cyan-500"
+                  className="rounded-xl bg-successGreen px-5 py-2.5 text-xs font-bold text-darkBg transition hover:bg-neonGreen"
                 >
                   Watch the Live Auction
                 </button>
                 <button
                   type="button"
                   onClick={() => navigate('/player/dashboard')}
-                  className="rounded-xl border border-slate-700 px-5 py-2.5 text-xs font-bold text-slate-300 transition hover:bg-slate-800"
+                  className="btn-secondary rounded-xl px-5 py-2.5 text-xs"
                 >
                   Back to Dashboard
                 </button>
@@ -190,7 +190,7 @@ export default function FieldPositionReveal() {
           <motion.button
             type="button"
             onClick={() => navigate('/player/dashboard')}
-            className="absolute left-4 top-4 z-30 flex items-center gap-2 rounded-full border border-white/15 bg-slate-950/60 px-3 py-1.5 text-[11px] font-bold uppercase tracking-widest text-slate-300 backdrop-blur-md transition hover:border-white/30 hover:text-white"
+            className="absolute left-4 top-4 z-30 flex items-center gap-2 rounded-full border border-white/15 bg-darkBg/60 px-3 py-1.5 text-[11px] font-bold uppercase tracking-widest text-secondaryText backdrop-blur-md transition hover:border-white/30 hover:text-white"
             initial={{ opacity: 0 }}
             animate={{ opacity: phase >= 1 ? 1 : 0 }}
             transition={{ duration: 0.4 }}
@@ -224,7 +224,7 @@ export default function FieldPositionReveal() {
                 className="absolute inset-y-0 w-1/3"
                 style={{
                   background:
-                    'linear-gradient(90deg, transparent, rgba(56,189,248,0.10), transparent)',
+                    'linear-gradient(90deg, transparent, rgba(88,210,10,0.10), transparent)',
                   filter: 'blur(20px)',
                 }}
                 initial={{ left: '-40%' }}
@@ -255,7 +255,7 @@ export default function FieldPositionReveal() {
             >
               {/* Glow pulse */}
               <motion.div
-                className="absolute -inset-6 rounded-full bg-cyan-400/30 blur-2xl"
+                className="absolute -inset-6 rounded-full bg-neonGreen/30 blur-2xl"
                 animate={
                   phase >= 1
                     ? { opacity: [0.4, 0.9, 0.4], scale: [0.9, 1.15, 0.9] }
@@ -264,8 +264,8 @@ export default function FieldPositionReveal() {
                 transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
               />
               {/* Jersey puck */}
-              <div className="relative flex h-16 w-16 items-center justify-center rounded-full border-2 border-cyan-300/70 bg-slate-900/90 shadow-[0_0_30px_rgba(56,189,248,0.5)] backdrop-blur-md">
-                <span className="font-black text-cyan-300" style={{ fontSize: '1.6rem' }}>
+              <div className="relative flex h-16 w-16 items-center justify-center rounded-full border-2 border-neonGreenHover/70 bg-cardBg/90 shadow-[0_0_30px_rgba(88,210,10,0.5)] backdrop-blur-md">
+                <span className="font-black text-neonGreenHover" style={{ fontSize: '1.6rem' }}>
                   {positionCode.slice(0, 3)}
                 </span>
               </div>
@@ -275,7 +275,7 @@ export default function FieldPositionReveal() {
           {/* Bottom info bar — team + position + price */}
           <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 flex justify-center p-5">
             <motion.div
-              className="pointer-events-auto flex w-full max-w-2xl flex-col items-center gap-3 rounded-2xl border border-white/10 bg-slate-950/80 p-5 text-center backdrop-blur-md sm:flex-row sm:justify-between sm:text-left"
+              className="pointer-events-auto flex w-full max-w-2xl flex-col items-center gap-3 rounded-2xl border border-white/10 bg-darkBg/80 p-5 text-center backdrop-blur-md sm:flex-row sm:justify-between sm:text-left"
               initial={{ opacity: 0, y: 40 }}
               animate={phase >= 2 ? { opacity: 1, y: 0 } : { opacity: 0, y: 40 }}
               transition={{ duration: 0.6, ease: EASE }}
@@ -285,15 +285,15 @@ export default function FieldPositionReveal() {
                   <img
                     src={team.logoUrl}
                     alt={team.name}
-                    className="h-10 w-10 rounded-xl border border-slate-700 object-cover"
+                    className="h-10 w-10 rounded-xl border border-borderStrong object-cover"
                   />
                 ) : (
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-700 bg-slate-900 text-lg">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-borderStrong bg-cardBg text-lg">
                     {team.shortCode?.[0] || '🏆'}
                   </div>
                 )}
                 <div>
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-secondaryText">
                     Your Team
                   </p>
                   <p className="font-black text-white">{team.name || 'Franchise Team'}</p>
@@ -301,19 +301,19 @@ export default function FieldPositionReveal() {
               </div>
 
               <div className="text-center sm:text-right">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-secondaryText">
                   Position
                 </p>
-                <p className="font-black text-cyan-300">
-                  {positionCode} <span className="text-sm font-semibold text-slate-300">· {positionName}</span>
+                <p className="font-black text-neonGreenHover">
+                  {positionCode} <span className="text-sm font-semibold text-secondaryText">· {positionName}</span>
                 </p>
               </div>
 
               <div className="text-center sm:text-right">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-secondaryText">
                   Sold For
                 </p>
-                <p className="font-mono font-black text-emerald-400">
+                <p className="font-mono font-black text-neonGreen">
                   ৳{soldPrice.toLocaleString('en-IN')}
                 </p>
               </div>
