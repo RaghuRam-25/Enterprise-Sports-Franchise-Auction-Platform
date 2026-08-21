@@ -17,6 +17,7 @@ import PlayerDisplayStage from '../../components/auction/PlayerDisplayStage';
 import { useAuctionAnimation } from '../../hooks/useAuctionAnimation';
 import { getImageUrl } from '../../utils/imageUrl';
 import { playerFallback } from '../../utils/playerFallback';
+import { getTeamTheme } from '../../utils/themeConfig';
 import '../../services/api';
 
 // ── Animated Counter Helper ──────────────────────────────────────────────────
@@ -34,113 +35,8 @@ function AnimatedCounter({ value, prefix = '', suffix = '' }) {
   );
 }
 
-const TEAM_THEMES = [
-  {
-    name: 'crimson',
-    gradient: 'from-rose-500/15 via-slate-950/60 to-slate-950',
-    border: 'border-rose-500/40',
-    ring: 'hover:shadow-rose-500/20',
-    accent: 'bg-rose-500',
-    badgeBg: 'bg-rose-500/15 text-rose-300 border-rose-500/30',
-    stat: 'text-rose-300',
-  },
-  {
-    name: 'amber',
-    gradient: 'from-amber-500/15 via-slate-950/60 to-slate-950',
-    border: 'border-amber-500/40',
-    ring: 'hover:shadow-amber-500/20',
-    accent: 'bg-amber-500',
-    badgeBg: 'bg-amber-500/15 text-amber-300 border-amber-500/30',
-    stat: 'text-amber-300',
-  },
-  {
-    name: 'emerald',
-    gradient: 'from-emerald-500/15 via-slate-950/60 to-slate-950',
-    border: 'border-emerald-500/40',
-    ring: 'hover:shadow-emerald-500/20',
-    accent: 'bg-emerald-500',
-    badgeBg: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
-    stat: 'text-emerald-300',
-  },
-  {
-    name: 'sky',
-    gradient: 'from-sky-500/15 via-slate-950/60 to-slate-950',
-    border: 'border-sky-500/40',
-    ring: 'hover:shadow-sky-500/20',
-    accent: 'bg-sky-500',
-    badgeBg: 'bg-sky-500/15 text-sky-300 border-sky-500/30',
-    stat: 'text-sky-300',
-  },
-  {
-    name: 'violet',
-    gradient: 'from-violet-500/15 via-slate-950/60 to-slate-950',
-    border: 'border-violet-500/40',
-    ring: 'hover:shadow-violet-500/20',
-    accent: 'bg-violet-500',
-    badgeBg: 'bg-violet-500/15 text-violet-300 border-violet-500/30',
-    stat: 'text-violet-300',
-  },
-  {
-    name: 'fuchsia',
-    gradient: 'from-fuchsia-500/15 via-slate-950/60 to-slate-950',
-    border: 'border-fuchsia-500/40',
-    ring: 'hover:shadow-fuchsia-500/20',
-    accent: 'bg-fuchsia-500',
-    badgeBg: 'bg-fuchsia-500/15 text-fuchsia-300 border-fuchsia-500/30',
-    stat: 'text-fuchsia-300',
-  },
-  {
-    name: 'teal',
-    gradient: 'from-teal-500/15 via-slate-950/60 to-slate-950',
-    border: 'border-teal-500/40',
-    ring: 'hover:shadow-teal-500/20',
-    accent: 'bg-teal-500',
-    badgeBg: 'bg-teal-500/15 text-teal-300 border-teal-500/30',
-    stat: 'text-teal-300',
-  },
-  {
-    name: 'orange',
-    gradient: 'from-orange-500/15 via-slate-950/60 to-slate-950',
-    border: 'border-orange-500/40',
-    ring: 'hover:shadow-orange-500/20',
-    accent: 'bg-orange-500',
-    badgeBg: 'bg-orange-500/15 text-orange-300 border-orange-500/30',
-    stat: 'text-orange-300',
-  },
-  {
-    name: 'indigo',
-    gradient: 'from-indigo-500/15 via-slate-950/60 to-slate-950',
-    border: 'border-indigo-500/40',
-    ring: 'hover:shadow-indigo-500/20',
-    accent: 'bg-indigo-500',
-    badgeBg: 'bg-indigo-500/15 text-indigo-300 border-indigo-500/30',
-    stat: 'text-indigo-300',
-  },
-  {
-    name: 'lime',
-    gradient: 'from-lime-500/15 via-slate-950/60 to-slate-950',
-    border: 'border-lime-500/40',
-    ring: 'hover:shadow-lime-500/20',
-    accent: 'bg-lime-500',
-    badgeBg: 'bg-lime-500/15 text-lime-300 border-lime-500/30',
-    stat: 'text-lime-300',
-  },
-];
 
-function hashString(str) {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    hash = (hash << 5) - hash + str.charCodeAt(i);
-    hash |= 0;
-  }
-  return Math.abs(hash);
-}
 
-function getTeamTheme(team) {
-  const key = String(team._id || team.id || team.name || team.shortCode || 'team');
-  const idx = hashString(key) % TEAM_THEMES.length;
-  return TEAM_THEMES[idx];
-}
 
 function TeamDetailModal({ team, onClose, players, formatCurrency }) {
   const modalTheme = useMemo(() => (team ? getTeamTheme(team) : null), [team]);

@@ -27,11 +27,13 @@ export default function PlayerCardCard({
   onEdit,
   onToggleBan,
   teams = [],
+  categories = [],
   customActions = null,
   showFullDetails = true,
 }) {
   const [imgError, setImgError] = useState(false);
-  const theme = getCategoryTheme(player?.category);
+  const theme = getCategoryTheme(player?.category, categories);
+  const CategoryIcon = theme.IconComponent || Tag;
   const id = player?._id || player?.id;
 
   const positions = Array.isArray(player?.positions) ? player.positions : [];
@@ -43,17 +45,26 @@ export default function PlayerCardCard({
   const soldToTeam = isSold ? teams.find(t => String(t._id || t.id) === String(player?.soldToTeam?._id || player?.soldToTeam)) : null;
 
   return (
-    <div className={`relative h-full flex flex-col justify-between rounded-2xl border bg-slate-950/80 backdrop-blur-md overflow-hidden transition-all duration-300 group hover:-translate-y-1.5 ${theme.border} ${theme.cardGlow}`}>
+    <div
+      style={theme.customBorderStyle || undefined}
+      className={`relative h-full flex flex-col justify-between rounded-2xl border bg-slate-950/80 backdrop-blur-md overflow-hidden transition-all duration-300 group hover:-translate-y-1.5 ${theme.border} ${theme.cardGlow}`}
+    >
       
       {/* Sports Accreditation Header Strip */}
-      <div className={`h-2.5 w-full ${theme.headerBg}`} />
+      <div
+        style={theme.customHeaderStyle || undefined}
+        className={`h-2.5 w-full ${theme.headerBg}`}
+      />
 
       <div className="p-4 space-y-3 flex-1 flex flex-col justify-between">
         
         {/* Top Header Row: Category Badge & Status Badge */}
         <div className="flex items-center justify-between gap-2">
-          <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border shadow-sm ${theme.badgeBg}`}>
-            <Tag className="w-2.5 h-2.5" />
+          <span
+            style={theme.customBadgeStyle || undefined}
+            className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border shadow-sm ${theme.badgeBg}`}
+          >
+            <CategoryIcon className="w-3 h-3" />
             {player?.category || 'Standard'}
           </span>
 

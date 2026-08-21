@@ -5,123 +5,13 @@ import {
 } from 'lucide-react';
 import Navbar from '../../components/Navbar';
 import TeamBadge from '../../components/common/TeamBadge';
-import { getTeamAvatarConfig } from '../../utils/themeConfig';
+import { getTeamAvatarConfig, getTeamTheme } from '../../utils/themeConfig';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 import io from 'socket.io-client';
 
-/* ---------------------------------------------------------
-   Distinct per-team color themes.
-   Each team gets a stable theme based on a hash of its
-   id/name/code, so colors never change on refresh/reorder.
----------------------------------------------------------- */
-const TEAM_THEMES = [
-  {
-    name: 'crimson',
-    gradient: 'from-rose-500/15 via-slate-950/60 to-slate-950',
-    border: 'border-rose-500/40',
-    ring: 'hover:shadow-rose-500/20',
-    accent: 'bg-rose-500',
-    badgeBg: 'bg-rose-500/15 text-rose-300 border-rose-500/30',
-    stat: 'text-rose-300',
-  },
-  {
-    name: 'amber',
-    gradient: 'from-amber-500/15 via-slate-950/60 to-slate-950',
-    border: 'border-amber-500/40',
-    ring: 'hover:shadow-amber-500/20',
-    accent: 'bg-amber-500',
-    badgeBg: 'bg-amber-500/15 text-amber-300 border-amber-500/30',
-    stat: 'text-amber-300',
-  },
-  {
-    name: 'emerald',
-    gradient: 'from-emerald-500/15 via-slate-950/60 to-slate-950',
-    border: 'border-emerald-500/40',
-    ring: 'hover:shadow-emerald-500/20',
-    accent: 'bg-emerald-500',
-    badgeBg: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
-    stat: 'text-emerald-300',
-  },
-  {
-    name: 'sky',
-    gradient: 'from-sky-500/15 via-slate-950/60 to-slate-950',
-    border: 'border-sky-500/40',
-    ring: 'hover:shadow-sky-500/20',
-    accent: 'bg-sky-500',
-    badgeBg: 'bg-sky-500/15 text-sky-300 border-sky-500/30',
-    stat: 'text-sky-300',
-  },
-  {
-    name: 'violet',
-    gradient: 'from-violet-500/15 via-slate-950/60 to-slate-950',
-    border: 'border-violet-500/40',
-    ring: 'hover:shadow-violet-500/20',
-    accent: 'bg-violet-500',
-    badgeBg: 'bg-violet-500/15 text-violet-300 border-violet-500/30',
-    stat: 'text-violet-300',
-  },
-  {
-    name: 'fuchsia',
-    gradient: 'from-fuchsia-500/15 via-slate-950/60 to-slate-950',
-    border: 'border-fuchsia-500/40',
-    ring: 'hover:shadow-fuchsia-500/20',
-    accent: 'bg-fuchsia-500',
-    badgeBg: 'bg-fuchsia-500/15 text-fuchsia-300 border-fuchsia-500/30',
-    stat: 'text-fuchsia-300',
-  },
-  {
-    name: 'teal',
-    gradient: 'from-teal-500/15 via-slate-950/60 to-slate-950',
-    border: 'border-teal-500/40',
-    ring: 'hover:shadow-teal-500/20',
-    accent: 'bg-teal-500',
-    badgeBg: 'bg-teal-500/15 text-teal-300 border-teal-500/30',
-    stat: 'text-teal-300',
-  },
-  {
-    name: 'orange',
-    gradient: 'from-orange-500/15 via-slate-950/60 to-slate-950',
-    border: 'border-orange-500/40',
-    ring: 'hover:shadow-orange-500/20',
-    accent: 'bg-orange-500',
-    badgeBg: 'bg-orange-500/15 text-orange-300 border-orange-500/30',
-    stat: 'text-orange-300',
-  },
-  {
-    name: 'indigo',
-    gradient: 'from-indigo-500/15 via-slate-950/60 to-slate-950',
-    border: 'border-indigo-500/40',
-    ring: 'hover:shadow-indigo-500/20',
-    accent: 'bg-indigo-500',
-    badgeBg: 'bg-indigo-500/15 text-indigo-300 border-indigo-500/30',
-    stat: 'text-indigo-300',
-  },
-  {
-    name: 'lime',
-    gradient: 'from-lime-500/15 via-slate-950/60 to-slate-950',
-    border: 'border-lime-500/40',
-    ring: 'hover:shadow-lime-500/20',
-    accent: 'bg-lime-500',
-    badgeBg: 'bg-lime-500/15 text-lime-300 border-lime-500/30',
-    stat: 'text-lime-300',
-  },
-];
 
-function hashString(str) {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    hash = (hash << 5) - hash + str.charCodeAt(i);
-    hash |= 0;
-  }
-  return Math.abs(hash);
-}
 
-function getTeamTheme(team) {
-  const key = String(team._id || team.id || team.name || team.shortCode || 'team');
-  const idx = hashString(key) % TEAM_THEMES.length;
-  return TEAM_THEMES[idx];
-}
 
 export default function PublicTeamsView() {
   const { user } = useAuth();
@@ -339,16 +229,23 @@ export default function PublicTeamsView() {
                   <div
                     key={id}
                     onClick={() => setSelectedTeam(team)}
-                    className={`group relative overflow-hidden rounded-2xl border ${theme.border} cursor-pointer transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl ${theme.ring} bg-gradient-to-br ${theme.gradient}`}
+                    style={{ ...(theme.customStyle || {}), ...(theme.customBorderStyle || {}) }}
+                    className={`group relative overflow-hidden rounded-2xl cursor-pointer transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl ${theme.ring} ${theme.customStyle ? '' : `border ${theme.border} bg-gradient-to-br ${theme.gradient}`}`}
                   >
                     {/* Colored top accent bar */}
-                    <div className={`h-1 w-full ${theme.accent}`} />
+                    <div
+                      style={theme.customAccentStyle || undefined}
+                      className={`h-1 w-full ${theme.accent}`}
+                    />
 
                     <div className="p-5 space-y-4">
                       {/* Top Team Badge Header */}
                       <div className="flex items-start justify-between gap-3">
                         <TeamBadge team={team} size="md" showManager={true} managerName={managerName} />
-                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold border ${theme.badgeBg}`}>
+                        <span
+                          style={theme.customBadgeStyle || undefined}
+                          className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold border ${theme.badgeBg}`}
+                        >
                           {team.shortCode || team.code || 'TEAM'}
                         </span>
                       </div>
@@ -357,7 +254,10 @@ export default function PublicTeamsView() {
                       <div className="grid grid-cols-2 gap-3 text-xs pt-1">
                         <div className="bg-slate-950/70 p-2.5 rounded-xl border border-slate-800/80">
                           <span className="text-[10px] text-slate-400 font-medium uppercase block">Remaining Purse</span>
-                          <span className={`font-mono font-bold text-xs sm:text-sm mt-0.5 block ${theme.stat}`}>
+                          <span
+                            style={theme.customStatStyle || undefined}
+                            className={`font-mono font-bold text-xs sm:text-sm mt-0.5 block ${theme.stat}`}
+                          >
                             {formatCurrency(team.remainingBudget)}
                           </span>
                         </div>
@@ -373,7 +273,10 @@ export default function PublicTeamsView() {
                       {/* Click Card Footer */}
                       <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400 group-hover:text-white transition">
                         <span className="font-medium">View Team Profile</span>
-                        <ExternalLink className={`w-3.5 h-3.5 transition ${theme.stat}`} />
+                        <ExternalLink
+                          style={theme.customStatStyle || undefined}
+                          className={`w-3.5 h-3.5 transition ${theme.stat}`}
+                        />
                       </div>
                     </div>
                   </div>

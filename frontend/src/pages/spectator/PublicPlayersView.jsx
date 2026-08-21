@@ -445,6 +445,7 @@ export default function PublicPlayersView() {
                 player={player}
                 formatCurrency={formatCurrency}
                 teams={teams}
+                categories={categories}
               />
             ))}
           </div>

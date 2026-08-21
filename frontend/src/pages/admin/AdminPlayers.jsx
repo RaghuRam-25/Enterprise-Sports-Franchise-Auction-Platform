@@ -207,6 +207,7 @@ export default function AdminPlayers() {
                 player={player}
                 formatCurrency={formatCurrency}
                 canManage={canManage}
+                categories={categories}
                 onApprove={handleApprove}
                 onEdit={openEdit}
                 onToggleBan={handleToggleBan}

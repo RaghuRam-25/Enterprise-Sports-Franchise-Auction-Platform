@@ -275,10 +275,10 @@ export const createTeam = async (req, res, next) => {
     }
 
     const team = await Team.create({
+      ...teamTheme,
       ...parsed,
       shortCode: parsed.shortCode.toUpperCase(),
       remainingBudget: parsed.totalBudget,
-      ...teamTheme,
       // Manual icon selection overrides the auto-generated one
       ...(parsed.icon ? { icon: parsed.icon } : {})
     });
