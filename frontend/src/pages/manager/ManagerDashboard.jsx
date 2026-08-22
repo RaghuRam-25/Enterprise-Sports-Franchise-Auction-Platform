@@ -446,11 +446,6 @@ export const ManagerDashboard = () => {
               <p className={`text-sm font-bold ${hasOptedOut ? 'text-warningGold' : 'text-primaryText'}`}>
                 {hasOptedOut ? "You're sitting this player out" : 'Not interested in this player?'}
               </p>
-              <p className="text-[11px] text-mutedText">
-                {hasOptedOut
-                  ? 'You will re-enter bidding automatically when the next player comes up.'
-                  : 'You can opt out of bidding for the current player at any time.'}
-              </p>
             </div>
           </div>
           <button

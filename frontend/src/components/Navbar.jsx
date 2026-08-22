@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Trophy, Info, User, Home, Menu } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -8,6 +8,31 @@ export default function Navbar({ onOpenMobileSidebar }) {
   const { user } = useAuth();
   const { podiumPlayer } = useAuction();
   const location = useLocation();
+  const headerRef = useRef(null);
+
+  // Publish the navbar's ACTUAL rendered height as --navbar-height so
+  // viewport-level detail views always start exactly below it.
+  useEffect(() => {
+    const el = headerRef.current;
+    if (!el) return undefined;
+
+    const syncHeight = () => {
+      document.documentElement.style.setProperty('--navbar-height', `${el.offsetHeight}px`);
+    };
+
+    syncHeight();
+    if (typeof ResizeObserver !== 'undefined') {
+      const ro = new ResizeObserver(syncHeight);
+      ro.observe(el);
+      window.addEventListener('resize', syncHeight);
+      return () => {
+        ro.disconnect();
+        window.removeEventListener('resize', syncHeight);
+      };
+    }
+    window.addEventListener('resize', syncHeight);
+    return () => window.removeEventListener('resize', syncHeight);
+  }, []);
 
   // Determine if current route is a public spectator route
   const publicRoutes = ['/', '/live', '/matches', '/matches/schedule', '/matches/table', '/matches/stats', '/teams', '/about', '/players'];
@@ -18,7 +43,7 @@ export default function Navbar({ onOpenMobileSidebar }) {
   const showSpectatorLinks = !user || isSpectatorRoute;
 
   return (
-    <header className="sticky top-0 z-50 bg-[#08090b]/95 border-b border-white/10 backdrop-blur-xl shadow-2xl">
+    <header ref={headerRef} className="sticky top-0 z-50 bg-[#08090b]/95 border-b border-white/10 backdrop-blur-xl shadow-2xl">
       <div className="w-full px-4 sm:px-5">
         <div className="flex items-center justify-between h-16">
 

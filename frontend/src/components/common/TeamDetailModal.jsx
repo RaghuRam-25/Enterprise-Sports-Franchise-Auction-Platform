@@ -1,6 +1,8 @@
 import { useState, useMemo } from 'react';
 import { X, Users, Wallet, Coins, Filter } from 'lucide-react';
 import TeamBadge from './TeamBadge';
+import DetailsViewport from './DetailsViewport';
+import useModalScrollLock from '../../hooks/useModalScrollLock';
 import { getTeamTheme } from '../../utils/themeConfig';
 import { getImageUrl } from '../../utils/imageUrl';
 import { playerFallback } from '../../utils/playerFallback';
@@ -36,6 +38,8 @@ const DEMO_SQUAD = [
 export default function TeamDetailModal({ team, onClose, players = [], formatCurrency }) {
   const [positionFilter, setPositionFilter] = useState('ALL');
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
+
+  useModalScrollLock(!!team);
 
   const modalTheme = useMemo(() => (team ? getTeamTheme(team) : null), [team]);
 
@@ -89,8 +93,12 @@ export default function TeamDetailModal({ team, onClose, players = [], formatCur
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#05070c]/90 backdrop-blur-xl animate-in fade-in duration-200">
-      <div className="bg-[#0c0e14] border border-blue-900/40 rounded-3xl p-6 sm:p-8 max-w-4xl w-full space-y-6 relative max-h-[92vh] overflow-y-auto custom-scrollbar shadow-2xl">
+    <DetailsViewport onClose={onClose}>
+        <div
+          onClick={(e) => e.stopPropagation()}
+          data-modal-scroll="true"
+          className="bg-[#0c0e14] border border-blue-900/40 rounded-3xl p-5 sm:p-8 max-w-[800px] w-full space-y-6 relative max-h-full overflow-y-auto overscroll-contain custom-scrollbar shadow-2xl"
+        >
         
         {/* ── Modal Close Button ── */}
         <button
@@ -267,8 +275,7 @@ export default function TeamDetailModal({ team, onClose, players = [], formatCur
           </div>
 
         </div>
-
-      </div>
-    </div>
+        </div>
+    </DetailsViewport>
   );
 }

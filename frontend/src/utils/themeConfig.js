@@ -29,6 +29,20 @@ const TEAM_ICON_MAP = {
   Zap, zap: Zap, Lightning: Zap, lightning: Zap
 };
 
+export const BPL_FRANCHISE_BRANDS = [
+  { match: 'victorians', primaryColor: '#2563EB', secondaryColor: '#1E3A8A', icon: 'Crown' },
+  { match: 'barishal',   primaryColor: '#FB923C', secondaryColor: '#9A3412', icon: 'Flame' },
+  { match: 'riders',     primaryColor: '#A855F7', secondaryColor: '#581C87', icon: 'Zap' },
+  { match: 'strikers',   primaryColor: '#22D3EE', secondaryColor: '#155E75', icon: 'Swords' },
+  { match: 'dynamites',  primaryColor: '#0EA5E9', secondaryColor: '#075985', icon: 'Zap' },
+  { match: 'kings',      primaryColor: '#EAB308', secondaryColor: '#713F12', icon: 'Crown' },
+];
+
+export function getFranchiseBrand(name) {
+  const n = String(name || '').toLowerCase();
+  return BPL_FRANCHISE_BRANDS.find(b => n.includes(b.match)) || null;
+}
+
 // ─── Player Category Themes ──────────────────────────────────────────────────
 // Dark charcoal surfaces stay constant; each category gets its OWN accent hue
 // (strip / badge / border / glow) so cards are clearly distinguishable.
@@ -216,13 +230,18 @@ export function getTeamAvatarConfig(team = {}) {
     IconComponent = TEAM_ICON_MAP[key] || TEAM_ICON_MAP[key.toLowerCase()] || TEAM_ICON_MAP[key.charAt(0).toUpperCase() + key.slice(1)];
   }
 
+  const brand = getFranchiseBrand(name);
+  if (!IconComponent && brand) {
+    IconComponent = TEAM_ICON_MAP[brand.icon] || null;
+  }
+
   // Guaranteed Icon Fallback (so Vercel/Production teams ALWAYS render an Icon)
   if (!IconComponent) {
     IconComponent = iconPreset.Icon || Shield;
   }
 
-  const primaryColor = team.primaryColor || colorPreset.accent || '#58D20A';
-  const secondaryColor = team.secondaryColor || '#0B0B0B';
+  const primaryColor = team.primaryColor || brand?.primaryColor || colorPreset.accent || '#58D20A';
+  const secondaryColor = team.secondaryColor || brand?.secondaryColor || '#0B0B0B';
 
   return {
     initials: shortCode || name.slice(0, 2).toUpperCase(),
@@ -316,9 +335,10 @@ export function getTeamTheme(team) {
     };
   }
 
-  if (tObj.primaryColor) {
-    const p = tObj.primaryColor;
-    const s = tObj.secondaryColor || '#0B0B0B';
+  const brand = getFranchiseBrand(tObj.name);
+  if (tObj.primaryColor || brand) {
+    const p = tObj.primaryColor || brand.primaryColor;
+    const s = tObj.secondaryColor || brand.secondaryColor;
     return {
       name: 'custom',
       customStyle: {
@@ -340,6 +360,7 @@ export function getTeamTheme(team) {
       stat: '',
       primaryColor: p,
       secondaryColor: s,
+      iconName: brand?.icon,
     };
   }
 

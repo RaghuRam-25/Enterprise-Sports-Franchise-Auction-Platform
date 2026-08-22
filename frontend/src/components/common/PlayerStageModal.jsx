@@ -1,6 +1,8 @@
 import { useEffect } from 'react';
 import { X } from 'lucide-react';
 import LandingLiveStageCard from '../LandingLiveStageCard';
+import DetailsViewport from './DetailsViewport';
+import useModalScrollLock from '../../hooks/useModalScrollLock';
 
 /**
  * PlayerStageModal — opens the EXACT stage presentation used when a player is
@@ -21,10 +23,7 @@ export default function PlayerStageModal({ player, teams = [], categories = [], 
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
 
-  useEffect(() => {
-    document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = ''; };
-  }, []);
+  useModalScrollLock(!!player);
 
   if (!player) return null;
 
@@ -35,25 +34,25 @@ export default function PlayerStageModal({ player, teams = [], categories = [], 
     teams.find((t) => (t.name || '').toLowerCase() === String(tid || '').toLowerCase());
 
   return (
-    <div
-      className="fixed inset-0 z-[300] bg-black/95 backdrop-blur-sm overflow-y-auto"
-      onClick={onClose}
-      role="dialog"
-      aria-modal="true"
-    >
-      <div className="min-h-full flex items-center justify-center p-4 sm:p-8">
-        <div className="relative w-full max-w-4xl" onClick={(e) => e.stopPropagation()}>
+    <DetailsViewport onClose={onClose}>
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="relative flex flex-col w-full max-w-[800px] max-h-full"
+      >
+        {/* Close — attached to the modal's top-right corner (never viewport-fixed) */}
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onClose?.(); }}
+          title="Close"
+          className="absolute top-4 right-4 z-20 w-9 h-9 rounded-full bg-[#0c0e12] border border-white/20 text-slate-200 hover:text-white hover:border-[#58D20A]/60 flex items-center justify-center shadow-lg transition"
+        >
+          <X className="w-4 h-4" />
+        </button>
 
-          {/* Close */}
-          <button
-            type="button"
-            onClick={onClose}
-            title="Close"
-            className="absolute -top-3 -right-3 z-10 w-9 h-9 rounded-full bg-[#0c0e12] border border-white/20 text-slate-200 hover:text-white hover:border-[#58D20A]/60 flex items-center justify-center shadow-lg transition"
-          >
-            <X className="w-4 h-4" />
-          </button>
-
+        <div
+          data-modal-scroll="true"
+          className="w-full min-h-0 overflow-y-auto overscroll-contain custom-scrollbar rounded-2xl"
+        >
           {/* The podium-push stage card, verbatim */}
           <LandingLiveStageCard
             player={player}
@@ -67,6 +66,6 @@ export default function PlayerStageModal({ player, teams = [], categories = [], 
           />
         </div>
       </div>
-    </div>
+    </DetailsViewport>
   );
 }

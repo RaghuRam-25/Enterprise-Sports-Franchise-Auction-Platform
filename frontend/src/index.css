@@ -36,6 +36,9 @@
   --urgent-text: #FF5C5C;
   --warning: #F4C542;
 
+  /* Layout */
+  --navbar-height: 4rem;
+
   font-family: 'Inter', system-ui, sans-serif;
   color-scheme: dark;
 }

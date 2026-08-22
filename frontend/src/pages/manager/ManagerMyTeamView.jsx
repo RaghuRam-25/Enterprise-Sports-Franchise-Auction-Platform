@@ -99,18 +99,9 @@ export default function ManagerMyTeamView() {
                         </div>
                     )}
                     <div className="min-w-0">
-                        <span className="text-[9px] font-bold uppercase tracking-widest text-mutedText flex items-center gap-1">
-                            <UserCircle2 className="w-3 h-3 text-neonGreen" /> Franchise Manager
-                        </span>
                         <p className="text-sm font-extrabold text-white truncate max-w-[160px]">
                             {user?.name || 'Team Manager'}
                         </p>
-                        {user?.email && (
-                            <p className="text-[10px] text-mutedText truncate max-w-[160px] flex items-center gap-1 mt-0.5">
-                                <Mail className="w-2.5 h-2.5 flex-shrink-0" />
-                                {user.email}
-                            </p>
-                        )}
                     </div>
                 </div>
             </div>
@@ -129,18 +120,6 @@ export default function ManagerMyTeamView() {
                     <span className="text-[10px] font-bold text-secondaryText uppercase">Remaining Purse</span>
                     <p className="text-xl font-black font-mono text-neonGreen mt-1">{formatCurrency(team.remainingBudget)}</p>
                 </div>
-            </div>
-
-            {/* Roster List */}
-            <div className="flex items-center justify-end">
-                <button
-                    onClick={() => fetchTeamDetails(true)}
-                    className="btn-secondary flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px]"
-                    title="Refresh roster"
-                    aria-label="Refresh roster"
-                >
-                    <RefreshCw className="w-3.5 h-3.5" /> Refresh
-                </button>
             </div>
             {players && team && <TeamRosterList players={players} team={team} />}
         </div>

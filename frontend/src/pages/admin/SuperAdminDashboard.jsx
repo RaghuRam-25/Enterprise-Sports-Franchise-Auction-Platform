@@ -1,17 +1,20 @@
 import { useState, useEffect } from 'react';
-import { Users, ShieldCheck, Trophy, Lock, DollarSign, Settings, Layers, ChevronRight, Loader, RotateCcw, AlertTriangle, CalendarClock } from 'lucide-react';
+import { Users, User, ShieldCheck, Trophy, Lock, DollarSign, Settings, Loader, RotateCcw, AlertTriangle, CalendarClock, Wallet, Coins } from 'lucide-react';
 import { useAuction } from '../../context/AuctionContext';
 import { usePhase } from '../../context/PhaseContext';
+import TeamBadge from '../../components/common/TeamBadge';
+import TeamDetailModal from '../../components/common/TeamDetailModal';
+import { getTeamTheme } from '../../utils/themeConfig';
 import { Link } from 'react-router-dom';
 import api from '../../services/api';
-import { isoToDhakaPicker, toDhakaIso, formatDhakaDateTime } from '../../utils/dhakaTime';
+import { isoToDhakaPicker, toDhakaIso } from '../../utils/dhakaTime';
 
 // Visual label per phase for the control stepper
 const PHASE_META = {
-  SETUP: { label: 'Setup', desc: 'Configure rules & teams' },
-  REGISTRATION: { label: 'Registration', desc: 'Players sign up' },
-  AUCTION: { label: 'Auction', desc: 'Live bidding on podium' },
-  TOURNAMENT: { label: 'Tournament', desc: 'Matches, stats & awards' },
+  SETUP: { label: 'Setup' },
+  REGISTRATION: { label: 'Registration' },
+  AUCTION: { label: 'Auction' },
+  TOURNAMENT: { label: 'Tournament' },
 };
 
 export default function SuperAdminDashboard() {
@@ -40,6 +43,7 @@ export default function SuperAdminDashboard() {
   const [togglingLock, setTogglingLock] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [resetting, setResetting] = useState(false);
+  const [selectedTeam, setSelectedTeam] = useState(null);
 
   // Form input states for datetime-local
   const [schedules, setSchedules] = useState({
@@ -244,7 +248,6 @@ export default function SuperAdminDashboard() {
       <div className="glass-card rounded-2xl p-6 border border-cardBorder bg-gradient-to-r from-cardBg via-cardBg/90 to-successGreen/40 space-y-5">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div>
-            <span className="text-xs font-bold uppercase tracking-widest text-neonGreen">Architect Dashboard &bull; {activeSection} Section</span>
             <h1 className="text-2xl font-black font-heading text-white">Global Event Control</h1>
           </div>
 
@@ -309,14 +312,6 @@ export default function SuperAdminDashboard() {
               <CalendarClock className="w-5 h-5 text-warningGold flex-shrink-0" />
               <div>
                 <h4 className="text-xs font-black text-white uppercase tracking-wider">Multi-Phase Event Schedule Manager</h4>
-                <p className="text-[11px] text-mutedText">
-                  All times in <span className="text-warningGold font-bold">Asia/Dhaka (UTC+6)</span> · Registration opens/closes automatically at these times
-                </p>
-                {registrationStartTime && (
-                  <p className="text-[10px] text-neonGreen mt-0.5">
-                    Current: opens {formatDhakaDateTime(registrationStartTime)}{registrationEndTime ? ` · closes ${formatDhakaDateTime(registrationEndTime)}` : ''}
-                  </p>
-                )}
               </div>
             </div>
             <button
@@ -334,7 +329,6 @@ export default function SuperAdminDashboard() {
             <div className="bg-darkBg/60 border border-cardBorder/80 p-3.5 rounded-2xl space-y-3">
               <div className="flex items-center justify-between border-b border-cardBorder/60 pb-2">
                 <span className="text-xs font-black text-neonGreen uppercase tracking-wider">1. Registration</span>
-                <span className="text-[10px] text-mutedText">Sign-ups</span>
               </div>
               <div className="space-y-2">
                 <div>
@@ -372,7 +366,6 @@ export default function SuperAdminDashboard() {
             <div className="bg-darkBg/60 border border-cardBorder/80 p-3.5 rounded-2xl space-y-3">
               <div className="flex items-center justify-between border-b border-cardBorder/60 pb-2">
                 <span className="text-xs font-black text-warningGold uppercase tracking-wider">2. Live Auction</span>
-                <span className="text-[10px] text-mutedText">Bidding Stage</span>
               </div>
               <div className="space-y-2">
                 <div>
@@ -410,7 +403,6 @@ export default function SuperAdminDashboard() {
             <div className="bg-darkBg/60 border border-cardBorder/80 p-3.5 rounded-2xl space-y-3">
               <div className="flex items-center justify-between border-b border-cardBorder/60 pb-2">
                 <span className="text-xs font-black text-cyan-400 uppercase tracking-wider">3. Tournament</span>
-                <span className="text-[10px] text-mutedText">Matches</span>
               </div>
               <div className="space-y-2">
                 <div>
@@ -455,7 +447,6 @@ export default function SuperAdminDashboard() {
             <div>
               <p className="text-xs font-semibold text-secondaryText uppercase">Total Registrations</p>
               <h3 className="text-2xl font-black text-white mt-1">{totalRegistered}</h3>
-              <p className="text-[11px] text-neonGreen mt-1">{soldPlayers} Sold &bull; {unsoldPlayers} Unsold</p>
             </div>
             <div className="p-3 bg-neonGreen/10 text-neonGreen rounded-xl border border-neonGreen/20">
               <Users className="w-6 h-6" />
@@ -468,7 +459,6 @@ export default function SuperAdminDashboard() {
             <div>
               <p className="text-xs font-semibold text-secondaryText uppercase">Franchise Teams</p>
               <h3 className="text-2xl font-black text-white mt-1">{teams.length}</h3>
-              <p className="text-[11px] text-neonGreen mt-1">Active Franchise Buyers</p>
             </div>
             <div className="p-3 bg-neonGreen/10 text-neonGreen rounded-xl border border-neonGreen/20">
               <ShieldCheck className="w-6 h-6" />
@@ -481,7 +471,6 @@ export default function SuperAdminDashboard() {
             <div>
               <p className="text-xs font-semibold text-secondaryText uppercase">Total Event Purse</p>
               <h3 className="text-xl font-black text-white mt-1">{formatCurrency(totalPurse)}</h3>
-              <p className="text-[11px] text-warningGold mt-1">Combined Franchise Capital</p>
             </div>
             <div className="p-3 bg-warningGold/10 text-warningGold rounded-xl border border-warningGold/20">
               <DollarSign className="w-6 h-6" />
@@ -494,7 +483,6 @@ export default function SuperAdminDashboard() {
             <div>
               <p className="text-xs font-semibold text-secondaryText uppercase">Dynamic Configs</p>
               <h3 className="text-2xl font-black text-white mt-1">{biddingTiers.length} Tiers</h3>
-              <p className="text-[11px] text-warningGold mt-1">{categories.length} Categories &bull; {positions.length} Positions &bull; {sessions.length} Sessions</p>
             </div>
             <div className="p-3 bg-warningGold/10 text-warningGold rounded-xl border border-warningGold/20">
               <Settings className="w-6 h-6" />
@@ -503,12 +491,14 @@ export default function SuperAdminDashboard() {
         </div>
       </div>
 
-      {/* Franchise Team Summary Table */}
+      {/* Franchise Team Summary */}
       <div className="glass-card rounded-2xl p-6 border border-cardBorder space-y-4">
         <div className="flex justify-between items-center">
-          <h3 className="text-sm font-bold uppercase tracking-wider text-secondaryText flex items-center gap-2">
-            <Trophy className="w-4 h-4 text-warningGold" /> Active Franchises
-          </h3>
+          <div>
+            <h3 className="text-sm font-bold uppercase tracking-wider text-secondaryText flex items-center gap-2">
+              <Trophy className="w-4 h-4 text-warningGold" /> Active Franchises
+            </h3>
+          </div>
           <Link
             to="/admin/teams"
             className="text-xs text-neonGreen hover:text-neonGreenHover font-semibold flex items-center gap-1"
@@ -517,34 +507,126 @@ export default function SuperAdminDashboard() {
           </Link>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs text-secondaryText">
-            <thead className="bg-cardBg/80 text-secondaryText uppercase font-bold text-[11px] border-b border-cardBorder">
-              <tr>
-                <th className="py-3 px-4">Franchise</th>
-                <th className="py-3 px-4">Initial Purse</th>
-                <th className="py-3 px-4">Remaining Purse</th>
-                <th className="py-3 px-4">Roster Count</th>
-                <th className="py-3 px-4">Min Target</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-cardBorder/60">
-              {teams.map(team => (
-                <tr key={team.id} className="hover:bg-surfaceHover/30">
-                  <td className="py-3 px-4 font-bold text-white flex items-center gap-2">
-                    <span>{team.logo}</span>
-                    <span>{team.name}</span>
-                  </td>
-                  <td className="py-3 px-4 font-mono">{formatCurrency(team.totalBudget)}</td>
-                  <td className="py-3 px-4 font-mono text-neonGreen font-semibold">{formatCurrency(team.remainingBudget)}</td>
-                  <td className="py-3 px-4 font-bold">{team.currentRoster.length} Players</td>
-                  <td className="py-3 px-4 text-secondaryText">{team.minRoster} Players</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        {teams.length === 0 ? (
+          <div className="py-10 text-center text-xs text-mutedText border border-dashed border-borderStrong rounded-xl">
+            No franchises yet. Add teams from Manage Teams.
+          </div>
+        ) : (
+          <div className="grid gap-2.5">
+            {teams.map(team => {
+              const rosterCount = Array.isArray(team.currentRoster)
+                ? team.currentRoster.length
+                : (Number(team.currentRosterCount ?? team.currentRoster) || 0);
+              const minRoster = Number(team.minRoster) || 0;
+              const rosterPct = minRoster > 0 ? Math.min(100, Math.round((rosterCount / minRoster) * 100)) : 0;
+              const spentPct = team.totalBudget > 0
+                ? Math.max(0, Math.min(100, Math.round(((team.totalBudget - (team.remainingBudget || 0)) / team.totalBudget) * 100)))
+                : 0;
+              const rosterComplete = minRoster > 0 && rosterCount >= minRoster;
+              const brandColor = getTeamTheme(team)?.primaryColor || '#58D20A';
+
+              return (
+                <div
+                  key={team.id || team._id}
+                  onClick={() => setSelectedTeam(team)}
+                  className="group relative flex flex-wrap items-center gap-x-4 gap-y-3 p-3 pl-4 sm:p-4 sm:pl-5 rounded-xl bg-cardBg/50 border border-cardBorder hover:border-neonGreen/25 hover:bg-surfaceHover/10 transition-all duration-200 overflow-hidden cursor-pointer"
+                >
+                  <div
+                    className="absolute left-0 inset-y-0 w-[3px] opacity-80 group-hover:opacity-100 transition-opacity"
+                    style={{ background: `linear-gradient(180deg, ${brandColor}, transparent)` }}
+                  />
+
+                  <TeamBadge team={team} size="md" showName={false} className="shrink-0" />
+
+                  <div className="min-w-0 flex-1 basis-[180px]">
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-bold text-white truncate group-hover:text-neonGreen transition-colors">
+                        {team.name}
+                      </p>
+                      {(team.shortCode || team.code) && (
+                        <span className="hidden sm:inline-flex font-mono text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-surfaceHover text-secondaryText border border-borderStrong">
+                          {team.shortCode || team.code}
+                        </span>
+                      )}
+                    </div>
+                    <div className="mt-2.5 flex items-center gap-2 max-w-[240px]">
+                      <Users className={`w-3.5 h-3.5 shrink-0 ${rosterComplete ? 'text-successGreen' : 'text-mutedText'}`} />
+                      <div className="h-1.5 w-full bg-darkBg/80 border border-cardBorder/60 rounded-full overflow-hidden">
+                        <div
+                          className={`h-full rounded-full transition-all duration-500 ${rosterComplete ? 'bg-successGreen' : rosterPct >= 50 ? 'bg-neonGreen' : 'bg-warningGold'}`}
+                          style={{ width: `${Math.max(rosterPct, 6)}%` }}
+                        />
+                      </div>
+                      <span className="font-mono text-xs shrink-0">
+                        <span className={`font-bold ${rosterComplete ? 'text-successGreen' : 'text-white'}`}>{rosterCount}</span>
+                        <span className="text-mutedText">/{minRoster || '–'}</span>
+                        <span className="ml-1 font-sans text-[10px] font-medium text-mutedText">Players</span>
+                      </span>
+                    </div>
+                  </div>
+
+                  {(team.managerId?.name || team.ownerName) ? (
+                    <div className="hidden lg:flex items-center gap-2.5 px-3 py-2 rounded-lg bg-darkBg/60 border border-cardBorder shrink-0">
+                      <div className="p-1.5 rounded-md bg-warningGold/10 text-warningGold shrink-0">
+                        <User className="w-3.5 h-3.5" />
+                      </div>
+                      <div className="leading-tight">
+                        <p className="text-[9px] font-bold uppercase tracking-wider text-mutedText">Manager</p>
+                        <p className="text-xs font-semibold text-white truncate max-w-[120px] mt-0.5">{team.managerId?.name || team.ownerName}</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="hidden lg:flex items-center gap-2 px-3 py-2 rounded-lg border border-dashed border-borderStrong/70 text-mutedText/70 shrink-0">
+                      <User className="w-3.5 h-3.5" />
+                      <span className="text-[10px] font-semibold">Unassigned</span>
+                    </div>
+                  )}
+
+                  <div className="flex items-stretch gap-2 sm:gap-2.5 ml-auto">
+                    <div className="hidden md:flex items-center gap-2.5 px-3 py-2 rounded-lg bg-darkBg/60 border border-cardBorder">
+                      <div className="p-1.5 rounded-md bg-secondaryText/10 text-secondaryText shrink-0">
+                        <Wallet className="w-3.5 h-3.5" />
+                      </div>
+                      <div className="leading-tight">
+                        <p className="text-[9px] font-bold uppercase tracking-wider text-mutedText">Initial Purse</p>
+                        <p className="font-mono text-xs text-secondaryText mt-0.5">{formatCurrency(team.totalBudget)}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-neonGreen/[0.06] border border-neonGreen/20 group-hover:border-neonGreen/30 transition-colors min-w-[160px] sm:min-w-[180px]">
+                      <div className="p-1.5 rounded-md bg-neonGreen/15 text-neonGreen shrink-0">
+                        <Coins className="w-3.5 h-3.5" />
+                      </div>
+                      <div className="leading-tight min-w-0">
+                        <p className="text-[9px] font-bold uppercase tracking-wider text-mutedText">Remaining Purse</p>
+                        <p className="font-mono text-sm font-bold text-neonGreen mt-0.5 truncate">{formatCurrency(team.remainingBudget)}</p>
+                        <div className="mt-1 flex items-center gap-1.5">
+                          <div className="h-0.5 w-16 bg-surfaceHover rounded-full overflow-hidden">
+                            <div
+                              className="h-full bg-warningGold/90 rounded-full transition-all duration-500"
+                              style={{ width: `${Math.max(spentPct, 2)}%` }}
+                            />
+                          </div>
+                          <span className="text-[9px] font-semibold text-mutedText">{spentPct}% spent</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
+
+      {selectedTeam && (
+        <TeamDetailModal
+          team={selectedTeam}
+          onClose={() => setSelectedTeam(null)}
+          players={players}
+          formatCurrency={formatCurrency}
+        />
+      )}
 
       {/* Reset Confirmation Modal */}
       {showResetConfirm && (

@@ -1,30 +1,12 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Plus, Trash2, Edit3, X, Save, Eye, Copy, CheckCircle, AlertTriangle, Lock, Users, Shield, Trophy, Zap, Crown, Flame, Star, Feather, Target, Sparkles, Award, Swords, Rocket, Gem, Anchor, Castle } from 'lucide-react';
+import { Plus, Trash2, Edit3, X, Save, Copy, CheckCircle, AlertTriangle, Lock, Shield, Trophy, Zap, Crown, Flame, Star, Feather, Target, Sparkles, Award, Swords, Rocket, Gem, Anchor, Castle } from 'lucide-react';
 import { useAuction } from '../../context/AuctionContext';
 import { useAuth } from '../../context/AuthContext';
 import { adminAPI } from '../../services/api';
 import Navbar from '../../components/Navbar';
 import TeamBadge from '../../components/common/TeamBadge';
+import TeamDetailModal from '../../components/common/TeamDetailModal';
 import { getTeamAvatarConfig, getTeamTheme } from '../../utils/themeConfig';
-import { getImageUrl } from '../../utils/imageUrl';
-import { playerFallback } from '../../utils/playerFallback';
-
-const getCategoryStyles = (category) => {
-  switch (category) {
-    case 'Icon Category':
-      return 'bg-warningGold/50 border-warningGold/50';
-    case 'A Grade':
-      return 'bg-successGreen/50 border-successGreen/60';
-    case 'B Grade':
-      return 'bg-successGreen/50 border-successGreen/50';
-    case 'Emerging Youth':
-      return 'bg-warningGold/50 border-warningGold/50';
-    default:
-      return 'bg-cardBg/60 border-cardBorder';
-  }
-};
-
-
 
 /* 15 selectable franchise icons — names are persisted on the Team record
    and resolved back to components by themeConfig.getTeamAvatarConfig. */
@@ -548,31 +530,15 @@ export default function AdminTeams() {
           )}
         </div>
 
-        {/* Roster View Modal */}
-        {viewingRoster && (() => {
-          const modalTheme = getTeamTheme(viewingRoster);
-          return (
-            <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-              <div className={`glass-card w-full max-w-lg rounded-2xl p-6 border ${modalTheme.border} space-y-5 shadow-2xl flex flex-col bg-gradient-to-br ${modalTheme.gradient}`}>
-                <div className="flex justify-between items-center flex-shrink-0">
-                  <div>
-                    <h2 className="text-lg font-black text-white flex items-center gap-2">
-                      <span className="text-2xl">{viewingRoster.logo || '🏆'}</span>
-                      {viewingRoster.name} Roster
-                    </h2>
-                    <p className="text-xs text-secondaryText">Players acquired in the auction.</p>
-                  </div>
-                  <button onClick={() => setViewingRoster(null)} className="p-2 text-secondaryText hover:text-white hover:bg-surfaceHover rounded-lg transition">
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-
-                <RosterModalContent team={viewingRoster} />
-
-              </div>
-            </div>
-          );
-        })()}
+        {/* Team Detail Modal */}
+        {viewingRoster && (
+          <TeamDetailModal
+            team={viewingRoster}
+            onClose={() => setViewingRoster(null)}
+            players={players}
+            formatCurrency={formatCurrency}
+          />
+        )}
 
         {/* Edit Team Modal (SUPER_ADMIN ONLY) */}
         {isSuperAdmin && editingTeam && (
@@ -791,54 +757,6 @@ export default function AdminTeams() {
           </div>
         )}
       </main>
-    </div>
-  );
-}
-
-function RosterModalContent({ team }) {
-  const { players, formatCurrency } = useAuction();
-
-  const rosterPlayerIds = useMemo(() => {
-    if (!team.currentRoster || !Array.isArray(team.currentRoster)) return new Set();
-    return new Set(team.currentRoster.map(p => typeof p === 'string' ? p : (p._id || p.id)));
-  }, [team.currentRoster]);
-
-  const rosterPlayers = useMemo(() => {
-    if (!Array.isArray(players)) return [];
-    return players.filter(p => rosterPlayerIds.has(p._id || p.id));
-  }, [players, rosterPlayerIds]);
-
-  if (rosterPlayers.length === 0) {
-    return (
-      <div className="text-center py-12 text-mutedText text-sm flex flex-col items-center gap-3">
-        <Users className="w-10 h-10 text-mutedText" />
-        This team has not acquired any players yet.
-      </div>
-    );
-  }
-
-  return (
-    <div className="max-h-[60vh] overflow-y-auto space-y-2 pr-1 custom-scrollbar">
-      {rosterPlayers.map(player => {
-        const categoryStyle = getCategoryStyles(player.category);
-        return (<div key={player._id || player.id} className={`border p-3 rounded-xl flex items-center justify-between gap-3 ${categoryStyle}`}>
-          <div className="flex items-center gap-3 min-w-0">
-            <img
-              src={getImageUrl(player.imageUrl, playerFallback('emerald'))}
-              alt={player.name}
-              className="w-10 h-10 rounded-full object-cover border-2 border-borderStrong flex-shrink-0"
-            />
-            <div className="min-w-0">
-              <p className="font-bold text-sm text-white truncate">{player.name}</p>
-              <p className="text-xs text-secondaryText">{player.primaryPosition || 'N/A'}</p>
-            </div>
-          </div>
-          <div className="text-right flex-shrink-0">
-            <p className="font-mono font-bold text-sm text-neonGreen">{formatCurrency(player.finalPrice || player.soldPrice || 0)}</p>
-            <p className="text-[10px] text-mutedText">Sold Price</p>
-          </div>
-        </div>);
-      })}
     </div>
   );
 }

@@ -36,6 +36,10 @@ export default function PlayerCardCard({
   const theme = getCategoryTheme(player?.category, categories);
   const CategoryIcon = theme.IconComponent || Tag;
   const id = player?._id || player?.id;
+  // Category may arrive as a populated document object — never render it raw.
+  const categoryLabel = typeof player?.category === 'object'
+    ? (player.category?.name || 'Standard')
+    : (player.category || 'Standard');
 
   const positions = Array.isArray(player?.positions) ? player.positions : [];
   const primaryPos = player?.primaryPosition || positions[0] || 'ST';
@@ -74,7 +78,7 @@ export default function PlayerCardCard({
             className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border shadow-sm ${theme.customBadgeStyle ? '' : theme.badgeBg}`}
           >
             <CategoryIcon className="w-3 h-3" />
-            {player?.category || 'Standard'}
+            {categoryLabel}
           </span>
 
           <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${statusCfg.color}`}>
