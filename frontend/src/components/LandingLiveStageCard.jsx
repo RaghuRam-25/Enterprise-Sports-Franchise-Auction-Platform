@@ -274,11 +274,12 @@ export default function LandingLiveStageCard({
 
           {/* Player name — ONE row guaranteed: the font-size itself is fitted
               to the container, so long names can never wrap or push into the
-              neighbouring TIME LEFT column. */}
+              neighbouring TIME LEFT column. Block-level h2 keeps the full-form
+              position pinned BELOW the name on every screen size. */}
           <div ref={nameWrapRef} className="pt-2 w-full min-w-0 overflow-hidden">
             <h2
               ref={nameElRef}
-              className="inline-block whitespace-nowrap text-2xl sm:text-4xl font-black uppercase tracking-tight leading-tight"
+              className="block w-max max-w-full mx-auto whitespace-nowrap text-2xl sm:text-4xl font-black uppercase tracking-tight leading-tight"
             >
               <span className="text-white">{firstName} </span>
               <span style={{ color: accent }}>{lastName}</span>
