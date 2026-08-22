@@ -208,44 +208,21 @@ const TeamAvatar = ({ logo, profilePic, name, teamRef, winner = false, live = fa
       ? 'ring-2 ring-warningGold ring-offset-1 ring-offset-darkBg shadow-md shadow-warningGold/30'
       : `ring-1.5 ${theme.ring} ring-offset-1 ring-offset-darkBg shadow-sm`;
 
-  const imgSrc = logo || profilePic || '';
-  const isUrl = typeof imgSrc === 'string' && (imgSrc.startsWith('http') || imgSrc.startsWith('/') || imgSrc.startsWith('data:'));
-
-  const initials = getInitials(name || 'Team');
+  // Build the same team record TeamBadge expects so the ORIGINAL franchise
+  // crest (uploaded logo / themed shield icon) renders identically to the
+  // Teams pages. Explicit logo/profilePic props stay highest priority.
+  const refObj = typeof teamRef === 'object' && teamRef !== null ? teamRef : {};
+  const teamRecord = {
+    ...refObj,
+    name: refObj.name || name,
+    logoUrl: refObj.logoUrl || logo || profilePic || '',
+  };
 
   return (
     <div
-      className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center shrink-0 overflow-hidden transition-all duration-300 ${ringMap}`}
-      style={{
-        background: isUrl ? 'rgba(15, 23, 42, 0.9)' : undefined,
-      }}
+      className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center shrink-0 bg-darkBg/70 transition-all duration-300 ${ringMap}`}
     >
-      {isUrl ? (
-        <img
-          src={imgSrc}
-          alt={name}
-          className="w-full h-full object-cover rounded-full p-0.5"
-          onError={(e) => {
-            e.currentTarget.style.display = 'none';
-            if (e.currentTarget.nextSibling) e.currentTarget.nextSibling.style.display = 'flex';
-          }}
-        />
-      ) : (
-        <div className={`w-full h-full bg-gradient-to-tr ${theme.bgGradient} flex flex-col items-center justify-center text-white`}>
-          <Shield className="w-5 h-5 text-white/90 drop-shadow mb-0.5" />
-          <span className="text-[10px] font-mono font-black tracking-tight text-white/90 drop-shadow">
-            {initials}
-          </span>
-        </div>
-      )}
-      {isUrl && (
-        <div className={`w-full h-full bg-gradient-to-tr ${theme.bgGradient} hidden items-center justify-center text-white flex-col`}>
-          <Shield className="w-5 h-5 text-white/90 drop-shadow mb-0.5" />
-          <span className="text-[10px] font-mono font-black tracking-tight text-white/90 drop-shadow">
-            {initials}
-          </span>
-        </div>
-      )}
+      <TeamBadge team={teamRecord} size="sm" showName={false} className="scale-[1.15]" />
     </div>
   );
 };
@@ -258,8 +235,10 @@ function MatchCard({ match, index = 0, teams = [], onCardClick }) {
 
   const homeTeamName = match.homeTeam || match.teamAName || 'Team A';
   const awayTeamName = match.awayTeam || match.teamBName || 'Team B';
-  const homeTeamLogo = match.homeTeamLogo || match.teamALogo;
-  const awayTeamLogo = match.awayTeamLogo || match.teamBLogo;
+  const homeTeamLogo = match.homeTeamLogo || match.teamALogo
+    || (typeof match.teamA === 'object' && match.teamA !== null ? match.teamA.logoUrl : '');
+  const awayTeamLogo = match.awayTeamLogo || match.teamBLogo
+    || (typeof match.teamB === 'object' && match.teamB !== null ? match.teamB.logoUrl : '');
 
   // Lookup full team record from context or match payload
   const homeTeamRef = (typeof match.teamA === 'object' && match.teamA?._id ? match.teamA : null) ||
