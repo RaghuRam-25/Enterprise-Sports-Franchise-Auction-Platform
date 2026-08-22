@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { X, Users, Wallet, Coins, Filter } from 'lucide-react';
 import TeamBadge from './TeamBadge';
 import DetailsViewport from './DetailsViewport';
+import AutoFitText from './AutoFitText';
 import useModalScrollLock from '../../hooks/useModalScrollLock';
 import { getTeamTheme } from '../../utils/themeConfig';
 import { getImageUrl } from '../../utils/imageUrl';
@@ -133,10 +134,9 @@ export default function TeamDetailModal({ team, onClose, players = [], formatCur
             </div>
             <div className="min-w-0">
               <span className="text-[10px] font-bold text-slate-400 uppercase block tracking-wider">TOTAL PURSE</span>
-              <span className="text-xl sm:text-2xl font-black font-mono text-white block leading-tight">
+              <AutoFitText className="font-black font-mono text-white">
                 {fmtPrice(totalPurse)}
-              </span>
-              <span className="text-[10px] text-slate-500 font-mono block">Allocated Budget</span>
+              </AutoFitText>
             </div>
           </div>
 
@@ -148,22 +148,9 @@ export default function TeamDetailModal({ team, onClose, players = [], formatCur
               </div>
               <div className="min-w-0">
                 <span className="text-[10px] font-bold text-slate-400 uppercase block tracking-wider">AVAILABLE BALANCE</span>
-                <span className="text-xl sm:text-2xl font-black font-mono text-emerald-400 block leading-tight">
+                <AutoFitText className="font-black font-mono text-emerald-400">
                   {fmtPrice(purseLeft)}
-                </span>
-              </div>
-            </div>
-
-            {/* Progress Bar & Percentage */}
-            <div className="mt-3 space-y-1">
-              <div className="w-full bg-slate-950 rounded-full h-2 overflow-hidden border border-slate-800">
-                <div
-                  className="h-full rounded-full bg-[#58D20A]"
-                  style={{ width: `${Math.min(100, Math.max(0, pursePercentage))}%` }}
-                />
-              </div>
-              <div className="flex justify-end text-[10px] font-mono font-bold text-emerald-400">
-                {pursePercentage}%
+                </AutoFitText>
               </div>
             </div>
           </div>
@@ -178,7 +165,6 @@ export default function TeamDetailModal({ team, onClose, players = [], formatCur
               <span className="text-xl sm:text-2xl font-black font-mono text-white block leading-tight">
                 {acquiredCount} / {maxSquadSize}
               </span>
-              <span className="text-[10px] text-slate-400 font-mono block">{acquiredCount} Players Acquired</span>
             </div>
           </div>
 

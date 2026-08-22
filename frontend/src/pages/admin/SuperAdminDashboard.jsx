@@ -4,6 +4,7 @@ import { useAuction } from '../../context/AuctionContext';
 import { usePhase } from '../../context/PhaseContext';
 import TeamBadge from '../../components/common/TeamBadge';
 import TeamDetailModal from '../../components/common/TeamDetailModal';
+import AutoFitText from '../../components/common/AutoFitText';
 import { getTeamTheme } from '../../utils/themeConfig';
 import { Link } from 'react-router-dom';
 import api from '../../services/api';
@@ -470,7 +471,9 @@ export default function SuperAdminDashboard() {
           <div className="flex justify-between items-start">
             <div>
               <p className="text-xs font-semibold text-secondaryText uppercase">Total Event Purse</p>
-              <h3 className="text-xl font-black text-white mt-1">{formatCurrency(totalPurse)}</h3>
+              <div className="mt-1 max-w-[220px]">
+                <AutoFitText className="font-black font-mono text-white">{formatCurrency(totalPurse)}</AutoFitText>
+              </div>
             </div>
             <div className="p-3 bg-warningGold/10 text-warningGold rounded-xl border border-warningGold/20">
               <DollarSign className="w-6 h-6" />
@@ -593,13 +596,13 @@ export default function SuperAdminDashboard() {
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-neonGreen/[0.06] border border-neonGreen/20 group-hover:border-neonGreen/30 transition-colors min-w-[160px] sm:min-w-[180px]">
+                    <div className="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-neonGreen/[0.06] border border-neonGreen/20 group-hover:border-neonGreen/30 transition-colors">
                       <div className="p-1.5 rounded-md bg-neonGreen/15 text-neonGreen shrink-0">
                         <Coins className="w-3.5 h-3.5" />
                       </div>
-                      <div className="leading-tight min-w-0">
+                      <div className="leading-tight">
                         <p className="text-[9px] font-bold uppercase tracking-wider text-mutedText">Remaining Purse</p>
-                        <p className="font-mono text-sm font-bold text-neonGreen mt-0.5 truncate">{formatCurrency(team.remainingBudget)}</p>
+                        <p className="font-mono text-xs sm:text-sm font-bold text-neonGreen mt-0.5">{formatCurrency(team.remainingBudget)}</p>
                         <div className="mt-1 flex items-center gap-1.5">
                           <div className="h-0.5 w-16 bg-surfaceHover rounded-full overflow-hidden">
                             <div

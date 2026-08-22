@@ -6,6 +6,7 @@ import { useSocket } from '../../context/SocketContext';
 import api from '../../services/api';
 import TeamRosterList from './TeamRosterList';
 import TeamBadge from '../../components/common/TeamBadge';
+import AutoFitText from '../../components/common/AutoFitText';
 
 export default function ManagerMyTeamView() {
     const { user } = useAuth();
@@ -110,15 +111,21 @@ export default function ManagerMyTeamView() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="glass-card rounded-xl p-4 border border-cardBorder">
                     <span className="text-[10px] font-bold text-secondaryText uppercase">Initial Purse</span>
-                    <p className="text-xl font-black font-mono text-white mt-1">{formatCurrency(team.totalBudget)}</p>
+                    <div className="mt-1">
+                        <AutoFitText className="font-black font-mono text-white">{formatCurrency(team.totalBudget)}</AutoFitText>
+                    </div>
                 </div>
                 <div className="glass-card rounded-xl p-4 border border-cardBorder">
                     <span className="text-[10px] font-bold text-secondaryText uppercase">Total Spent</span>
-                    <p className="text-xl font-black font-mono text-urgentRedText mt-1">{formatCurrency(spentBudget)}</p>
+                    <div className="mt-1">
+                        <AutoFitText className="font-black font-mono text-urgentRedText">{formatCurrency(spentBudget)}</AutoFitText>
+                    </div>
                 </div>
                 <div className="glass-card rounded-xl p-4 border border-cardBorder">
                     <span className="text-[10px] font-bold text-secondaryText uppercase">Remaining Purse</span>
-                    <p className="text-xl font-black font-mono text-neonGreen mt-1">{formatCurrency(team.remainingBudget)}</p>
+                    <div className="mt-1">
+                        <AutoFitText className="font-black font-mono text-neonGreen">{formatCurrency(team.remainingBudget)}</AutoFitText>
+                    </div>
                 </div>
             </div>
             {players && team && <TeamRosterList players={players} team={team} />}
