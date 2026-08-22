@@ -1,3 +1,4 @@
+import { useLayoutEffect, useRef } from 'react';
 import { Tag, TrendingUp, Trophy, Target, Clock, Calendar, Zap } from 'lucide-react';
 import { getImageUrl } from '../utils/imageUrl';
 import { playerFallback } from '../utils/playerFallback';
@@ -14,6 +15,25 @@ const alpha = (hex, a) => {
   } catch {
     return `rgba(88,210,10,${a})`;
   }
+};
+
+// Position code → full-form name (mirrors the seeded Position collection).
+// A DB-driven `positions` prop takes precedence when provided.
+const POSITION_FULL_NAMES = {
+  GK: 'Goalkeeper',
+  CB: 'Centre Back',
+  LB: 'Left Back',
+  RB: 'Right Back',
+  CDM: 'Central Defensive Midfielder',
+  CMF: 'Central Midfielder',
+  CM: 'Central Midfielder',
+  CAM: 'Central Attacking Midfielder',
+  LM: 'Left Midfielder',
+  RM: 'Right Midfielder',
+  CF: 'Centre Forward',
+  LW: 'Left Winger',
+  RW: 'Right Winger',
+  ST: 'Striker',
 };
 
 /**
@@ -43,6 +63,7 @@ export default function LandingLiveStageCard({
   bidDisabled = false,
   podiumControls = null,
   categories = [],
+  positions = [],
   formatCurrency = (val) => val != null ? `Tk ${Number(val).toLocaleString('en-US')}` : 'Tk 0',
 }) {
   // ── Category-driven accent (DB-matched, same resolution as PlayerCardCard) ──
@@ -63,6 +84,54 @@ export default function LandingLiveStageCard({
       : position.toUpperCase().includes('DEF') || position.toUpperCase().includes('CB') ? 'CB'
       : position.toUpperCase().includes('GOAL') || position.toUpperCase().includes('GK') ? 'GK'
       : 'CM');
+
+  // Full-form position name — DB Position names win, then the canonical map,
+  // then whatever raw value the player document carries.
+  const fullPositionName = (() => {
+    const code = position.trim().toUpperCase();
+    const fromDb = Array.isArray(positions)
+      ? positions.find((p) => String(p.code || '').toUpperCase() === code)
+      : null;
+    return fromDb?.name || POSITION_FULL_NAMES[code] || position;
+  })();
+
+  // Player name always renders on a SINGLE line that NEVER overlaps neighbouring
+  // columns: the font-size itself is fitted to the container width (transform
+  // alone cannot do this — it doesn't affect layout, so the oversized text kept
+  // blowing out the grid column over the TIME LEFT tile).
+  const nameWrapRef = useRef(null);
+  const nameElRef = useRef(null);
+
+  useLayoutEffect(() => {
+    const wrap = nameWrapRef.current;
+    const el = nameElRef.current;
+    if (!wrap || !el) return undefined;
+
+    const fitName = () => {
+      // Measure at the class-defined base size first
+      el.style.fontSize = '';
+      const available = wrap.clientWidth;
+      const natural = el.scrollWidth;
+      if (!available || !natural) return;
+      if (natural > available) {
+        const base = parseFloat(window.getComputedStyle(el).fontSize) || 24;
+        // Floor at 11px so absurdly long names stay legible rather than vanish
+        el.style.fontSize = `${Math.max(11, Math.floor((base * available) / natural))}px`;
+      }
+    };
+
+    fitName();
+    if (document.fonts?.ready) {
+      document.fonts.ready.then(fitName).catch(() => {});
+    }
+    const ro = new ResizeObserver(fitName);
+    ro.observe(wrap);
+    window.addEventListener('resize', fitName);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', fitName);
+    };
+  }, [name]);
 
   // Jersey badge shows ONLY the numeric part — values like "MUSTAFIZUR 13"
   // or names stored in jerseyName collapse to just "13".
@@ -123,7 +192,7 @@ export default function LandingLiveStageCard({
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-center relative z-10">
 
         {/* ── Left Column: Hexagon Photo & Identity ── */}
-        <div className="lg:col-span-5 flex flex-col items-center text-center space-y-4">
+        <div className="lg:col-span-5 min-w-0 flex flex-col items-center text-center space-y-4">
 
           {/* Category badge — above the picture */}
           {player?.category && (
@@ -203,15 +272,20 @@ export default function LandingLiveStageCard({
             </div>
           </div>
 
-          {/* Player name */}
-          <div className="pt-2">
-            <h2 className="text-2xl sm:text-4xl font-black uppercase tracking-tight leading-tight">
+          {/* Player name — ONE row guaranteed: the font-size itself is fitted
+              to the container, so long names can never wrap or push into the
+              neighbouring TIME LEFT column. */}
+          <div ref={nameWrapRef} className="pt-2 w-full min-w-0 overflow-hidden">
+            <h2
+              ref={nameElRef}
+              className="inline-block whitespace-nowrap text-2xl sm:text-4xl font-black uppercase tracking-tight leading-tight"
+            >
               <span className="text-white">{firstName} </span>
               <span style={{ color: accent }}>{lastName}</span>
             </h2>
             <div className="inline-block mt-1">
               <span className="text-xs font-mono font-bold uppercase tracking-widest block" style={{ color: accent }}>
-                {position}
+                {fullPositionName}
               </span>
               <div className="w-12 h-0.5 mx-auto mt-1 rounded-full" style={{ background: accent }} />
             </div>
@@ -267,7 +341,7 @@ export default function LandingLiveStageCard({
         </div>
 
         {/* ── Right Column: Bidding Metric Cards ── */}
-        <div className="lg:col-span-7 space-y-3">
+        <div className="lg:col-span-7 min-w-0 space-y-3">
 
           {/* BASE PRICE */}
           <div className="rounded-2xl p-3.5 flex items-center justify-between shadow-md" style={tileStyle}>

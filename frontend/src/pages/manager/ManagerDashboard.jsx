@@ -20,6 +20,7 @@ export const ManagerDashboard = () => {
   const {
     teams = [],
     categories = [],
+    positions = [],
     podiumPlayer,
     currentBid = 0,
     highestBidder,
@@ -428,6 +429,7 @@ export const ManagerDashboard = () => {
                 : (isBidding ? 'Placing Bid…' : bidButtonLabel)}
               bidDisabled={isBlindMode ? !blindReady : (bidButtonDisabled || isBidding)}
               categories={categories}
+              positions={positions}
               formatCurrency={formatCurrency}
             />
           )}

@@ -99,6 +99,7 @@ export default function LandingPage() {
     players,
     teams: dbTeams,
     categories,
+    positions,
     podiumPlayer,
     currentBid,
     highestBidder,
@@ -536,6 +537,7 @@ export default function LandingPage() {
                 <LandingLiveStageCard
                   player={podiumPlayer}
                   categories={categories}
+                  positions={positions}
                   currentBid={currentBid}
                   highestBidder={highestBidder}
                   timerRemaining={timerRemaining}
