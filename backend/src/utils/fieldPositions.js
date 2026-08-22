@@ -21,7 +21,8 @@ export const FIELD_COORDS = {
   LB: { fieldX: 28, fieldY: 16 },  // Left Back
   RB: { fieldX: 28, fieldY: 84 },  // Right Back
   CDM: { fieldX: 40, fieldY: 50 }, // Defensive Midfielder
-  CM: { fieldX: 52, fieldY: 50 },  // Central Midfielder
+  CMF: { fieldX: 52, fieldY: 50 }, // Central Midfielder
+  CM: { fieldX: 52, fieldY: 50 },  // Central Midfielder (legacy code)
   CAM: { fieldX: 64, fieldY: 50 }, // Attacking Midfielder
   LM: { fieldX: 55, fieldY: 18 },  // Left Midfielder
   RM: { fieldX: 55, fieldY: 82 },  // Right Midfielder

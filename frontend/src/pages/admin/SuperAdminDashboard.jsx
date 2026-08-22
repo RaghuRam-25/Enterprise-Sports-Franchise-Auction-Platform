@@ -4,6 +4,7 @@ import { useAuction } from '../../context/AuctionContext';
 import { usePhase } from '../../context/PhaseContext';
 import { Link } from 'react-router-dom';
 import api from '../../services/api';
+import { isoToDhakaPicker, toDhakaIso, formatDhakaDateTime } from '../../utils/dhakaTime';
 
 // Visual label per phase for the control stepper
 const PHASE_META = {
@@ -51,13 +52,9 @@ export default function SuperAdminDashboard() {
   });
   const [savingSchedule, setSavingSchedule] = useState(false);
 
-  const formatForPicker = (isoStr) => {
-    if (!isoStr) return '';
-    const d = new Date(isoStr);
-    if (isNaN(d.getTime())) return '';
-    const pad = (n) => String(n).padStart(2, '0');
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-  };
+  // datetime-local pickers display Asia/Dhaka wall-clock; stored values stay
+  // absolute UTC ISO instants (converted at the edges via dhakaTime helpers).
+  const formatForPicker = (isoStr) => isoToDhakaPicker(isoStr);
 
   useEffect(() => {
     setSchedules({
@@ -74,12 +71,12 @@ export default function SuperAdminDashboard() {
     setSavingSchedule(true);
     try {
       const payload = {
-        registrationStartTime: schedules.registrationStartTime ? new Date(schedules.registrationStartTime).toISOString() : null,
-        registrationEndTime: schedules.registrationEndTime ? new Date(schedules.registrationEndTime).toISOString() : null,
-        auctionStartTime: schedules.auctionStartTime ? new Date(schedules.auctionStartTime).toISOString() : null,
-        auctionEndTime: schedules.auctionEndTime ? new Date(schedules.auctionEndTime).toISOString() : null,
-        tournamentStartTime: schedules.tournamentStartTime ? new Date(schedules.tournamentStartTime).toISOString() : null,
-        tournamentEndTime: schedules.tournamentEndTime ? new Date(schedules.tournamentEndTime).toISOString() : null,
+        registrationStartTime: toDhakaIso(schedules.registrationStartTime),
+        registrationEndTime: toDhakaIso(schedules.registrationEndTime),
+        auctionStartTime: toDhakaIso(schedules.auctionStartTime),
+        auctionEndTime: toDhakaIso(schedules.auctionEndTime),
+        tournamentStartTime: toDhakaIso(schedules.tournamentStartTime),
+        tournamentEndTime: toDhakaIso(schedules.tournamentEndTime),
       };
       const res = await api.patch('/phase/schedule', payload);
       triggerToast(res?.data?.message || res?.message || 'Event schedule updated successfully.', 'success');
@@ -312,7 +309,14 @@ export default function SuperAdminDashboard() {
               <CalendarClock className="w-5 h-5 text-warningGold flex-shrink-0" />
               <div>
                 <h4 className="text-xs font-black text-white uppercase tracking-wider">Multi-Phase Event Schedule Manager</h4>
-                <p className="text-[11px] text-mutedText">Set phase start & end timestamps to drive automatic public countdowns</p>
+                <p className="text-[11px] text-mutedText">
+                  All times in <span className="text-warningGold font-bold">Asia/Dhaka (UTC+6)</span> · Registration opens/closes automatically at these times
+                </p>
+                {registrationStartTime && (
+                  <p className="text-[10px] text-neonGreen mt-0.5">
+                    Current: opens {formatDhakaDateTime(registrationStartTime)}{registrationEndTime ? ` · closes ${formatDhakaDateTime(registrationEndTime)}` : ''}
+                  </p>
+                )}
               </div>
             </div>
             <button

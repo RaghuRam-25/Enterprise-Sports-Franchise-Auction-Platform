@@ -10,7 +10,11 @@ const positionSchema = new mongoose.Schema({
   // correct at any screen size. Default is midfield-center until an admin (or
   // the seed) assigns a position-specific spot.
   fieldX: { type: Number, default: 50, min: 0, max: 100 },
-  fieldY: { type: Number, default: 50, min: 0, max: 100 }
+  fieldY: { type: Number, default: 50, min: 0, max: 100 },
+  // Lucide icon name chosen by Super Admin for the position card (e.g.
+  // 'Hand', 'Shield'). Empty → frontend falls back to its automatic
+  // code-based football icon mapping.
+  icon: { type: String, default: '', maxlength: 30 }
 }, { timestamps: true });
 
 export const Position = mongoose.model('Position', positionSchema);

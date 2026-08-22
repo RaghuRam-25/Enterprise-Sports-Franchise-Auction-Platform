@@ -175,17 +175,12 @@ export default function LeagueTable() {
               </div>
               <div className="min-w-0">
                 <h1 className="font-heading font-black text-lg tracking-wide text-white leading-tight">League Table</h1>
-                <p className="text-[10px] text-mutedText truncate">{competitionName} &bull; {sessionName}</p>
               </div>
             </div>
             <div className="flex items-center gap-2 shrink-0">
               {manualRows && (
                 <span className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-warningGold/15 text-warningGold border border-warningGold/30">Manual</span>
               )}
-              <span className="hidden sm:inline text-[10px] font-bold uppercase tracking-widest text-mutedText">{teams.length} Franchises</span>
-              <button onClick={fetchMatches} className="btn-secondary p-2.5 rounded-xl transition shrink-0" title="Refresh Table">
-              <RefreshCw className="w-4 h-4" />
-            </button>
             </div>
           </div>
 
@@ -260,13 +255,6 @@ export default function LeagueTable() {
             </div>
           )}
         </section>
-
-        {/* Legend */}
-        <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[10px] font-bold text-mutedText uppercase tracking-widest pb-2">
-          <span className="flex items-center gap-1.5"><ArrowUp className="w-3 h-3 text-neonGreen" /> Points = 3 win / 1 draw</span>
-          <span className="flex items-center gap-1.5"><Shield className="w-3 h-3 text-neonGreen" /> Top 3 shaded</span>
-          {maxPoints > 0 && <span className="flex items-center gap-1.5"><Trophy className="w-3 h-3 text-warningGold" /> Max {maxPoints} pts</span>}
-        </div>
       </main>
     </div>
   );

@@ -683,7 +683,7 @@ export const AuctionProvider = ({ children }) => {
   };
   const addPosition = async (pos) => {
     try {
-      const res = await api.post('/admin/positions', { code: pos.code, name: pos.name });
+      const res = await api.post('/admin/positions', { code: pos.code, name: pos.name, icon: pos.icon || '' });
       if (res.data?.data) setPositions(prev => [...prev, { ...res.data.data, id: res.data.data._id }]);
     } catch (err) { triggerToast(err.response?.data?.message || 'Failed to add position', 'error'); }
   };

@@ -633,7 +633,14 @@ export default function LandingPage() {
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {/* Dynamic grid — columns always equal the visible team count
+              (1→100%, 2→50%+50%, 3→33.33%×3, 4→25%×4) so the row fills the
+              full container width with no empty column. Mobile stacks to a
+              single column, tablet uses two. */}
+          <div
+            className="grid grid-cols-1 sm:grid-cols-2 gap-6 lg:[grid-template-columns:repeat(var(--team-cols),minmax(0,1fr))]"
+            style={{ '--team-cols': String(Math.min(4, Math.max(1, teams.slice(0, 4).length))) }}
+          >
             {teams.slice(0, 4).map((team, idx) => {
               const theme = getTeamTheme(team);
               // Count is cross-checked against the actual roster array so a
@@ -658,7 +665,7 @@ export default function LandingPage() {
                     '--team-accent': accentHex,
                     boxShadow: `0 0 0 1px ${accentHex}1a`,
                   }}
-                  className={`bg-[#0c0e12] ${theme.border} ${theme.ring} rounded-2xl p-5 space-y-4 hover:shadow-2xl transition-all cursor-pointer group hover:-translate-y-1 relative overflow-hidden`}
+                  className={`h-full bg-[#0c0e12] ${theme.border} ${theme.ring} rounded-2xl p-5 space-y-4 hover:shadow-2xl transition-all cursor-pointer group hover:-translate-y-1 relative overflow-hidden`}
                 >
                   {/* Team-color ambient glow */}
                   <div

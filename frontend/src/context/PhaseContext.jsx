@@ -1,6 +1,7 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { useSocket } from './SocketContext';
 import api from '../services/api';
+import { msUntil } from '../utils/dhakaTime';
 
 /*
  * ── PhaseContext ──────────────────────────────────────────────────────────────
@@ -106,6 +107,59 @@ export const PhaseProvider = ({ children }) => {
   }, [socket, applyPhasePayload]);
 
   // Dynamic calculation for the next active schedule milestone
+  // ── Automatic Registration Window (live, ticking) ───────────────────────────
+  // Mirrors the backend's server-side rule: a configured start/end window is
+  // authoritative — before start → CLOSED, at start → OPEN, after end → CLOSED.
+  // A 1s ticker flips the state the moment times are reached without any
+  // refresh; the backend still re-validates on every actual submission.
+  const [nowTs, setNowTs] = useState(Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNowTs(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  const registrationWindow = useMemo(() => {
+    const hasWindow = Boolean(registrationStartTime || registrationEndTime);
+    const startMs = registrationStartTime ? new Date(registrationStartTime).getTime() : null;
+    const endMs = registrationEndTime ? new Date(registrationEndTime).getTime() : null;
+    const validStart = startMs != null && !isNaN(startMs);
+    const validEnd = endMs != null && !isNaN(endMs);
+
+    let state;
+    let withinWindow;
+    if (!validStart && !validEnd) {
+      state = 'NOT_CONFIGURED';
+      withinWindow = true;
+    } else if (validStart && nowTs < startMs) {
+      state = 'BEFORE_START';
+      withinWindow = false;
+    } else if (validEnd && nowTs > endMs) {
+      state = 'AFTER_END';
+      withinWindow = false;
+    } else {
+      state = 'OPEN';
+      withinWindow = true;
+    }
+
+    return {
+      hasWindow,
+      state,
+      withinWindow,
+      startTime: registrationStartTime,
+      endTime: registrationEndTime,
+      msUntilStart: msUntil(registrationStartTime, nowTs),
+      msUntilEnd: msUntil(registrationEndTime, nowTs),
+    };
+  }, [registrationStartTime, registrationEndTime, nowTs]);
+
+  // Open ⇔ the scheduled window allows (PRD pure time rule when configured);
+  // with no window set, legacy phase behaviour applies (SETUP/REGISTRATION).
+  const isRegistrationOpen = useMemo(() => (
+    registrationWindow.hasWindow
+      ? registrationWindow.withinWindow
+      : ['SETUP', 'REGISTRATION'].includes(phase)
+  ), [phase, registrationWindow]);
+
   const getActiveScheduleMilestone = useCallback(() => {
     const now = Date.now();
     const milestones = [
@@ -142,7 +196,8 @@ export const PhaseProvider = ({ children }) => {
     tournamentStartTime,
     tournamentEndTime,
     getActiveScheduleMilestone,
-    isRegistrationOpen: phase === 'REGISTRATION',
+    registrationWindow,
+    isRegistrationOpen,
     isAuctionActive: phase === 'AUCTION',
     isTournamentActive: phase === 'TOURNAMENT',
     phaseIndex: phase ? PHASES.indexOf(phase) : -1,

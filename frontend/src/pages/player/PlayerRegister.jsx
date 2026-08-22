@@ -1,14 +1,32 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { UserPlus, CheckCircle2, FileImage, Lock } from 'lucide-react';
+import {
+  UserPlus, CheckCircle2, FileImage, Lock, Check, User, Mail, IdCard,
+  Calendar, Shirt, Ruler, Hash, KeyRound
+} from 'lucide-react';
 import { useAuction } from '../../context/AuctionContext';
 import { useAuth } from '../../context/AuthContext';
+import { usePhase } from '../../context/PhaseContext';
 import Navbar from '../../components/Navbar';
+import { formatDhakaDateTime, formatCountdown } from '../../utils/dhakaTime';
+import { getPositionIcon } from '../../utils/positionIcons';
 
 export default function PlayerRegister() {
   const { user } = useAuth();
-  const { sessions, positions, isRegistrationFrozen, setPlayers, refetchPlayers, triggerToast } = useAuction();
+  const { sessions, positions, setPlayers, refetchPlayers, triggerToast } = useAuction();
+  const { phase, registrationWindow } = usePhase();
   const navigate = useNavigate();
+
+  // ── AUTOMATIC REGISTRATION WINDOW (mirrors the server-side rule) ────────────
+  // A configured window is fully authoritative: before startTime → closed, at
+  // startTime → opens automatically, after endTime → closes. Without a window,
+  // legacy phase behaviour applies. The ticking context flips this live with
+  // no refresh; the backend re-validates on submit either way.
+  const isRegistrationFrozen = !(
+    registrationWindow.hasWindow
+      ? registrationWindow.withinWindow
+      : ['SETUP', 'REGISTRATION'].includes(phase)
+  );
 
   React.useEffect(() => {
     if (user) {
@@ -48,11 +66,6 @@ export default function PlayerRegister() {
   const [selectedPositions, setSelectedPositions] = useState(['ST']);
   const [primaryPosId, setPrimaryPosId] = useState('ST');
 
-  // Image Upload & WebP Optimization State (PRD Section 4.A)
-  const [imageFile, setImageFile] = useState(null);
-  const [imagePreview, setImagePreview] = useState(null);
-  const [optimizationInfo, setOptimizationInfo] = useState(null);
-
   const handlePositionToggle = (posId) => {
     if (selectedPositions.includes(posId)) {
       const next = selectedPositions.filter(p => p !== posId);
@@ -66,6 +79,11 @@ export default function PlayerRegister() {
       if (!primaryPosId) setPrimaryPosId(posId);
     }
   };
+
+  // Image Upload & WebP Optimization State (PRD Section 4.A)
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [optimizationInfo, setOptimizationInfo] = useState(null);
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -90,7 +108,12 @@ export default function PlayerRegister() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (isRegistrationFrozen) {
-      triggerToast('Registration is currently frozen by Super Admin.', 'error');
+      triggerToast(
+        registrationWindow.state === 'BEFORE_START'
+          ? `Registration opens ${formatDhakaDateTime(registrationWindow.startTime)} (Asia/Dhaka).`
+          : 'Registration is currently closed.',
+        'error'
+      );
       return;
     }
 
@@ -185,14 +208,36 @@ export default function PlayerRegister() {
             <p className="text-xs text-secondaryText">Enterprise Franchise Sports Draft Onboarding</p>
           </div>
 
-          {/* Registration Freeze Alert */}
+          {/* Automatic Registration Window Status */}
           {isRegistrationFrozen && (
             <div className="p-4 bg-urgentRed/10 border border-urgentRed/30 text-urgentRedText text-xs rounded-xl flex items-center gap-3">
               <Lock className="w-5 h-5 text-urgentRedText flex-shrink-0" />
               <div>
-                <strong className="block font-bold">Registration Frozen:</strong>
-                Super Admin has locked registrations for the upcoming auction. Form submission is disabled.
+                <strong className="block font-bold">
+                  {registrationWindow.state === 'BEFORE_START' ? 'Registration Not Open Yet:' : 'Registration Closed:'}
+                </strong>
+                {registrationWindow.state === 'BEFORE_START' ? (
+                  <>
+                    Opens {formatDhakaDateTime(registrationWindow.startTime)} (Asia/Dhaka)
+                    {registrationWindow.msUntilStart > 0 && <> — in <span className="font-mono font-bold">{formatCountdown(registrationWindow.msUntilStart)}</span></>}.
+                    {' '}The form will activate automatically — no action needed.
+                  </>
+                ) : registrationWindow.state === 'AFTER_END' ? (
+                  <>Registration ended {formatDhakaDateTime(registrationWindow.endTime)} (Asia/Dhaka).</>
+                ) : (
+                  <>Super Admin has locked registrations for the upcoming auction. Form submission is disabled.</>
+                )}
               </div>
+            </div>
+          )}
+
+          {!isRegistrationFrozen && registrationWindow.hasWindow && registrationWindow.endTime && (
+            <div className="p-3 bg-neonGreen/10 border border-neonGreen/30 text-neonGreen text-xs rounded-xl flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
+              <span>
+                Registration is open until {formatDhakaDateTime(registrationWindow.endTime)} (Asia/Dhaka)
+                {registrationWindow.msUntilEnd > 0 && <> — closes in <span className="font-mono font-bold">{formatCountdown(registrationWindow.msUntilEnd)}</span></>}.
+              </span>
             </div>
           )}
 
@@ -201,7 +246,9 @@ export default function PlayerRegister() {
             {/* Name & Email */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-secondaryText mb-1">Full Name*</label>
+                <label className="flex items-center gap-1.5 text-xs font-semibold text-secondaryText mb-1">
+                  <User className="w-3.5 h-3.5 text-neonGreen" /> Full Name*
+                </label>
                 <input
                   type="text"
                   value={name}
@@ -214,7 +261,9 @@ export default function PlayerRegister() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-secondaryText mb-1">Gmail/Email*</label>
+                <label className="flex items-center gap-1.5 text-xs font-semibold text-secondaryText mb-1">
+                  <Mail className="w-3.5 h-3.5 text-neonGreen" /> Gmail/Email*
+                </label>
                 <input
                   type="email"
                   value={email}
@@ -230,7 +279,9 @@ export default function PlayerRegister() {
             {/* Student ID & Academic Session */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-secondaryText mb-1">Student ID *</label>
+                <label className="flex items-center gap-1.5 text-xs font-semibold text-secondaryText mb-1">
+                  <IdCard className="w-3.5 h-3.5 text-neonGreen" /> Student ID *
+                </label>
                 <input
                   type="text"
                   value={studentId}
@@ -243,7 +294,9 @@ export default function PlayerRegister() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-secondaryText mb-1">Session *</label>
+                <label className="flex items-center gap-1.5 text-xs font-semibold text-secondaryText mb-1">
+                  <Calendar className="w-3.5 h-3.5 text-neonGreen" /> Session *
+                </label>
                 <select
                   value={selectedSession}
                   onChange={e => setSelectedSession(e.target.value)}
@@ -260,8 +313,8 @@ export default function PlayerRegister() {
             {/* Jersey Name, T-Shirt Size & T-Shirt Number */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-secondaryText mb-1">
-                  Jersey Name*
+                <label className="flex items-center gap-1.5 text-xs font-semibold text-secondaryText mb-1">
+                  <Shirt className="w-3.5 h-3.5 text-neonGreen" /> Jersey Name*
                 </label>
                 <input
                   type="text"
@@ -277,7 +330,9 @@ export default function PlayerRegister() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-secondaryText mb-1">T-Shirt Size *</label>
+                <label className="flex items-center gap-1.5 text-xs font-semibold text-secondaryText mb-1">
+                  <Ruler className="w-3.5 h-3.5 text-neonGreen" /> T-Shirt Size *
+                </label>
                 <select
                   value={tShirtSize}
                   onChange={e => setTShirtSize(e.target.value)}
@@ -293,7 +348,9 @@ export default function PlayerRegister() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-secondaryText mb-1">T-Shirt Number *</label>
+                <label className="flex items-center gap-1.5 text-xs font-semibold text-secondaryText mb-1">
+                  <Hash className="w-3.5 h-3.5 text-neonGreen" /> T-Shirt Number *
+                </label>
                 <input
                   type="text"
                   pattern="[0-9]*"
@@ -307,34 +364,50 @@ export default function PlayerRegister() {
               </div>
             </div>
 
-            {/* Positions Multi-Select with Primary Flag (PRD Section 2.B) */}
-            <div className="space-y-3">
-              <label className="block text-xs font-semibold text-secondaryText">
-                Positions*
+            {/* Positions — dark + neon-lime football card grid (mirrors the
+                Super Admin position setup; multi-select + primary preserved) */}
+            <div className="space-y-4">
+              <label className="block text-center text-xs font-semibold text-secondaryText tracking-wide">
+                Positions *
               </label>
 
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2.5">
                 {availablePositions.map(p => {
                   const posKey = p.code || p.id || p._id;
                   const isSelected = selectedPositions.includes(posKey);
                   const isPrimary = primaryPosId === posKey;
+                  const PosIcon = getPositionIcon(p);
 
                   return (
                     <div
                       key={posKey}
                       onClick={() => !isRegistrationFrozen && handlePositionToggle(posKey)}
-                      className={`p-3 rounded-xl border text-xs cursor-pointer transition flex flex-col justify-between ${
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => { if ((e.key === 'Enter' || e.key === ' ') && !isRegistrationFrozen) handlePositionToggle(posKey); }}
+                      className={`relative rounded-lg border px-2 py-3 flex flex-col items-center gap-1 transition-all duration-200 select-none ${
                         isSelected
-                          ? 'bg-successGreen/20 border-neonGreen/50 text-white'
-                          : 'bg-cardBg/60 border-cardBorder text-secondaryText hover:border-borderStrong'
-                      }`}
+                          ? 'border-neonGreen bg-neonGreen/[0.05] shadow-[0_0_14px_rgba(88,210,10,0.22)]'
+                          : 'border-[#262b26] bg-[#060806] hover:border-[#39413a]'
+                      } ${isRegistrationFrozen ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
                     >
-                      <div className="flex justify-between items-center">
-                        <span className="font-mono font-bold text-neonGreen">{p.code}</span>
-                        {isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-neonGreen" />}
-                      </div>
-                      <span className="font-semibold mt-1">{p.name}</span>
+                      {/* Selected checkmark badge */}
+                      {isSelected && (
+                        <span className="absolute top-1 right-1 w-3.5 h-3.5 rounded-full bg-neonGreen flex items-center justify-center shadow-[0_0_8px_rgba(88,210,10,0.5)]">
+                          <Check className="w-2 h-2 text-darkBg" strokeWidth={4} />
+                        </span>
+                      )}
 
+                      <PosIcon className="w-5 h-5 text-neonGreen" strokeWidth={1.6} />
+
+                      <span className="font-mono font-black text-neonGreen text-xs tracking-[0.12em] leading-none">
+                        {p.code}
+                      </span>
+                      <span className="text-white text-[9px] font-semibold text-center leading-tight">
+                        {p.name}
+                      </span>
+
+                      {/* Primary designation — only on selected cards */}
                       {isSelected && (
                         <button
                           type="button"
@@ -342,11 +415,11 @@ export default function PlayerRegister() {
                             e.stopPropagation();
                             setPrimaryPosId(posKey);
                           }}
-                          className={`mt-2 py-0.5 px-2 rounded text-[10px] font-bold text-center transition ${
-                            isPrimary ? 'bg-neonGreen text-darkBg' : 'bg-surfaceHover text-secondaryText hover:text-white'
+                          className={`mt-0.5 py-0.5 px-1.5 rounded-full text-[8px] font-bold tracking-wide transition ${
+                            isPrimary ? 'bg-neonGreen text-darkBg shadow-[0_0_8px_rgba(88,210,10,0.45)]' : 'bg-surfaceHover text-secondaryText hover:text-white'
                           }`}
                         >
-                          {isPrimary ? '★ Primary Position' : 'Set as Primary'}
+                          {isPrimary ? '★ PRIMARY' : 'SET PRIMARY'}
                         </button>
                       )}
                     </div>
@@ -406,7 +479,9 @@ export default function PlayerRegister() {
             {/* Password & Confirm Password */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-secondaryText mb-1">Password *</label>
+                <label className="flex items-center gap-1.5 text-xs font-semibold text-secondaryText mb-1">
+                  <KeyRound className="w-3.5 h-3.5 text-neonGreen" /> Password *
+                </label>
                 <input
                   type="password"
                   value={password}
@@ -419,7 +494,9 @@ export default function PlayerRegister() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-secondaryText mb-1">Confirm Password *</label>
+                <label className="flex items-center gap-1.5 text-xs font-semibold text-secondaryText mb-1">
+                  <Lock className="w-3.5 h-3.5 text-neonGreen" /> Confirm Password *
+                </label>
                 <input
                   type="password"
                   value={confirmPassword}

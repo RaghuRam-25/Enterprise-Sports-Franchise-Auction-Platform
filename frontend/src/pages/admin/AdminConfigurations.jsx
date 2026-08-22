@@ -2,6 +2,7 @@ import  { useState } from 'react';
 import {  useParams } from 'react-router-dom';
 import {  Plus, Trash2, Calculator, PenLine, X, Save, Medal, Diamond, Coins, Sparkle, BadgeCheck, StarHalf, CircleDollarSign, Banknote, Pentagon, Hexagon, Octagon, Triangle, Square, CircleDot, Circle } from 'lucide-react';
 import { useAuction } from '../../context/AuctionContext';
+import { POSITION_ICON_OPTIONS, POSITION_ICON_MAP, getPositionIcon } from '../../utils/positionIcons';
 
 /* Tier/rank-flavoured category icons (Diamond/Gold-style) — deliberately a
    different set from the Team icons so the two never collide. */
@@ -50,6 +51,8 @@ export default function AdminConfigurations() {
   const [newSessionName, setNewSessionName] = useState('');
   const [newPosCode, setNewPosCode] = useState('');
   const [newPosName, setNewPosName] = useState('');
+  const [newPosIcon, setNewPosIcon] = useState('');
+  const [posIconMenuOpen, setPosIconMenuOpen] = useState(false);
   
   const [newCatName, setNewCatName] = useState('');
   const [newCatPriority, setNewCatPriority] = useState(1);
@@ -79,9 +82,10 @@ export default function AdminConfigurations() {
   const handleAddPosition = (e) => {
     e.preventDefault();
     if (!newPosCode.trim() || !newPosName.trim()) return;
-    addPosition({ code: newPosCode.toUpperCase(), name: newPosName });
+    addPosition({ code: newPosCode.toUpperCase(), name: newPosName, icon: newPosIcon });
     setNewPosCode('');
     setNewPosName('');
+    setNewPosIcon('');
     triggerToast(`Added position: ${newPosCode.toUpperCase()}`, 'success');
   };
 
@@ -180,14 +184,14 @@ export default function AdminConfigurations() {
           </div>
         )}
 
-        {/* 2. Sports Positions Tab */}
+        {/* 2. Sports Positions Tab — dark + neon-lime football card grid */}
         {activeTab === 'positions' && (
           <div className="space-y-6">
             <h3 className="text-sm font-bold uppercase tracking-wider text-secondaryText">
               Manage Sports Positions (CRUD)
             </h3>
 
-            <form onSubmit={handleAddPosition} className="grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-lg">
+            <form onSubmit={handleAddPosition} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 max-w-2xl">
               <input
                 type="text"
                 placeholder="Code (e.g. ST)"
@@ -202,6 +206,53 @@ export default function AdminConfigurations() {
                 onChange={e => setNewPosName(e.target.value)}
                 className="glass-input rounded-xl px-4 py-2 text-xs"
               />
+
+              {/* Icon picker — optional; auto-maps from code when left empty */}
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setPosIconMenuOpen(prev => !prev)}
+                  className="glass-input w-full rounded-xl px-4 py-2 text-xs flex items-center justify-between gap-2 hover:border-borderStrong transition"
+                  title={newPosIcon ? `Icon: ${newPosIcon}` : 'Icon: auto (by code)'}
+                >
+                  <span className="flex items-center gap-1.5 text-primaryText font-semibold">
+                    {(() => {
+                      const Selected = newPosIcon
+                        ? (POSITION_ICON_OPTIONS.find(o => o.name === newPosIcon) || POSITION_ICON_OPTIONS[0]).Icon
+                        : POSITION_ICON_MAP.Volleyball;
+                      return <Selected className="w-4 h-4" />;
+                    })()}
+                    {newPosIcon || 'Auto Icon'}
+                  </span>
+                </button>
+                {posIconMenuOpen && (
+                  <>
+                    <div className="fixed inset-0 z-20" onClick={() => setPosIconMenuOpen(false)} />
+                    <div className="absolute z-30 top-full mt-1 left-0 bg-darkBg border border-borderStrong rounded-xl p-2 shadow-2xl flex flex-col gap-1 max-h-[280px] overflow-y-auto custom-scrollbar min-w-[140px]">
+                      <button
+                        type="button"
+                        onClick={() => { setNewPosIcon(''); setPosIconMenuOpen(false); }}
+                        className={`h-8 px-2 rounded-md flex items-center gap-2 text-[11px] font-semibold whitespace-nowrap transition ${!newPosIcon ? 'bg-warningGold text-darkBg shadow-md' : 'text-secondaryText hover:text-white hover:bg-surfaceHover'}`}
+                      >
+                        Auto (by code)
+                      </button>
+                      {POSITION_ICON_OPTIONS.map(({ name: iconName, label, Icon }) => (
+                        <button
+                          key={iconName}
+                          type="button"
+                          onClick={() => { setNewPosIcon(iconName); setPosIconMenuOpen(false); }}
+                          title={label}
+                          className={`h-8 px-2 rounded-md flex items-center gap-2 text-[11px] font-semibold whitespace-nowrap transition ${newPosIcon === iconName ? 'bg-warningGold text-darkBg shadow-md' : 'text-secondaryText hover:text-white hover:bg-surfaceHover'}`}
+                        >
+                          <Icon className="w-4 h-4" />
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+
               <button
                 type="submit"
                 className="btn-primary"
@@ -210,26 +261,37 @@ export default function AdminConfigurations() {
               </button>
             </form>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 pt-4">
-              {positions.map(p => (
-                <div key={p.id} className="bg-cardBg/60 border border-cardBorder p-4 rounded-xl flex items-center justify-between">
-                  <div>
-                    <span className="font-mono text-xs font-bold text-neonGreen bg-neonGreen/10 px-2 py-0.5 rounded border border-neonGreen/20">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 pt-4">
+              {positions.map(p => {
+                const PosIcon = getPositionIcon(p);
+                return (
+                  <div
+                    key={p.id}
+                    className="relative rounded-xl border border-[#262b26] bg-[#060806] px-3 py-4 flex flex-col items-center gap-1.5 transition hover:border-[#39413a] group"
+                  >
+                    {/* Delete — subtle, top-right, appears on hover */}
+                    <button
+                      onClick={() => {
+                        deletePosition(p.id);
+                        triggerToast(`Deleted position ${p.code}`, 'info');
+                      }}
+                      title={`Delete ${p.code}`}
+                      className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full flex items-center justify-center text-mutedText/60 hover:text-rose-400 hover:bg-rose-500/10 opacity-0 group-hover:opacity-100 focus:opacity-100 transition"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </button>
+
+                    <PosIcon className="w-7 h-7 text-neonGreen" strokeWidth={1.5} />
+
+                    <span className="font-mono font-black text-neonGreen text-sm tracking-[0.14em] leading-none">
                       {p.code}
                     </span>
-                    <p className="font-bold text-sm text-white mt-1">{p.name}</p>
+                    <span className="text-white text-[10px] font-semibold text-center leading-tight">
+                      {p.name}
+                    </span>
                   </div>
-                  <button
-                    onClick={() => {
-                      deletePosition(p.id);
-                      triggerToast(`Deleted position ${p.code}`, 'info');
-                    }}
-                    className="p-2 text-secondaryText hover:text-urgentRedText hover:bg-urgentRed/10 rounded-lg transition"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}

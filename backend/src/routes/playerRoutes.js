@@ -13,7 +13,7 @@ import {
   requestPlayerRole
 } from '../controllers/playerController.js';
 import { protect, optionalAuth, authorize } from '../middleware/auth.js';
-import { requirePhase } from '../middleware/phase.js';
+import { requirePhase, requireRegistrationOpen } from '../middleware/phase.js';
 
 const router = express.Router();
 
@@ -30,8 +30,10 @@ router.get('/me', protect, getMyProfile);
 router.get('/field-position', protect, authorize('PLAYER', 'SUPER_ADMIN'), getMyFieldPosition);
 
 // POST /api/players/register — public (freeze bypass for SUPER_ADMIN handled in controller)
-// Phase-gated: registration only unlocks during the REGISTRATION phase.
-router.post('/register', optionalAuth, requirePhase('REGISTRATION'), uploadMiddleware.single('picture'), registerPlayer);
+// Gated by the AUTOMATIC registration window: closed before the scheduled
+// start time, open at start, closed again after the end time. All evaluated
+// server-side; SUPER_ADMIN retains an operational bypass.
+router.post('/register', optionalAuth, requireRegistrationOpen(), uploadMiddleware.single('picture'), registerPlayer);
 
 // GET /api/players — optionalAuth: public gets limited fields, privileged users get full data
 router.get('/', optionalAuth, getPlayers);

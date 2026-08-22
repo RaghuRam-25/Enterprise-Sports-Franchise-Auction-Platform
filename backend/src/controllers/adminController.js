@@ -17,7 +17,8 @@ const positionSchema = z.object({
   code: z.string().min(1),
   name: z.string().min(2),
   fieldX: z.number().min(0).max(100).optional(),
-  fieldY: z.number().min(0).max(100).optional()
+  fieldY: z.number().min(0).max(100).optional(),
+  icon: z.string().max(30).optional()
 });
 const categorySchema = z.object({
   name: z.string().min(2),

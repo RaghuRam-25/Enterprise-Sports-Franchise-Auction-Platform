@@ -381,7 +381,6 @@ export default function MatchesHub() {
                 </div>
                 <div className="min-w-0">
                   <h2 className="font-heading font-black text-lg tracking-wide text-white leading-tight">Matches</h2>
-                  <p className="text-[10px] text-mutedText truncate">{competitionName} &bull; {sessionName}</p>
                 </div>
               </div>
               <Link to={schedulePath} className="flex items-center gap-1 text-xs font-bold text-secondaryText hover:text-white transition shrink-0">
@@ -522,7 +521,6 @@ export default function MatchesHub() {
                   </div>
                   <div className="min-w-0">
                     <h2 className="font-heading font-black text-lg tracking-wide text-white leading-tight">Table</h2>
-                    <p className="text-[10px] text-mutedText truncate">{competitionName} &bull; {sessionName}</p>
                   </div>
                 </div>
                 <Link to={tablePath} className="flex items-center gap-1 text-xs font-bold text-secondaryText hover:text-white transition shrink-0">

@@ -21,13 +21,37 @@ const DEFAULT_SESSIONS = [
 ];
 
 const DEFAULT_POSITIONS = [
-  { code: 'ST', name: 'Striker', fieldX: 88, fieldY: 50 },
-  { code: 'GK', name: 'Goalkeeper', fieldX: 6, fieldY: 50 },
-  { code: 'RW', name: 'Right Winger', fieldX: 78, fieldY: 82 },
-  { code: 'LW', name: 'Left Winger', fieldX: 78, fieldY: 18 },
-  { code: 'CM', name: 'Central Midfielder', fieldX: 52, fieldY: 50 },
-  { code: 'CB', name: 'Center Back', fieldX: 22, fieldY: 50 },
+  { code: 'GK', name: 'Goalkeeper', icon: 'Hand', fieldX: 6, fieldY: 50 },
+  { code: 'CB', name: 'Centre Back', icon: 'Shield', fieldX: 22, fieldY: 50 },
+  { code: 'LB', name: 'Left Back', icon: 'Footprints', fieldX: 28, fieldY: 16 },
+  { code: 'RB', name: 'Right Back', icon: 'Activity', fieldX: 28, fieldY: 84 },
+  { code: 'CDM', name: 'Central Defensive Midfielder', icon: 'Anchor', fieldX: 40, fieldY: 50 },
+  { code: 'CMF', name: 'Central Midfielder', icon: 'Zap', fieldX: 52, fieldY: 50 },
+  { code: 'CAM', name: 'Central Attacking Midfielder', icon: 'Star', fieldX: 64, fieldY: 50 },
+  { code: 'LM', name: 'Left Midfielder', icon: 'Flag', fieldX: 55, fieldY: 18 },
+  { code: 'RM', name: 'Right Midfielder', icon: 'Wind', fieldX: 55, fieldY: 82 },
+  { code: 'CF', name: 'Centre Forward', icon: 'Volleyball', fieldX: 86, fieldY: 50 },
+  { code: 'LW', name: 'Left Winger', icon: 'ArrowUpLeft', fieldX: 78, fieldY: 18 },
+  { code: 'RW', name: 'Right Winger', icon: 'ArrowUpRight', fieldX: 78, fieldY: 82 },
 ];
+
+// Icons auto-assigned by the PREVIOUS seed generation. On boot, a stored icon
+// equal to one of these is migrated forward to the current default — while a
+// genuinely custom Super-Admin pick is never touched.
+const LEGACY_POSITION_ICONS = {
+  GK: 'Hand',
+  CB: 'Shield',
+  LB: 'Footprints',
+  RB: 'Footprints',
+  CDM: 'Shield',
+  CMF: 'Zap',
+  CAM: 'Star',
+  LM: 'Zap',
+  RM: 'Zap',
+  CF: 'Volleyball',
+  LW: 'Footprints',
+  RW: 'Footprints',
+};
 
 const DEFAULT_CATEGORIES = [
   { name: 'Icon Category', priorityLevel: 1, basePrice: 5000000 },
@@ -59,6 +83,31 @@ const ensureCollection = async (Model, records, label) => {
 export async function autoSeedDefaults() {
   await ensureCollection(Session, DEFAULT_SESSIONS, 'sessions');
   await ensureCollection(Position, DEFAULT_POSITIONS, 'positions');
+  // The registration form offers a canonical set of 12 football positions and
+  // the backend validates submissions against this collection — so EVERY
+  // default code must exist, not just on fresh databases. $setOnInsert keeps
+  // admin-customized names/coordinates untouched; only missing codes appear.
+  for (const pos of DEFAULT_POSITIONS) {
+    try {
+      await Position.updateOne(
+        { code: pos.code },
+        { $setOnInsert: { ...pos } },
+        { upsert: true }
+      );
+      // Icon migration: fill empty icons and advance stale auto-assigned ones
+      // (from the previous 6-icon generation) — custom picks are preserved.
+      const legacy = LEGACY_POSITION_ICONS[pos.code];
+      await Position.updateOne(
+        {
+          code: pos.code,
+          $or: [{ icon: '' }, { icon: null }, ...(legacy ? [{ icon: legacy }] : [])],
+        },
+        { $set: { icon: pos.icon } }
+      );
+    } catch (err) {
+      console.warn(`[AutoSeed] Skipped position ${pos.code}:`, err.message);
+    }
+  }
   await ensureCollection(PlayerCategory, DEFAULT_CATEGORIES, 'categories');
   await ensureCollection(BiddingTier, DEFAULT_TIERS, 'bidding tiers');
 }

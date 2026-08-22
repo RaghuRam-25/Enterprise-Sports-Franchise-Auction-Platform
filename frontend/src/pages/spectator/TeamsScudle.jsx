@@ -741,9 +741,6 @@ export default function TeamsScudle() {
                 <h1 className="font-heading font-black text-lg tracking-wide text-white leading-tight truncate">
                   Tournament Match Schedule
                 </h1>
-                <p className="text-[10px] text-mutedText truncate">
-                  Live fixtures, upcoming clashes, and match results.
-                </p>
               </div>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -821,16 +818,6 @@ export default function TeamsScudle() {
                   <ArrowUpDown className="w-3.5 h-3.5" />
                   <span className="capitalize">{sortOrder}</span>
                 </button>
-
-                {/* Refresh */}
-                <button
-                  onClick={() => fetchMatches({ silent: true })}
-                  className="btn-secondary p-2 rounded-xl"
-                  title="Refresh schedule"
-                >
-                  <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
-                </button>
-
               </div>
             </div>
           </>

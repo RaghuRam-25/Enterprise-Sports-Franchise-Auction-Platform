@@ -6,6 +6,7 @@ import { Team } from '../models/Team.js';
 import { User } from '../models/User.js';
 import { SystemConfig, getConfig, setConfig } from '../models/SystemConfig.js';
 import { isRegistrationFrozen as isRegFrozenByPhase, getCurrentPhase } from '../services/phaseService.js';
+import { evaluateRegistrationAccess, getRegistrationSchedule, resolveRegistrationWindow, isRegistrationOpen, describeWindowState } from '../services/registrationSchedule.js';
 import { processAndUploadImage, deleteCloudinaryAsset } from '../services/imageService.js';
 import { resolveFieldCoords } from '../utils/fieldPositions.js';
 import bcrypt from 'bcryptjs';
@@ -30,15 +31,22 @@ export const getMyPlayerProfile = async (req, res, next) => {
   }
 };
 
-// ── Registration Freeze — now DERIVED from the global event phase ─────────────
-// Registration is "frozen" whenever the phase is not REGISTRATION. The phase
-// state machine (services/phaseService.js) is the single source of truth; this
-// endpoint is retained for backward compatibility with the existing frontend.
+// ── Registration Status — event phase + AUTOMATIC scheduled window ────────────
+// The phase state machine is the lifecycle upper bound; the Super-Admin-set
+// registration window (start/end times) drives open/close automatically:
+// before start → closed, at start → open, after end → closed.
 export const getRegistrationStatus = async (req, res, next) => {
   try {
-    const isRegistrationFrozen = await isRegFrozenByPhase();
-    const phase = await getCurrentPhase();
-    res.json({ success: true, isRegistrationFrozen, phase });
+    const access = await evaluateRegistrationAccess();
+    res.json({
+      success: true,
+      isRegistrationFrozen: !access.isOpen,
+      isOpen: access.isOpen,
+      phase: access.phase,
+      registrationWindow: access.win,
+      message: access.message,
+      serverTime: new Date().toISOString(),
+    });
   } catch (e) {
     // Surface failures instead of silently claiming "frozen" (which would lock
     // the registration UI on a DB/phase-service outage).
@@ -114,14 +122,22 @@ const PUBLIC_PLAYER_FIELDS = 'name jerseyName studentId basePrice positions prim
 // ── REGISTER PLAYER ───────────────────────────────────────────────────────────
 export const registerPlayer = async (req, res, next) => {
   try {
-    // Registration freeze is derived from the event phase (single source of truth).
-    // It stays OPEN during SETUP (pre-launch onboarding) and REGISTRATION, and is
-    // only frozen once the AUCTION/TOURNAMENT phases begin.
+    // Server-side AUTOMATIC registration window check (defense in depth — the
+    // route middleware already gates this). A configured start/end window is
+    // authoritative: before startTime → blocked, at startTime → open,
+    // after endTime → blocked. Without a window, the legacy phase rule
+    // (SETUP or REGISTRATION) applies. SUPER_ADMIN retains a bypass.
     const currentPhase = await getCurrentPhase();
-    const registrationOpen = currentPhase === 'SETUP' || currentPhase === 'REGISTRATION';
+    const schedule = await getRegistrationSchedule();
+    const win = resolveRegistrationWindow(schedule, new Date());
 
-    if (!registrationOpen && req.user?.role !== 'SUPER_ADMIN') {
-      return res.status(403).json({ success: false, message: 'Registration is currently closed. It will open again during the registration phase.' });
+    if (!isRegistrationOpen(currentPhase, win) && req.user?.role !== 'SUPER_ADMIN') {
+      return res.status(403).json({
+        success: false,
+        message: `Registration is currently closed. ${describeWindowState(win)}.`,
+        registrationWindow: win,
+        serverTime: new Date().toISOString(),
+      });
     }
 
     const body = req.body;

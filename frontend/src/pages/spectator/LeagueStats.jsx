@@ -218,7 +218,6 @@ export default function LeagueStats() {
                   </div>
                   <div className="min-w-0">
                     <h1 className="font-heading font-black text-lg tracking-wide text-white leading-tight">{activeTab.label} Leaderboard</h1>
-                    <p className="text-[10px] text-mutedText">{competitionName} &bull; {sessionName}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">

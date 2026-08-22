@@ -1,4 +1,5 @@
 import { getCurrentPhase } from '../services/phaseService.js';
+import { evaluateRegistrationAccess } from '../services/registrationSchedule.js';
 
 /*
  * ── Phase-gating middleware ───────────────────────────────────────────────────
@@ -31,6 +32,31 @@ export const requirePhase = (...allowedPhases) => {
         });
       }
       next();
+    } catch (e) {
+      next(e);
+    }
+  };
+};
+
+/*
+ * ── requireRegistrationOpen — automatic registration window gate ─────────────
+ * Server-side enforcement of the scheduled Player Registration window:
+ * before startTime → blocked, at startTime → open, after endTime → blocked.
+ * SUPER_ADMIN keeps an operational bypass (same as the controller-level check).
+ */
+export const requireRegistrationOpen = () => {
+  return async (req, res, next) => {
+    try {
+      const access = await evaluateRegistrationAccess();
+      if (access.isOpen || req.user?.role === 'SUPER_ADMIN') {
+        return next();
+      }
+      return res.status(403).json({
+        success: false,
+        message: `Registration is currently closed. ${access.message}.`,
+        registrationWindow: access.win,
+        serverTime: new Date().toISOString(),
+      });
     } catch (e) {
       next(e);
     }
