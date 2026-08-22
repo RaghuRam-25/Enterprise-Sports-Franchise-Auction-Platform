@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import Navbar from '../../components/Navbar';
 import TeamBadge from '../../components/common/TeamBadge';
+import TeamDetailModal from '../../components/common/TeamDetailModal';
 import { getTeamAvatarConfig, getTeamTheme } from '../../utils/themeConfig';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
@@ -128,9 +129,6 @@ export default function PublicTeamsView() {
           />
           <Shield className="w-10 h-10 mx-auto text-neonGreen bg-neonGreen/10 p-2 rounded-xl border border-neonGreen/20 shadow-md shadow-neonGreen/10" />
           <h1 className="text-2xl sm:text-3xl font-black font-heading bg-gradient-to-r from-white via-primaryText to-secondaryText bg-clip-text text-transparent uppercase tracking-wide">All Franchises</h1>
-          <p className="text-xs text-secondaryText max-w-sm mx-auto">
-            Official league franchises competing in the auction platform.
-          </p>
         </div>
 
         <div className="sticky top-2 z-20 flex flex-col sm:flex-row gap-3 sm:items-center justify-between rounded-2xl border border-cardBorder bg-darkBg/80 backdrop-blur-xl px-4 py-3 shadow-xl">
@@ -308,58 +306,13 @@ export default function PublicTeamsView() {
           </>
         )}
 
-        {selectedTeam && (() => {
-          const modalTheme = getTeamTheme(selectedTeam);
-          return (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-darkBg/80 backdrop-blur-md">
-              <div className={`glass-card rounded-2xl p-6 border ${modalTheme.border} max-w-xl w-full space-y-6 relative max-h-[90vh] overflow-y-auto bg-gradient-to-br ${modalTheme.gradient}`}>
-                <button
-                  onClick={() => setSelectedTeam(null)}
-                  className="absolute top-4 right-4 p-1.5 text-secondaryText hover:text-white rounded-lg bg-cardBg border border-cardBorder"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-
-                <TeamBadge team={selectedTeam} size="lg" showManager={true} managerName={selectedTeam.managerId?.name || selectedTeam.ownerName} />
-
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs font-mono">
-                  <div className="bg-darkBg/70 p-3 rounded-xl border border-cardBorder">
-                    <span className="text-[10px] text-secondaryText uppercase block">Total Purse</span>
-                    <span className="font-bold text-white">{formatCurrency(selectedTeam.totalBudget)}</span>
-                  </div>
-                  <div className="bg-darkBg/70 p-3 rounded-xl border border-cardBorder">
-                    <span className="text-[10px] text-secondaryText uppercase block">Purse Left</span>
-                    <span className={`font-bold ${modalTheme.stat}`}>{formatCurrency(selectedTeam.remainingBudget)}</span>
-                  </div>
-                  <div className="bg-darkBg/70 p-3 rounded-xl border border-cardBorder">
-                    <span className="text-[10px] text-secondaryText uppercase block">Total Players</span>
-                    <span className="font-bold text-white">{selectedTeam.currentRoster?.length || selectedTeam.currentRosterCount || 0}</span>
-                  </div>
-                </div>
-
-                <div>
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-secondaryText mb-3 flex items-center gap-1.5">
-                    <Users className={`w-4 h-4 ${modalTheme.stat}`} /> Acquired Roster
-                  </h4>
-                  {Array.isArray(selectedTeam.currentRoster) && selectedTeam.currentRoster.length > 0 ? (
-                    <div className="space-y-2 max-h-48 overflow-y-auto pr-1 custom-scrollbar">
-                      {selectedTeam.currentRoster.map(player => (
-                        <div key={player._id || player.id} className="bg-darkBg/70 p-2.5 rounded-xl border border-cardBorder/80 flex items-center justify-between text-xs">
-                          <span className="font-bold text-white">{player.name} ({player.primaryPosition || 'Player'})</span>
-                          <span className="font-mono text-warningGold font-bold">{formatCurrency(player.finalPrice || 0)}</span>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-xs text-mutedText italic bg-darkBg/50 p-4 rounded-xl text-center border border-cardBorder">
-                      No players acquired in auction yet.
-                    </p>
-                  )}
-                </div>
-              </div>
-            </div>
-          );
-        })()}
+        {selectedTeam && (
+          <TeamDetailModal
+            team={selectedTeam}
+            onClose={() => setSelectedTeam(null)}
+            formatCurrency={formatCurrency}
+          />
+        )}
 
       </main>
     </div>

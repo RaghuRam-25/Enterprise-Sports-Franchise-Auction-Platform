@@ -10,10 +10,11 @@ import { useAuction } from '../../context/AuctionContext';
 import api, { managerAPI } from '../../services/api';
 import TeamBadge from '../../components/common/TeamBadge';
 import PlayerCardCard from '../../components/common/PlayerCardCard';
+import PlayerStageModal from '../../components/common/PlayerStageModal';
 
 export default function ManagerMyTeam() {
   const { user } = useAuth();
-  const { triggerToast, formatCurrency, refetchTeams, teams: allTeams = [] } = useAuction();
+  const { triggerToast, formatCurrency, refetchTeams, teams: allTeams = [], categories = [] } = useAuction();
 
   const [team, setTeam] = useState(null);
   const [roster, setRoster] = useState([]);
@@ -34,6 +35,7 @@ export default function ManagerMyTeam() {
   const [newPass, setNewPass] = useState('');
   const [confirmPass, setConfirmPass] = useState('');
   const [changingPass, setChangingPass] = useState(false);
+  const [selectedPlayer, setSelectedPlayer] = useState(null);
 
   const fetchTeamDetails = useCallback(async () => {
     setLoading(true);
@@ -431,11 +433,24 @@ export default function ManagerMyTeam() {
                 player={player}
                 formatCurrency={formatCurrency}
                 teams={allTeams}
+                categories={categories}
+                onCardClick={() => setSelectedPlayer(player)}
               />
             ))}
           </div>
         )}
       </div>
+
+      {/* Podium-push style stage presentation on card click */}
+      {selectedPlayer && (
+        <PlayerStageModal
+          player={selectedPlayer}
+          teams={allTeams}
+          categories={categories}
+          formatCurrency={formatCurrency}
+          onClose={() => setSelectedPlayer(null)}
+        />
+      )}
 
       {/* Edit Team Modal */}
       {showEditModal && (

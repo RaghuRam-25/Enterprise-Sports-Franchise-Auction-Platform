@@ -2,6 +2,11 @@ import axios from 'axios';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
 
+// Fired when the session is fully dead (refresh failed) so AuthContext can
+// drop the user from React state too — keeps UI and storage consistent
+// instead of leaving a half-logged-in zombie state behind.
+export const SESSION_CLEARED_EVENT = 'app:session-cleared';
+
 const api = axios.create({
   baseURL: `${BACKEND_URL}/api`,
   headers: { 'Content-Type': 'application/json' },
@@ -41,6 +46,8 @@ api.interceptors.response.use(
       } catch {
         localStorage.removeItem('token');
         localStorage.removeItem('refreshToken');
+        localStorage.removeItem('user');
+        window.dispatchEvent(new Event(SESSION_CLEARED_EVENT));
       }
     }
     console.error('API Error:', error.response?.data || error.message);

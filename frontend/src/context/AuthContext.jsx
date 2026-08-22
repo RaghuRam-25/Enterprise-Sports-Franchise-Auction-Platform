@@ -41,40 +41,57 @@ export const getDashboardForRole = (role) => {
 const AuthContext = createContext(null);
 export const useAuth = () => useContext(AuthContext);
 
+// ── Session-cleared bridge ───────────────────────────────────────────────────
+// The axios interceptor may wipe tokens when refresh fails. When that happens
+// it dispatches this event so React state drops the user TOO — otherwise the
+// app walks around half-logged-in ("user" visible, token gone) and the next
+// protected navigation behaves unpredictably.
+export const SESSION_CLEARED_EVENT = 'app:session-cleared';
+
+// Module-level so BOTH the synchronous rehydrate path below and the
+// login/logout flows share one implementation.
+function clearSession() {
+  localStorage.removeItem('token');
+  localStorage.removeItem('refreshToken');
+  localStorage.removeItem('user');
+}
+
+const readStoredUser = () => {
+  try {
+    const storedUser = localStorage.getItem('user');
+    const storedToken = localStorage.getItem('token');
+    if (!storedUser || !storedToken) return null;
+
+    const parsed = JSON.parse(storedUser);
+    const normalizedRole = ROLE_MAP[parsed.role] || parsed.role;
+    if (!VALID_ROLES.includes(normalizedRole)) {
+      console.warn('[AuthContext] Stored user has invalid role. Clearing session.');
+      clearSession();
+      return null;
+    }
+    return { ...parsed, role: normalizedRole };
+  } catch {
+    clearSession();
+    return null;
+  }
+};
+
 export const AuthProvider = ({ children }) => {
-  const [user, setUser]       = useState(null);
-  const [loading, setLoading] = useState(true);
+  // Rehydrate SYNCHRONOUSLY during the very first render (lazy initializer).
+  // There is never a rendered frame where children exist but user is still
+  // null-but-loading — which previously let a protected navigation flash the
+  // login page before auth state settled (first-click bug).
+  const [user, setUser] = useState(readStoredUser);
+  // Auth resolves synchronously now; `loading` stays in the context API for
+  // consumers (ProtectedRoute) but is always false.
+  const [loading] = useState(false);
   // Store the socket ref so we can attach the role-update listener
   const socketRef = useRef(null);
 
-  function clearSession() {
-    localStorage.removeItem('token');
-    localStorage.removeItem('refreshToken');
-    localStorage.removeItem('user');
-  }
-
-  // ── Rehydrate from localStorage on app load ───────────────────────────────
   useEffect(() => {
-    const storedUser  = localStorage.getItem('user');
-    const storedToken = localStorage.getItem('token');
-
-    if (storedUser && storedToken) {
-      try {
-        const parsed = JSON.parse(storedUser);
-        const normalizedRole = ROLE_MAP[parsed.role] || parsed.role;
-
-        if (!VALID_ROLES.includes(normalizedRole)) {
-          console.warn('[AuthContext] Stored user has invalid role. Clearing session.');
-          clearSession();
-        } else {
-          setUser({ ...parsed, role: normalizedRole });
-        }
-      } catch {
-        clearSession();
-      }
-    }
-
-    setLoading(false);
+    const onSessionCleared = () => setUser(null);
+    window.addEventListener(SESSION_CLEARED_EVENT, onSessionCleared);
+    return () => window.removeEventListener(SESSION_CLEARED_EVENT, onSessionCleared);
   }, []);
 
   // ── Internal helpers ──────────────────────────────────────────────────────

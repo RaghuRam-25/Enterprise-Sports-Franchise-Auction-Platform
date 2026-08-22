@@ -16,6 +16,10 @@ const playerSchema = new mongoose.Schema({
   positions: [{ type: String, required: true }],
   primaryPosition: { type: String, required: true },
   imageUrl: { type: String, default: '' },
+  // Cloudinary public_id for the stored image — enables permanent asset
+  // lifecycle (replace/delete cleanup). Null when imageUrl is a dev-only
+  // local /uploads path or a placeholder.
+  imagePublicId: { type: String, default: null },
   phone: { type: String, default: '' },
   bio: { type: String, default: '' },
   address: { type: String, default: '' },

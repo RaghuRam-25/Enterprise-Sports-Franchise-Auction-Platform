@@ -4,6 +4,7 @@ import { Trophy, Shield, Users, Radio } from 'lucide-react';
 import FloatingParticles from './FloatingParticles';
 import SpotlightBackground from './SpotlightBackground';
 import { soundManager, AUCTION_SOUNDS } from './soundManager';
+import { usePhase } from '../../context/PhaseContext';
 
 /**
  * WaitingAnimation — broadcast-quality "waiting for next player" sequence shown
@@ -63,7 +64,42 @@ export default function WaitingAnimation({
   managersReady = 0,
   isActive = true,
   inline = false,
+  title = null,
+  subtitle = null,
 }) {
+  const phaseContext = usePhase();
+  const phase = phaseContext?.phase;
+  const isAuctionActive = (phase === 'AUCTION') || (phaseContext?.isAuctionActive ?? false);
+  const getActiveScheduleMilestone = phaseContext?.getActiveScheduleMilestone;
+
+  const milestone = getActiveScheduleMilestone ? getActiveScheduleMilestone() : null;
+
+  let displayTitle = title;
+  let displaySubtitle = subtitle;
+
+  if (!displayTitle) {
+    if (milestone) {
+      displayTitle = milestone.label;
+    } else if (isAuctionActive) {
+      displayTitle = 'WAITING FOR NEXT PLAYER';
+    } else {
+      displayTitle = 'WAITING FOR AUCTION';
+    }
+  }
+
+  if (!displaySubtitle) {
+    if (milestone) {
+      const d = new Date(milestone.targetMs);
+      const dateStr = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase();
+      const timeStr = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+      displaySubtitle = `TARGET: ${dateStr} | ${timeStr}`;
+    } else if (isAuctionActive) {
+      displaySubtitle = 'Preparing the Next Auction';
+    } else {
+      displaySubtitle = 'The Auction Has Not Started Yet';
+    }
+  }
+
   const reduceMotion = useReducedMotion();
   // Start on the informative final scene when motion is reduced.
   const [scene, setScene] = useState(reduceMotion ? 'text' : 'lights');
@@ -154,7 +190,7 @@ export default function WaitingAnimation({
                 transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
               >
                 <ParticleAssembly />
-                <HeadlineBlock compact={inline} />
+                <HeadlineBlock compact={inline} title={displayTitle} subtitle={displaySubtitle} />
               </motion.div>
             )}
           </AnimatePresence>
@@ -623,7 +659,7 @@ function ParticleAssembly() {
 /* ─────────────────────────────────────────────────────────────────────────
  * HeadlineBlock — premium typography that the particles resolve into.
  * ──────────────────────────────────────────────────────────────────────── */
-function HeadlineBlock({ compact }) {
+function HeadlineBlock({ compact, title, subtitle }) {
   return (
     <div className="relative space-y-4">
       <motion.div
@@ -646,14 +682,14 @@ function HeadlineBlock({ compact }) {
         }}
         style={{ willChange: 'transform, filter', textShadow: '0 0 30px rgba(88,210,10,0.35)' }}
       >
-        WAITING FOR NEXT PLAYER
+        {title || 'WAITING FOR NEXT PLAYER'}
       </motion.h1>
       <motion.p
         className={`font-medium uppercase tracking-[0.35em] text-secondaryText ${compact ? 'text-[11px]' : 'text-sm'}`}
         animate={{ opacity: [0.5, 1, 0.5] }}
         transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
       >
-        Preparing the Next Auction
+        {subtitle || 'Preparing the Next Auction'}
       </motion.p>
     </div>
   );

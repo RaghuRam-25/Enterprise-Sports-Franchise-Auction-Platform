@@ -54,6 +54,7 @@ export default function PlayerDisplayStage({
   isManagerWinner = false,
   waitingStats = {},
   showWaiting = false,
+  showLeaderboard = true,
   children,
   className = '',
   // Responsive broadcast height reserved for the cinematic surface. It is
@@ -87,7 +88,9 @@ export default function PlayerDisplayStage({
 
   return (
     <div className={`relative ${className} h-full`}>
-      <FullscreenWrapper>
+      {/* Fullscreen toggle is offered ONLY while the Podium Admin's broadcast
+          video (Video Control) is playing — every other scene stays inline. */}
+      <FullscreenWrapper showToggle={isBroadcastingVideo}>
         <div className="relative h-full flex flex-col">
           <div className="flex-1 relative overflow-hidden rounded-t-2xl">
             {/* Cinematic broadcast surface */}
@@ -280,8 +283,9 @@ export default function PlayerDisplayStage({
             </AnimatePresence>
           </div>
 
-          {/* Spectator Leaderboard: shown only if cinematic is active AND it's NOT a manager view (no children) */}
-          {(cinematicActive || hasBroadcastOverlay) && !children && (
+          {/* Spectator Leaderboard: shown only if cinematic is active, it's NOT a
+              manager view (no children), and the page allows it (players opt out). */}
+          {(cinematicActive || hasBroadcastOverlay) && !children && showLeaderboard && (
             <div className="h-28 flex-shrink-0">
               <LiveAuctionLeaderboard />
             </div>

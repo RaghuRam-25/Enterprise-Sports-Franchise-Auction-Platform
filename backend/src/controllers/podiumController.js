@@ -8,6 +8,19 @@ const logPodiumAction = async (action, performedBy, details) => {
   } catch (_) { /* silent */ }
 };
 
+// Release stale ON_PODIUM holds before launching a new player. Without this,
+// re-pushing while a previous player is on stage (or a server restart
+// mid-auction) leaves the old player stuck as ON_PODIUM forever — invisible
+// to every selection pool. They return to the pool as UNSOLD.
+const releaseStalePodiumHolds = async (exceptId = null) => {
+  const filter = { status: 'ON_PODIUM' };
+  if (exceptId) filter._id = { $ne: exceptId };
+  const res = await Player.updateMany(filter, { $set: { status: 'UNSOLD' } });
+  if (res.modifiedCount > 0) {
+    console.log(`[Podium] Released ${res.modifiedCount} stale ON_PODIUM player(s) back to pool`);
+  }
+};
+
 export const launchPlayer = async (req, res, next) => {
   try {
     const { playerId, duration, mode } = req.body;
@@ -27,6 +40,7 @@ export const launchPlayer = async (req, res, next) => {
         imageUrl: null
       };
     } else {
+      await releaseStalePodiumHolds(player._id);
       player.status = 'ON_PODIUM';
       await player.save();
     }
@@ -46,6 +60,7 @@ export const selectUnsoldPlayer = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'Player not found or not available for selection' });
     }
 
+    await releaseStalePodiumHolds(player._id);
     player.status = 'ON_PODIUM';
     await player.save();
 

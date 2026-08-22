@@ -1,9 +1,16 @@
+import mongoose from 'mongoose';
 import { timerService } from './timerService.js';
 import { BiddingTier } from '../models/BiddingTier.js';
 import { Player } from '../models/Player.js';
 import { Team } from '../models/Team.js';
 import { AuctionLedger } from '../models/AuctionLedger.js';
 import { ManagerTargetPlayer } from '../models/ManagerTargetPlayer.js';
+import {
+  AUCTION_POOL_EXCLUDED_STATUSES,
+  AVAILABLE_PLAYER_STATUSES,
+  computeBiddingEligibility,
+  describeEligibilityReason,
+} from '../utils/biddingRules.js';
 
 class AuctionEngine {
   constructor() {
@@ -364,6 +371,18 @@ class AuctionEngine {
       if (this.io) {
         this.io.emit('teams:updated', team || { _id: teamId });
         this.io.emit('player:updated', { _id: playerId, id: playerId, status: 'SOLD' });
+
+        // §11 — every sale changes the pool, so push a fresh bidding context
+        // (pool size + current minimum price) and force all clients to
+        // recalculate reserve budgets / eligibility immediately.
+        const context = await this._getBiddingContext(0);
+        if (context) {
+          this.io.emit('bidding:eligibility-updated', {
+            ...context,
+            changedTeamId: String(teamId),
+            timestamp: Date.now(),
+          });
+        }
       }
       return true;
     } catch (err) {
@@ -519,11 +538,97 @@ class AuctionEngine {
     if (!teamId) return null;
     try {
       return await Team.findById(teamId)
-        .select('name totalBudget remainingBudget minRoster currentRosterCount')
+        .select('name totalBudget remainingBudget minRoster maxRoster currentRosterCount')
         .lean();
     } catch (_) {
       return null;
     }
+  }
+
+  // ── DYNAMIC BIDDING CONTEXT (league pool snapshot) ──────────────────────────
+  // Resolves the live inputs of the reserve-budget formula straight from the DB
+  // so every bid is validated against current reality, never stale config:
+  //   • totalAuctionPlayers — everyone still in the auction lifecycle
+  //   • availablePlayers    — count + lowest base price of the buyable pool
+  // Returns null when no DB session exists (unit tests / offline), letting
+  // callers degrade to the legacy static guardrail instead of crashing.
+  async _getBiddingContext(fallbackMinPrice = 0) {
+    try {
+      const connection = mongoose.connection;
+      if (!connection || connection.readyState !== 1) return null;
+
+      const [totalTeams, lifecycleRows, availableRows] = await Promise.all([
+        Team.countDocuments(),
+        Player.aggregate([
+          { $match: { status: { $nin: AUCTION_POOL_EXCLUDED_STATUSES } } },
+          { $group: { _id: null, count: { $sum: 1 } } },
+        ]),
+        Player.aggregate([
+          { $match: { status: { $in: AVAILABLE_PLAYER_STATUSES } } },
+          { $group: { _id: null, count: { $sum: 1 }, minBasePrice: { $min: '$basePrice' } } },
+        ]),
+      ]);
+
+      const lifecycle = lifecycleRows?.[0] || { count: 0 };
+      const available = availableRows?.[0] || { count: 0, minBasePrice: null };
+
+      // §7 — minimum price is dynamic: lowest base price among currently
+      // available players. Empty-pool fallback chain: podium player's own
+      // reserve price → caller-provided floor.
+      let minimumPlayerPrice;
+      if (available.minBasePrice != null && Number(available.minBasePrice) > 0) {
+        minimumPlayerPrice = Number(available.minBasePrice);
+      } else {
+        const podiumReserve = this.podiumPlayer?.basePrice || 0;
+        minimumPlayerPrice = Math.max(0, Number(podiumReserve) || Number(fallbackMinPrice) || 0);
+      }
+
+      return {
+        totalTeams,
+        totalAuctionPlayers: lifecycle.count,
+        availablePlayersCount: available.count,
+        minimumPlayerPrice,
+      };
+    } catch (err) {
+      console.warn('[AuctionEngine] Failed to load bidding context:', err.message);
+      return null;
+    }
+  }
+
+  // Evaluate the full reserve-budget eligibility for a team's proposed bid.
+  // Falls back to the legacy PRD guardrail ((minRoster - squad - 1) × price)
+  // when no live pool context can be resolved.
+  _evaluateBidEligibility(effectiveTeam, proposedAmount, context, fallbackMinPrice = 0) {
+    if (!context) {
+      // Legacy fallback keeps bidding functional if pool stats are unavailable
+      const remainingMinimum = Math.max(0, (effectiveTeam.minRoster || 0) - ((effectiveTeam.currentRosterCount || 0) + 1));
+      const reserve = remainingMinimum * (Number(fallbackMinPrice) || 0);
+      const balance = (effectiveTeam.remainingBudget || 0) - reserve;
+      return {
+        minimumPerTeam: effectiveTeam.minRoster || 0,
+        remainingMinimumPlayers: remainingMinimum,
+        requiredReserveBudget: reserve,
+        availableBidBalance: balance,
+        maxAllowableBid: Math.max(0, balance),
+        rosterLimit: effectiveTeam.maxRoster ?? null,
+        rosterSlotsRemaining: effectiveTeam.maxRoster ? Math.max(0, effectiveTeam.maxRoster - (effectiveTeam.currentRosterCount || 0)) : Infinity,
+        leagueExtraPlayers: Infinity,
+        isBelowMinimum: (effectiveTeam.currentRosterCount || 0) < (effectiveTeam.minRoster || 0),
+        bidAllowed: proposedAmount <= balance,
+        reasons: proposedAmount > balance ? ['INSUFFICIENT_BID_BALANCE'] : [],
+      };
+    }
+
+    return computeBiddingEligibility({
+      totalTeams: context.totalTeams,
+      totalAuctionPlayers: context.totalAuctionPlayers,
+      availablePlayersCount: context.availablePlayersCount,
+      purchasedCount: effectiveTeam.currentRosterCount || 0,
+      maxRoster: effectiveTeam.maxRoster,
+      remainingBudget: effectiveTeam.remainingBudget || 0,
+      minimumPlayerPrice: context.minimumPlayerPrice,
+      proposedBidAmount: proposedAmount,
+    });
   }
 
   async _executeNormalBid(teamData) {
@@ -547,6 +652,7 @@ class AuctionEngine {
       totalBudget: authoritative.totalBudget,
       remainingBudget: authoritative.remainingBudget,
       minRoster: authoritative.minRoster,
+      maxRoster: authoritative.maxRoster,
       currentRosterCount: authoritative.currentRosterCount || 0,
     };
 
@@ -572,6 +678,20 @@ class AuctionEngine {
       return { success: false, error: 'Insufficient team budget' };
     }
 
+    // §10 — CORE RULE: no team may bid so much that it can no longer afford its
+    // reserved minimum-squad budget. Reserve is computed from the LIVE pool:
+    // Remaining Minimum Players × Current Lowest Available Player Price.
+    const context = await this._getBiddingContext(this.podiumPlayer?.basePrice || 0);
+    const eligibility = this._evaluateBidEligibility(effectiveTeam, nextAmount, context, this.podiumPlayer?.basePrice || 0);
+    if (!eligibility.bidAllowed) {
+      const reason = eligibility.reasons[0];
+      const errorMsg = `BID REJECTED: ${describeEligibilityReason(reason)}. Reserve held: ${eligibility.requiredReserveBudget} BDT, available bidding balance: ${Math.max(0, eligibility.availableBidBalance)} BDT.`;
+      if (this.io && effectiveTeam.id) {
+        this.io.to(`team:${effectiveTeam.id}`).emit('bid:error', { error: errorMsg });
+      }
+      return { success: false, error: errorMsg, reason };
+    }
+
     this.currentBid = nextAmount;
     this.highestBidder = effectiveTeam;
     // Reset timer upon valid bid
@@ -593,7 +713,14 @@ class AuctionEngine {
     return { success: true, nextAmount };
   }
 
-  // --- BLIND BIDDING ENGINE (BLIND BID BUDGET GUARDRAIL) ---
+  // --- BLIND BIDDING ENGINE (SEALED ROUND — §1–§15) ---
+  // Server-side validation only; the client's numbers are NEVER trusted.
+  // Acceptance formula (§8):
+  //   minimumValidBid       = Best Price (+ configured bid increment)
+  //   availableBidBalance   = Team Budget − (Remaining Minimum Players × Min Price)
+  //   accepted ⇔ enteredBid ≥ minimumValidBid AND enteredBid ≤ balance
+  // The reserve price floor is resolved SERVER-SIDE from the live pool —
+  // a client-supplied lowestBasePrice is only a last-resort fallback.
   async placeBlindBid(teamData, amount, lowestBasePrice = 1000000) {
     if (!this.podiumPlayer) return { success: false, error: 'No player on podium' };
     if (timerService.status !== 'RUNNING' || timerService.isPaused) {
@@ -602,13 +729,19 @@ class AuctionEngine {
 
     const bidAmount = Number(amount);
     if (isNaN(bidAmount) || bidAmount <= 0) {
-      return { success: false, error: 'Invalid numeric bid amount' };
+      const errorMsg = 'BLIND BID REJECTED: Please enter a valid positive numeric amount.';
+      if (this.io && teamData?.id) this.io.to(`team:${teamData.id}`).emit('bid:error', { error: errorMsg });
+      return { success: false, error: errorMsg };
     }
 
-    // GAP: a sealed blind bid can never go below the player's reserve price.
-    const reserve = this.podiumPlayer.basePrice || 1000000;
-    if (bidAmount < reserve) {
-      return { success: false, error: `BLIND BID REJECTED: Bid of ${bidAmount} BDT is below the reserve price of ${reserve} BDT.` };
+    // §6 — minimum acceptable bid. No flat per-bid increment is configured in
+    // this system, so Minimum Valid Bid = Best Price (the player's base price).
+    const bestPrice = this.podiumPlayer.basePrice || 1000000;
+    const minimumValidBid = bestPrice;
+    if (bidAmount < minimumValidBid) {
+      const errorMsg = `BLIND BID REJECTED: Bid of ${bidAmount} BDT is below the minimum valid bid of ${minimumValidBid} BDT (Best Price).`;
+      if (this.io && teamData?.id) this.io.to(`team:${teamData.id}`).emit('bid:error', { error: errorMsg });
+      return { success: false, error: errorMsg };
     }
 
     // Reconcile against authoritative team data (never trust client budget).
@@ -619,8 +752,10 @@ class AuctionEngine {
     const team = {
       id: authoritative._id ? authoritative._id.toString() : teamData.id,
       name: authoritative.name,
+      totalBudget: authoritative.totalBudget,
       remainingBudget: authoritative.remainingBudget,
       minRoster: authoritative.minRoster,
+      maxRoster: authoritative.maxRoster,
       currentRosterCount: authoritative.currentRosterCount || 0,
     };
 
@@ -629,27 +764,28 @@ class AuctionEngine {
       return { success: false, error: 'You have already submitted a blind bid for this player' };
     }
 
-    // PRD Blind Bid Budget Guardrail Formula:
-    // Required Reserve = (minRoster - currentRosterCount - 1) * lowestCategoryBasePrice
-    const slotsNeeded = Math.max(0, (team.minRoster || 11) - ((team.currentRosterCount || 0) + 1));
-    const requiredReserve = slotsNeeded * lowestBasePrice;
-    const maxAllowableBid = (team.remainingBudget || 100000000) - requiredReserve;
+    // §10 guardrail against the LIVE pool: Required Reserve =
+    // Remaining Minimum Players × Current Lowest Available Player Price.
+    const context = await this._getBiddingContext(lowestBasePrice);
+    const eligibility = this._evaluateBidEligibility(team, bidAmount, context, lowestBasePrice);
 
-    if (bidAmount > maxAllowableBid) {
-      const errorMsg = `BLIND BID REJECTED: Bid of ${bidAmount} BDT exceeds allowable limit. Required reserve for ${slotsNeeded} remaining slots is ${requiredReserve} BDT.`;
+    if (!eligibility.bidAllowed) {
+      const errorMsg = `BLIND BID REJECTED: ${describeEligibilityReason(eligibility.reasons[0])}. Required reserve for ${eligibility.remainingMinimumPlayers} remaining minimum players is ${eligibility.requiredReserveBudget} BDT. Your available bid balance is ${Math.max(0, eligibility.availableBidBalance)} BDT.`;
 
       // Notify ONLY this specific team manager via private socket room!
       if (this.io && team.id) {
         this.io.to(`team:${team.id}`).emit('bid:error', { error: errorMsg });
       }
-      return { success: false, error: errorMsg };
+      return { success: false, error: errorMsg, reason: eligibility.reasons[0] };
     }
 
-    // Register valid blind bid
+    // Register valid blind bid (server timestamp — used for §13 tie-breaking)
     this.blindBids.push({ teamId: team.id, teamName: team.name, amount: bidAmount, timestamp: Date.now() });
 
+    // Private ack to THIS manager only — never broadcast; other teams must not
+    // even learn that a submission happened, let alone its amount.
     if (this.io && team.id) {
-      this.io.to(`team:${team.id}`).emit('bid:blind-success', { amount: bidAmount });
+      this.io.to(`team:${team.id}`).emit('bid:blind-success', { amount: bidAmount, minimumValidBid });
     }
     return { success: true };
   }
@@ -662,8 +798,12 @@ class AuctionEngine {
     this.isAuctionCompleting = true;
 
     if (this.mode === 'BLIND' && this.blindBids.length > 0) {
-      // Resolve highest blind bid
-      const sorted = [...this.blindBids].sort((a, b) => b.amount - a.amount);
+      // §12/§13 — resolve the sealed round server-side. Highest valid bid wins;
+      // ties go to the EARLIEST SERVER-SIDE submission (timestamps here are set
+      // by the engine at registration — client clocks are never trusted).
+      const sorted = [...this.blindBids].sort(
+        (a, b) => (b.amount - a.amount) || ((a.timestamp || 0) - (b.timestamp || 0))
+      );
       const winner = sorted[0];
       this.currentBid = winner.amount;
       this.highestBidder = { _id: winner.teamId, id: winner.teamId, name: winner.teamName };
@@ -713,7 +853,7 @@ class AuctionEngine {
   }
 
   getState() {
-    return {
+    const state = {
       podiumPlayer: this.podiumPlayer,
       currentBid: this.currentBid,
       highestBidder: this.highestBidder,
@@ -729,6 +869,23 @@ class AuctionEngine {
       systemAuctionState: this.systemAuctionState,
       hasStartedAuction: this.hasStartedAuction
     };
+
+    // §11 — BLIND MODE DATA PRIVACY: sealed-bid data must never reach ANY
+    // client (manager, spectator, or projected admin screen). Stripping it at
+    // this single choke point guarantees no broadcast, initial sync or
+    // reconnect payload ever carries other teams' bid amounts/identities.
+    // Managers only ever learn their OWN submission outcome via the private
+    // team-room 'bid:blind-success' / 'bid:error' events.
+    if (this.mode === 'BLIND') {
+      return {
+        ...state,
+        currentBid: this.podiumPlayer?.basePrice || 0, // Best Price only
+        highestBidder: null,
+        bidHistory: [],
+      };
+    }
+
+    return state;
   }
 }
 

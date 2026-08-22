@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Volume2, VolumeX, Radio, Trophy, Clock, Flame, Wifi, WifiOff } from 'lucide-react';
 import { useAuction } from '../../context/AuctionContext';
 import { useAuth } from '../../context/AuthContext';
+import { usePhase } from '../../context/PhaseContext';
 import { useSocket } from '../../context/SocketContext';
 import {
   PlayerDisplayStage,
@@ -11,10 +12,15 @@ import { useAuctionAnimation } from '../../hooks/useAuctionAnimation';
 import { playerFallback } from '../../utils/playerFallback';
 import { getImageUrl } from '../../utils/imageUrl';
 import Navbar from '../../components/Navbar';
+import WaitingForAuction from '../../components/WaitingForAuction';
+import SoundToggle from '../../components/SoundToggle';
+import { WaitingAnimation } from '../../components/auction';
+import LandingLiveStageCard from '../../components/LandingLiveStageCard';
 
 export default function PublicLiveView() {
   const {
     teams = [],
+    categories = [],
     podiumPlayer,
     currentBid = 0,
     highestBidder,
@@ -22,11 +28,13 @@ export default function PublicLiveView() {
     timerRemaining = 0,
     timerStatus = 'idle',
     bidHistory = [],
+    broadcastVideoUrl,
     formatCurrency = (value) => `${value || 0} BDT`,
   } = useAuction();
 
   const { socket, isConnected } = useSocket();
   const { user } = useAuth();
+  const { auctionStartTime, phase, isAuctionActive } = usePhase();
   const {
     animState,
     introPlayer,
@@ -35,8 +43,6 @@ export default function PublicLiveView() {
     ANIM_STATES,
     onAnimationComplete,
   } = useAuctionAnimation();
-
-  const [soundEnabled, setSoundEnabled] = useState(true);
 
   const safeTeams = useMemo(() => (Array.isArray(teams) ? teams : []), [teams]);
   const safeBidHistory = Array.isArray(bidHistory) ? bidHistory : [];
@@ -62,38 +68,6 @@ export default function PublicLiveView() {
       <main
         className={`flex-1 space-y-6 ${!user ? 'max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6' : ''}`}
       >
-        <div className="glass-card rounded-2xl p-4 border border-cardBorder flex items-center justify-between gap-4 bg-gradient-to-r from-cardBg via-successGreen/30 to-cardBg">
-          <div className="flex items-center space-x-3 min-w-0">
-            <span className="relative flex h-3 w-3 flex-shrink-0">
-              <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${isConnected ? 'bg-neonGreen' : 'bg-warningGold'}`} />
-              <span className={`relative inline-flex rounded-full h-3 w-3 ${isConnected ? 'bg-neonGreen' : 'bg-warningGold'}`} />
-            </span>
-            <span className="text-xs font-black uppercase tracking-widest text-neonGreen flex items-center gap-1.5">
-              <Radio className="w-4 h-4 text-neonGreen" /> LIVE STADIUM BROADCAST
-            </span>
-            <span className={`hidden sm:flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold border ${isConnected
-              ? 'bg-neonGreen/10 text-neonGreen border-neonGreen/20'
-              : 'bg-warningGold/10 text-warningGold border-warningGold/20'
-              }`}>
-              {isConnected ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
-              {isConnected ? 'WS LIVE' : 'RECONNECTING'}
-            </span>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => setSoundEnabled((enabled) => !enabled)}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-cardBg hover:bg-surfaceHover text-xs font-bold rounded-xl border border-borderStrong transition flex-shrink-0"
-          >
-            {soundEnabled ? <Volume2 className="w-4 h-4 text-neonGreen" /> : <VolumeX className="w-4 h-4 text-mutedText" />}
-            <span className="hidden sm:inline">{soundEnabled ? 'Audio FX Enabled' : 'Audio Muted'}</span>
-          </button>
-        </div>
-
-        {/* One continuous premium broadcast panel — the cinematic stage, the
-            live auction information, and the bid ledger all live inside a
-            SINGLE glass card, separated by smooth dividers. No detached columns
-            and no empty gap beneath the animation. */}
         <motion.div
           className="glass-card rounded-3xl border overflow-hidden bg-gradient-to-b from-cardBg/90 via-cardBg to-successGreen/20 shadow-2xl"
           animate={{
@@ -104,12 +78,23 @@ export default function PublicLiveView() {
           }}
           transition={{ duration: 0.4 }}
         >
-          {/* Shared confined Player Display stage — the premium cinematic
-              surface. Collapses flush during LIVE so the auction info sits
-              directly beneath it with no reserved gap. */}
-          <PlayerDisplayStage
+          {/* Global sound on/off — anchored to the stage card, right beside
+              the LIVE BROADCAST badge when a broadcast is playing */}
+          <div className="relative">
+            <div className="absolute top-3 left-3 z-40 flex items-center gap-2">
+              {Boolean(broadcastVideoUrl) && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#050505]/85 backdrop-blur-md border border-red-500/60 text-red-400 text-[10px] font-mono font-black tracking-widest uppercase">
+                  <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                  Live Broadcast
+                </span>
+              )}
+              <SoundToggle />
+            </div>
+
+            <PlayerDisplayStage
             className="rounded-none"
             cinematicHeight="min-h-[480px] sm:min-h-[620px] lg:min-h-[720px]"
+            showLeaderboard={user?.role !== 'PLAYER'}
             animState={animState}
             ANIM_STATES={ANIM_STATES}
             introPlayer={introPlayer}
@@ -119,91 +104,22 @@ export default function PublicLiveView() {
             showWaiting={showWaiting}
             waitingStats={{ teamsConnected, managersReady }}
           >
-          <div className="relative p-6 sm:p-8 space-y-8">
-            <AnimatePresence mode="wait">
-            {podiumPlayer ? (
-              <motion.div
-                key="live"
-                className="space-y-8"
-                initial={{ opacity: 0, scale: 1.06, filter: 'blur(8px)' }}
-                animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
-                exit={{ opacity: 0, scale: 0.96, filter: 'blur(6px)' }}
-                transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-              >
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-6 border-b border-cardBorder pb-6">
-                  <div className="flex flex-col sm:flex-row items-center gap-6">
-                    <div className="relative flex-shrink-0">
-                      <img
-                        src={getImageUrl(podiumPlayer.imageUrl, playerFallback('slate'))}
-                        alt={podiumPlayer.name}
-                        className="w-32 h-32 rounded-3xl object-cover border-4 border-neonGreen/50 shadow-2xl"
-                      />
-                      <span className="absolute -bottom-2 -right-2 px-3 py-1 bg-neonGreen text-darkBg font-black text-xs rounded-lg uppercase tracking-wider shadow-lg">
-                        {podiumPlayer.category || 'Player'}
-                      </span>
-                    </div>
-
-                    <div className="space-y-1 text-center sm:text-left">
-                      <span className="text-xs font-extrabold text-neonGreen uppercase tracking-widest flex items-center justify-center sm:justify-start gap-1">
-                        <Flame className="w-4 h-4 text-warningGold animate-bounce" /> CURRENT PLAYER ON PODIUM
-                      </span>
-                      <h1 className="text-3xl sm:text-4xl font-black font-heading text-white">{podiumPlayer.name}</h1>
-                      <p className="text-sm text-secondaryText font-semibold">{podiumPlayer.jerseyName}</p>
-                      <p className="text-xs text-secondaryText font-mono">
-                        Base Opening Price: <strong className="text-neonGreen">{formatCurrency(podiumPlayer.basePrice)}</strong>
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col items-center flex-shrink-0">
-                    <motion.div
-                      className={`relative w-28 h-28 rounded-full flex items-center justify-center border-4 shadow-2xl ${isUrgent ? 'border-urgentRed text-urgentRedText' : 'border-neonGreen text-neonGreen'}`}
-                      animate={isUrgent
-                        ? { scale: [1, 1.08, 1], boxShadow: ['0 0 0 rgba(255,92,92,0)', '0 0 28px rgba(255,92,92,0.7)', '0 0 0 rgba(255,92,92,0)'] }
-                        : { scale: 1 }}
-                      transition={isUrgent ? { duration: 1, repeat: Infinity } : { duration: 0.3 }}
-                      style={{ willChange: 'transform' }}
-                    >
-                      <span className="text-4xl font-black font-mono">{timerRemaining}s</span>
-                    </motion.div>
-                    <span className="text-[10px] font-bold text-secondaryText uppercase tracking-widest mt-2">
-                      Mode: <strong className="text-white uppercase">{biddingMode}</strong>
-                    </span>
-                  </div>
-                </div>
-
-                <div className="bg-darkBg/90 border-2 border-neonGreen/40 rounded-2xl p-6 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-2xl">
-                  <div className="text-center sm:text-left">
-                    <span className="text-xs font-extrabold text-secondaryText uppercase tracking-widest">HIGHEST BID AMOUNT</span>
-                    <h2 className="text-4xl sm:text-5xl font-black font-mono text-neonGreen mt-1">
-                      {formatCurrency(currentBid)}
-                    </h2>
-                  </div>
-
-                  <div className="text-center sm:text-right">
-                    <span className="text-xs font-extrabold text-secondaryText uppercase tracking-widest">LEADING FRANCHISE</span>
-                    <div className="flex items-center gap-3 mt-1 justify-center sm:justify-end">
-                      <span className="text-3xl">{highestBidder ? highestBidder.logo : '--'}</span>
-                      <span className="text-xl font-black text-white">{highestBidder ? highestBidder.name : 'Opening / Base'}</span>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            ) : (
-              <motion.div
-                key="standby"
-                className="text-center py-24 space-y-4"
-                initial={{ opacity: 0, scale: 0.96 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 1.04, filter: 'blur(6px)' }}
-                transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-              >         
-                
-              </motion.div>
+            {podiumPlayer && (
+              <div className="relative p-2 sm:p-4">
+                <LandingLiveStageCard
+                  player={podiumPlayer}
+                  currentBid={currentBid}
+                  highestBidder={highestBidder}
+                  timerRemaining={timerRemaining}
+                  timerStatus={timerStatus}
+                  mode="spectator"
+                  categories={categories}
+                  formatCurrency={formatCurrency}
+                />
+              </div>
             )}
-            </AnimatePresence>
+            </PlayerDisplayStage>
           </div>
-          </PlayerDisplayStage>
 
           {/* Live Bid Ledger — same continuous panel, separated by a divider. */}
           <div className="border-t border-cardBorder/80 p-6 sm:p-8 space-y-4">

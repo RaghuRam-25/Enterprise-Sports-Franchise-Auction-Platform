@@ -1,26 +1,36 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Zap, Gavel, CheckCircle2, TrendingUp, LogOut, ShieldOff, Wallet, Users, Crown, Radio } from 'lucide-react';
+import { TrendingUp, LogOut, ShieldOff, Wallet, Users, Crown, Radio } from 'lucide-react';
 import { useAuction } from '../../context/AuctionContext';
 import { useAuth } from '../../context/AuthContext';
+import { usePhase } from '../../context/PhaseContext';
 import { PlayerDisplayStage, TargetPlayerAlert } from '../../components/auction';
 import { useAuctionAnimation } from '../../hooks/useAuctionAnimation';
 
 import { playerFallback } from '../../utils/playerFallback';
 import { getImageUrl } from '../../utils/imageUrl';
 
+import LandingLiveStageCard from '../../components/LandingLiveStageCard';
+import WaitingForAuction from '../../components/WaitingForAuction';
+import SoundToggle from '../../components/SoundToggle';
+import { WaitingAnimation } from '../../components/auction';
+
 export const ManagerDashboard = () => {
   const { user } = useAuth();
+  const { auctionStartTime, isAuctionActive } = usePhase();
   const {
     teams = [],
+    categories = [],
     podiumPlayer,
     currentBid = 0,
     highestBidder,
     biddingMode = 'normal',
+    timerRemaining = 0,
     timerStatus = 'idle',
     bidHistory = [],
     calculateNextBidAmount,
     placeNormalBid,
     placeBlindBid,
+    getTeamBiddingEligibility,
     formatCurrency = (v) => `${v} BDT`,
     triggerToast = () => { },
     targetAlert = null,
@@ -37,7 +47,6 @@ export const ManagerDashboard = () => {
   } = useAuctionAnimation();
 
   const [blindBidAmount, setBlindBidAmount] = useState('');
-  const [blindBidError, setBlindBidError] = useState('');
   const [isBidding, setIsBidding] = useState(false);
   const [hasOptedOut, setHasOptedOut] = useState(false);
   const podiumPlayerId = podiumPlayer?._id || podiumPlayer?.id || null;
@@ -72,6 +81,19 @@ export const ManagerDashboard = () => {
     ? calculateNextBidAmount(safeCurrentBid, activeTeam?.totalBudget || 100000000)
     : safeCurrentBid + 150000;
 
+  // ── Reserve-Budget Eligibility (§3–§10 of the bidding spec) ──────────────────
+  // Recomputed live from teams/players/categories state — every purchase,
+  // price change or roster change instantly re-gates the Place Bid button.
+  const activeTeamId = activeTeam.id || activeTeam._id;
+  const eligibility = useMemo(
+    () => (typeof getTeamBiddingEligibility === 'function'
+      ? getTeamBiddingEligibility(activeTeamId, nextExactBid)
+      : null),
+    [getTeamBiddingEligibility, activeTeamId, nextExactBid]
+  );
+  const reserveBudget = eligibility?.requiredReserveBudget ?? 0;
+  const bidBalance = eligibility?.availableBidBalance ?? remainingBudget;
+
   const isCurrentlyHighestBidder = Boolean(
     highestBidder &&
     ((highestBidder.id && highestBidder.id === activeTeam.id) ||
@@ -102,21 +124,24 @@ export const ManagerDashboard = () => {
     setTimeout(() => setIsBidding(false), 500);
   };
 
-  const handleBlindBidSubmit = (e) => {
-    e.preventDefault();
-    setBlindBidError('');
-    if (hasOptedOut) return;
+  const submitSealedBid = () => {
+    if (!podiumPlayer || hasOptedOut || rosterFull) return;
 
     const targetTeamId = activeTeam.id || activeTeam._id;
     const res = placeBlindBid ? placeBlindBid(targetTeamId, blindBidAmount) : { success: false, error: 'Blind bid service unavailable' };
 
     if (!res.success) {
-      setBlindBidError(res.error || 'Validation failed');
-      triggerToast('Blind Bid Failed validation check!', 'error');
+      triggerToast(res.error || 'Blind bid validation failed', 'error');
     } else {
-      triggerToast(`Sealed blind bid of ${formatCurrency(blindBidAmount)} submitted.`, 'success');
+      triggerToast('Sealed blind bid submitted. Result reveals when the round ends.', 'success');
       setBlindBidAmount('');
     }
+  };
+
+  // One bidding surface: normal → open raise, blind → sealed input + push.
+  const handleStageAction = () => {
+    if (isBlindMode) submitSealedBid();
+    else handleNormalBidSubmit();
   };
 
   const handleOptOut = () => {
@@ -125,7 +150,23 @@ export const ManagerDashboard = () => {
     triggerToast(`You've opted out of bidding on ${podiumPlayer.name}.`, 'info');
   };
 
-  const bidButtonDisabled = !podiumPlayer || timerStatus !== 'running' || isCurrentlyHighestBidder || hasOptedOut || nextExactBid > activeTeam.remainingBudget;
+  const isBlindMode = biddingMode === 'blind';
+
+  // §9 — Place Bid button final conditions. The button is HIDDEN entirely when
+  // the squad limit is reached (§2), and disabled with a reason label for every
+  // other failed condition (reserve unaffordable, zero bid balance, etc.).
+  const rosterFull = eligibility?.reasons?.includes('ROSTER_LIMIT_REACHED') || false;
+  const biddingBlocked = Boolean(eligibility && !eligibility.bidAllowed);
+  const bidButtonDisabled = !podiumPlayer || timerStatus !== 'running' || isCurrentlyHighestBidder || hasOptedOut || biddingBlocked || nextExactBid > activeTeam.remainingBudget;
+
+  const blockedReasonLabel = (() => {
+    if (!eligibility) return null;
+    if (eligibility.reasons.includes('ROSTER_LIMIT_REACHED')) return 'Squad Limit Reached';
+    if (eligibility.reasons.includes('RESERVE_EXCEEDS_BUDGET')) return 'Budget Reserved';
+    if (eligibility.reasons.includes('NO_EXTRA_PLAYERS')) return 'No Extra Players Left';
+    if (eligibility.reasons.includes('INSUFFICIENT_BID_BALANCE')) return `Bid Balance: ${formatCurrency(Math.max(0, eligibility.availableBidBalance))}`;
+    return null;
+  })();
 
   const bidButtonLabel = hasOptedOut
     ? 'You Are Sitting This Out'
@@ -137,7 +178,27 @@ export const ManagerDashboard = () => {
           ? 'Auction Clock Paused'
           : nextExactBid > activeTeam.remainingBudget
             ? 'Exceeds Purse'
-            : `Place Bid: ${formatCurrency(nextExactBid)}`;
+            : blockedReasonLabel && biddingBlocked
+              ? `Place Bid — ${blockedReasonLabel}`
+              : `Place Bid: ${formatCurrency(nextExactBid)}`;
+
+  // ── Blind Mode — single input + push on the stage card itself (§2) ──────────
+  // Minimum hint lives in the input placeholder; full §8 validation happens in
+  // placeBlindBid (client context) and again server-side against the live DB.
+  const bestPrice = Number(podiumPlayer?.basePrice) || 0;
+  const blindBidNum = Number(blindBidAmount);
+  const maxAllowableBid = eligibility ? Math.max(0, eligibility.maxAllowableBid) : remainingBudget;
+  const blindReady = Boolean(
+    podiumPlayer &&
+    timerStatus === 'running' &&
+    !hasOptedOut &&
+    !rosterFull &&
+    !biddingBlocked &&
+    blindBidAmount &&
+    Number.isFinite(blindBidNum) &&
+    blindBidNum >= bestPrice &&      // §6 — minimum valid bid
+    blindBidNum <= maxAllowableBid   // §7/§15 — reserve stays protected
+  );
 
   // Target Players List state & Live Target Alert integration
   const [targetList, setTargetList] = useState([]);
@@ -168,32 +229,6 @@ export const ManagerDashboard = () => {
 
   return (
     <div className="space-y-6">
-
-      {/* Real-Time Target Player Alert Notification Banner */}
-      {/* Live socket-pushed alert fired the moment this manager's target player
-          hits the podium — beats the polling-derived banner below. */}
-      {targetAlert && targetAlert.player && (
-        <TargetPlayerAlert
-          targetItem={{
-            playerId: targetAlert.player,
-            note: targetAlert.note,
-            optionalBudgetLimit: targetAlert.optionalBudgetLimit,
-            priority: targetAlert.priority,
-          }}
-          onQuickBid={handleNormalBidSubmit}
-          onDismiss={dismissTargetAlert}
-        />
-      )}
-
-      {/* Real-Time Target Player Alert Notification Banner */}
-      {showTargetAlert && !targetAlert && (
-        <TargetPlayerAlert
-          targetItem={activeTargetItem}
-          onQuickBid={handleNormalBidSubmit}
-          onDismiss={() => setDismissedAlertPlayerId(podiumPlayerId)}
-        />
-      )}
-
 
       {/* Top Team Header — premium franchise identity band */}
       <div className="relative overflow-hidden glass-card rounded-3xl p-6 sm:p-7 border border-white/5 bg-gradient-to-br from-cardBg via-cardBg/80 to-successGreen/30 shadow-2xl shadow-successGreen/20">
@@ -250,6 +285,9 @@ export const ManagerDashboard = () => {
             <span className="text-[10px] font-bold text-secondaryText uppercase tracking-widest">Available Purse</span>
           </div>
           <h3 className="mt-3 text-xl font-black font-mono text-neonGreen">{formatCurrency(activeTeam.remainingBudget)}</h3>
+          <p className="mt-1 text-[10px] font-mono text-mutedText truncate" title={`Reserve for ${eligibility?.remainingMinimumPlayers ?? 0} more minimum players`}>
+            Reserve: {formatCurrency(reserveBudget)} · Bid Bal: {formatCurrency(Math.max(0, bidBalance))}
+          </p>
           <div className="mt-2 h-1.5 rounded-full bg-surfaceHover overflow-hidden">
             <div className="h-full rounded-full bg-gradient-to-r from-neonGreen to-neonGreen transition-all duration-500" style={{ width: `${pursePct}%` }} />
           </div>
@@ -262,7 +300,14 @@ export const ManagerDashboard = () => {
             </div>
             <span className="text-[10px] font-bold text-secondaryText uppercase tracking-widest">Roster Slots</span>
           </div>
-          <h3 className="mt-3 text-xl font-black font-mono text-primaryText">{currentRosterCount}<span className="text-mutedText text-sm"> / {activeTeam.minRoster || 11} min</span></h3>
+          <h3 className="mt-3 text-xl font-black font-mono text-primaryText">{currentRosterCount}<span className="text-mutedText text-sm"> / {eligibility?.minimumPerTeam || minRoster} required</span></h3>
+          <p className="mt-1 text-[10px] font-mono text-mutedText truncate">
+            {eligibility?.remainingMinimumPlayers > 0
+              ? `${eligibility.remainingMinimumPlayers} more to secure`
+              : eligibility?.leagueExtraPlayers > 0
+                ? `${eligibility.leagueExtraPlayers} extra in pool`
+                : 'Minimum complete'}
+          </p>
           <div className="mt-2 h-1.5 rounded-full bg-surfaceHover overflow-hidden">
             <div className="h-full rounded-full bg-gradient-to-r from-neonGreen to-neonGreen transition-all duration-500" style={{ width: `${rosterPct}%` }} />
           </div>
@@ -273,10 +318,20 @@ export const ManagerDashboard = () => {
             <div className="w-9 h-9 rounded-xl bg-warningGold/10 border border-warningGold/20 flex items-center justify-center">
               <Crown className="w-4.5 h-4.5" />
             </div>
-            <span className="text-[10px] font-bold text-secondaryText uppercase tracking-widest">Leading Bid</span>
+            <span className="text-[10px] font-bold text-secondaryText uppercase tracking-widest">{isBlindMode ? 'Sealed Bids' : 'Leading Bid'}</span>
           </div>
-          <h3 className="mt-3 text-xl font-black font-mono text-warningGold">{formatCurrency(safeCurrentBid)}</h3>
-          <p className="mt-2 text-[11px] text-mutedText truncate">{highestBidder ? highestBidder.name : 'Awaiting opening bid'}</p>
+          {isBlindMode ? (
+            <>
+              {/* §1/§3/§4 — no amounts, no team identities during a blind round */}
+              <h3 className="mt-3 text-xl font-black font-mono text-slate-500 tracking-widest select-none">•••••</h3>
+              <p className="mt-2 text-[11px] text-mutedText truncate">All bids are confidential until the round ends</p>
+            </>
+          ) : (
+            <>
+              <h3 className="mt-3 text-xl font-black font-mono text-warningGold">{formatCurrency(safeCurrentBid)}</h3>
+              <p className="mt-2 text-[11px] text-mutedText truncate">{highestBidder ? highestBidder.name : 'Awaiting opening bid'}</p>
+            </>
+          )}
         </div>
 
         <div className={`group glass-card rounded-2xl p-4 border transition-all duration-300 hover:-translate-y-0.5 ${isCurrentlyHighestBidder ? 'border-neonGreen/40 bg-gradient-to-br from-successGreen/40 to-cardBg' : 'border-white/5 bg-gradient-to-br from-cardBg to-darkBg'}`}>
@@ -308,10 +363,39 @@ export const ManagerDashboard = () => {
           </div>
         </div>
 
+        {/* Target Player Alert — shown INSIDE the live auction stage (not above
+            the dashboard). Socket-pushed alert beats the polling-derived one. */}
+        {targetAlert && targetAlert.player && (
+          <TargetPlayerAlert
+            targetItem={{
+              playerId: targetAlert.player,
+              note: targetAlert.note,
+              optionalBudgetLimit: targetAlert.optionalBudgetLimit,
+              priority: targetAlert.priority,
+            }}
+            onQuickBid={handleNormalBidSubmit}
+            onDismiss={dismissTargetAlert}
+          />
+        )}
+
+        {showTargetAlert && !targetAlert && (
+          <TargetPlayerAlert
+            targetItem={activeTargetItem}
+            onQuickBid={handleNormalBidSubmit}
+            onDismiss={() => setDismissedAlertPlayerId(podiumPlayerId)}
+          />
+        )}
+
         {/* Shared confined Player Display stage — premium cinematic surface for
             the Manager / Player panel. Confined to this card; the team header,
             bid controls, opt-out, and bid stream below all stay visible. */}
-        <PlayerDisplayStage
+        <div className="relative">
+          {/* Global sound on/off — same spot as the live auction page */}
+          <div className="absolute top-3 left-3 z-40">
+            <SoundToggle />
+          </div>
+
+          <PlayerDisplayStage
           className="rounded-2xl"
           cinematicHeight="min-h-[440px] sm:min-h-[520px] lg:min-h-[600px]"
           animState={animState}
@@ -324,126 +408,31 @@ export const ManagerDashboard = () => {
             highestBidder &&
             (highestBidder.id === activeTeam.id || highestBidder._id === activeTeam._id)
           )}
-          showWaiting={!podiumPlayer && (animState === ANIM_STATES_HOOK?.IDLE || !animState)}
-          waitingStats={{
-            teamsConnected: safeTeams.length,
-            managersReady: safeTeams.filter((t) => t.managerId).length,
-          }}
+          showWaiting={!podiumPlayer && animState === ANIM_STATES_HOOK.IDLE}
         >
-          {podiumPlayer ? (
-            <div className="grid grid-cols-1 md:grid-cols-6 gap-4 items-center bg-gradient-to-br from-darkBg/90 to-cardBg/60 p-6 rounded-2xl border border-white/5 shadow-inner">
-              <div className="relative mx-auto md:mx-0">
-                <div className="absolute -inset-1.5 rounded-2xl bg-gradient-to-br from-neonGreen/30 to-transparent blur-md" />
-                <img
-                  src={getImageUrl(podiumPlayer.imageUrl, playerFallback('emerald'))}
-                  alt={podiumPlayer.name}
-                  className="relative w-36 h-36 rounded-2xl object-cover border-2 border-neonGreen/40 shadow-2xl"
-                />
-                <span className="absolute -bottom-2 -right-2 px-2.5 py-0.5 bg-neonGreen text-darkBg font-black text-[10px] rounded-lg uppercase tracking-wider shadow-lg">
-                  {podiumPlayer.category}
-                </span>
-              </div>
-
-              <div className="md:col-span-2 space-y-3 text-center md:text-left">
-                <div>
-                  <h3 className="text-2xl font-black text-white tracking-tight">{podiumPlayer.name}</h3>
-                  <p className="text-xs text-secondaryText mt-0.5">
-                    Jersey: <strong className="text-primaryText">{podiumPlayer.jerseyName}</strong> &bull; Student ID: <span className="font-mono">{podiumPlayer.studentId}</span>
-                  </p>
-                </div>
-
-                <div className="flex flex-wrap gap-1.5 justify-center md:justify-start text-[11px]">
-                  <span className="px-2.5 py-1 bg-surfaceHover/80 text-secondaryText rounded-lg font-semibold border border-white/5">
-                    Primary: {podiumPlayer.primaryPosition}
-                  </span>
-                  <span className="px-2.5 py-1 bg-surfaceHover/80 text-secondaryText rounded-lg font-semibold border border-white/5">
-                    Session: {podiumPlayer.session}
-                  </span>
-                </div>
-
-                <div className="pt-3 border-t border-white/5 grid grid-cols-2 gap-4 text-xs">
-                  <div className="rounded-xl bg-cardBg/60 border border-white/5 px-3 py-2">
-                    <span className="text-[10px] text-mutedText uppercase tracking-widest">Base Price</span>
-                    <p className="font-mono font-bold text-primaryText mt-0.5">{formatCurrency(podiumPlayer.basePrice)}</p>
-                  </div>
-                  <div className="rounded-xl bg-neonGreen/5 border border-neonGreen/20 px-3 py-2">
-                    <span className="text-[10px] text-mutedText uppercase tracking-widest">Current High Bid</span>
-                    <p className="font-mono font-bold text-xl text-neonGreen mt-0.5">{formatCurrency(safeCurrentBid)}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="py-16 text-center text-mutedText bg-gradient-to-b from-darkBg/60 to-transparent rounded-2xl border border-white/5 space-y-2">
-              <Gavel className="w-12 h-12 mx-auto text-mutedText animate-pulse" />
-              <p className="font-bold text-secondaryText">Podium is currently empty</p>
-              <p className="text-xs text-mutedText">Waiting for Podium Admin to launch the next player.</p>
-            </div>
+          {podiumPlayer && (
+            <LandingLiveStageCard
+              player={podiumPlayer}
+              currentBid={currentBid}
+              highestBidder={highestBidder}
+              timerRemaining={timerRemaining}
+              timerStatus={timerStatus}
+              mode="manager"
+              onPlaceBid={handleStageAction}
+              hideBidButton={rosterFull}
+              blindMode={isBlindMode}
+              blindAmount={blindBidAmount}
+              onBlindAmountChange={setBlindBidAmount}
+              bidLabel={isBlindMode
+                ? 'Place Blind Bid'
+                : (isBidding ? 'Placing Bid…' : bidButtonLabel)}
+              bidDisabled={isBlindMode ? !blindReady : (bidButtonDisabled || isBidding)}
+              categories={categories}
+              formatCurrency={formatCurrency}
+            />
           )}
-        </PlayerDisplayStage>
-
-        {/* Bid Action Card */}
-        {biddingMode === 'normal' ? (
-          <div className="relative overflow-hidden bg-darkBg/80 p-5 sm:p-6 rounded-2xl border border-neonGreen/20">
-            <div className="pointer-events-none absolute -top-10 left-1/2 -translate-x-1/2 w-64 h-32 bg-neonGreen/20 blur-3xl rounded-full" />
-
-            <div className="relative flex flex-col sm:flex-row items-center gap-5">
-              <div className="text-center sm:text-left flex-shrink-0">
-                <span className="text-[10px] text-secondaryText uppercase tracking-widest">Next Minimum Bid Required</span>
-                <p className="text-3xl font-black font-mono text-neonGreen">{formatCurrency(nextExactBid)}</p>
-              </div>
-
-              <button
-                onClick={handleNormalBidSubmit}
-                disabled={bidButtonDisabled}
-                className={`group relative flex-1 w-full py-5 rounded-2xl font-black text-sm sm:text-base uppercase tracking-wider transition-all duration-300 shadow-2xl flex items-center justify-center gap-2.5 overflow-hidden ${isCurrentlyHighestBidder
-                  ? 'bg-successGreen/90 text-darkBg border border-neonGreen/40 cursor-default'
-                  : hasOptedOut
-                    ? 'bg-surfaceActive text-secondaryText border border-borderStrong cursor-not-allowed'
-                    : !podiumPlayer || timerStatus !== 'running'
-                      ? 'bg-surfaceActive text-secondaryText border border-borderStrong cursor-not-allowed'
-                      : nextExactBid > activeTeam.remainingBudget
-                        ? 'bg-urgentRed text-urgentRedText border border-urgentRed cursor-not-allowed'
-                        : 'bg-gradient-to-r from-neonGreen via-neonGreen to-neonGreen bg-[length:200%_100%] hover:bg-[position:100%_0] text-darkBg shadow-successGreen/60 hover:shadow-neonGreen/40 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.99]'
-                  }`}
-              >
-                {!bidButtonDisabled && (
-                  <span className="pointer-events-none absolute inset-0 overflow-hidden rounded-2xl">
-                    <span className="absolute -inset-y-full -left-1/2 w-1/3 rotate-12 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-[130%] group-hover:translate-x-[420%] transition-transform duration-[900ms] ease-out" />
-                  </span>
-                )}
-                <Zap className={`w-5 h-5 sm:w-6 sm:h-6 fill-current relative ${!bidButtonDisabled ? 'animate-pulse' : ''}`} />
-                <span className="relative">{bidButtonLabel}</span>
-              </button>
-            </div>
-          </div>
-        ) : (
-          <form onSubmit={handleBlindBidSubmit} className="space-y-4 bg-darkBg/80 p-5 sm:p-6 rounded-2xl border border-warningGold/20 hidden group-[:fullscreen]:block">
-            <div>
-              <label className="block text-xs font-bold text-warningGold uppercase mb-1">Sealed Blind Bid Amount (BDT)</label>
-              <input
-                type="number"
-                value={blindBidAmount}
-                onChange={e => setBlindBidAmount(e.target.value)}
-                placeholder="Enter sealed bid..."
-                className="glass-input w-full px-3 py-2.5 rounded-xl font-mono text-sm text-white"
-                disabled={hasOptedOut}
-                required
-              />
-              {blindBidError && (
-                <p className="text-[11px] text-urgentRedText font-semibold mt-1">{blindBidError}</p>
-              )}
-            </div>
-
-            <button
-              type="submit"
-              disabled={!podiumPlayer || timerStatus !== 'running' || !blindBidAmount || hasOptedOut}
-              className="w-full py-3.5 bg-gradient-to-r from-warningGold to-warningGold hover:from-warningGold hover:to-warningGold text-darkBg font-bold text-xs uppercase tracking-wider rounded-xl transition shadow-lg flex items-center justify-center gap-2 disabled:opacity-50"
-            >
-              <CheckCircle2 className="w-4 h-4" /> Submit Sealed Blind Bid
-            </button>
-          </form>
-        )}
+          </PlayerDisplayStage>
+        </div>
 
         {/* My Bid Out Card */}
         <div className={`flex flex-col sm:flex-row items-center justify-between gap-3 p-4 sm:p-5 rounded-2xl border ${hasOptedOut ? 'bg-warningGold/10 border-warningGold/30' : 'bg-darkBg/60 border-cardBorder'}`}>
@@ -471,7 +460,9 @@ export const ManagerDashboard = () => {
           </button>
         </div>
 
-        {/* Bid History Table */}
+        {/* Bid History Table — §1/§11: hidden entirely during Blind Mode so no
+            team identity or amount is ever surfaced to competing managers. */}
+        {!isBlindMode && (
         <div className="space-y-3 pt-2">
           <h3 className="text-xs font-bold uppercase tracking-wider text-secondaryText flex items-center justify-between">
             <span>Live Bid Stream ({safeBidHistory.length})</span>
@@ -495,6 +486,7 @@ export const ManagerDashboard = () => {
             )}
           </div>
         </div>
+        )}
       </div>
 
       {/* Cinematic overlays are now rendered confined inside the Podium Display

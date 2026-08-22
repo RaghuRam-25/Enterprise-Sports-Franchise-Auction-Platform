@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, ShieldCheck, UserCheck, Users, Info, Eye } from 'lucide-react';
+import { ArrowLeft, ShieldCheck, UserCheck, Users, Info, Eye, Search, ArrowUpDown } from 'lucide-react';
 import api from '../../services/api';
 import TeamBadge from '../../components/common/TeamBadge';
 
@@ -20,6 +20,8 @@ export default function GeneralTeamProfile() {
   const { id } = useParams();
   const [team, setTeam] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [nameQuery, setNameQuery] = useState('');
+  const [priceSort, setPriceSort] = useState('default'); // default | high | low
 
   useEffect(() => {
     let cancelled = false;
@@ -63,6 +65,23 @@ export default function GeneralTeamProfile() {
   const roster = Array.isArray(team.currentRoster) ? team.currentRoster : [];
   const managerName = team.managerId?.name || team.ownerName || null;
 
+  const priceOf = (p) => Number(p.finalPrice || p.soldPrice || p.basePrice || 0);
+
+  // Filters: player-name search + ৳ price sorting
+  const visibleRoster = useMemo(() => {
+    let list = [...roster];
+    const q = nameQuery.trim().toLowerCase();
+    if (q) {
+      list = list.filter(p =>
+        `${p.jerseyName || ''} ${p.name || ''}`.toLowerCase().includes(q)
+      );
+    }
+    if (priceSort === 'high') list.sort((a, b) => priceOf(b) - priceOf(a));
+    else if (priceSort === 'low') list.sort((a, b) => priceOf(a) - priceOf(b));
+    return list;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [roster, nameQuery, priceSort]);
+
   return (
     <div className="space-y-6">
       <Link to="/general/teams" className="inline-flex items-center gap-1.5 text-[11px] font-bold text-secondaryText hover:text-white transition">
@@ -102,14 +121,45 @@ export default function GeneralTeamProfile() {
 
       {/* Squad */}
       <section className="glass-card rounded-2xl p-5 border border-cardBorder space-y-4">
-        <h3 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-secondaryText">
-          <ShieldCheck className="w-4 h-4 text-neonGreen" /> Squad ({roster.length})
-        </h3>
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+          <h3 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-secondaryText shrink-0">
+            <ShieldCheck className="w-4 h-4 text-neonGreen" /> Squad ({roster.length})
+          </h3>
+
+          {/* Name search + price sort */}
+          <div className="flex flex-col sm:flex-row gap-2.5 sm:ml-auto">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-mutedText pointer-events-none" />
+              <input
+                type="text"
+                value={nameQuery}
+                onChange={e => setNameQuery(e.target.value)}
+                placeholder="Search player by name..."
+                className="w-full sm:w-56 pl-9 pr-3 py-2 rounded-xl text-xs bg-cardBg/80 border border-cardBorder text-primaryText placeholder:text-mutedText focus:outline-none focus:border-neonGreen/60 transition"
+              />
+            </div>
+            <div className="relative">
+              <ArrowUpDown className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-mutedText pointer-events-none" />
+              <select
+                value={priceSort}
+                onChange={e => setPriceSort(e.target.value)}
+                className="w-full sm:w-auto pl-9 pr-8 py-2 rounded-xl text-xs font-bold bg-cardBg/80 border border-cardBorder text-secondaryText focus:outline-none focus:border-neonGreen/60 transition appearance-none cursor-pointer"
+              >
+                <option value="default">৳ Price: Default</option>
+                <option value="high">৳ Price: High → Low</option>
+                <option value="low">৳ Price: Low → High</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
         {roster.length === 0 ? (
           <p className="text-xs text-mutedText py-6 text-center">No players acquired yet.</p>
+        ) : visibleRoster.length === 0 ? (
+          <p className="text-xs text-mutedText py-6 text-center">No players match your filter.</p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {roster.map(p => {
+            {visibleRoster.map(p => {
               const catStyle = CATEGORY_STYLES[p.category] || CATEGORY_STYLES.default;
               return (
                 <Link
@@ -133,11 +183,14 @@ export default function GeneralTeamProfile() {
                     <p className="text-xs font-bold text-primaryText truncate group-hover:text-white">{p.jerseyName || p.name}</p>
                     <p className="text-[11px] text-mutedText truncate">{p.primaryPosition || p.positions?.[0] || '—'}</p>
                   </div>
-                  {p.category && (
-                    <span className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded border shrink-0 ${catStyle}`}>
-                      {p.category}
-                    </span>
-                  )}
+                  <div className="flex flex-col items-end gap-1 shrink-0">
+                    <span className="text-[11px] font-mono font-black text-neonGreenHover">৳{priceOf(p).toLocaleString()}</span>
+                    {p.category && (
+                      <span className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded border ${catStyle}`}>
+                        {p.category}
+                      </span>
+                    )}
+                  </div>
                 </Link>
               );
             })}

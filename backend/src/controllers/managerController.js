@@ -55,17 +55,54 @@ export const updateOwnTeam = async (req, res, next) => {
     // Frontend sends teamColor; the Team schema uses primaryColor (themeConfig reads team.primaryColor).
     if (teamColor) updateData.primaryColor = teamColor;
 
+    // Image uploads return { url, publicId } — the permanent Cloudinary
+    // secure_url is what gets persisted. Old assets are destroyed only AFTER
+    // the database update succeeds; a failed DB write triggers rollback of the
+    // freshly uploaded asset so nothing is orphaned.
+    let newLogo = null;
+    let newBanner = null;
     if (req.files) {
       const { processAndUploadImage } = await import('../services/imageService.js');
       if (req.files.logo && req.files.logo[0]) {
-        updateData.logoUrl = await processAndUploadImage(req.files.logo[0].buffer, `team_logo_${team._id}`);
+        const uploaded = await processAndUploadImage(req.files.logo[0].buffer, `team_logo_${team._id}`);
+        if (uploaded.url) {
+          newLogo = uploaded;
+          updateData.logoUrl = uploaded.url;
+          updateData.logoPublicId = uploaded.publicId || null;
+        }
       }
       if (req.files.banner && req.files.banner[0]) {
-        updateData.bannerUrl = await processAndUploadImage(req.files.banner[0].buffer, `team_banner_${team._id}`);
+        const uploaded = await processAndUploadImage(req.files.banner[0].buffer, `team_banner_${team._id}`);
+        if (uploaded.url) {
+          newBanner = uploaded;
+          updateData.bannerUrl = uploaded.url;
+          updateData.bannerPublicId = uploaded.publicId || null;
+        }
       }
     }
 
-    const updatedTeam = await Team.findByIdAndUpdate(teamId, updateData, { new: true });
+    let updatedTeam;
+    try {
+      updatedTeam = await Team.findByIdAndUpdate(teamId, updateData, { new: true });
+    } catch (dbErr) {
+      const { deleteCloudinaryAsset } = await import('../services/imageService.js');
+      if (newLogo?.publicId) await deleteCloudinaryAsset(newLogo.publicId);
+      if (newBanner?.publicId) await deleteCloudinaryAsset(newBanner.publicId);
+      throw dbErr;
+    }
+
+    // DB update won — safe to retire the replaced assets now.
+    try {
+      const { deleteCloudinaryAsset } = await import('../services/imageService.js');
+      if (newLogo?.publicId && team.logoPublicId && team.logoPublicId !== newLogo.publicId) {
+        await deleteCloudinaryAsset(team.logoPublicId);
+      }
+      if (newBanner?.publicId && team.bannerPublicId && team.bannerPublicId !== newBanner.publicId) {
+        await deleteCloudinaryAsset(team.bannerPublicId);
+      }
+    } catch (cleanupErr) {
+      console.error('[updateOwnTeam] Old asset cleanup failed:', cleanupErr?.message || cleanupErr);
+    }
 
     // Emit real-time update so all connected clients refresh instantly
     const io = req.app.get('io');

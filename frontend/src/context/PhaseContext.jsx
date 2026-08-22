@@ -23,6 +23,15 @@ export const PhaseProvider = ({ children }) => {
   const [phase, setPhase] = useState(null); // null = still loading / unknown
   const [isLocked, setIsLocked] = useState(false);
   const [rosterSizing, setRosterSizing] = useState(null);
+
+  // All multi-phase schedule timestamps
+  const [registrationStartTime, setRegistrationStartTime] = useState(null);
+  const [registrationEndTime, setRegistrationEndTime] = useState(null);
+  const [auctionStartTime, setAuctionStartTime] = useState(null);
+  const [auctionEndTime, setAuctionEndTime] = useState(null);
+  const [tournamentStartTime, setTournamentStartTime] = useState(null);
+  const [tournamentEndTime, setTournamentEndTime] = useState(null);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -37,6 +46,12 @@ export const PhaseProvider = ({ children }) => {
     if (typeof payload.locked === 'boolean') {
       setIsLocked(payload.locked);
     }
+    if (payload.registrationStartTime !== undefined) setRegistrationStartTime(payload.registrationStartTime || null);
+    if (payload.registrationEndTime !== undefined) setRegistrationEndTime(payload.registrationEndTime || null);
+    if (payload.auctionStartTime !== undefined) setAuctionStartTime(payload.auctionStartTime || null);
+    if (payload.auctionEndTime !== undefined) setAuctionEndTime(payload.auctionEndTime || null);
+    if (payload.tournamentStartTime !== undefined) setTournamentStartTime(payload.tournamentStartTime || null);
+    if (payload.tournamentEndTime !== undefined) setTournamentEndTime(payload.tournamentEndTime || null);
   }, []);
 
   // Initial fetch (public endpoint, no auth needed)
@@ -73,15 +88,45 @@ export const PhaseProvider = ({ children }) => {
         setIsLocked(payload.locked);
       }
     };
+    const onScheduleChange = (payload) => {
+      applyPhasePayload(payload);
+    };
 
     socket.on('phase:changed', onChange);
     socket.on('phase:lock-toggled', onLockToggle);
+    socket.on('phase:schedule-updated', onScheduleChange);
+    socket.on('phase:auction-start-changed', onScheduleChange);
 
     return () => {
       socket.off('phase:changed', onChange);
       socket.off('phase:lock-toggled', onLockToggle);
+      socket.off('phase:schedule-updated', onScheduleChange);
+      socket.off('phase:auction-start-changed', onScheduleChange);
     };
   }, [socket, applyPhasePayload]);
+
+  // Dynamic calculation for the next active schedule milestone
+  const getActiveScheduleMilestone = useCallback(() => {
+    const now = Date.now();
+    const milestones = [
+      { key: 'registrationStartTime', label: 'REGISTRATION OPENS IN', time: registrationStartTime },
+      { key: 'registrationEndTime', label: 'REGISTRATION CLOSES IN', time: registrationEndTime },
+      { key: 'auctionStartTime', label: 'AUCTION STARTS IN', time: auctionStartTime },
+      { key: 'auctionEndTime', label: 'AUCTION ENDS IN', time: auctionEndTime },
+      { key: 'tournamentStartTime', label: 'TOURNAMENT STARTS IN', time: tournamentStartTime },
+      { key: 'tournamentEndTime', label: 'TOURNAMENT ENDS IN', time: tournamentEndTime },
+    ];
+
+    for (const m of milestones) {
+      if (m.time) {
+        const ms = new Date(m.time).getTime();
+        if (!isNaN(ms) && ms > now) {
+          return { ...m, targetMs: ms };
+        }
+      }
+    }
+    return null;
+  }, [registrationStartTime, registrationEndTime, auctionStartTime, auctionEndTime, tournamentStartTime, tournamentEndTime]);
 
   const value = {
     phase,
@@ -90,13 +135,18 @@ export const PhaseProvider = ({ children }) => {
     error,
     rosterSizing,
     isLocked,
+    registrationStartTime,
+    registrationEndTime,
+    auctionStartTime,
+    auctionEndTime,
+    tournamentStartTime,
+    tournamentEndTime,
+    getActiveScheduleMilestone,
     isRegistrationOpen: phase === 'REGISTRATION',
     isAuctionActive: phase === 'AUCTION',
     isTournamentActive: phase === 'TOURNAMENT',
-    // index helpers for ordering/UI
     phaseIndex: phase ? PHASES.indexOf(phase) : -1,
   };
-
 
   return <PhaseContext.Provider value={value}>{children}</PhaseContext.Provider>;
 };

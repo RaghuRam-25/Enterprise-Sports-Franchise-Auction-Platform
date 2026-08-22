@@ -258,13 +258,71 @@ export function getTeamTheme(team) {
   if (!team) return TEAM_THEMES[0];
   const tObj = typeof team === 'object' ? team : { name: String(team) };
 
+  const nameLower = (tObj.name || '').toLowerCase();
+  if (nameLower.includes('phoenix')) {
+    return {
+      name: 'phoenix',
+      gradient: 'from-[#3b0909]/90 via-[#1a0505]/90 to-[#0d0d0d]',
+      border: 'border-red-600/60 hover:border-red-500',
+      ring: 'hover:shadow-[0_0_28px_rgba(220,38,38,0.3)]',
+      accent: 'bg-gradient-to-r from-red-600 to-amber-600',
+      badgeBg: 'bg-red-950/80 text-red-400 border-red-600/40',
+      stat: 'text-red-500',
+      primaryColor: '#dc2626',
+      secondaryColor: '#7f1d1d',
+      iconName: 'Flame'
+    };
+  }
+  if (nameLower.includes('titan')) {
+    return {
+      name: 'titans',
+      gradient: 'from-[#091f3b]/90 via-[#051120]/90 to-[#0d0d0d]',
+      border: 'border-blue-600/60 hover:border-blue-500',
+      ring: 'hover:shadow-[0_0_28px_rgba(37,99,235,0.3)]',
+      accent: 'bg-gradient-to-r from-blue-600 to-cyan-500',
+      badgeBg: 'bg-blue-950/80 text-blue-400 border-blue-600/40',
+      stat: 'text-blue-400',
+      primaryColor: '#2563eb',
+      secondaryColor: '#1e3a8a',
+      iconName: 'Shield'
+    };
+  }
+  if (nameLower.includes('warrior')) {
+    return {
+      name: 'warriors',
+      gradient: 'from-[#093514]/90 via-[#051c0b]/90 to-[#0d0d0d]',
+      border: 'border-emerald-600/60 hover:border-emerald-500',
+      ring: 'hover:shadow-[0_0_28px_rgba(16,185,129,0.3)]',
+      accent: 'bg-gradient-to-r from-emerald-600 to-teal-500',
+      badgeBg: 'bg-emerald-950/80 text-emerald-400 border-emerald-600/40',
+      stat: 'text-emerald-400',
+      primaryColor: '#10b981',
+      secondaryColor: '#064e3b',
+      iconName: 'Swords'
+    };
+  }
+  if (nameLower.includes('legend')) {
+    return {
+      name: 'legends',
+      gradient: 'from-[#2b0938]/90 via-[#17051f]/90 to-[#0d0d0d]',
+      border: 'border-purple-600/60 hover:border-purple-500',
+      ring: 'hover:shadow-[0_0_28px_rgba(147,51,234,0.3)]',
+      accent: 'bg-gradient-to-r from-purple-600 to-fuchsia-500',
+      badgeBg: 'bg-purple-950/80 text-purple-400 border-purple-600/40',
+      stat: 'text-purple-400',
+      primaryColor: '#9333ea',
+      secondaryColor: '#581c87',
+      iconName: 'Crown'
+    };
+  }
+
   if (tObj.primaryColor) {
     const p = tObj.primaryColor;
     const s = tObj.secondaryColor || '#0B0B0B';
     return {
       name: 'custom',
       customStyle: {
-        background: `linear-gradient(135deg, ${p}1a 0%, #101010 100%)`,
+        background: `linear-gradient(135deg, ${p}22 0%, #101010 100%)`,
       },
       customBorderStyle: {
         borderColor: s,
@@ -280,6 +338,8 @@ export function getTeamTheme(team) {
       accent: '',
       badgeBg: '',
       stat: '',
+      primaryColor: p,
+      secondaryColor: s,
     };
   }
 

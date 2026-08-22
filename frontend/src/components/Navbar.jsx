@@ -1,116 +1,113 @@
-import 'react';
+import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Trophy, Radio, Info, Calendar, Menu } from 'lucide-react';
+import { Trophy, Info, User, Home, Menu } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useAuction } from '../context/AuctionContext';
-import { usePhase } from '../context/PhaseContext';
 
 export default function Navbar({ onOpenMobileSidebar }) {
   const { user } = useAuth();
-  const { timerStatus, podiumPlayer, currentBid, formatCurrency, isRegistrationFrozen } = useAuction();
-  const { phase } = usePhase();
+  const { podiumPlayer } = useAuction();
   const location = useLocation();
 
+  // Determine if current route is a public spectator route
+  const publicRoutes = ['/', '/live', '/matches', '/matches/schedule', '/matches/table', '/matches/stats', '/teams', '/about', '/players'];
+  const isSpectatorRoute = publicRoutes.some(path => 
+    path === '/' ? location.pathname === '/' : location.pathname.startsWith(path)
+  );
+
+  const showSpectatorLinks = !user || isSpectatorRoute;
+
   return (
-    <header className="sticky top-0 z-40 bg-[#0B0B0B] border-b border-[#222222] backdrop-blur-md">
-      <div className="w-full px-4 sm:px-6 lg:px-8">
+    <header className="sticky top-0 z-50 bg-[#08090b]/95 border-b border-white/10 backdrop-blur-xl shadow-2xl">
+      <div className="w-full px-4 sm:px-5">
         <div className="flex items-center justify-between h-16">
 
-          {/* Hamburgers & Brand */}
-          <div className="flex items-center gap-2 min-w-0">
-            {/* Hamburger — only visible when authenticated (sidebar present) & small screens */}
+          {/* Left Brand Logo & Mobile Menu Toggle */}
+          <div className="flex items-center gap-3 min-w-0">
+            <Link to="/" className="flex items-center space-x-3 group shrink-0">
+              <div className="w-10 h-10 rounded-xl bg-[#12200E] border border-[#58D20A]/50 p-0.5 shadow-[0_0_15px_rgba(88,210,10,0.25)] group-hover:scale-105 transition-transform flex items-center justify-center">
+                <span className="text-lg">⚽</span>
+              </div>
+              <div className="min-w-0">
+                <span className="font-black text-base tracking-wider text-white uppercase whitespace-nowrap block">
+                  FRANCHISE<span className="text-[#58D20A]">AUCTION</span>
+                </span>
+                <span className="block text-[9px] tracking-widest text-slate-400 uppercase font-bold">
+                  ENTERPRISE PLATFORM
+                </span>
+              </div>
+            </Link>
+
             {user && (
               <button
                 onClick={onOpenMobileSidebar}
-                className="lg:hidden p-2 -ml-1 text-[#A3A3A3] hover:text-[#F5F5F5] hover:bg-[#151515] rounded-lg transition ui-focus"
+                className="lg:hidden p-2 text-slate-400 hover:text-white hover:bg-slate-800/80 rounded-xl transition"
                 title="Open Menu"
                 aria-label="Open Menu"
               >
                 <Menu className="w-5 h-5" />
               </button>
             )}
-            <Link to="/" className="flex items-center space-x-3 group shrink-0">
-              <div className="w-9 h-9 rounded-xl bg-[#12200E] border border-[#58D20A]/40 p-0.5 shadow-lg group-hover:scale-105 transition-transform flex items-center justify-center">
-                <Trophy className="w-4 h-4 text-[#58D20A]" />
-              </div>
-              <div className="min-w-0">
-                <span className="font-heading font-black text-base tracking-wider text-[#F5F5F5] uppercase whitespace-nowrap">
-                  FRANCHISE<span className="text-[#58D20A]">AUCTION</span>
-                </span>
-                <span className="block text-[9px] tracking-widest text-[#A3A3A3] uppercase font-bold">
-                  Enterprise Platform
-                </span>
-              </div>
-            </Link>
           </div>
 
-          {/* Live Auction Ticker Widget */}
-          <div className="hidden md:flex items-center gap-3 bg-[#101010] px-3.5 py-1.5 rounded-full border border-[#222222] shadow-inner">
-            <span className="relative flex h-2.5 w-2.5">
-              <span
-                className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${
-                  timerStatus === 'running' ? 'bg-[#58D20A]' : 'bg-[#F4C542]'
-                }`}
-              />
-              <span
-                className={`relative inline-flex rounded-full h-2.5 w-2.5 ${
-                  timerStatus === 'running' ? 'bg-[#58D20A]' : 'bg-[#F4C542]'
-                }`}
-              />
-            </span>
-            <span className="text-xs font-bold text-[#F5F5F5] uppercase tracking-wide">
-              {podiumPlayer ? `On Podium: ${podiumPlayer.name}` : 'Podium Standing By'}
-            </span>
-            {podiumPlayer && (
-              <span className="text-xs font-mono font-extrabold text-[#58D20A] bg-[#12200E] px-2.5 py-0.5 rounded-md border border-[#58D20A]/40">
-                {formatCurrency(currentBid)}
-              </span>
-            )}
-          </div>
+          {/* Right Navigation Menu (Matching the green pill active style from image) */}
+          <div className="flex items-center space-x-3">
+            {showSpectatorLinks ? (
+              <nav className="hidden md:flex items-center gap-1.5 bg-[#0c0d10] p-1.5 rounded-2xl border border-white/10 text-xs font-bold shadow-xl">
+                
+                {/* Home / Overview */}
+                <Link
+                  to="/"
+                  className={`flex items-center gap-1.5 px-4 py-1.5 rounded-xl transition-all ${
+                    location.pathname === '/'
+                      ? 'bg-[#58D20A] text-[#050505] font-extrabold shadow-[0_0_18px_rgba(88,210,10,0.45)]'
+                      : 'text-slate-300 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  <Home className="w-3.5 h-3.5" />
+                  <span>Home</span>
+                </Link>
 
-          {/* Public Top Nav Menu (Only for SPECTATOR / Unauthenticated) */}
-          <div className="flex items-center space-x-2 shrink-0">
-            {/* User Auth Buttons */}
-            {user ? null : (
-              <div className="hidden md:flex items-center gap-4">
-                {/* Public Navigation */}
-                <div className="flex items-center space-x-1 bg-[#101010] p-1 rounded-xl border border-[#222222] text-xs">
-                  <Link to="/" className={`px-3 py-1.5 rounded-lg transition font-bold ${location.pathname === '/' ? 'bg-[#12200E] text-[#58D20A] border border-[#58D20A]/40 shadow-sm' : 'text-[#A3A3A3] hover:text-[#F5F5F5] hover:bg-[#151515]'}`}>
-                    Home
-                  </Link>
-                  <Link to="/live" className={`flex items-center gap-1 px-3 py-1.5 rounded-lg transition font-bold ${location.pathname === '/live' ? 'bg-[#12200E] text-[#58D20A] border border-[#58D20A]/40 shadow-sm' : 'text-[#A3A3A3] hover:text-[#F5F5F5] hover:bg-[#151515]'}`}>
-                    <Radio className="w-3.5 h-3.5 text-[#58D20A]" />
-                    Live Auction
-                  </Link>
-                  <Link to="/matches" className={`flex items-center gap-1 px-3 py-1.5 rounded-lg transition font-bold ${location.pathname === '/matches' || location.pathname.startsWith('/matches/') ? 'bg-[#12200E] text-[#58D20A] border border-[#58D20A]/40 shadow-sm' : 'text-[#A3A3A3] hover:text-[#F5F5F5] hover:bg-[#151515]'}`}>
-                    <Calendar className="w-3.5 h-3.5" />
-                    Tournament
-                  </Link>
-                  <Link to="/about" className={`flex items-center gap-1 px-3 py-1.5 rounded-lg transition font-bold ${location.pathname === '/about' ? 'bg-[#12200E] text-[#58D20A] border border-[#58D20A]/40 shadow-sm' : 'text-[#A3A3A3] hover:text-[#F5F5F5] hover:bg-[#151515]'}`}>
-                    <Info className="w-3.5 h-3.5" />
-                    About
-                  </Link>
-                </div>
+                {/* Tournament */}
+                <Link
+                  to="/matches"
+                  className={`flex items-center gap-1.5 px-4 py-1.5 rounded-xl transition-all ${
+                    location.pathname.startsWith('/matches')
+                      ? 'bg-[#58D20A] text-[#050505] font-extrabold shadow-[0_0_18px_rgba(88,210,10,0.45)]'
+                      : 'text-slate-300 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  <Trophy className="w-3.5 h-3.5" />
+                  <span>Tournament</span>
+                </Link>
 
-                {/* Auth Actions */}
-                <div className="flex items-center gap-2">
-                  {phase === 'REGISTRATION' && !isRegistrationFrozen && (
-                    <Link
-                      to="/player/register"
-                      className="px-3.5 py-1.5 text-xs font-bold text-[#A3A3A3] hover:text-[#F5F5F5] hover:bg-[#151515] rounded-xl transition border border-[#222222] ui-focus"
-                    >
-                      Register
-                    </Link>
-                  )}
-                  <Link
-                    to="/login"
-                    className="btn-primary"
-                  >
-                    Login
-                  </Link>
-                </div>
-              </div>
-            )}
+                {/* About */}
+                <Link
+                  to="/about"
+                  className={`flex items-center gap-1.5 px-4 py-1.5 rounded-xl transition-all ${
+                    location.pathname === '/about'
+                      ? 'bg-[#58D20A] text-[#050505] font-extrabold shadow-[0_0_18px_rgba(88,210,10,0.45)]'
+                      : 'text-slate-300 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  <Info className="w-3.5 h-3.5" />
+                  <span>About</span>
+                </Link>
+
+              </nav>
+            ) : null}
+
+            {/* Auth Action */}
+            {!user ? (
+              <Link
+                to="/login"
+                className="px-5 py-2 bg-[#58D20A] hover:bg-[#68e21a] text-[#050505] font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-[0_0_20px_rgba(88,210,10,0.35)] transition flex items-center gap-1.5"
+              >
+                <User className="w-3.5 h-3.5" />
+                <span>LOGIN</span>
+              </Link>
+            ) : null}
+
           </div>
 
         </div>

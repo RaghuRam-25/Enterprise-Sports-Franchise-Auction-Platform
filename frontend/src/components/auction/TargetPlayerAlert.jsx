@@ -105,20 +105,27 @@ export default function TargetPlayerAlert({ targetItem, onQuickBid, onDismiss })
         </div>
 
         {/* Note Collapsible Drawer */}
-        {note && isNoteExpanded && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="mt-3 pt-3 border-t border-warningGold/20 text-xs text-warningGold/90 italic bg-warningGold/40 p-3 rounded-xl border border-warningGold/10 flex items-start gap-2"
-          >
-            <AlertCircle className="w-4 h-4 text-warningGold flex-shrink-0 mt-0.5" />
-            <div>
-              <strong className="not-italic font-bold text-warningGold block text-[10px] uppercase tracking-wider">Your Private Strategy Note:</strong>
-              "{note}"
-            </div>
-          </motion.div>
-        )}
+        <AnimatePresence>
+          {note && isNoteExpanded && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.25 }}
+              className="overflow-hidden"
+            >
+              <div className="mt-3 flex items-start gap-2.5 rounded-xl border border-warningGold/30 bg-darkBg/80 p-3">
+                <AlertCircle className="w-4 h-4 text-warningGold flex-shrink-0 mt-0.5" />
+                <div className="min-w-0">
+                  <span className="block text-[10px] font-bold uppercase tracking-wider text-warningGold mb-0.5">
+                    Your Private Strategy Note
+                  </span>
+                  <p className="text-xs leading-relaxed text-primaryText break-words">{note}</p>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </motion.div>
     </AnimatePresence>
   );

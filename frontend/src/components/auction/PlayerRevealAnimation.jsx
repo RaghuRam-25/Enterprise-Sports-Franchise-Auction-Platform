@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
-import { Calendar, Shield, Clock, Tag, Hash, Globe, Coins } from 'lucide-react';
+import { Calendar, Shield, Clock, Tag, Hash, Globe, Coins, Building2, GraduationCap } from 'lucide-react';
 import SpotlightBackground from './SpotlightBackground';
 import FloatingParticles from './FloatingParticles';
 import { soundManager, AUCTION_SOUNDS } from './soundManager';
@@ -77,21 +77,34 @@ export default function PlayerRevealAnimation({ player, onComplete, isActive = t
     ? getImageUrl(rawImage)
     : 'data:image/svg+xml;utf8,' + encodeURIComponent(PLAYER_FALLBACK_SVG);
 
-  // Reveal order per spec: Position → Category → Session → Base Price → rest.
-  // Base Price is flagged so it renders as the highlighted broadcast stat.
+  // Info set mirrors the live stage card exactly: Position • Department • Year,
+  // then Category / Session / Base Price (the highlighted broadcast stat).
   const detailItems = [
     { icon: Shield, label: 'Position', value: player.primaryPosition || player.positions?.[0] || 'N/A' },
-    { icon: Tag, label: 'Category', value: player.category || 'N/A' },
-    { icon: Calendar, label: 'Session', value: player.session || 'N/A' },
-    { icon: Coins, label: 'Base Price', value: `৳${(player.basePrice || 0).toLocaleString('en-IN')}`, highlight: true },
-    { icon: Globe, label: 'Country', value: player.country || 'N/A' },
-    { icon: Hash, label: 'Student ID', value: player.studentId || 'N/A' }
+    { icon: Building2, label: 'Department', value: player.department },
+    { icon: GraduationCap, label: 'Year', value: player.year },
+    { icon: Tag, label: 'Category', value: player.category },
+    { icon: Calendar, label: 'Session', value: player.session },
+    { icon: Coins, label: 'Base Price', value: `৳${(player.basePrice || 0).toLocaleString('en-IN')}`, highlight: true }
   ].filter((item) => item.highlight || (item.value && item.value !== 'N/A'));
+
+  // Subline under the typed name — same "position • department • year" strip
+  // the live stage card shows beneath the player's name.
+  const sublineText = [
+    player.primaryPosition || player.positions?.[0],
+    player.department,
+    player.year,
+  ].filter(Boolean).join('   •   ');
 
   const showLights = step >= 1;
   const showImage = step >= 2;
   const showName = step >= 3;
   const showStats = step >= 4;
+  // Name coloring mirrors the stage card: given name white, surname green.
+  const nameWords = player.name.trim().split(' ');
+  const firstCharCount = nameWords.length > 1
+    ? nameWords.slice(0, -1).join(' ').length + 1
+    : nameWords[0]?.length || 0;
   const nameChars = player.name.split('');
   // The name has finished typing once we move past the name step; trigger the
   // broadcast-title glow pulse from that moment on.
@@ -212,6 +225,25 @@ export default function PlayerRevealAnimation({ player, onComplete, isActive = t
                     />
                   </motion.div>
 
+                  {/* Jersey number chip — mirrors the stage card's corner chip,
+                      popping in right after the portrait lands. */}
+                  {(() => {
+                    const rawJn = String(player.jerseyNumber ?? '').trim();
+                    const shown = rawJn
+                      || (String(player.jerseyName ?? '').trim().length <= 3 ? String(player.jerseyName ?? '').trim() : '');
+                    return shown ? (
+                      <motion.div
+                        className="absolute -left-3 -top-3 z-30 flex h-10 w-10 items-center justify-center rounded-xl border border-[#8bf53f] bg-[#58D20A] font-mono text-base font-black text-black sm:h-12 sm:w-12 sm:text-lg"
+                        style={{ boxShadow: '0 0 20px rgba(88,210,10,0.6)' }}
+                        initial={{ scale: 0, rotate: -30 }}
+                        animate={{ scale: 1, rotate: 0 }}
+                        transition={{ delay: 0.55, type: 'spring', stiffness: 260, damping: 16 }}
+                      >
+                        {shown}
+                      </motion.div>
+                    ) : null;
+                  })()}
+
                   {/* Pulsing glow bloom */}
                   <motion.div
                     className="absolute -inset-3 -z-20 rounded-[2.5rem] bg-neonGreen/25 blur-2xl"
@@ -263,7 +295,7 @@ export default function PlayerRevealAnimation({ player, onComplete, isActive = t
                       <motion.span
                         key={`${char}-${i}`}
                         aria-hidden="true"
-                        className="inline-block"
+                        className={`inline-block ${i < firstCharCount ? 'text-white' : 'text-neonGreenHover'}`}
                         style={{ willChange: 'transform, opacity, filter', whiteSpace: 'pre' }}
                         initial={{ opacity: 0, y: 28, rotateX: -90, filter: 'blur(8px)' }}
                         animate={{ opacity: 1, y: 0, rotateX: 0, filter: 'blur(0px)' }}
@@ -289,6 +321,17 @@ export default function PlayerRevealAnimation({ player, onComplete, isActive = t
                       transition={{ duration: 0.5, delay: 0.2 }}
                     >
                       <span className="font-mono text-neonGreenHover">{player.jerseyName}</span>
+                    </motion.p>
+                  )}
+                  {/* Position • Department • Year — same strip as the stage card */}
+                  {sublineText && (
+                    <motion.p
+                      className="mt-2 whitespace-nowrap text-center text-[10px] font-bold uppercase tracking-[0.25em] text-slate-300 sm:text-xs"
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: namePulsing ? 1 : 0, y: namePulsing ? 0 : 8 }}
+                      transition={{ duration: 0.5, delay: 0.35 }}
+                    >
+                      {sublineText}
                     </motion.p>
                   )}
                 </motion.div>

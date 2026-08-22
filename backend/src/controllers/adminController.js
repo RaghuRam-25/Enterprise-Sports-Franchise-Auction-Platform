@@ -6,6 +6,7 @@ import { Team } from '../models/Team.js';
 import { User } from '../models/User.js';
 import { Player } from '../models/Player.js';
 import { AuditLog } from '../models/AuditLog.js';
+import { deletePlayerEverywhere } from '../services/playerCleanup.js';
 import { buildCompleteTeamTheme, buildCategoryTheme, buildCategoryThemeFromColor } from '../services/ThemeGenerator.js';
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
@@ -582,8 +583,19 @@ export const deleteManager = async (req, res, next) => {
     const user = await User.findById(req.params.id);
     if (!user) return res.status(404).json({ success: false, message: 'User not found' });
 
+    // Cascade: deleting a user account must also remove the player profile it
+    // owns. Previously only the User document was deleted, leaving an orphaned
+    // Player record that every list endpoint kept returning — the "deleted
+    // player still shows in the frontend" bug.
+    let removedPlayers = 0;
+    const ownedPlayers = await Player.find({ userId: user._id }).select('_id');
+    for (const p of ownedPlayers) {
+      const result = await deletePlayerEverywhere(p._id, req.app?.get('io'));
+      if (result.found) removedPlayers += 1;
+    }
+
     await User.findByIdAndDelete(req.params.id);
-    await logAdminAction('DELETE_USER', req.user?.email || 'admin', { id: req.params.id, email: user.email });
+    await logAdminAction('DELETE_USER', req.user?.email || 'admin', { id: req.params.id, email: user.email, playersRemoved: removedPlayers });
     res.json({ success: true, message: `Account '${user.name}' deleted` });
   } catch (e) { next(e); }
 };
@@ -634,7 +646,6 @@ export const createPodiumAdmin = async (req, res, next) => {
 // --- PLAYER MANAGEMENT ---
 export const getAdminPlayers = async (req, res, next) => {
   try {
-    const { Player } = await import('../models/Player.js');
     const { status, category, search } = req.query;
     let query = {};
     if (status) query.status = status;
@@ -646,8 +657,44 @@ export const getAdminPlayers = async (req, res, next) => {
         { email: { $regex: search, $options: 'i' } }
       ];
     }
-    const players = await Player.find(query).sort({ createdAt: -1 });
+
+    // Only CURRENT, valid player records leave this API. Records whose owning
+    // User account no longer exists (deleted directly in the DB or before the
+    // cascade fix) are stale orphans and must never reach the frontend.
+    let players = await Player.find(query).sort({ createdAt: -1 }).lean();
+    const ownerIds = [...new Set(players.map((p) => p.userId?.toString()).filter(Boolean))];
+    if (ownerIds.length > 0) {
+      const existingUsers = await User.find({ _id: { $in: ownerIds } }).select('_id').lean();
+      const validOwnerIds = new Set(existingUsers.map((u) => u._id.toString()));
+      players = players.filter((p) => !p.userId || validOwnerIds.has(p.userId.toString()));
+    }
+
     res.json({ success: true, count: players.length, data: players });
+  } catch (e) { next(e); }
+};
+
+// DELETE /api/admin/players/:id — permanent delete + full reference & asset
+// cleanup. Idempotent-safe: an already-deleted id yields a clean 404 instead
+// of a crash. The response contract matches the other admin mutations.
+export const deletePlayer = async (req, res, next) => {
+  try {
+    const result = await deletePlayerEverywhere(req.params.id, req.app?.get('io'));
+
+    if (!result.found) {
+      return res.status(404).json({ success: false, message: 'Player not found' });
+    }
+
+    await logAdminAction('DELETE_PLAYER', req.user?.email || 'admin', {
+      playerId: req.params.id,
+      name: result.player.name,
+      cloudinaryDeleted: result.cloudinaryDeleted
+    });
+
+    res.json({
+      success: true,
+      message: `Player '${result.player.name}' permanently deleted`,
+      data: { id: req.params.id }
+    });
   } catch (e) { next(e); }
 };
 

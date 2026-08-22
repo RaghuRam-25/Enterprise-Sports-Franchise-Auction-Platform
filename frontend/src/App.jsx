@@ -13,6 +13,7 @@ const LeagueStats = lazy(() => import('./pages/spectator/LeagueStats'));
 const MatchesHub = lazy(() => import('./pages/spectator/MatchesHub'));
 const PublicAboutView = lazy(() => import('./pages/spectator/PublicAboutView'));
 const PublicPlayersView = lazy(() => import('./pages/spectator/PublicPlayersView'));
+const SoldPlayersView = lazy(() => import('./pages/spectator/SoldPlayersView'));
 const PublicTeamsView = lazy(() => import('./pages/spectator/PublicTeamsView'));
 
 
@@ -103,6 +104,7 @@ function App() {
           <Route path="/teams" element={<PublicTeamsView />} />
           <Route path="/about" element={<PublicAboutView />} />
           <Route path="/players" element={<PublicPlayersView />} />
+          <Route path="/players/sold" element={<SoldPlayersView />} />
 
           {/* ── Universal Auth Routes ─────────────────────────────────────────── */}
           <Route path="/login" element={<ManagerLogin />} />

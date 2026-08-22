@@ -35,6 +35,7 @@ export default {
                 heading: ['Inter', 'system-ui', 'sans-serif'],
                 sans: ['Inter', 'system-ui', 'sans-serif'],
                 mono: ['JetBrains Mono', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
+                algerian: ['Algerian', 'Cinzel', 'Georgia', 'serif'],
             },
             fontSize: {
                 '2xs': ['0.65rem', { lineHeight: '1rem' }],

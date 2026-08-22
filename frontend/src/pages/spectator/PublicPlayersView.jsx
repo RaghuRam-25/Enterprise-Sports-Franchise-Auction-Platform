@@ -11,6 +11,7 @@ import CompetitionHeader from '../../components/common/CompetitionHeader';
 import '../../services/api';
 import { getImageUrl } from '../../utils/imageUrl';
 import PlayerCardCard from '../../components/common/PlayerCardCard';
+import PlayerStageModal from '../../components/common/PlayerStageModal';
 
 // ── Status badge config ──────────────────────────────────────────────────────
 const STATUS_CONFIG = {
@@ -139,6 +140,7 @@ export default function PublicPlayersView() {
   const [viewMode, setViewMode] = useState('grid'); // grid | list
   const [players, setPlayers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedPlayer, setSelectedPlayer] = useState(null);
 
   // ── Sync with global context players for instant updates ─────────────────
   useEffect(() => {
@@ -234,12 +236,6 @@ export default function PublicPlayersView() {
             </div>
 
             <div className="flex items-center gap-3">
-              {/* Showing count */}
-              <div className="text-right">
-                <span className="block text-2xl font-black font-mono text-neonGreen">{filtered.length}</span>
-                <span className="text-[10px] text-mutedText uppercase font-bold">of {players.length} Players</span>
-              </div>
-
               {/* View mode toggle */}
               <div className="flex rounded-xl overflow-hidden border border-[#333333] bg-[#151515] p-0.5">
                 <button
@@ -446,6 +442,7 @@ export default function PublicPlayersView() {
                 formatCurrency={formatCurrency}
                 teams={teams}
                 categories={categories}
+                onCardClick={() => setSelectedPlayer(player)}
               />
             ))}
           </div>
@@ -484,6 +481,17 @@ export default function PublicPlayersView() {
         )}
 
       </main>
+
+      {/* Podium-push style stage presentation on card click */}
+      {selectedPlayer && (
+        <PlayerStageModal
+          player={selectedPlayer}
+          teams={teams}
+          categories={categories}
+          formatCurrency={formatCurrency}
+          onClose={() => setSelectedPlayer(null)}
+        />
+      )}
     </div>
   );
 }

@@ -2,6 +2,7 @@ import  { createContext, useContext, useState, useEffect, useCallback } from 're
 import { useSocket } from './SocketContext';
 import api from '../services/api';
 import { soundManager, AUCTION_SOUNDS } from '../components/auction/soundManager';
+import { computeBiddingEligibility, describeEligibilityReason, getAuctionPoolStats } from '../utils/biddingEligibility';
 
 const AuctionContext = createContext();
 
@@ -192,6 +193,33 @@ export const AuctionProvider = ({ children }) => {
     return Math.min(...categories.map(c => c.basePrice));
   }, [categories]);
 
+  // ── RESERVE-BUDGET ELIGIBILITY (mirrors backend biddingRules.js) ────────────
+  // Recomputed from live client state on every call — the state itself is kept
+  // fresh via socket-driven refetches (teams:updated / player:updated /
+  // bidding:eligibility-updated), so managers never act on stale budgets.
+  const getTeamBiddingEligibility = useCallback((teamId, proposedBidAmount = 0) => {
+    const team = teams.find(t => (t.id || t._id) === teamId) || teams[0];
+    if (!team) return null;
+
+    const pool = getAuctionPoolStats(players, categories);
+    return computeBiddingEligibility({
+      totalTeams: teams.length,
+      totalAuctionPlayers: pool.totalAuctionPlayers,
+      availablePlayersCount: pool.availablePlayersCount,
+      purchasedCount: Array.isArray(team.currentRoster)
+        ? team.currentRoster.length
+        : (team.currentRosterCount || 0),
+      maxRoster: team.maxRoster,
+      remainingBudget: team.remainingBudget,
+      minimumPlayerPrice: pool.minimumPlayerPrice,
+      proposedBidAmount,
+    });
+  }, [teams, players, categories]);
+
+  const getCurrentMinimumPlayerPrice = useCallback(() =>
+    getAuctionPoolStats(players, categories).minimumPlayerPrice, [players, categories]);
+
+
   const calculateNextBidAmount = useCallback((currentBidVal, totalPurse = 100000000) => {
     const currentBidNum = currentBidVal || 0;
     const bidPercentOfPurse = (currentBidNum / totalPurse) * 100;
@@ -338,6 +366,14 @@ export const AuctionProvider = ({ children }) => {
       refetchTeams();
     };
 
+    // §11 — server pushed a fresh bidding context (pool size / min price) after
+    // any auction-state change; refresh teams & players so eligibility math
+    // always runs on current data, never a stale snapshot.
+    const handleBiddingEligibilityUpdate = () => {
+      refetchTeams();
+      refetchPlayers();
+    };
+
     // teams:updated — emitted by auto-creation & updateOwnTeam with the full updated team document
     const handleSingleTeamUpdate = (updatedTeam) => {
       if (!updatedTeam) { refetchTeams(); return; }
@@ -398,6 +434,7 @@ export const AuctionProvider = ({ children }) => {
     socket.on('auction:timer-update', handleTimerUpdate);
     socket.on('player:updated', handlePlayerUpdate);
     socket.on('team:updated', handleTeamUpdate);
+    socket.on('bidding:eligibility-updated', handleBiddingEligibilityUpdate);
     socket.on('teams:created', handleTeamCreated);
     socket.on('teams:updated', handleSingleTeamUpdate);
     socket.on('teams:deleted', handleTeamDeleted);
@@ -435,6 +472,7 @@ export const AuctionProvider = ({ children }) => {
       socket.off('auction:timer-update', handleTimerUpdate);
       socket.off('player:updated', handlePlayerUpdate);
       socket.off('team:updated', handleTeamUpdate);
+      socket.off('bidding:eligibility-updated', handleBiddingEligibilityUpdate);
       socket.off('teams:updated', handleSingleTeamUpdate);
       socket.off('registration:freeze-toggled', handleFreezeToggle);
       socket.off('podium:video-control', handleVideoBroadcast);
@@ -559,6 +597,19 @@ export const AuctionProvider = ({ children }) => {
       return { success: false, error: `Insufficient budget! Remaining: ${formatCurrency(team.remainingBudget)}` };
     }
 
+    // §10 — frontend mirror of the reserve guardrail: the proposed bid must
+    // never eat into the budget reserved for the remaining minimum squad.
+    // (The backend re-validates this authoritatively against the live DB.)
+    const eligibility = getTeamBiddingEligibility(teamId, nextAmount);
+    if (eligibility && !eligibility.bidAllowed) {
+      const reason = describeEligibilityReason(eligibility.reasons[0]);
+      return {
+        success: false,
+        reason: eligibility.reasons[0],
+        error: `${reason}. Reserved for ${eligibility.remainingMinimumPlayers} more required players: ${formatCurrency(eligibility.requiredReserveBudget)}. Available bid balance: ${formatCurrency(eligibility.availableBidBalance)}.`
+      };
+    }
+
     if (socket && isConnected) {
       socket.emit('bid:place', { team });
     }
@@ -588,24 +639,32 @@ export const AuctionProvider = ({ children }) => {
       return { success: false, error: 'Please enter a valid numeric bid amount.' };
     }
 
-    const lowestBasePrice = getLowestCategoryBasePrice();
-    const currentRosterCount = team.currentRoster.length;
-    const slotsNeeded = Math.max(0, team.minRoster - (currentRosterCount + 1));
-    const requiredReserve = slotsNeeded * lowestBasePrice;
-    const maxAllowableBid = team.remainingBudget - requiredReserve;
-
-    if (bidNum > maxAllowableBid) {
+    // §6 — minimum valid bid floor: the player's Best Price. (No flat per-bid
+    // increment is configured in this system; server enforces the same rule.)
+    const bestPrice = Number(podiumPlayer.basePrice) || 0;
+    if (bidNum < bestPrice) {
       return {
         success: false,
-        error: `BLIND BID REJECTED: Bid of ${formatCurrency(bidNum)} exceeds allowable purse limit. Required reserve for remaining ${slotsNeeded} squad slots is ${formatCurrency(requiredReserve)}.`
+        error: `BLIND BID REJECTED: Bid of ${formatCurrency(bidNum)} is below the minimum valid bid of ${formatCurrency(bestPrice)} (Best Price).`
+      };
+    }
+
+    // §8/§9/§15 — full eligibility gate incl. roster limit + reserve budget.
+    const eligibility = getTeamBiddingEligibility(teamId, bidNum);
+    if (eligibility && !eligibility.bidAllowed) {
+      return {
+        success: false,
+        reason: eligibility.reasons[0],
+        error: `BLIND BID REJECTED: ${describeEligibilityReason(eligibility.reasons[0])}. Required reserve for remaining ${eligibility.remainingMinimumPlayers} squad slots is ${formatCurrency(eligibility.requiredReserveBudget)}. Available bid balance: ${formatCurrency(Math.max(0, eligibility.availableBidBalance))}.`
       };
     }
 
     if (socket && isConnected) {
-      socket.emit('bid:blind', { team, amount: bidNum, lowestBasePrice });
+      // §11 — no pricing hints are sent; the server resolves everything itself.
+      socket.emit('bid:blind', { team, amount: bidNum });
     }
 
-    triggerToast(`Sealed blind bid of ${formatCurrency(bidNum)} submitted by ${team.name}`, 'info');
+    triggerToast('Sealed blind bid submitted by ' + team.name, 'info');
     return { success: true };
   };
 
@@ -678,6 +737,7 @@ export const AuctionProvider = ({ children }) => {
         systemAuctionState, hasStartedAuction,
         broadcastVideoUrl, videoBroadcastState, introLoopState,
         formatCurrency, calculateNextBidAmount, getLowestCategoryBasePrice,
+        getTeamBiddingEligibility, getCurrentMinimumPlayerPrice,
         pushToPodium, pauseTimer, resumeTimer, rollbackBid, hammerSell, cancelAuction, placeNormalBid, placeBlindBid, triggerToast,
         targetAlert, dismissTargetAlert
       }}

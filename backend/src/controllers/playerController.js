@@ -6,7 +6,7 @@ import { Team } from '../models/Team.js';
 import { User } from '../models/User.js';
 import { SystemConfig, getConfig, setConfig } from '../models/SystemConfig.js';
 import { isRegistrationFrozen as isRegFrozenByPhase, getCurrentPhase } from '../services/phaseService.js';
-import { processAndUploadImage } from '../services/imageService.js';
+import { processAndUploadImage, deleteCloudinaryAsset } from '../services/imageService.js';
 import { resolveFieldCoords } from '../utils/fieldPositions.js';
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
@@ -175,12 +175,17 @@ export const registerPlayer = async (req, res, next) => {
       role: 'PLAYER'
     });
 
-    // 4. Image upload processing using Sharp WebP pipeline
-    // Default imageUrl is null so the frontend renders its generic footballer
-    // placeholder (original SVG artwork — never a copyrighted athlete photo).
+    // 4. Image upload processing using Sharp WebP pipeline.
+    //    processAndUploadImage returns { url, publicId }; url is a permanent
+    //    Cloudinary secure_url in production (persisted in DB) or null when the
+    //    upload failed — in that case imageUrl stays null and the frontend
+    //    renders its generic footballer placeholder. Default imageUrl is null.
     let imageUrl = null;
+    let imagePublicId = null;
     if (req.file) {
-      imageUrl = await processAndUploadImage(req.file.buffer, parsed.studentId);
+      const uploaded = await processAndUploadImage(req.file.buffer, parsed.studentId);
+      imageUrl = uploaded.url || null;
+      imagePublicId = uploaded.publicId || null;
     }
 
     // 5. Default the player to the LAST category in the list (the one with the
@@ -196,22 +201,32 @@ export const registerPlayer = async (req, res, next) => {
       }
     }
 
-    const player = await Player.create({
-      name: parsed.name,
-      email: parsed.email.toLowerCase(),
-      userId: user._id,
-      studentId: parsed.studentId,
-      session: parsed.session,
-      jerseyName: parsed.jerseyName.toUpperCase(),
-      tShirtSize: parsed.tShirtSize,
-      tShirtNumber: parsed.tShirtNumber || '',
-      positions: positionsArr,
-      primaryPosition: parsed.primaryPosition,
-      imageUrl,
-      category,
-      basePrice,
-      status: 'REGISTERED'
-    });
+    // 5b. Persist the player. If the database write fails AFTER a successful
+    //     Cloudinary upload, destroy the just-uploaded asset so no orphan is
+    //     left behind, then surface the original error.
+    let player;
+    try {
+      player = await Player.create({
+        name: parsed.name,
+        email: parsed.email.toLowerCase(),
+        userId: user._id,
+        studentId: parsed.studentId,
+        session: parsed.session,
+        jerseyName: parsed.jerseyName.toUpperCase(),
+        tShirtSize: parsed.tShirtSize,
+        tShirtNumber: parsed.tShirtNumber || '',
+        positions: positionsArr,
+        primaryPosition: parsed.primaryPosition,
+        imageUrl,
+        imagePublicId,
+        category,
+        basePrice,
+        status: 'REGISTERED'
+      });
+    } catch (dbErr) {
+      if (imagePublicId) await deleteCloudinaryAsset(imagePublicId);
+      throw dbErr;
+    }
 
     // Real-time Socket.IO emission to update all connected clients instantly
     const io = req.app?.get('io');
@@ -246,10 +261,19 @@ export const getPlayers = async (req, res, next) => {
     const role = req.user?.role;
     const isPrivileged = ['TEAM_MANAGER', 'PODIUM_ADMIN', 'SUPER_ADMIN'].includes(role);
 
-    // Privileged users get full documents; public gets only safe fields
-    const players = isPrivileged
-      ? await Player.find(query).sort({ createdAt: -1 })
-      : await Player.find(query).select(PUBLIC_PLAYER_FIELDS).sort({ createdAt: -1 });
+    const projection = isPrivileged ? undefined : PUBLIC_PLAYER_FIELDS;
+
+    // Only CURRENT, valid records leave this API. Players whose owning User
+    // account no longer exists (e.g. account deleted directly in the DB) are
+    // stale orphans and must never reach the frontend.
+    let players = await Player.find(query, projection).sort({ createdAt: -1 }).lean();
+
+    const ownerIds = [...new Set(players.map((p) => p.userId?.toString()).filter(Boolean))];
+    if (ownerIds.length > 0) {
+      const existingUsers = await User.find({ _id: { $in: ownerIds } }).select('_id').lean();
+      const validOwnerIds = new Set(existingUsers.map((u) => u._id.toString()));
+      players = players.filter((p) => !p.userId || validOwnerIds.has(p.userId.toString()));
+    }
 
     res.json({ success: true, count: players.length, data: players });
   } catch (e) { next(e); }
@@ -377,9 +401,12 @@ export const updatePlayerProfile = async (req, res, next) => {
 
     const parsed = updateProfileSchema.parse(req.body);
 
-    // Handle photo upload if provided
+    // Handle photo upload if provided. The pipeline returns { url, publicId } —
+    // a permanent Cloudinary secure_url in production. A failed upload yields
+    // url=null and the existing photo is kept untouched.
+    let uploadedImage = null;
     if (req.file) {
-      parsed.imageUrl = await processAndUploadImage(req.file.buffer, player.studentId);
+      uploadedImage = await processAndUploadImage(req.file.buffer, player.studentId);
     }
 
     // Positions parser helper
@@ -411,6 +438,14 @@ export const updatePlayerProfile = async (req, res, next) => {
       if (parsed[key] !== undefined) update[key] = parsed[key];
     }
 
+    // New photo wins over any imageUrl string the client may have sent, and
+    // its Cloudinary public_id is persisted alongside for lifecycle cleanup.
+    // Image fields are set explicitly so they apply for every caller role.
+    if (uploadedImage && uploadedImage.url) {
+      update.imageUrl = uploadedImage.url;
+      update.imagePublicId = uploadedImage.publicId || null;
+    }
+
     // FormData sends numbers as strings — normalize before persisting.
     if (update.age === '' || update.age === null || update.age === undefined) {
       update.age = null;
@@ -432,7 +467,27 @@ export const updatePlayerProfile = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Primary position must be one of the selected positions' });
     }
 
-    const updatedPlayer = await Player.findByIdAndUpdate(req.params.id, update, { new: true });
+    // Persist the profile update with compensating image-asset handling:
+    //   - DB update FAILS  → destroy the freshly uploaded asset (no orphans)
+    //   - DB update SUCCEEDS → destroy the replaced OLD asset (after success,
+    //     never before — the old photo must stay live until the new one wins)
+    const oldImagePublicId = player.imagePublicId || null;
+    let updatedPlayer;
+    try {
+      updatedPlayer = await Player.findByIdAndUpdate(req.params.id, update, { new: true });
+    } catch (dbErr) {
+      if (uploadedImage?.publicId) await deleteCloudinaryAsset(uploadedImage.publicId);
+      throw dbErr;
+    }
+
+    if (
+      uploadedImage?.url &&
+      uploadedImage.publicId &&
+      oldImagePublicId &&
+      oldImagePublicId !== uploadedImage.publicId
+    ) {
+      await deleteCloudinaryAsset(oldImagePublicId);
+    }
 
     // Synchronize User collection name if player name was updated
     if (update.name && player.userId) {

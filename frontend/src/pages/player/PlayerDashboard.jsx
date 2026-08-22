@@ -9,7 +9,6 @@ import {
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useAuction } from "../../context/AuctionContext";
-import FullscreenWrapper from "../../components/auction/FullscreenWrapper";
 import FootballField from "../../components/common/FootballField";
 import { playerAPI } from "../../services/api";
 import api from "../../services/api";

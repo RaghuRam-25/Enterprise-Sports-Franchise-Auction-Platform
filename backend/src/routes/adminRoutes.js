@@ -8,7 +8,7 @@ import {
   getTeams, createTeam, editTeam, deleteTeam,
   getManagers, createManager, editManager, deleteManager, resetManagerPassword, handleManagerRequest, handlePlayerRequest,
   createPodiumAdmin,
-  getAdminPlayers, editPlayer, approvePlayer, banPlayer,
+  getAdminPlayers, editPlayer, approvePlayer, banPlayer, deletePlayer,
   getReports, exportReports
 } from '../controllers/adminController.js';
 import { getDisplayOverrides, saveDisplayOverrides } from '../controllers/displayController.js';
@@ -56,6 +56,7 @@ router.get('/players',             protect, authorize('SUPER_ADMIN'), getAdminPl
 router.put('/players/:id',         protect, authorize('SUPER_ADMIN'), editPlayer);
 router.put('/players/:id/approve', protect, authorize('SUPER_ADMIN'), approvePlayer);
 router.put('/players/:id/ban',     protect, authorize('SUPER_ADMIN'), banPlayer);
+router.delete('/players/:id',      protect, authorize('SUPER_ADMIN'), deletePlayer);
 
 // ── Reports & System Analytics (SUPER_ADMIN ONLY) ─────────────────────────────
 router.get('/reports',         protect, authorize('SUPER_ADMIN'), getReports);

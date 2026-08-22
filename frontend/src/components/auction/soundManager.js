@@ -28,11 +28,30 @@ const SOUND_SOURCES = {
 };
 
 let masterVolume = 0.6;
-let muted = false;
+// Mute preference persists across visits so "sound off" stays off until the
+// user explicitly turns it back on.
+const MUTED_STORAGE_KEY = 'app:sound-muted';
+let muted = (() => {
+  try {
+    return localStorage.getItem(MUTED_STORAGE_KEY) === 'true';
+  } catch {
+    return false;
+  }
+})();
 let audioContext = null;
 let hasUserInteraction = false;
 
 const soundCache = {};
+
+// ── Mute-state pub/sub ───────────────────────────────────────────────────────
+// UI toggles (navbar sound button) subscribe so every instance reflects the
+// current preference without prop drilling through contexts.
+const muteListeners = new Set();
+function notifyMuteListeners() {
+  muteListeners.forEach((cb) => {
+    try { cb(muted); } catch { /* listener errors must never break playback */ }
+  });
+}
 
 function getAudioContext() {
   if (!audioContext) {
@@ -255,13 +274,37 @@ export const soundManager = {
   },
 
   mute() {
-    muted = true;
-    Object.values(soundCache).forEach(h => h.mute(true));
+    this.setMuted(true);
   },
 
   unmute() {
-    muted = false;
-    Object.values(soundCache).forEach(h => h.mute(false));
+    this.setMuted(false);
+  },
+
+  // Single source of truth for the global sound preference. Persists to
+  // localStorage, mutes/stops every cached Howl and notifies subscribers.
+  setMuted(value) {
+    const next = Boolean(value);
+    if (muted === next) return;
+    muted = next;
+    try {
+      localStorage.setItem(MUTED_STORAGE_KEY, String(next));
+    } catch { /* storage unavailable — session-only preference */ }
+    Object.values(soundCache).forEach(h => h.mute(muted));
+    if (muted) {
+      // Kill anything currently sounding (e.g. waiting ambient loop).
+      Object.values(soundCache).forEach(h => h.stop());
+    }
+    notifyMuteListeners();
+  },
+
+  toggleMuted() {
+    this.setMuted(!muted);
+  },
+
+  subscribe(listener) {
+    muteListeners.add(listener);
+    return () => muteListeners.delete(listener);
   },
 
   isMuted() {
@@ -273,6 +316,7 @@ export const soundManager = {
   },
 
   play(key) {
+    if (muted) return; // global sound off — no playback at all
     ensureInteraction();
     const ctx = getAudioContext();
     if (ctx) {

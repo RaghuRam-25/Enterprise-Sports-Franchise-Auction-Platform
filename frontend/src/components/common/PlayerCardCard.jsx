@@ -30,6 +30,7 @@ export default function PlayerCardCard({
   categories = [],
   customActions = null,
   showFullDetails = true,
+  onCardClick = null,
 }) {
   const [imgError, setImgError] = useState(false);
   const theme = getCategoryTheme(player?.category, categories);
@@ -44,10 +45,18 @@ export default function PlayerCardCard({
   const isSold = player?.status === 'SOLD';
   const soldToTeam = isSold ? teams.find(t => String(t._id || t.id) === String(player?.soldToTeam?._id || player?.soldToTeam)) : null;
 
+  // Card background follows the resolved category accent — every category gets
+  // its own subtle tint instead of a single fixed color.
+  const accentHex = theme.stripColor || '#58D20A';
+
   return (
     <div
-      style={theme.customBorderStyle || undefined}
-      className={`relative h-full flex flex-col justify-between rounded-2xl border bg-[#101010] overflow-hidden transition-all duration-300 group hover:-translate-y-1.5 hover:shadow-xl ${theme.customBorderStyle ? 'border-[#222222] hover:border-[#58D20A]/40' : `${theme.border} ${theme.cardGlow}`}`}
+      onClick={onCardClick || undefined}
+      style={{
+        ...(theme.customBorderStyle || {}),
+        background: theme.customHeaderStyle?.background || `linear-gradient(170deg, ${accentHex}1c 0%, ${accentHex}0d 30%, #101010 62%)`,
+      }}
+      className={`relative h-full flex flex-col justify-between rounded-2xl border border-[#222222] overflow-hidden transition-all duration-300 group hover:-translate-y-1.5 hover:shadow-xl ${onCardClick ? 'cursor-pointer' : ''} ${theme.cardGlow}`}
     >
 
       {/* Top Accent Header Strip — colored by player category */}
@@ -77,7 +86,7 @@ export default function PlayerCardCard({
         {/* Player Main Details Row (Photo + Info + Jersey Badge) */}
         <div className="flex items-start gap-3 pt-1">
           {/* Photo Frame */}
-          <div className="relative flex-shrink-0">
+          <div className="flex-shrink-0 flex flex-col items-center gap-1.5">
             <div className={`w-16 h-16 rounded-xl overflow-hidden border border-[#222222] bg-[#050505] shadow-md`}>
               {player?.imageUrl && !imgError ? (
                 <img
@@ -96,10 +105,10 @@ export default function PlayerCardCard({
               )}
             </div>
 
-            {/* Jersey Number Overlay Badge */}
-            <div className="absolute -bottom-1.5 -right-1.5 bg-[#050505] text-[#F5F5F5] font-mono font-black text-[10px] px-1.5 py-0.5 rounded-md border border-[#222222] shadow flex items-center gap-0.5">
-              <span className="text-[#58D20A]">#</span>
-              {player?.jerseyNumber ?? player?.jerseyName ?? '—'}
+            {/* Jersey Number / Short Name Badge (fixed position below photo) */}
+            <div className="bg-[#050505] text-[#F5F5F5] font-mono font-black text-[10px] px-1.5 py-0.5 rounded-md border border-[#222222] shadow flex items-center gap-0.5 whitespace-nowrap">
+              <span className="text-[#58D20A] shrink-0">#</span>
+              <span>{(String(player?.jerseyNumber ?? player?.jerseyName ?? '').match(/\d+/) || ['—'])[0]}</span>
             </div>
           </div>
 
@@ -162,7 +171,10 @@ export default function PlayerCardCard({
 
       {/* Card Action Footer */}
       {(canManage || customActions) && (
-        <div className="px-4 py-2.5 bg-[#050505] border-t border-[#222222] flex items-center justify-end gap-1.5">
+        <div
+          onClick={(e) => e.stopPropagation()}
+          className="px-4 py-2.5 bg-[#050505] border-t border-[#222222] flex items-center justify-end gap-1.5"
+        >
           {customActions ? (
             customActions
           ) : canManage && (

@@ -17,8 +17,11 @@ async function runTests() {
     }
   }).jpeg().toBuffer();
 
-  const webpUrl = await processAndUploadImage(mockJpgBuffer, 'test_player');
-  assert(webpUrl.includes('.webp') || webpUrl.includes('/uploads/'), 'Image URL must reference webp uploaded file');
+  // processAndUploadImage resolves to { url, publicId }
+  const uploaded = await processAndUploadImage(mockJpgBuffer, 'test_player');
+  const webpUrl = typeof uploaded === 'string' ? uploaded : uploaded?.url;
+  assert(webpUrl && (webpUrl.includes('.webp') || webpUrl.includes('/uploads/') || webpUrl.startsWith('http')),
+    'Image URL must reference an uploaded webp file (local or Cloudinary)');
   console.log('✅ WebP conversion test passed! Generated URL:', webpUrl);
 
   // Test 2: Dynamic Bidding Raise Calculation

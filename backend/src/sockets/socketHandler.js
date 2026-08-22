@@ -123,7 +123,9 @@ export const handleSocketConnections = (io) => {
         return;
       }
 
-      const result = await auctionEngine.placeBlindBid(data.team, data.amount, data.lowestBasePrice || 1000000);
+      // Reserve price floor is resolved server-side from the live pool —
+      // the client's lowestBasePrice is deliberately NOT trusted here.
+      const result = await auctionEngine.placeBlindBid(data.team, data.amount);
       if (!result?.success) {
         socket.emit('bid:error', { error: result?.error || 'Blind bid failed' });
       }

@@ -6,6 +6,7 @@ import { adminAPI } from '../../services/api';
 import api from '../../services/api';
 import { getImageUrl } from '../../utils/imageUrl';
 import PlayerCardCard from '../../components/common/PlayerCardCard';
+import PlayerStageModal from '../../components/common/PlayerStageModal';
 
 const STATUS_STYLES = {
   SOLD: 'bg-neonGreen/20 text-neonGreen border-neonGreen/30',
@@ -40,6 +41,7 @@ export default function AdminPlayers() {
     sessions,
     positions,
     categories,
+    teams = [],
     isRegistrationFrozen,
     formatCurrency,
     triggerToast
@@ -56,6 +58,7 @@ export default function AdminPlayers() {
   const [editingPlayer, setEditingPlayer] = useState(null);
   const [editForm, setEditForm] = useState({});
   const [saving, setSaving] = useState(false);
+  const [selectedPlayer, setSelectedPlayer] = useState(null);
 
   const safePlayers = Array.isArray(players) ? players : [];
 
@@ -211,6 +214,7 @@ export default function AdminPlayers() {
                 onApprove={handleApprove}
                 onEdit={openEdit}
                 onToggleBan={handleToggleBan}
+                onCardClick={() => setSelectedPlayer(player)}
               />
             ))}
           </div>
@@ -292,6 +296,17 @@ export default function AdminPlayers() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Podium-push style stage presentation on card click */}
+      {selectedPlayer && (
+        <PlayerStageModal
+          player={selectedPlayer}
+          teams={teams}
+          categories={categories}
+          formatCurrency={formatCurrency}
+          onClose={() => setSelectedPlayer(null)}
+        />
       )}
 
     </div>

@@ -266,6 +266,95 @@ describe('Auction engine — duplicate bids', () => {
   });
 });
 
+// ══════════════════════════════════════════════════════════════════════════════
+describe('Blind Mode — §11 sealed-data privacy & §13 tie-breaker', () => {
+  beforeEach(() => {
+    auctionEngine.podiumPlayer = { _id: 'p-9', name: 'Sealed Player', basePrice: 500000 };
+    auctionEngine.currentBid = 750000;
+    auctionEngine.highestBidder = { id: 'team-2', _id: 'team-2', name: 'Team Two' };
+    auctionEngine.bidHistory = [{ id: 'b-1', amount: 750000, bidder: 'Team Two' }];
+    auctionEngine.blindBids = [];
+    auctionEngine.mode = 'NORMAL';
+    auctionEngine.isAuctionCompleting = false;
+    timerService.status = 'RUNNING';
+    timerService.isPaused = false;
+    timerService.remainingSeconds = 60;
+    timerService.duration = 60;
+  });
+
+  test('§3/§4/§11 — BLIND state strips current bid, highest bidder and bid history', () => {
+    auctionEngine.mode = 'BLIND';
+    const state = auctionEngine.getState();
+
+    // Only the Best Price may surface as the bid figure
+    assert.equal(state.currentBid, 500000);
+    assert.equal(state.highestBidder, null);
+    assert.deepEqual(state.bidHistory, []);
+    assert.equal(state.podiumPlayer.name, 'Sealed Player'); // player info stays
+    assert.equal(state.mode, 'BLIND');
+  });
+
+  test('NORMAL mode state is not sanitized', () => {
+    const state = auctionEngine.getState();
+    assert.equal(state.currentBid, 750000);
+    assert.equal(state.highestBidder.name, 'Team Two');
+    assert.equal(state.bidHistory.length, 1);
+  });
+
+  test('blind bid below the Best Price floor (minimum valid bid) is rejected', async () => {
+    auctionEngine.mode = 'BLIND';
+    const res = await auctionEngine.placeBlindBid({ id: 'team-1' }, 499999);
+    assert.equal(res.success, false);
+    assert.match(res.error, /below the minimum valid bid/i);
+  });
+
+  test('§13 — equal bids resolve to the earliest server-side submission', async () => {
+    auctionEngine.mode = 'BLIND';
+    // Stub persistence — winner resolution is what we're asserting.
+    const originalPersist = auctionEngine.persistSale.bind(auctionEngine);
+    auctionEngine.persistSale = async () => true;
+    try {
+      auctionEngine.blindBids = [
+        { teamId: 'team-b', teamName: 'Team B', amount: 10000, timestamp: 300 },
+        { teamId: 'team-a', teamName: 'Team A', amount: 10000, timestamp: 100 },
+        { teamId: 'team-c', teamName: 'Team C', amount: 9000, timestamp: 50 },
+      ];
+
+      await auctionEngine.handleTimerEnd();
+
+      assert.equal(auctionEngine.currentBid, 10000);
+      assert.equal(auctionEngine.highestBidder.id, 'team-a', 'tie must go to the earlier timestamp');
+      assert.notEqual(auctionEngine.highestBidder.id, 'team-b');
+    } finally {
+      auctionEngine.persistSale = originalPersist;
+      auctionEngine.isAuctionCompleting = false;
+      auctionEngine.podiumPlayer = null;
+    }
+  });
+
+  test('§12 — highest valid bid wins the sealed round', async () => {
+    auctionEngine.mode = 'BLIND';
+    const originalPersist = auctionEngine.persistSale.bind(auctionEngine);
+    auctionEngine.persistSale = async () => true;
+    try {
+      auctionEngine.blindBids = [
+        { teamId: 'team-a', teamName: 'Team A', amount: 8000, timestamp: 100 },
+        { teamId: 'team-b', teamName: 'Team B', amount: 9500, timestamp: 200 },
+        { teamId: 'team-c', teamName: 'Team C', amount: 7500, timestamp: 300 },
+      ];
+
+      await auctionEngine.handleTimerEnd();
+
+      assert.equal(auctionEngine.currentBid, 9500);
+      assert.equal(auctionEngine.highestBidder.id, 'team-b');
+    } finally {
+      auctionEngine.persistSale = originalPersist;
+      auctionEngine.isAuctionCompleting = false;
+      auctionEngine.podiumPlayer = null;
+    }
+  });
+});
+
 describe('Phase transitions — transitionPhase() enforces the machine against the store', () => {
   beforeEach(() => { store.event_phase = 'SETUP'; });
 

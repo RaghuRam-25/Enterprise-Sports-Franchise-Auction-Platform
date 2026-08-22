@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Users, ShieldCheck, Trophy, Lock, DollarSign, Settings, Layers, ChevronRight, Loader, RotateCcw, AlertTriangle } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Users, ShieldCheck, Trophy, Lock, DollarSign, Settings, Layers, ChevronRight, Loader, RotateCcw, AlertTriangle, CalendarClock } from 'lucide-react';
 import { useAuction } from '../../context/AuctionContext';
 import { usePhase } from '../../context/PhaseContext';
 import { Link } from 'react-router-dom';
@@ -26,13 +26,82 @@ export default function SuperAdminDashboard() {
     triggerToast
   } = useAuction();
 
-  // ── Phase state machine (global lifecycle) ─────────────────────────────────
-  const { phase, phases, loading: phaseLoading, isLocked } = usePhase();
+  // ── Multi-phase Event Schedule Management ──────────────────────────────────
+  const {
+    phase, phases, loading: phaseLoading, isLocked,
+    registrationStartTime, registrationEndTime,
+    auctionStartTime, auctionEndTime,
+    tournamentStartTime, tournamentEndTime,
+  } = usePhase();
+
   const [activeSection, setActiveSection] = useState('SETUP'); // Top nav section: Setup | Registration | Auction | Results
   const [transitioning, setTransitioning] = useState(false);
   const [togglingLock, setTogglingLock] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [resetting, setResetting] = useState(false);
+
+  // Form input states for datetime-local
+  const [schedules, setSchedules] = useState({
+    registrationStartTime: '',
+    registrationEndTime: '',
+    auctionStartTime: '',
+    auctionEndTime: '',
+    tournamentStartTime: '',
+    tournamentEndTime: '',
+  });
+  const [savingSchedule, setSavingSchedule] = useState(false);
+
+  const formatForPicker = (isoStr) => {
+    if (!isoStr) return '';
+    const d = new Date(isoStr);
+    if (isNaN(d.getTime())) return '';
+    const pad = (n) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  };
+
+  useEffect(() => {
+    setSchedules({
+      registrationStartTime: formatForPicker(registrationStartTime),
+      registrationEndTime: formatForPicker(registrationEndTime),
+      auctionStartTime: formatForPicker(auctionStartTime),
+      auctionEndTime: formatForPicker(auctionEndTime),
+      tournamentStartTime: formatForPicker(tournamentStartTime),
+      tournamentEndTime: formatForPicker(tournamentEndTime),
+    });
+  }, [registrationStartTime, registrationEndTime, auctionStartTime, auctionEndTime, tournamentStartTime, tournamentEndTime]);
+
+  const saveAllSchedules = async () => {
+    setSavingSchedule(true);
+    try {
+      const payload = {
+        registrationStartTime: schedules.registrationStartTime ? new Date(schedules.registrationStartTime).toISOString() : null,
+        registrationEndTime: schedules.registrationEndTime ? new Date(schedules.registrationEndTime).toISOString() : null,
+        auctionStartTime: schedules.auctionStartTime ? new Date(schedules.auctionStartTime).toISOString() : null,
+        auctionEndTime: schedules.auctionEndTime ? new Date(schedules.auctionEndTime).toISOString() : null,
+        tournamentStartTime: schedules.tournamentStartTime ? new Date(schedules.tournamentStartTime).toISOString() : null,
+        tournamentEndTime: schedules.tournamentEndTime ? new Date(schedules.tournamentEndTime).toISOString() : null,
+      };
+      const res = await api.patch('/phase/schedule', payload);
+      triggerToast(res?.data?.message || res?.message || 'Event schedule updated successfully.', 'success');
+    } catch (err) {
+      triggerToast(err?.response?.data?.message || 'Failed to update event schedule.', 'error');
+    } finally {
+      setSavingSchedule(false);
+    }
+  };
+
+  const clearScheduleKey = async (key) => {
+    setSavingSchedule(true);
+    try {
+      const payload = { [key]: null };
+      await api.patch('/phase/schedule', payload);
+      triggerToast('Schedule milestone cleared.', 'info');
+    } catch (err) {
+      triggerToast('Failed to clear schedule.', 'error');
+    } finally {
+      setSavingSchedule(false);
+    }
+  };
 
   const totalRegistered = players.length;
   // GAP-15 FIX: status values are uppercase in DB
@@ -236,33 +305,141 @@ export default function SuperAdminDashboard() {
           })}
         </div>
 
-        {/* Quick Registration Status Toggle Box */}
-        <div className="pt-2 border-t border-cardBorder/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-darkBg/40 p-3.5 rounded-xl">
-          <div className="flex items-center gap-3">
-            <span className={`w-3 h-3 rounded-full ${phase === 'REGISTRATION' ? 'bg-neonGreen animate-pulse' : 'bg-urgentRed'}`} />
-            <div>
-              <p className="text-xs font-extrabold text-white uppercase tracking-wider">
-                Player Registration Status: <span className={phase === 'REGISTRATION' ? 'text-neonGreen' : 'text-urgentRedText'}>{phase === 'REGISTRATION' ? 'OPEN & ACTIVE' : 'CLOSED / FROZEN'}</span>
-              </p>
+        {/* ── Multi-Phase Event Schedule Manager ── */}
+        <div className="mt-4 border-t border-cardBorder/80 pt-4 space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <CalendarClock className="w-5 h-5 text-warningGold flex-shrink-0" />
+              <div>
+                <h4 className="text-xs font-black text-white uppercase tracking-wider">Multi-Phase Event Schedule Manager</h4>
+                <p className="text-[11px] text-mutedText">Set phase start & end timestamps to drive automatic public countdowns</p>
+              </div>
+            </div>
+            <button
+              onClick={saveAllSchedules}
+              disabled={savingSchedule}
+              className="btn-primary px-4 py-2 rounded-xl font-bold text-xs flex items-center gap-2 disabled:opacity-40"
+            >
+              {savingSchedule ? <Loader className="w-3.5 h-3.5 animate-spin" /> : null}
+              Save All Schedules
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* 1. Registration Phase */}
+            <div className="bg-darkBg/60 border border-cardBorder/80 p-3.5 rounded-2xl space-y-3">
+              <div className="flex items-center justify-between border-b border-cardBorder/60 pb-2">
+                <span className="text-xs font-black text-neonGreen uppercase tracking-wider">1. Registration</span>
+                <span className="text-[10px] text-mutedText">Sign-ups</span>
+              </div>
+              <div className="space-y-2">
+                <div>
+                  <label className="text-[10px] font-bold text-secondaryText uppercase block mb-1">Registration Open</label>
+                  <div className="flex items-center gap-1.5">
+                    <input
+                      type="datetime-local"
+                      value={schedules.registrationStartTime}
+                      onChange={(e) => setSchedules({ ...schedules, registrationStartTime: e.target.value })}
+                      className="w-full px-2.5 py-1.5 rounded-xl bg-surfaceHover border border-borderStrong text-xs text-white font-mono focus:outline-none focus:ring-1 focus:ring-neonGreen/40 [color-scheme:dark]"
+                    />
+                    {registrationStartTime && (
+                      <button onClick={() => clearScheduleKey('registrationStartTime')} className="text-red-400 hover:text-red-300 text-xs px-1 font-bold">×</button>
+                    )}
+                  </div>
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold text-secondaryText uppercase block mb-1">Registration Close</label>
+                  <div className="flex items-center gap-1.5">
+                    <input
+                      type="datetime-local"
+                      value={schedules.registrationEndTime}
+                      onChange={(e) => setSchedules({ ...schedules, registrationEndTime: e.target.value })}
+                      className="w-full px-2.5 py-1.5 rounded-xl bg-surfaceHover border border-borderStrong text-xs text-white font-mono focus:outline-none focus:ring-1 focus:ring-neonGreen/40 [color-scheme:dark]"
+                    />
+                    {registrationEndTime && (
+                      <button onClick={() => clearScheduleKey('registrationEndTime')} className="text-red-400 hover:text-red-300 text-xs px-1 font-bold">×</button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 2. Auction Phase */}
+            <div className="bg-darkBg/60 border border-cardBorder/80 p-3.5 rounded-2xl space-y-3">
+              <div className="flex items-center justify-between border-b border-cardBorder/60 pb-2">
+                <span className="text-xs font-black text-warningGold uppercase tracking-wider">2. Live Auction</span>
+                <span className="text-[10px] text-mutedText">Bidding Stage</span>
+              </div>
+              <div className="space-y-2">
+                <div>
+                  <label className="text-[10px] font-bold text-secondaryText uppercase block mb-1">Auction Start</label>
+                  <div className="flex items-center gap-1.5">
+                    <input
+                      type="datetime-local"
+                      value={schedules.auctionStartTime}
+                      onChange={(e) => setSchedules({ ...schedules, auctionStartTime: e.target.value })}
+                      className="w-full px-2.5 py-1.5 rounded-xl bg-surfaceHover border border-borderStrong text-xs text-white font-mono focus:outline-none focus:ring-1 focus:ring-warningGold/40 [color-scheme:dark]"
+                    />
+                    {auctionStartTime && (
+                      <button onClick={() => clearScheduleKey('auctionStartTime')} className="text-red-400 hover:text-red-300 text-xs px-1 font-bold">×</button>
+                    )}
+                  </div>
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold text-secondaryText uppercase block mb-1">Auction End</label>
+                  <div className="flex items-center gap-1.5">
+                    <input
+                      type="datetime-local"
+                      value={schedules.auctionEndTime}
+                      onChange={(e) => setSchedules({ ...schedules, auctionEndTime: e.target.value })}
+                      className="w-full px-2.5 py-1.5 rounded-xl bg-surfaceHover border border-borderStrong text-xs text-white font-mono focus:outline-none focus:ring-1 focus:ring-warningGold/40 [color-scheme:dark]"
+                    />
+                    {auctionEndTime && (
+                      <button onClick={() => clearScheduleKey('auctionEndTime')} className="text-red-400 hover:text-red-300 text-xs px-1 font-bold">×</button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 3. Tournament Phase */}
+            <div className="bg-darkBg/60 border border-cardBorder/80 p-3.5 rounded-2xl space-y-3">
+              <div className="flex items-center justify-between border-b border-cardBorder/60 pb-2">
+                <span className="text-xs font-black text-cyan-400 uppercase tracking-wider">3. Tournament</span>
+                <span className="text-[10px] text-mutedText">Matches</span>
+              </div>
+              <div className="space-y-2">
+                <div>
+                  <label className="text-[10px] font-bold text-secondaryText uppercase block mb-1">Tournament Start</label>
+                  <div className="flex items-center gap-1.5">
+                    <input
+                      type="datetime-local"
+                      value={schedules.tournamentStartTime}
+                      onChange={(e) => setSchedules({ ...schedules, tournamentStartTime: e.target.value })}
+                      className="w-full px-2.5 py-1.5 rounded-xl bg-surfaceHover border border-borderStrong text-xs text-white font-mono focus:outline-none focus:ring-1 focus:ring-cyan-400/40 [color-scheme:dark]"
+                    />
+                    {tournamentStartTime && (
+                      <button onClick={() => clearScheduleKey('tournamentStartTime')} className="text-red-400 hover:text-red-300 text-xs px-1 font-bold">×</button>
+                    )}
+                  </div>
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold text-secondaryText uppercase block mb-1">Tournament End</label>
+                  <div className="flex items-center gap-1.5">
+                    <input
+                      type="datetime-local"
+                      value={schedules.tournamentEndTime}
+                      onChange={(e) => setSchedules({ ...schedules, tournamentEndTime: e.target.value })}
+                      className="w-full px-2.5 py-1.5 rounded-xl bg-surfaceHover border border-borderStrong text-xs text-white font-mono focus:outline-none focus:ring-1 focus:ring-cyan-400/40 [color-scheme:dark]"
+                    />
+                    {tournamentEndTime && (
+                      <button onClick={() => clearScheduleKey('tournamentEndTime')} className="text-red-400 hover:text-red-300 text-xs px-1 font-bold">×</button>
+                    )}
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-          <button
-            onClick={() => handlePhaseChange(phase === 'REGISTRATION' ? 'SETUP' : 'REGISTRATION')}
-            disabled={transitioning || phaseLoading || isLocked}
-            className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition shadow-md whitespace-nowrap ${
-              phase === 'REGISTRATION'
-                ? 'bg-urgentRed/20 text-urgentRedText border border-urgentRed/40 hover:bg-urgentRed hover:text-white'
-                : 'bg-neonGreen hover:bg-neonGreen text-darkBg shadow-neonGreen/20'
-            }`}
-          >
-            {transitioning ? (
-              <span className="flex items-center gap-1.5"><Loader className="w-3.5 h-3.5 animate-spin" /> Updating...</span>
-            ) : phase === 'REGISTRATION' ? (
-              'Close Registration'
-            ) : (
-              'Enable Player Registration'
-            )}
-          </button>
         </div>
       </div>
 

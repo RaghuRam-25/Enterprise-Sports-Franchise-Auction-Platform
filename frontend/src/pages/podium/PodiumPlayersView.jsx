@@ -1,12 +1,15 @@
 import 'react';
+import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useAuction } from '../../context/AuctionContext';
 import { Trophy, Clock } from 'lucide-react';
 import PlayerCardCard from '../../components/common/PlayerCardCard';
+import PlayerStageModal from '../../components/common/PlayerStageModal';
 
 export default function PodiumPlayersView() {
     const { filter } = useParams(); // 'sold' or 'unsold'
-    const { players, teams = [], formatCurrency } = useAuction();
+    const { players, teams = [], categories = [], formatCurrency } = useAuction();
+    const [selectedPlayer, setSelectedPlayer] = useState(null);
 
     const statusFilter = filter.toUpperCase();
     const filteredPlayers = players.filter(p => p.status === statusFilter);
@@ -41,11 +44,24 @@ export default function PodiumPlayersView() {
                                 player={player}
                                 formatCurrency={formatCurrency}
                                 teams={teams}
+                                categories={categories}
+                                onCardClick={() => setSelectedPlayer(player)}
                             />
                         ))}
                     </div>
                 )}
             </div>
+
+            {/* Podium-push style stage presentation on card click */}
+            {selectedPlayer && (
+                <PlayerStageModal
+                    player={selectedPlayer}
+                    teams={teams}
+                    categories={categories}
+                    formatCurrency={formatCurrency}
+                    onClose={() => setSelectedPlayer(null)}
+                />
+            )}
         </div>
     );
 }

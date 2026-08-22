@@ -65,15 +65,131 @@ export const getPhase = async (req, res, next) => {
     const phase = await getCurrentPhase();
     const minRosterSize = await getConfig('minRosterSize', null);
     const maxRosterSize = await getConfig('maxRosterSize', null);
+
+    const registrationStartTime = await getConfig('registration_start_time', null);
+    const registrationEndTime = await getConfig('registration_end_time', null);
+    const auctionStartTime = await getConfig('auction_start_time', null);
+    const auctionEndTime = await getConfig('auction_end_time', null);
+    const tournamentStartTime = await getConfig('tournament_start_time', null);
+    const tournamentEndTime = await getConfig('tournament_end_time', null);
+
     res.json({
       success: true,
       data: {
         phase,
         phases: PHASES,
-        // registration is only "open" while phase === REGISTRATION
         isRegistrationOpen: phase === 'REGISTRATION',
         rosterSizing: minRosterSize != null ? { minRosterSize, maxRosterSize } : null,
+        registrationStartTime,
+        registrationEndTime,
+        auctionStartTime,
+        auctionEndTime,
+        tournamentStartTime,
+        tournamentEndTime,
       },
+    });
+  } catch (e) { next(e); }
+};
+
+// ── PATCH /api/phase/schedule — Super Admin only: update full multi-phase event schedule ──
+export const setEventSchedule = async (req, res, next) => {
+  try {
+    const {
+      registrationStartTime,
+      registrationEndTime,
+      auctionStartTime,
+      auctionEndTime,
+      tournamentStartTime,
+      tournamentEndTime,
+    } = req.body;
+    const performedBy = req.user?.email || req.user?.name || 'super_admin';
+
+    const parseDate = (val) => {
+      if (val === null || val === '') return null;
+      if (!val) return undefined;
+      const d = new Date(val);
+      return isNaN(d.getTime()) ? null : d.toISOString();
+    };
+
+    const schedule = {};
+    if (registrationStartTime !== undefined) schedule.registrationStartTime = parseDate(registrationStartTime);
+    if (registrationEndTime !== undefined) schedule.registrationEndTime = parseDate(registrationEndTime);
+    if (auctionStartTime !== undefined) schedule.auctionStartTime = parseDate(auctionStartTime);
+    if (auctionEndTime !== undefined) schedule.auctionEndTime = parseDate(auctionEndTime);
+    if (tournamentStartTime !== undefined) schedule.tournamentStartTime = parseDate(tournamentStartTime);
+    if (tournamentEndTime !== undefined) schedule.tournamentEndTime = parseDate(tournamentEndTime);
+
+    const keyMap = {
+      registrationStartTime: 'registration_start_time',
+      registrationEndTime: 'registration_end_time',
+      auctionStartTime: 'auction_start_time',
+      auctionEndTime: 'auction_end_time',
+      tournamentStartTime: 'tournament_start_time',
+      tournamentEndTime: 'tournament_end_time',
+    };
+
+    for (const [prop, configKey] of Object.entries(keyMap)) {
+      if (schedule[prop] !== undefined) {
+        await setConfig(configKey, schedule[prop], performedBy);
+      }
+    }
+
+    await logPhaseAction('EVENT_SCHEDULE_SET', performedBy, schedule);
+
+    const currentSchedule = {
+      registrationStartTime: await getConfig('registration_start_time', null),
+      registrationEndTime: await getConfig('registration_end_time', null),
+      auctionStartTime: await getConfig('auction_start_time', null),
+      auctionEndTime: await getConfig('auction_end_time', null),
+      tournamentStartTime: await getConfig('tournament_start_time', null),
+      tournamentEndTime: await getConfig('tournament_end_time', null),
+    };
+
+    const io = req.app.get('io');
+    if (io) {
+      io.emit('phase:schedule-updated', currentSchedule);
+      io.emit('phase:auction-start-changed', { auctionStartTime: currentSchedule.auctionStartTime });
+    }
+
+    return res.json({
+      success: true,
+      message: 'Event schedule updated successfully.',
+      data: currentSchedule,
+    });
+  } catch (e) { next(e); }
+};
+
+// ── PATCH /api/phase/auction-start — Super Admin only: set/clear public auction start target ─────────
+export const setAuctionStart = async (req, res, next) => {
+  try {
+    const { auctionStartTime } = req.body;
+    const performedBy = req.user?.email || req.user?.name || 'super_admin';
+
+    let normalized = null;
+    if (auctionStartTime) {
+      const d = new Date(auctionStartTime);
+      if (isNaN(d.getTime())) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid auction start time provided.',
+        });
+      }
+      normalized = d.toISOString();
+    }
+
+    await setConfig('auction_start_time', normalized, performedBy);
+    await logPhaseAction('AUCTION_SCHEDULE_SET', performedBy, { auctionStartTime: normalized });
+
+    const io = req.app.get('io');
+    if (io) {
+      io.emit('phase:schedule-updated', { auctionStartTime: normalized });
+      io.emit('phase:auction-start-changed', { auctionStartTime: normalized });
+    }
+
+    return res.json({
+      success: true,
+      message: normalized ? 'Auction start time scheduled successfully.' : 'Auction schedule cleared.',
+      data: { auctionStartTime: normalized },
     });
   } catch (e) { next(e); }
 };

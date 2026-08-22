@@ -24,6 +24,7 @@ import { useSocket } from '../../context/SocketContext';
 import api from '../../services/api';
 import { playerFallback } from '../../utils/playerFallback';
 import PlayerCardCard from '../../components/common/PlayerCardCard';
+import PlayerStageModal from '../../components/common/PlayerStageModal';
 
 const getCategoryCardStyle = (category) => {
   switch (category) {
@@ -51,6 +52,9 @@ export default function TargetPlayersView() {
     formatCurrency = (v) => `${v} BDT`,
     triggerToast = () => { }
   } = useAuction();
+
+  // Stage presentation modal on card click
+  const [selectedPlayer, setSelectedPlayer] = useState(null);
 
   // Target Players List State
   const [targetList, setTargetList] = useState([]);
@@ -383,6 +387,8 @@ export default function TargetPlayersView() {
                       player={player}
                       formatCurrency={formatCurrency}
                       teams={teams}
+                      categories={categories}
+                      onCardClick={() => setSelectedPlayer(player)}
                       customActions={
                         <div className="w-full space-y-2">
                           {/* Note & Budget Cap badges */}
@@ -463,6 +469,8 @@ export default function TargetPlayersView() {
                   player={player}
                   formatCurrency={formatCurrency}
                   teams={teams}
+                  categories={categories}
+                  onCardClick={() => setSelectedPlayer(player)}
                   customActions={
                     isTargeted ? (
                       <button
@@ -553,6 +561,17 @@ export default function TargetPlayersView() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Podium-push style stage presentation on card click */}
+      {selectedPlayer && (
+        <PlayerStageModal
+          player={selectedPlayer}
+          teams={teams}
+          categories={categories}
+          formatCurrency={formatCurrency}
+          onClose={() => setSelectedPlayer(null)}
+        />
       )}
     </div>
   );

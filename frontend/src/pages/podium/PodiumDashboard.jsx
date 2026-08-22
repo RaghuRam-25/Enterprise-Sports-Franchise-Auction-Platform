@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Play, Pause, RotateCcw, XCircle, Gavel, Search, Settings2, ShieldAlert, Shuffle, SkipForward } from 'lucide-react';
 import { useAuction } from '../../context/AuctionContext';
+import { usePhase } from '../../context/PhaseContext';
 import { useSocket } from '../../context/SocketContext';
 import api from '../../services/api';
 import {
@@ -14,10 +15,16 @@ import EmbeddedVideoPlayer from '../../components/auction/EmbeddedVideoPlayer';
 import { useAuctionAnimation } from '../../hooks/useAuctionAnimation';
 import { playerFallback } from '../../utils/playerFallback';
 import { getImageUrl } from '../../utils/imageUrl';
+import { getCategoryTheme } from '../../utils/themeConfig';
 import { AnimatePresence } from 'framer-motion';
+import LandingLiveStageCard from '../../components/LandingLiveStageCard';
+import WaitingForAuction from '../../components/WaitingForAuction';
+import SoundToggle from '../../components/SoundToggle';
+
 export const PodiumDashboard = () => {
   const {
     players,
+    categories = [],
     podiumPlayer,
     currentBid,
     highestBidder,
@@ -48,6 +55,7 @@ export const PodiumDashboard = () => {
   } = useAuctionAnimation();
 
   const { socket } = useSocket();
+  const { auctionStartTime } = usePhase();
   const [displayVideoUrl, setDisplayVideoUrl] = useState(null);
   const [isIntroLoopActive, setIsIntroLoopActive] = useState(false);
   const introLoopIntervalRef = useRef(null);
@@ -178,36 +186,6 @@ export const PodiumDashboard = () => {
     return cleanup;
   }, [isIntroLoopActive, unsoldPlayers, pushToPodium, triggerToast, socket]);
 
-  const getCategoryStyles = (category) => {
-    switch (category) {
-      case 'Icon Category':
-        return {
-          card: 'bg-warningGold/50 border-warningGold/50 hover:border-warningGold/70',
-          text: 'group-hover:text-warningGold',
-        };
-      case 'A Grade':
-        return {
-          card: 'bg-successGreen/50 border-successGreen/60 hover:border-successGreen/70',
-          text: 'group-hover:text-neonGreen',
-        };
-      case 'B Grade':
-        return {
-          card: 'bg-successGreen/50 border-successGreen/50 hover:border-successGreen/70',
-          text: 'group-hover:text-neonGreen',
-        };
-      case 'Emerging Youth':
-        return {
-          card: 'bg-warningGold/50 border-warningGold/50 hover:border-warningGold/70',
-          text: 'group-hover:text-warningGold',
-        };
-      default:
-        return {
-          card: 'bg-cardBg/70 border-cardBorder hover:border-borderStrong',
-          text: 'group-hover:text-secondaryText',
-        };
-    }
-  };
-
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState('ALL');
   const [selectedPositionFilter, setSelectedPositionFilter] = useState('ALL');
@@ -309,25 +287,41 @@ export const PodiumDashboard = () => {
               </div>
             ) : (
               filteredUnsold.map(player => {
-                const categoryStyles = getCategoryStyles(player.category);
+                // Card tinted by the player's DB-configured category color —
+                // every category gets its own distinct look.
+                const catColor = getCategoryTheme(player.category, categories)?.stripColor || '#58D20A';
                 return (
                   <div
                     key={player.id}
-                    className={`border p-3.5 rounded-xl flex items-center justify-between transition-colors group ${categoryStyles.card}`}
+                    className="border p-3.5 rounded-xl flex items-center justify-between transition-colors group"
+                    style={{
+                      background: `linear-gradient(170deg, ${catColor}1f 0%, rgba(14,15,20,0.92) 70%)`,
+                      borderColor: `${catColor}59`,
+                    }}
                   >
                     <div className="flex items-center gap-3 min-w-0">
-                      <img src={getImageUrl(player.imageUrl, playerFallback('slate'))} alt="" className="w-10 h-10 rounded-full object-cover border border-borderStrong flex-shrink-0" />
+                      <img
+                        src={getImageUrl(player.imageUrl, playerFallback('slate'))}
+                        alt=""
+                        className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+                        style={{ border: `1px solid ${catColor}` }}
+                      />
                       <div className="min-w-0">
-                        <p className={`font-extrabold text-xs text-white truncate transition ${categoryStyles.text}`}>{player.name}</p>
+                        <p className="font-extrabold text-xs text-white truncate transition group-hover:opacity-90">{player.name}</p>
                         <p className="text-[11px] text-secondaryText">
-                          {player.jerseyName} &bull; <span className="text-neonGreen font-mono font-bold">{formatCurrency(player.basePrice)}</span>
+                          {player.jerseyName} &bull; <span className="font-mono font-bold" style={{ color: catColor }}>{formatCurrency(player.basePrice)}</span>
                         </p>
                       </div>
                     </div>
 
                     <button
                       onClick={() => handlePushPlayer(player)}
-                      className="btn-primary px-3.5 py-1.5 text-xs shadow-md"
+                      className="w-[7.5rem] h-9 shrink-0 text-[11px] rounded-xl font-black uppercase tracking-wide transition hover:brightness-110 hover:-translate-y-0.5 shadow-md flex items-center justify-center whitespace-nowrap"
+                      style={{
+                        backgroundColor: catColor,
+                        color: '#050505',
+                        boxShadow: `0 0 14px ${catColor}66`,
+                      }}
                     >
                       Push to Podium
                     </button>
@@ -425,8 +419,13 @@ export const PodiumDashboard = () => {
                 stays confined here; the admin's Unsold Pool sidebar and
                 Launchpad remain visible at all times. */}
           <div className="glass-card rounded-2xl border border-cardBorder overflow-hidden bg-gradient-to-b from-cardBg via-cardBg/90 to-successGreen/20 min-h-[460px] sm:min-h-[540px] lg:min-h-[600px]">
-            <FullscreenWrapper>
+            <FullscreenWrapper showToggle={Boolean(broadcastVideoUrl || displayVideoUrl)}>
               <div className="relative h-full">
+                {/* Global sound on/off — same spot as manager & live pages */}
+                <div className="absolute top-3 left-3 z-40">
+                  <SoundToggle />
+                </div>
+
                 {(broadcastVideoUrl || displayVideoUrl) ? (
                   <EmbeddedVideoPlayer
                     url={broadcastVideoUrl || displayVideoUrl}
@@ -469,12 +468,9 @@ export const PodiumDashboard = () => {
                 ) : (
                   <>
                     {podiumPlayer ? (
-                      <div className="relative overflow-hidden p-6 space-y-6 h-full flex flex-col justify-center min-h-[460px] sm:min-h-[540px] lg:min-h-[600px]">
+                      <div className="p-4 sm:p-6">
 
-                        {/* Inline cinematic player intro — replaces the detail section in
-                    place during the INTRO phase, then self-dismisses to LIVE
-                    (socket handler advances the state machine after ~3.5s), at
-                    which point the admin control deck below becomes visible. */}
+                        {/* Inline cinematic intro overlay */}
                         <AnimatePresence>
                           {animState === ANIM_STATES.INTRO && introPlayer && (
                             <PlayerRevealAnimation
@@ -487,132 +483,62 @@ export const PodiumDashboard = () => {
                           )}
                         </AnimatePresence>
 
-                        <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
+                        {/* SAME LandingLiveStageCard design as Manager & Landing page.
+                            Bottom action row = podium admin controls via podiumControls. */}
+                        <LandingLiveStageCard
+                          player={podiumPlayer}
+                          categories={categories}
+                          currentBid={currentBid}
+                          highestBidder={highestBidder}
+                          timerRemaining={timerRemaining}
+                          timerStatus={timerStatus}
+                          mode="podium"
+                          formatCurrency={formatCurrency}
+                          podiumControls={
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full">
+                              {timerStatus === 'running' ? (
+                                <button
+                                  onClick={pauseTimer}
+                                  className="py-3.5 px-4 bg-warningGold/20 hover:bg-warningGold text-warningGold hover:text-[#050505] border border-warningGold/40 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2"
+                                >
+                                  <Pause className="w-4 h-4" /> Pause
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={resumeTimer}
+                                  className="py-3.5 px-4 bg-[#58D20A]/20 hover:bg-[#58D20A] text-[#58D20A] hover:text-[#050505] border border-[#58D20A]/40 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2"
+                                >
+                                  <Play className="w-4 h-4" /> Resume
+                                </button>
+                              )}
 
-                          {/* Player Info & Photo */}
-                          <div className="flex items-center gap-4">
-                            <div className="relative">
-                              <img
-                                src={getImageUrl(podiumPlayer.imageUrl, playerFallback('slate'))}
-                                alt=""
-                                className="w-24 h-24 rounded-2xl object-cover border-2 border-neonGreen/40 shadow-xl"
-                              />
-                              <span className="absolute -bottom-2 -right-2 px-2 py-0.5 bg-neonGreen text-darkBg font-bold text-[10px] rounded-md">
-                                {podiumPlayer.category}
-                              </span>
-                            </div>
-
-                            <div className="space-y-1">
-                              <span className="text-[11px] font-bold text-neonGreen uppercase tracking-widest">ON THE PODIUM</span>
-                              <h2 className="text-2xl font-black font-heading text-white">{podiumPlayer.name}</h2>
-                              <p className="text-xs text-secondaryText">
-                                {podiumPlayer.jerseyName} &bull; <span className="font-mono text-neonGreen">Base: {formatCurrency(podiumPlayer.basePrice)}</span>
-                              </p>
-                              <p className="text-[11px] text-secondaryText font-mono">ID: {podiumPlayer.studentId} &bull; {podiumPlayer.session}</p>
-                            </div>
-                          </div>
-
-                          {/* Countdown Timer Display */}
-                          <div className="flex flex-col items-center">
-                            <div className={`relative w-24 h-24 rounded-full flex items-center justify-center border-4 shadow-xl ${timerRemaining <= 10 ? 'border-urgentRed text-urgentRedText animate-pulse' : 'border-neonGreen text-neonGreen'
-                              }`}>
-                              <span className="text-3xl font-black font-mono">{timerRemaining}s</span>
-                            </div>
-                            <span className="text-[10px] font-bold text-secondaryText uppercase tracking-widest mt-1">
-                              Mode: <strong className="text-white">{biddingMode}</strong>
-                            </span>
-                          </div>
-
-                        </div>
-
-                        {/* Current Highest Bidder Banner */}
-                        <div className="bg-darkBg/90 border border-cardBorder p-4 rounded-xl flex items-center justify-between">
-                          <div>
-                            <span className="text-[10px] font-bold text-secondaryText uppercase tracking-widest">Current Leading Bid</span>
-                            <h3 className="text-2xl font-black font-mono text-neonGreen">{formatCurrency(currentBid)}</h3>
-                          </div>
-
-                          <div className="text-right">
-                            <span className="text-[10px] font-bold text-secondaryText uppercase tracking-widest">Highest Bidder Team</span>
-                            <p className="text-sm font-extrabold text-white flex items-center gap-1.5 justify-end">
-                              <span>{highestBidder ? highestBidder.logo : '—'}</span>
-                              <span>{highestBidder ? highestBidder.name : 'Opening / Base Price'}</span>
-                            </p>
-                          </div>
-                        </div>
-
-                        {/* Dispute Resolution Control Deck (PRD Section 3.B) */}
-                        <div className="space-y-2">
-                          <span className="text-[11px] font-bold text-secondaryText uppercase tracking-wider flex items-center gap-1">
-                            <ShieldAlert className="w-3.5 h-3.5 text-urgentRedText" /> Admin Dispute Controls
-                          </span>
-
-                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                            {/* Pause/Resume */}
-                            {timerStatus === 'running' ? (
                               <button
-                                onClick={pauseTimer}
-                                className="py-3 px-4 bg-warningGold/20 hover:bg-warningGold text-warningGold hover:text-darkBg border border-warningGold/40 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow"
+                                onClick={rollbackBid}
+                                className="py-3.5 px-4 bg-slate-700/50 hover:bg-slate-600 text-slate-300 hover:text-white border border-slate-600/40 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2"
                               >
-                                <Pause className="w-4 h-4" /> Pause Clock
+                                <RotateCcw className="w-4 h-4" /> Rollback
                               </button>
-                            ) : (
+
                               <button
-                                onClick={resumeTimer}
-                                className="py-3 px-4 bg-successGreen/20 hover:bg-successGreen text-neonGreenHover hover:text-darkBg border border-neonGreen/40 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow"
+                                onClick={hammerSell}
+                                className="py-3.5 px-4 bg-[#58D20A] hover:bg-[#68e21a] text-[#050505] rounded-xl text-xs font-black transition flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(88,210,10,0.4)]"
                               >
-                                <Play className="w-4 h-4" /> Resume Clock
+                                <Gavel className="w-4 h-4" /> SELL
                               </button>
-                            )}
 
-                            {/* Rollback Bid */}
-                            <button
-                              onClick={rollbackBid}
-                              className="py-3 px-4 bg-successGreen/20 hover:bg-successGreen text-neonGreenHover hover:text-darkBg border border-neonGreen/40 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow"
-                            >
-                              <RotateCcw className="w-4 h-4" /> Rollback Bid
-                            </button>
-
-                            {/* Hammer / Force Sell */}
-                            <button
-                              onClick={hammerSell}
-                              className="py-3 px-4 bg-successGreen hover:bg-neonGreen text-darkBg rounded-xl text-xs font-black transition flex items-center justify-center gap-2 shadow-lg"
-                            >
-                              <Gavel className="w-4 h-4" /> HAMMER / SELL
-                            </button>
-
-                            {/* Cancel Auction */}
-                            <button
-                              onClick={cancelAuction}
-                              className="py-3 px-4 bg-urgentRed/20 hover:bg-urgentRed text-urgentRedText hover:text-white border border-urgentRed/40 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow"
-                            >
-                              <XCircle className="w-4 h-4" /> Cancel Auction
-                            </button>
-                          </div>
-                        </div>
-
+                              <button
+                                onClick={cancelAuction}
+                                className="py-3.5 px-4 bg-red-950/50 hover:bg-red-600 text-red-400 hover:text-white border border-red-700/40 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2"
+                              >
+                                <XCircle className="w-4 h-4" /> Cancel
+                              </button>
+                            </div>
+                          }
+                        />
                       </div>
                     ) : (
-                      <div className="relative overflow-hidden h-full flex items-center justify-center min-h-[460px] sm:min-h-[540px] lg:min-h-[600px]">
-                        {/* Waiting cinematic — confined to THIS Player Details panel only.
-                    Navbar + Unsold Player Pool sidebar stay visible; the
-                    animation never becomes a full-screen takeover for the admin. */}
-                        {animState === ANIM_STATES.IDLE ? (
-                          <WaitingAnimation
-                            inline
-                            teamsConnected={0}
-                            managersReady={0}
-                            isActive
-                          />
-                        ) : (
-                          <div className="p-12 text-center space-y-3">
-                            <Gavel className="w-12 h-12 text-mutedText mx-auto" />
-                            <h3 className="text-base font-bold text-secondaryText">Podium is currently empty</h3>
-                            <p className="text-xs text-mutedText max-w-sm mx-auto">
-                              Select an unsold player from the left panel and click "Push to Podium" to start the live bidding timer.
-                            </p>
-                          </div>
-                        )}
+                      <div className="relative overflow-hidden h-full min-h-[460px] sm:min-h-[540px] lg:min-h-[600px] rounded-3xl border border-white/10 shadow-2xl">
+                        <WaitingAnimation inline isActive />
                       </div>
                     )}
 

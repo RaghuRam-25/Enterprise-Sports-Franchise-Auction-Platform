@@ -5,6 +5,9 @@ const teamSchema = new mongoose.Schema({
   shortCode: { type: String, required: true, uppercase: true },
   logoUrl: { type: String, default: '' },
   bannerUrl: { type: String, default: '' },
+  // Cloudinary public_ids for the uploaded assets (asset lifecycle cleanup)
+  logoPublicId: { type: String, default: null },
+  bannerPublicId: { type: String, default: null },
   logo: { type: String, default: '' }, // emoji/short logo field for UI
   totalBudget: { type: Number, required: true, default: 100000000 },
   remainingBudget: { type: Number, required: true, default: 100000000 },

@@ -1,11 +1,32 @@
 import  { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import {
   Shield, LogIn, Eye, EyeOff,
   AlertCircle, Server, Loader2
 } from 'lucide-react';
 import { useAuth, getDashboardForRole } from '../../context/AuthContext';
 import Navbar from '../../components/Navbar';
+
+// Where each role is allowed to land. Mirrors the App.jsx route table so a
+// stale "return to" path from a PREVIOUS session/role never dumps a freshly
+// logged-in user onto a route their new role cannot access (Access Denied).
+const ROLE_ALLOWED_PREFIXES = {
+  SUPER_ADMIN: ['/admin', '/podium', '/manager', '/player'],
+  PODIUM_ADMIN: ['/podium', '/manager', '/player'],
+  TEAM_MANAGER: ['/manager'],
+  PLAYER: ['/player'],
+  GENERAL_USER: ['/general'],
+};
+
+// Public, no-auth sections every signed-in role may browse.
+const PUBLIC_PREFIXES = ['/matches', '/live', '/players', '/teams', '/about'];
+
+const isPathAllowedForRole = (pathname, role) => {
+  if (!pathname || pathname === '/login') return false;
+  if (PUBLIC_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`))) return true;
+  const allowed = ROLE_ALLOWED_PREFIXES[role] || [];
+  return allowed.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+};
 
 export default function ManagerLogin() {
   const [email,    setEmail]    = useState('');
@@ -16,12 +37,23 @@ export default function ManagerLogin() {
 
   const { login, user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Where the user was actually headed when auth intercepted them
+  // (ProtectedRoute stores it in location.state.from). Only honored when the
+  // logged-in role may actually access it — otherwise the role dashboard.
+  const resolvePostLoginPath = (role) => {
+    const from = location.state?.from?.pathname;
+    if (from && isPathAllowedForRole(from, role)) return from;
+    return getDashboardForRole(role);
+  };
 
   // If already logged in redirect to correct dashboard
   useEffect(() => {
     if (user) {
-      navigate(getDashboardForRole(user.role), { replace: true });
+      navigate(resolvePostLoginPath(user.role), { replace: true });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, navigate]);
 
   const handleSubmit = async (e) => {
@@ -35,8 +67,7 @@ export default function ManagerLogin() {
       const res = await login({ email: email.trim(), password });
 
       if (res?.success && res?.user) {
-        const targetPath = getDashboardForRole(res.user.role);
-        navigate(targetPath, { replace: true });
+        navigate(resolvePostLoginPath(res.user.role), { replace: true });
       } else {
         setError(res?.message || 'Authentication failed. Check your credentials.');
       }
@@ -161,14 +192,6 @@ export default function ManagerLogin() {
               </p>
             </div>
           </details>
-
-          {/* Player registration link */}
-          <p className="text-center text-xs text-mutedText">
-            Registering as a player?{' '}
-            <Link to="/player/register" className="text-warningGold hover:text-warningGold font-semibold transition">
-              Player Registration →
-            </Link>
-          </p>
 
         </div>
       </main>
