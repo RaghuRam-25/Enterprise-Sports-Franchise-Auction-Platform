@@ -270,19 +270,6 @@ export default function PlayerDashboard() {
 
   if (loading) return <div className="flex items-center justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-warningGold" /></div>;
 
-  const currentAvatar = removeImage ? `${DEFAULT_AVATAR}${encodeURIComponent(myPlayer?.name || "P")}` : (filePreview || myPlayer?.imageUrl || `${DEFAULT_AVATAR}${encodeURIComponent(myPlayer?.name || "P")}`);
-  const activePositionCode = myPlayer ? (myPlayer.assignedTeamPosition || myPlayer.primaryPosition) : "";
-  const primaryName = (resolvePosition(activePositionCode)?.name) || (activePositionCode || "");
-  // Single source of truth: place animated marker at manager's assigned squad position
-  const pitchMarks = useMemo(() => {
-    const mainMark = resolvePosition(activePositionCode);
-    const otherMarks = ((myPlayer?.positions || []))
-      .filter(p => String(p).toUpperCase() !== String(activePositionCode).toUpperCase())
-      .map(resolvePosition)
-      .filter(Boolean);
-    return mainMark ? [mainMark, ...otherMarks] : ((myPlayer?.positions || [])).map(resolvePosition).filter(Boolean);
-  }, [activePositionCode, myPlayer.positions]);
-
   if (!myPlayer) return (
     <div className="max-w-5xl w-full mx-auto px-4 py-8">
       <div className="glass-card rounded-2xl p-10 border border-cardBorder text-center text-secondaryText space-y-2">
@@ -292,6 +279,21 @@ export default function PlayerDashboard() {
       </div>
     </div>
   );
+
+  const currentAvatar = removeImage ? `${DEFAULT_AVATAR}${encodeURIComponent(myPlayer?.name || "P")}` : (filePreview || myPlayer?.imageUrl || `${DEFAULT_AVATAR}${encodeURIComponent(myPlayer?.name || "P")}`);
+  const activePositionCode = myPlayer.assignedTeamPosition || myPlayer.primaryPosition || "";
+  const primaryName = (resolvePosition(activePositionCode)?.name) || activePositionCode || "";
+  const catTone = getCategoryTone(myPlayer.category);
+
+  // Pitch marker positions — safe here because both early returns have already fired.
+  const pitchMarks = (() => {
+    const mainMark = resolvePosition(activePositionCode);
+    const otherMarks = (myPlayer.positions || [])
+      .filter(p => String(p).toUpperCase() !== String(activePositionCode).toUpperCase())
+      .map(resolvePosition)
+      .filter(Boolean);
+    return mainMark ? [mainMark, ...otherMarks] : (myPlayer.positions || []).map(resolvePosition).filter(Boolean);
+  })();
 
   const isSold = myPlayer.status === "SOLD";
   const isHalted = myPlayer.status === "WITHDRAWN" || myPlayer.status === "BANNED";
