@@ -2,7 +2,7 @@ import  { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import {
   Shield, LogIn, Eye, EyeOff,
-  AlertCircle, Server, Loader2
+  AlertCircle, Server, Loader2, UserPlus
 } from 'lucide-react';
 import { useAuth, getDashboardForRole } from '../../context/AuthContext';
 import Navbar from '../../components/Navbar';
@@ -87,7 +87,7 @@ export default function ManagerLogin() {
 
           {/* Header */}
           <div className="text-center space-y-2">
-            <div className="w-14 h-14 bg-neonGreen/10 text-neonGreen rounded-2xl border border-neonGreen/20 flex items-center justify-center mx-auto shadow-lg">
+            <div className="w-14 h-14 bg-neonGreen/10 text-white rounded-2xl border border-neonGreen/20 flex items-center justify-center mx-auto shadow-lg">
               <Shield className="w-7 h-7" />
             </div>
             <h1 className="text-2xl font-black font-heading text-white">Auction Platform Login</h1>
@@ -126,7 +126,7 @@ export default function ManagerLogin() {
             <div>
               <div className="flex justify-between items-center mb-1">
                 <label className="block text-xs font-semibold text-secondaryText">Password</label>
-                <Link to="/forgot-password" className="text-[11px] text-neonGreen hover:text-neonGreenHover transition font-medium">
+                <Link to="/forgot-password" className="text-[11px] text-white hover:text-white transition font-medium">
                   Forgot Password?
                 </Link>
               </div>
@@ -165,6 +165,15 @@ export default function ManagerLogin() {
             </button>
           </form>
 
+          {/* General User Registration */}
+          <Link
+            to="/general/register"
+            className="w-full py-3 flex items-center justify-center gap-2 rounded-xl border border-neonGreen/30 bg-[#0B2B26]/25 text-white text-xs font-bold uppercase tracking-wider hover:bg-[#0B2B26]/45 hover:border-[#0B2B26]/60 transition"
+          >
+            <UserPlus className="w-4 h-4" />
+            General Register
+          </Link>
+
           {/* Credential hints for development */}
           <details className="group">
             <summary className="text-[11px] text-[#A3A3A3] cursor-pointer hover:text-[#F5F5F5] transition select-none font-semibold">
@@ -172,9 +181,9 @@ export default function ManagerLogin() {
             </summary>
             <div className="mt-3 space-y-1.5 text-[11px]">
               {[
-                { role: 'SUPER_ADMIN',  email: 'superadmin@auction.com', pw: 'Admin@1234',   color: 'text-[#58D20A]' },
+                { role: 'SUPER_ADMIN',  email: 'superadmin@auction.com', pw: 'Admin@1234',   color: 'text-white' },
                 { role: 'PODIUM_ADMIN', email: 'podium@auction.com',     pw: 'Podium@1234',  color: 'text-[#FF5C5C]' },
-                { role: 'TEAM_MANAGER', email: 'manager@auction.com',    pw: 'Manager@1234', color: 'text-[#58D20A]' },
+                { role: 'TEAM_MANAGER', email: 'manager@auction.com',    pw: 'Manager@1234', color: 'text-white' },
                 { role: 'PLAYER',       email: 'player@auction.com',     pw: 'Player@1234',  color: 'text-[#F4C542]' },
               ].map(c => (
                 <button

@@ -7,8 +7,8 @@ import TeamBadge from '../../components/common/TeamBadge';
 
 const CATEGORY_STYLES = {
   'Icon Category': 'bg-warningGold/50 border-warningGold/50 text-warningGold',
-  'A Grade': 'bg-successGreen/50 border-successGreen/60 text-neonGreenHover',
-  'B Grade': 'bg-successGreen/50 border-successGreen/50 text-neonGreenHover',
+  'A Grade': 'bg-successGreen/50 border-successGreen/60 text-white',
+  'B Grade': 'bg-successGreen/50 border-successGreen/50 text-white',
   'Emerging Youth': 'bg-warningGold/50 border-warningGold/50 text-warningGold',
   default: 'bg-cardBg/60 border-cardBorder text-secondaryText',
 };
@@ -57,7 +57,7 @@ export default function GeneralPlayerProfile() {
       <div className="glass-card rounded-2xl p-10 border border-cardBorder text-center space-y-3">
         <Info className="w-8 h-8 mx-auto text-mutedText" />
         <p className="text-sm font-bold text-secondaryText">Player not found</p>
-        <Link to="/general/players" className="inline-flex items-center gap-1.5 text-xs font-bold text-neonGreen hover:text-neonGreenHover">
+        <Link to="/general/players" className="inline-flex items-center gap-1.5 text-xs font-bold text-white hover:text-white">
           <ArrowLeft className="w-3.5 h-3.5" /> Back to Players
         </Link>
       </div>

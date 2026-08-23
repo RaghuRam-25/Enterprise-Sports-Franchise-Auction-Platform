@@ -33,6 +33,7 @@ const DEFAULT_POSITIONS = [
   { code: 'CF', name: 'Centre Forward', icon: 'Volleyball', fieldX: 86, fieldY: 50 },
   { code: 'LW', name: 'Left Winger', icon: 'ArrowUpLeft', fieldX: 78, fieldY: 18 },
   { code: 'RW', name: 'Right Winger', icon: 'ArrowUpRight', fieldX: 78, fieldY: 82 },
+  { code: 'ST', name: 'Striker', icon: 'Volleyball', fieldX: 86, fieldY: 50 },
 ];
 
 // Icons auto-assigned by the PREVIOUS seed generation. On boot, a stored icon

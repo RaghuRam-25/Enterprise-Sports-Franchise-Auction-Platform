@@ -29,11 +29,11 @@ function PitchSVG({ className = '' }) {
       aria-hidden="true"
     >
       <defs>
-        {/* Pitch turf — deep slate with a subtle radial vignette */}
+        {/* Pitch turf — deep pine green with a subtle radial vignette */}
         <radialGradient id="pitch-turf" cx="50%" cy="45%" r="75%">
-          <stop offset="0%" stopColor="#0f2a24" />
-          <stop offset="55%" stopColor="#0a1f1c" />
-          <stop offset="100%" stopColor="#060f14" />
+          <stop offset="0%" stopColor="#0B2B26" />
+          <stop offset="55%" stopColor="rgba(11, 43, 38, 0.60)" />
+          <stop offset="100%" stopColor="#050505" />
         </radialGradient>
         {/* Alternating mow stripes, very low contrast */}
         <linearGradient id="pitch-stripe" x1="0" y1="0" x2="1" y2="0">

@@ -32,7 +32,7 @@ export default function FloatingParticles({ count = 30, theme = 'default', class
       case 'urgent':
         return ['248,80,80', '252,103,103', '244,197,662'];
       default:
-        return ['88,210,10', '88,210,10', '114,242,26'];
+        return ['11, 43, 38', '11, 43, 38', '11, 43, 38'];
     }
   }, [theme]);
 

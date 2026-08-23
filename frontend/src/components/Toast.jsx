@@ -12,10 +12,10 @@ const ICONS = {
 };
 
 const STYLES = {
-  success: 'bg-[#0B0B0B] border-successGreen/50 text-successGreen',
+  success: 'bg-[#0B0B0B] border-successGreen/50 text-white',
   error: 'bg-[#0B0B0B] border-urgentRed/60 text-urgentRedText',
   warning: 'bg-[#0B0B0B] border-warningGold/50 text-warningGold',
-  info: 'bg-[#0B0B0B] border-neonGreen/40 text-neonGreen',
+  info: 'bg-[#0B0B0B] border-neonGreen/40 text-white',
 };
 
 export default function Toast() {

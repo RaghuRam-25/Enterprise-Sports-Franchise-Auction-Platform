@@ -242,7 +242,7 @@ function BroadcastHUD({ teamsConnected, managersReady, compact }) {
         </span>
         <span className="h-3 w-px bg-white/20" />
         <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-[0.18em] text-secondaryText">
-          <Radio className="h-3 w-3 text-neonGreen" /> Auction Centre
+          <Radio className="h-3 w-3 text-white" /> Auction Centre
         </span>
       </motion.div>
 
@@ -255,14 +255,14 @@ function BroadcastHUD({ teamsConnected, managersReady, compact }) {
         style={{ boxShadow: '0 12px 40px rgba(0,0,0,0.45)' }}
       >
         <HudStat
-          icon={<Trophy className="h-3.5 w-3.5 text-neonGreen" />}
+          icon={<Trophy className="h-3.5 w-3.5 text-white" />}
           label="Teams"
           value={teamsConnected}
           compact={compact}
         />
         <span className="h-8 w-px bg-white/10" />
         <HudStat
-          icon={<Shield className="h-3.5 w-3.5 text-neonGreen" />}
+          icon={<Shield className="h-3.5 w-3.5 text-white" />}
           label="Managers"
           value={managersReady}
           compact={compact}
@@ -287,7 +287,7 @@ function HudStat({ icon, label, value, compact }) {
       </span>
       <div className="text-left">
         <p className="text-[9px] font-bold uppercase tracking-widest text-secondaryText">{label}</p>
-        <p className={`font-mono font-black text-neonGreen ${compact ? 'text-xs' : 'text-sm'}`}>
+        <p className={`font-mono font-black text-white ${compact ? 'text-xs' : 'text-sm'}`}>
           {value}
         </p>
       </div>
@@ -306,13 +306,13 @@ function StadiumBackdrop({ igniting }) {
       {/* Distant crowd tier gradient */}
       <div className="absolute inset-x-0 top-0 h-1/2 bg-[linear-gradient(to_bottom,rgba(11,11,11,0.55),transparent)]" />
       {/* Pitch glow near the bottom */}
-      <div className="absolute inset-x-0 bottom-0 h-2/3 bg-[radial-gradient(ellipse_80%_60%_at_50%_120%,rgba(88,210,10,0.16),transparent_70%)]" />
+      <div className="absolute inset-x-0 bottom-0 h-2/3 bg-[radial-gradient(ellipse_80%_60%_at_50%_120%,rgba(11, 43, 38,0.16),transparent_70%)]" />
       {/* Pitch stripes for depth */}
       <div
         className="absolute inset-x-0 bottom-0 h-1/3 opacity-25"
         style={{
           background:
-            'repeating-linear-gradient(105deg, rgba(88,210,10,0.10) 0px, rgba(88,210,10,0.10) 40px, transparent 40px, transparent 80px)',
+            'repeating-linear-gradient(105deg, rgba(11, 43, 38,0.10) 0px, rgba(11, 43, 38,0.10) 40px, transparent 40px, transparent 80px)',
           maskImage: 'linear-gradient(to top, black, transparent)',
           WebkitMaskImage: 'linear-gradient(to top, black, transparent)',
         }}
@@ -324,9 +324,9 @@ function StadiumBackdrop({ igniting }) {
       {/* Floodlight flares sweeping from the top corners. During ignition they
           snap on with a brief overshoot for a "lights coming up" beat. */}
       {[
-        { left: '10%', delay: 0, hue: 'rgba(114,242,26,0.4)' },
+        { left: '10%', delay: 0, hue: 'rgba(11, 43, 38,0.4)' },
         { left: '34%', delay: 0.18, hue: 'rgba(244,197,66,0.3)' },
-        { left: '60%', delay: 0.32, hue: 'rgba(88,210,10,0.36)' },
+        { left: '60%', delay: 0.32, hue: 'rgba(11, 43, 38,0.36)' },
         { left: '86%', delay: 0.46, hue: 'rgba(244,197,66,0.32)' },
       ].map((f, i) => (
         <motion.div
@@ -361,8 +361,8 @@ function StadiumBackdrop({ igniting }) {
             style={{ willChange: 'opacity' }}
             animate={
               igniting
-                ? { opacity: [0.1, 1, 0.85], boxShadow: '0 0 26px 6px rgba(114,242,26,0.75)' }
-                : { opacity: [0.7, 0.9, 0.7], boxShadow: '0 0 18px 4px rgba(114,242,26,0.5)' }
+                ? { opacity: [0.1, 1, 0.85], boxShadow: '0 0 26px 6px rgba(11, 43, 38,0.75)' }
+                : { opacity: [0.7, 0.9, 0.7], boxShadow: '0 0 18px 4px rgba(11, 43, 38,0.5)' }
             }
             transition={
               igniting
@@ -467,7 +467,7 @@ function RunScene({ compact }) {
               width: 110 - i * 24,
               marginTop: -14 + i * 14,
               background:
-                'linear-gradient(to left, rgba(88,210,10,0.75), transparent)',
+                'linear-gradient(to left, rgba(11, 43, 38,0.75), transparent)',
               filter: 'blur(2px)',
               willChange: 'transform, opacity',
             }}
@@ -579,7 +579,7 @@ function BallScene() {
         className="absolute h-1.5 w-[60%] rounded-full"
         style={{
           background:
-            'linear-gradient(to right, transparent, rgba(88,210,10,0.7), rgba(255,255,255,0.95), rgba(88,210,10,0.7), transparent)',
+            'linear-gradient(to right, transparent, rgba(11, 43, 38,0.7), rgba(255,255,255,0.95), rgba(11, 43, 38,0.7), transparent)',
           filter: 'blur(4px)',
           willChange: 'transform, opacity',
         }}
@@ -616,7 +616,7 @@ function BallScene() {
         <motion.div
           key={s.id}
           className="absolute h-2.5 w-2.5 rounded-full bg-neonGreenHover"
-          style={{ willChange: 'transform, opacity', boxShadow: '0 0 10px rgba(88,210,10,0.95)' }}
+          style={{ willChange: 'transform, opacity', boxShadow: '0 0 10px rgba(11, 43, 38,0.95)' }}
           initial={{ x: 0, y: 0, scale: 1, opacity: 0 }}
           animate={{ x: s.x, y: s.y, scale: [1, 0.2], opacity: [1, 0] }}
           transition={{ duration: 0.75, delay: 0.62, ease: 'easeOut' }}
@@ -646,7 +646,7 @@ function ParticleAssembly() {
         <motion.span
           key={m.id}
           className="absolute h-1.5 w-1.5 rounded-full bg-neonGreenHover"
-          style={{ boxShadow: '0 0 8px rgba(114,242,26,0.9)', willChange: 'transform, opacity' }}
+          style={{ boxShadow: '0 0 8px rgba(11, 43, 38,0.9)', willChange: 'transform, opacity' }}
           initial={{ x: m.fromX, y: m.fromY, opacity: 0, scale: 1.4 }}
           animate={{ x: 0, y: 0, opacity: [0, 1, 0], scale: 0.3 }}
           transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
@@ -669,7 +669,7 @@ function HeadlineBlock({ compact, title, subtitle }) {
         style={{ willChange: 'transform, opacity' }}
       />
       <motion.h1
-        className={`font-black font-heading tracking-[0.08em] text-neonGreenHover ${
+        className={`font-black font-heading tracking-[0.08em] text-white ${
           compact ? 'text-2xl sm:text-3xl' : 'text-4xl sm:text-6xl lg:text-7xl'
         }`}
         initial={{ opacity: 0, y: 20, filter: 'blur(10px)' }}
@@ -680,7 +680,7 @@ function HeadlineBlock({ compact, title, subtitle }) {
           filter: { duration: 0.6 },
           scale: { duration: 4, repeat: Infinity, ease: 'easeInOut' },
         }}
-        style={{ willChange: 'transform, filter', textShadow: '0 0 30px rgba(88,210,10,0.35)' }}
+        style={{ willChange: 'transform, filter', textShadow: '0 0 30px rgba(11, 43, 38,0.35)' }}
       >
         {title || 'WAITING FOR NEXT PLAYER'}
       </motion.h1>

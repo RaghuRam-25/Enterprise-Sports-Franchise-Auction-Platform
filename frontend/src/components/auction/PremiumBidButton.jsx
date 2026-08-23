@@ -37,13 +37,13 @@ export default function PremiumBidButton({
 
   const variantStyles = {
     bid: {
-      base: 'bg-[#58D20A]',
-      hover: 'hover:bg-[#72F21A]',
-      text: 'text-[#050505]',
-      shadow: 'shadow-[0_0_20px_rgba(88,210,10,0.3)] hover:shadow-[0_0_30px_rgba(114,242,26,0.5)]',
-      border: 'border-[#58D20A]/50',
+      base: 'bg-[#0B2B26]',
+      hover: 'hover:brightness-125',
+      text: 'text-white',
+      shadow: 'shadow-[0_0_20px_rgba(11, 43, 38,0.3)] hover:shadow-[0_0_30px_rgba(11, 43, 38,0.5)]',
+      border: 'border-[#0B2B26]/50',
       shine: 'via-white/40',
-      ring: 'ring-[#58D20A]/30',
+      ring: 'ring-[#0B2B26]/30',
     },
     out: {
       base: 'bg-[#B00012]/15 border border-[#B00012]/30',
@@ -103,9 +103,9 @@ export default function PremiumBidButton({
     if (pulseGlow && !disabled) {
       controls.start({
         boxShadow: [
-          '0 0 15px rgba(88,210,10,0.4)',
-          '0 0 25px rgba(88,210,10,0.6)',
-          '0 0 15px rgba(88,210,10,0.4)',
+          '0 0 15px rgba(11, 43, 38,0.4)',
+          '0 0 25px rgba(11, 43, 38,0.6)',
+          '0 0 15px rgba(11, 43, 38,0.4)',
         ],
         transition: { duration: 2, repeat: Infinity, ease: 'easeInOut' },
       });
@@ -172,7 +172,7 @@ export default function PremiumBidButton({
         className="absolute -inset-0.5 rounded-2xl opacity-0 group-hover:opacity-100 blur-xl -z-10"
         style={{
           background: variant === 'bid'
-            ? 'radial-gradient(circle, rgba(88,210,10,0.3) 0%, transparent 70%)'
+            ? 'radial-gradient(circle, rgba(11, 43, 38,0.3) 0%, transparent 70%)'
             : variant === 'out'
               ? 'radial-gradient(circle, rgba(176,0,18,0.3) 0%, transparent 70%)'
               : 'radial-gradient(circle, rgba(244,197,66,0.3) 0%, transparent 70%)',

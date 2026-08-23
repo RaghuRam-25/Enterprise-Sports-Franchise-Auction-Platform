@@ -263,7 +263,7 @@ function MatchCard({ match, index = 0, teams = [], onCardClick }) {
     ? 'bg-gradient-to-br from-urgentRed/25 via-darkBg/95 to-cardBg/90 shadow-2xl shadow-urgentRed/20'
     : isFinished
       ? 'bg-gradient-to-br from-cardBg/95 via-darkBg/95 to-cardBg/90 shadow-xl shadow-black/60'
-      : 'bg-gradient-to-br from-[#12200E]/80 via-darkBg/95 to-cardBg/90 shadow-xl shadow-black/40';
+      : 'bg-gradient-to-br from-[#0B2B26]/80 via-darkBg/95 to-cardBg/90 shadow-xl shadow-black/40';
 
   const borderClass = isLive
     ? 'border-urgentRed/60 hover:border-urgentRed shadow-urgentRed/30'
@@ -282,7 +282,7 @@ function MatchCard({ match, index = 0, teams = [], onCardClick }) {
     >
       {/* Dynamic ambient backdrop light bleed */}
       <div
-        className={`absolute -top-10 -left-10 w-36 h-36 rounded-full blur-3xl pointer-events-none opacity-40 transition-opacity group-hover:opacity-70 ${isLive ? 'bg-urgentRed' : isFinished ? 'bg-neonGreen' : 'bg-neonGreen'
+        className={`absolute -top-10 -left-10 w-36 h-36 rounded-full blur-3xl pointer-events-none opacity-40 transition-opacity group-hover:opacity-70 ${isLive ? 'bg-urgentRed' : 'bg-[#0B2B26]'
           }`}
       />
 
@@ -318,8 +318,8 @@ function MatchCard({ match, index = 0, teams = [], onCardClick }) {
             Live Now
           </span>
         ) : isUpcoming ? (
-          <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-neonGreenHover bg-neonGreen/15 border border-neonGreen/30 px-2.5 py-0.5 rounded-full shrink-0">
-            <Hourglass className="w-3 h-3 text-neonGreen" />
+          <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-white bg-neonGreen/15 border border-neonGreen/30 px-2.5 py-0.5 rounded-full shrink-0">
+            <Hourglass className="w-3 h-3 text-white" />
             {countdown || 'Upcoming'}
           </span>
         ) : (
@@ -419,7 +419,7 @@ function MatchCard({ match, index = 0, teams = [], onCardClick }) {
       {/* Bottom Bar: Bottom Left (Time) - Bottom Right (Venue) */}
       <div className="relative z-10 flex items-center justify-between px-5 py-3 border-t border-white/[0.06] bg-darkBg/60 text-xs text-secondaryText gap-3">
         <div className="flex items-center gap-1.5 min-w-0">
-          <Clock className="w-3.5 h-3.5 shrink-0 text-neonGreen" />
+          <Clock className="w-3.5 h-3.5 shrink-0 text-white" />
           <span className="font-semibold truncate">{match.matchTime || 'TBD'}</span>
         </div>
         <div className="flex items-center gap-1.5 min-w-0 text-right">
@@ -471,7 +471,7 @@ function RosterColumn({ team, theme = {} }) {
               <p className="text-xs text-secondaryText">{player.primaryPosition || 'Player'}</p>
             </div>
             {player.finalPrice > 0 && (
-              <div className="text-xs font-mono text-neonGreen font-bold ml-auto shrink-0">
+              <div className="text-xs font-mono text-white font-bold ml-auto shrink-0">
                 {formatCurrency(player.finalPrice)}
               </div>
             )}
@@ -682,7 +682,7 @@ export default function TeamsScudle() {
   const sortedDates = Object.keys(groupedMatches);
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#0b0f19] text-primaryText font-sans selection:bg-neonGreen selection:text-darkBg">
+    <div className="min-h-screen flex flex-col bg-black text-primaryText font-sans selection:bg-neonGreen selection:text-white">
       <style>{`
         @keyframes shimmerSweep {
           from { background-position: -400px 0; }
@@ -713,7 +713,7 @@ export default function TeamsScudle() {
         <div className="glass-card rounded-3xl overflow-hidden ui-fade-up">
           <div className="flex flex-wrap items-center justify-between gap-3 px-4 sm:px-6 py-3.5">
             <div className="flex items-center gap-2.5 min-w-0">
-              <div className="p-2 rounded-xl bg-neonGreen/10 border border-neonGreen/20 text-neonGreen shrink-0">
+              <div className="p-2 rounded-xl bg-neonGreen/10 border border-neonGreen/20 text-white shrink-0">
                 <Trophy className="w-4 h-4" />
               </div>
               <div className="min-w-0">
@@ -725,8 +725,8 @@ export default function TeamsScudle() {
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               <StatPill label="Total Matches" value={stats.total} tone="text-primaryText border-cardBorder" />
               <StatPill label="Live Now" value={stats.live} tone="text-urgentRedText border-urgentRed/30" />
-              <StatPill label="Upcoming" value={stats.upcoming} tone="text-neonGreen border-neonGreen/30" />
-              <StatPill label="Completed" value={stats.finished} tone="text-neonGreen border-neonGreen/30" />
+              <StatPill label="Upcoming" value={stats.upcoming} tone="text-white border-neonGreen/30" />
+              <StatPill label="Completed" value={stats.finished} tone="text-white border-neonGreen/30" />
             </div>
           </div>
         </div>
@@ -743,8 +743,8 @@ export default function TeamsScudle() {
                     key={tab.key}
                     onClick={() => setActiveTab(tab.key)}
                     className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all duration-200 shrink-0 ${activeTab === tab.key
-                      ? 'bg-[#58D20A] border border-[#58D20A] text-[#050505] font-black shadow-lg shadow-[#58D20A]/30'
-                      : 'bg-[#151515] border border-[#333333] text-[#F5F5F5] hover:text-[#58D20A] hover:border-[#58D20A]'
+                      ? 'bg-[#0B2B26] border border-[#0B2B26] text-white font-black shadow-lg shadow-[#0B2B26]/30'
+                      : 'bg-[#151515] border border-[#333333] text-[#F5F5F5] hover:text-white hover:border-[#0B2B26]'
                       }`}
                   >
                     {tab.label}
@@ -837,12 +837,12 @@ export default function TeamsScudle() {
 
                 {/* Date Section Header */}
                 <div className="flex items-center gap-2.5 pb-1 border-b border-cardBorder/80">
-                  <div className="p-1.5 rounded-lg bg-neonGreen/10 border border-neonGreen/20 text-neonGreen">
+                  <div className="p-1.5 rounded-lg bg-neonGreen/10 border border-neonGreen/20 text-white">
                     <Calendar className="w-4 h-4" />
                   </div>
                   <h2 className="text-sm font-bold text-white tracking-wide">{date}</h2>
                   {isSameDay(groupedMatches[date][0]?.matchDate) && (
-                    <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-neonGreen/15 text-neonGreen border border-neonGreen/30">
+                    <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-neonGreen/15 text-white border border-neonGreen/30">
                       Today
                     </span>
                   )}

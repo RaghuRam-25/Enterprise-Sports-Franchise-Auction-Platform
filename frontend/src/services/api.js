@@ -121,6 +121,7 @@ export const adminAPI = {
   resetManagerPassword: (id, data) => api.put(`/admin/managers/${id}/reset-password`, data),
   updateManagerRequest: (id, action) => api.put(`/admin/managers/${id}/request`, { action }),
   updatePlayerRequest: (id, action) => api.put(`/admin/users/${id}/player-request`, { action }),
+  updateAdminRoleRequest: (id, targetRole, action) => api.put(`/admin/users/${id}/admin-request/${targetRole}`, { action }),
   createPodiumAdmin: (data) => api.post('/admin/podium-admins', data),
 
   // Player Management
@@ -141,6 +142,7 @@ export const playerAPI = {
   }),
   getAll: (params) => api.get('/players', { params }),
   getMyProfile: () => api.get('/players/me'),
+  getMyTeam: () => api.get('/players/my-team'),
   getFieldPosition: () => api.get('/players/field-position'),
   getRegistrationStatus: () => api.get('/players/status'),
   withdraw: (id) => api.put(`/players/${id}/withdraw`),
@@ -151,6 +153,8 @@ export const playerAPI = {
   requestManagerRole: (note) => api.post('/players/request-manager', { note }),
   cancelManagerRole: () => api.post('/players/request-manager/cancel'),
   requestPlayerRole: (note) => api.post('/players/request-player', { note }),
+  requestAdminRole: (targetRole, note) => api.post(`/players/request-admin/${targetRole}`, { note }),
+  cancelAdminRoleRequest: (targetRole) => api.post(`/players/request-admin/${targetRole}/cancel`),
 };
 
 // ─── Manager (TEAM_MANAGER + SUPER_ADMIN) ─────────────────────────────────────
@@ -163,6 +167,8 @@ export const managerAPI = {
   // GAP 8 FIX: roster endpoint added
   getRoster: () => api.get('/manager/roster'),
   getHistory: () => api.get('/manager/history'),
+  getLineup: () => api.get('/manager/lineup'),
+  saveLineup: (data) => api.put('/manager/lineup', data),
   placeBid: (data) => api.post('/manager/bid', data),
   placeBlindBid: (data) => api.post('/manager/blind-bid', data),
   changePassword: (data) => api.put('/manager/password', data),

@@ -15,7 +15,7 @@ import EmbeddedVideoPlayer from '../../components/auction/EmbeddedVideoPlayer';
 import { useAuctionAnimation } from '../../hooks/useAuctionAnimation';
 import { playerFallback } from '../../utils/playerFallback';
 import { getImageUrl } from '../../utils/imageUrl';
-import { getCategoryTheme } from '../../utils/themeConfig';
+import { getCategoryTheme, isDarkHex, readableAccentText } from '../../utils/themeConfig';
 import { AnimatePresence } from 'framer-motion';
 import LandingLiveStageCard from '../../components/LandingLiveStageCard';
 import WaitingForAuction from '../../components/WaitingForAuction';
@@ -238,7 +238,7 @@ export const PodiumDashboard = () => {
         <div className="glass-card rounded-xl sm:rounded-2xl p-2.5 border border-cardBorder w-full lg:w-[290px] xl:w-[330px] lg:flex-none flex flex-col min-h-0 space-y-1.5">
           <div>
             <h3 className="text-[11px] font-bold uppercase tracking-wider text-secondaryText flex items-center gap-1.5">
-              <Search className="w-3.5 h-3.5 text-neonGreen" /> Unsold Player Pool ({unsoldPlayers.length})
+              <Search className="w-3.5 h-3.5 text-white" /> Unsold Player Pool ({unsoldPlayers.length})
             </h3>
           </div>
 
@@ -289,7 +289,7 @@ export const PodiumDashboard = () => {
               filteredUnsold.map(player => {
                 // Card tinted by the player's DB-configured category color —
                 // every category gets its own distinct look.
-                const catColor = getCategoryTheme(player.category, categories)?.stripColor || '#58D20A';
+                const catColor = getCategoryTheme(player.category, categories)?.stripColor || '#0B2B26';
                 return (
                   <div
                     key={player.id}
@@ -309,7 +309,7 @@ export const PodiumDashboard = () => {
                       <div className="min-w-0">
                         <p className="font-extrabold text-sm text-white truncate transition group-hover:opacity-90">{player.name}</p>
                         <p className="text-[10px] text-secondaryText truncate">{player.jerseyName}</p>
-                        <p className="text-[11px] font-mono font-bold tabular-nums truncate" style={{ color: catColor }}>{formatCurrency(player.basePrice)}</p>
+                        <p className="text-[11px] font-mono font-bold tabular-nums truncate" style={{ color: readableAccentText(catColor) }}>{formatCurrency(player.basePrice)}</p>
                       </div>
                     </div>
 
@@ -318,7 +318,7 @@ export const PodiumDashboard = () => {
                       className="w-24 h-9 shrink-0 text-[10px] rounded-lg font-black uppercase tracking-wide transition hover:brightness-110 hover:-translate-y-px shadow-md flex items-center justify-center whitespace-nowrap"
                       style={{
                         backgroundColor: catColor,
-                        color: '#050505',
+                        color: isDarkHex(catColor) ? '#FFFFFF' : '#050505',
                         boxShadow: `0 0 14px ${catColor}66`,
                       }}
                     >
@@ -337,7 +337,7 @@ export const PodiumDashboard = () => {
           {/* Launchpad Configuration — compact single strip */}
           <div className="glass-card flex-none rounded-xl border border-cardBorder px-2.5 py-2 flex flex-wrap items-center gap-x-1.5 gap-y-1.5">
             <h3 className="text-[9px] font-bold uppercase tracking-widest text-secondaryText flex items-center gap-1">
-              <Settings2 className="w-3 h-3 text-neonGreen" /> Time
+              <Settings2 className="w-3 h-3 text-white" /> Time
             </h3>
 
             {/* Time(S) — enlarged boxes */}
@@ -348,7 +348,7 @@ export const PodiumDashboard = () => {
                   type="button"
                   onClick={() => setCustomDuration(dur)}
                   className={`px-4 py-2.5 text-xs font-bold rounded-md border transition ${customDuration === dur
-                    ? 'bg-[#58D20A] text-[#050505] border-[#58D20A] shadow-md font-extrabold'
+                    ? 'bg-[#0B2B26] text-white border-[#0B2B26] shadow-md font-extrabold'
                     : 'btn-secondary !py-2.5 !px-4 !rounded-md'
                     }`}
                 >
@@ -371,7 +371,7 @@ export const PodiumDashboard = () => {
                 type="button"
                 onClick={() => setTargetMode('normal')}
                 className={`px-3 py-2 text-[11px] font-bold rounded-md border transition ${targetMode === 'normal'
-                  ? 'bg-successGreen text-darkBg border-neonGreen font-extrabold'
+                  ? 'bg-successGreen text-white border-neonGreen font-extrabold'
                   : 'bg-cardBg text-secondaryText border-cardBorder'
                   }`}
               >
@@ -403,7 +403,7 @@ export const PodiumDashboard = () => {
               <button
                 onClick={handleMoveNext}
                 disabled={!!podiumPlayer || unsoldPlayers.length === 0}
-                className="py-2 px-3 bg-successGreen/20 hover:bg-successGreen text-neonGreenHover hover:text-darkBg border border-neonGreen/40 rounded-md text-[10px] font-bold transition flex items-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
+                className="py-2 px-3 bg-successGreen/20 hover:bg-successGreen text-white hover:text-white border border-neonGreen/40 rounded-md text-[10px] font-bold transition flex items-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
               >
                 <SkipForward className="w-3 h-3" /> Next Player in Queue
               </button>
@@ -454,7 +454,7 @@ export const PodiumDashboard = () => {
                             <div className="flex justify-center gap-4 text-xs font-mono bg-cardBg/90 p-3 rounded-xl border border-cardBorder">
                               <div><span className="text-mutedText block text-[10px]">ROLE</span><span className="text-white font-bold">{curPlayer.role || curPlayer.primaryRole || 'N/A'}</span></div>
                               <div className="w-px bg-surfaceHover" />
-                              <div><span className="text-mutedText block text-[10px]">BASE PRICE</span><span className="text-neonGreen font-bold">{formatCurrency(curPlayer.basePrice || 1000000)}</span></div>
+                              <div><span className="text-mutedText block text-[10px]">BASE PRICE</span><span className="text-white font-bold">{formatCurrency(curPlayer.basePrice || 1000000)}</span></div>
                             </div>
                           </div>
                         );
@@ -502,7 +502,7 @@ export const PodiumDashboard = () => {
                                 ) : (
                                   <button
                                     onClick={resumeTimer}
-                                    className="py-2.5 px-3 bg-[#58D20A]/20 hover:bg-[#58D20A] text-[#58D20A] hover:text-[#050505] border border-[#58D20A]/40 rounded-xl text-[11px] font-bold transition flex items-center justify-center gap-1.5"
+                                    className="py-2.5 px-3 bg-[#0B2B26]/20 hover:bg-[#0B2B26] text-white hover:text-white border border-[#0B2B26]/40 rounded-xl text-[11px] font-bold transition flex items-center justify-center gap-1.5"
                                   >
                                     <Play className="w-3.5 h-3.5" /> Resume
                                   </button>
@@ -517,7 +517,7 @@ export const PodiumDashboard = () => {
 
                                 <button
                                   onClick={hammerSell}
-                                  className="py-2.5 px-3 bg-[#58D20A] hover:bg-[#68e21a] text-[#050505] rounded-xl text-[11px] font-black transition flex items-center justify-center gap-1.5 shadow-[0_0_20px_rgba(88,210,10,0.4)]"
+                                  className="py-2.5 px-3 bg-[#0B2B26] hover:bg-[#0B2B26] text-white rounded-xl text-[11px] font-black transition flex items-center justify-center gap-1.5 shadow-[0_0_20px_rgba(11, 43, 38,0.4)]"
                                 >
                                   <Gavel className="w-3.5 h-3.5" /> SELL
                                 </button>
@@ -588,7 +588,7 @@ export const PodiumDashboard = () => {
                         <span className="text-[9px] text-secondaryText shrink-0">({log.type})</span>
                       </div>
                       <div className="flex items-center gap-2.5 font-mono shrink-0">
-                        <span className="text-neonGreen font-bold tabular-nums">{formatCurrency(log.amount)}</span>
+                        <span className="text-white font-bold tabular-nums">{formatCurrency(log.amount)}</span>
                         <span className="text-[9px] text-mutedText">{log.time}</span>
                       </div>
                     </div>

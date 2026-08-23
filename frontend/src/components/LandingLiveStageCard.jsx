@@ -2,7 +2,7 @@ import { useLayoutEffect, useRef } from 'react';
 import { Tag, TrendingUp, Trophy, Target, Clock, Calendar, Zap } from 'lucide-react';
 import { getImageUrl } from '../utils/imageUrl';
 import { playerFallback } from '../utils/playerFallback';
-import { getCategoryTheme } from '../utils/themeConfig';
+import { getCategoryTheme, isDarkHex } from '../utils/themeConfig';
 import { getBatchFromSession } from '../utils/batchFromSession';
 
 // hex (#RRGGBB) → rgba() string with the given alpha
@@ -10,10 +10,10 @@ const alpha = (hex, a) => {
   try {
     const raw = String(hex).replace('#', '');
     const full = raw.length === 3 ? raw.split('').map((c) => c + c).join('') : raw;
-    const n = parseInt(full || '58D20A', 16);
+    const n = parseInt(full || '0B2B26', 16);
     return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${a})`;
   } catch {
-    return `rgba(88,210,10,${a})`;
+    return `rgba(11, 43, 38,${a})`;
   }
 };
 
@@ -76,7 +76,9 @@ export default function LandingLiveStageCard({
   // ── Category-driven accent (DB-matched, same resolution as PlayerCardCard) ──
   const catTheme = getCategoryTheme(player?.category, categories);
   const CategoryIcon = catTheme?.IconComponent || Tag;
-  const accent = catTheme?.stripColor || '#58D20A';
+  const accent = catTheme?.stripColor || '#0B2B26';
+  // Dark accents flip to light for text/icons/labels so they stay readable.
+  const accentText = isDarkHex(accent) ? '#FFFFFF' : accent;
 
   const name = player?.name || 'PLAYER';
   const nameParts = name.trim().split(' ');
@@ -178,7 +180,7 @@ export default function LandingLiveStageCard({
   const iconBoxStyle = {
     backgroundColor: alpha(accent, 0.12),
     border: `1px solid ${alpha(accent, 0.4)}`,
-    color: accent,
+    color: accentText,
   };
 
   // ── fitContainer sizing tokens ─────────────────────────────────────────────
@@ -258,7 +260,7 @@ export default function LandingLiveStageCard({
               style={{
                 background: alpha(accent, 0.12),
                 border: `1px solid ${accent}`,
-                color: accent,
+                color: accentText,
                 boxShadow: `0 0 18px ${alpha(accent, 0.35)}`,
               }}
             >
@@ -307,7 +309,7 @@ export default function LandingLiveStageCard({
                 <polygon
                   points="50,2 98,26.5 98,73.5 50,98 2,73.5 2,26.5"
                   fill="none"
-                  stroke={accent}
+                  stroke={accentText}
                   strokeWidth="2.5"
                   vectorEffect="non-scaling-stroke"
                   strokeLinejoin="round"
@@ -322,7 +324,7 @@ export default function LandingLiveStageCard({
               </div>
               <div
                 className="px-3 py-1 rounded-xl bg-[#0e0f14] font-mono font-extrabold text-xs shadow-md uppercase"
-                style={{ border: `1px solid ${accent}`, color: accent }}
+                style={{ border: `1px solid ${accentText}`, color: accentText }}
               >
                 {posCode}
               </div>
@@ -339,13 +341,13 @@ export default function LandingLiveStageCard({
               className={nameTextCls}
             >
               <span className="text-white">{firstName} </span>
-              <span style={{ color: accent }}>{lastName}</span>
+              <span style={{ color: accentText }}>{lastName}</span>
             </h2>
             <div className="inline-block mt-1">
-              <span className={`${fitContainer ? 'text-[10px] sm:text-xs' : 'text-xs'} font-mono font-bold uppercase tracking-widest block`} style={{ color: accent }}>
+              <span className={`${fitContainer ? 'text-[10px] sm:text-xs' : 'text-xs'} font-mono font-bold uppercase tracking-widest block`} style={{ color: accentText }}>
                 {fullPositionName}
               </span>
-              <div className="w-12 h-0.5 mx-auto mt-1 rounded-full" style={{ background: accent }} />
+              <div className="w-12 h-0.5 mx-auto mt-1 rounded-full" style={{ background: alpha(accentText, 0.9) }} />
             </div>
           </div>
 
@@ -380,7 +382,7 @@ export default function LandingLiveStageCard({
                 className={`${bidBtnCls} ${bidDisabled ? 'cursor-not-allowed opacity-60 saturate-50' : 'transform hover:-translate-y-0.5 hover:brightness-110 active:scale-[0.99]'}`}
                 style={{
                   backgroundColor: accent,
-                  color: '#050505',
+                  color: isDarkHex(accent) ? '#FFFFFF' : '#050505',
                   boxShadow: bidDisabled ? 'none' : `0 0 30px ${alpha(accent, 0.5)}`,
                 }}
               >
@@ -425,7 +427,7 @@ export default function LandingLiveStageCard({
             {blindMode ? (
               <span className={`${fitContainer ? 'text-xs sm:text-sm' : 'text-sm sm:text-base'} font-black font-mono tracking-widest text-slate-500 select-none shrink-0`}>••••• HIDDEN</span>
             ) : (
-              <span className={`${tileValueCls} shrink-0`} style={{ color: accent }}>
+              <span className={`${tileValueCls} shrink-0`} style={{ color: accentText }}>
                 {formatCurrency(activeCurrentBid)}
               </span>
             )}
@@ -459,7 +461,7 @@ export default function LandingLiveStageCard({
               </div>
               <span className={`${tileLabelCls} truncate`}>{blindMode ? 'MINIMUM VALID BID' : 'NEXT MINIMUM BID'}</span>
             </div>
-            <span className={`${tileValueCls} shrink-0`} style={{ color: accent }}>
+            <span className={`${tileValueCls} shrink-0`} style={{ color: accentText }}>
               {formatCurrency(computedNextMinBid)}
             </span>
           </div>

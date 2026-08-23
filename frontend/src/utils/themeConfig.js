@@ -49,12 +49,12 @@ export function getFranchiseBrand(name) {
 
 export const CATEGORY_THEMES = {
   'Category A': {
-    name: 'Category A', label: 'Cat A', theme: 'lime',
-    border: 'border-[#58D20A]/50 hover:border-[#58D20A]',
-    headerBg: 'bg-gradient-to-r from-[#12200E] via-[#0B0B0B] to-[#101010]',
-    cardGlow: 'shadow-[0_0_20px_rgba(88,210,10,0.12)] hover:shadow-[0_0_28px_rgba(88,210,10,0.22)]',
-    badgeBg: 'bg-[#58D20A]/10 text-[#58D20A] border-[#58D20A]/40',
-    accentText: 'text-[#58D20A]', accentBg: 'bg-[#58D20A]', stripColor: '#58D20A', IconComponent: Medal,
+    name: 'Category A', label: 'Cat A', theme: 'primary-green',
+    border: 'border-[#0B2B26]/85 hover:border-[#0B2B26]',
+    headerBg: 'bg-gradient-to-r from-[#0B2B26] via-[#0B0B0B] to-[#101010]',
+    cardGlow: 'shadow-[0_0_20px_rgba(11,43,38,0.60)] hover:shadow-[0_0_28px_rgba(11,43,38,0.85)]',
+    badgeBg: 'bg-[#0B2B26]/25 text-white border-[#0B2B26]/60',
+    accentText: 'text-white', accentBg: 'bg-[#0B2B26]', stripColor: '#0B2B26', IconComponent: Medal,
   },
   'Icon Category': {
     name: 'Icon Category', label: 'Icon', theme: 'gold',
@@ -65,12 +65,12 @@ export const CATEGORY_THEMES = {
     accentText: 'text-[#F4C542]', accentBg: 'bg-[#F4C542]', stripColor: '#F4C542', IconComponent: Crown,
   },
   'Category B': {
-    name: 'Category B', label: 'Cat B', theme: 'cyan',
-    border: 'border-[#22D3EE]/50 hover:border-[#22D3EE]',
-    headerBg: 'bg-gradient-to-r from-[#08252b] via-[#0B0B0B] to-[#101010]',
-    cardGlow: 'shadow-[0_0_20px_rgba(34,211,238,0.10)] hover:shadow-[0_0_28px_rgba(34,211,238,0.2)]',
-    badgeBg: 'bg-[#22D3EE]/10 text-[#22D3EE] border-[#22D3EE]/40',
-    accentText: 'text-[#22D3EE]', accentBg: 'bg-[#22D3EE]', stripColor: '#22D3EE', IconComponent: Award,
+    name: 'Category B', label: 'Cat B', theme: 'primary-green-alt',
+    border: 'border-[#0B2B26]/85 hover:border-[#0B2B26]',
+    headerBg: 'bg-gradient-to-r from-[#0B2B26] via-[#0B0B0B] to-[#101010]',
+    cardGlow: 'shadow-[0_0_20px_rgba(11,43,38,0.60)] hover:shadow-[0_0_28px_rgba(11,43,38,0.85)]',
+    badgeBg: 'bg-[#0B2B26]/25 text-white border-[#0B2B26]/60',
+    accentText: 'text-white', accentBg: 'bg-[#0B2B26]', stripColor: '#0B2B26', IconComponent: Award,
   },
   'Category C': {
     name: 'Category C', label: 'Cat C', theme: 'orange',
@@ -89,12 +89,12 @@ export const CATEGORY_THEMES = {
     accentText: 'text-[#A78BFA]', accentBg: 'bg-[#A78BFA]', stripColor: '#A78BFA', IconComponent: Zap,
   },
   'Emerging Youth': {
-    name: 'Emerging Youth', label: 'Youth', theme: 'emerald',
-    border: 'border-[#34D399]/50 hover:border-[#34D399]',
-    headerBg: 'bg-gradient-to-r from-[#0a2419] via-[#0B0B0B] to-[#101010]',
-    cardGlow: 'shadow-[0_0_18px_rgba(52,211,153,0.10)] hover:shadow-[0_0_26px_rgba(52,211,153,0.18)]',
-    badgeBg: 'bg-[#34D399]/10 text-[#34D399] border-[#34D399]/40',
-    accentText: 'text-[#34D399]', accentBg: 'bg-[#34D399]', stripColor: '#34D399', IconComponent: Sparkle,
+    name: 'Emerging Youth', label: 'Youth', theme: 'primary-green',
+    border: 'border-[#0B2B26]/85 hover:border-[#0B2B26]',
+    headerBg: 'bg-gradient-to-r from-[#0B2B26] via-[#0B0B0B] to-[#101010]',
+    cardGlow: 'shadow-[0_0_18px_rgba(11,43,38,0.55)] hover:shadow-[0_0_26px_rgba(11,43,38,0.80)]',
+    badgeBg: 'bg-[#0B2B26]/25 text-white border-[#0B2B26]/60',
+    accentText: 'text-white', accentBg: 'bg-[#0B2B26]', stripColor: '#0B2B26', IconComponent: Sparkle,
   },
   'Category E': {
     name: 'Category E', label: 'Cat E', theme: 'red',
@@ -117,27 +117,26 @@ const DEFAULT_CATEGORY_THEME = {
 
 // Fallback rotation — one DISTINCT hue per unknown category so cards never blend together.
 const CUSTOM_CATEGORY_PALETTE = [
-  { theme: 'lime',    border: 'border-[#58D20A]/50 hover:border-[#58D20A]',        headerBg: 'bg-gradient-to-r from-[#12200E] via-[#0B0B0B] to-[#101010]', cardGlow: 'shadow-[0_0_20px_rgba(88,210,10,0.12)]',   badgeBg: 'bg-[#58D20A]/10 text-[#58D20A] border-[#58D20A]/40',   accentText: 'text-[#58D20A]',   accentBg: 'bg-[#58D20A]',   stripColor: '#58D20A' },
+  { theme: 'primary-green', border: 'border-[#0B2B26]/85 hover:border-[#0B2B26]', headerBg: 'bg-gradient-to-r from-[#0B2B26] via-[#0B0B0B] to-[#101010]', cardGlow: 'shadow-[0_0_20px_rgba(11,43,38,0.60)]', badgeBg: 'bg-[#0B2B26]/25 text-white border-[#0B2B26]/60', accentText: 'text-white', accentBg: 'bg-[#0B2B26]', stripColor: '#0B2B26' },
   { theme: 'gold',    border: 'border-[#F4C542]/50 hover:border-[#F4C542]',        headerBg: 'bg-gradient-to-r from-[#1f1a08] via-[#0B0B0B] to-[#101010]', cardGlow: 'shadow-[0_0_20px_rgba(244,197,66,0.10)]',  badgeBg: 'bg-[#F4C542]/10 text-[#F4C542] border-[#F4C542]/40',   accentText: 'text-[#F4C542]',   accentBg: 'bg-[#F4C542]',   stripColor: '#F4C542' },
-  { theme: 'cyan',    border: 'border-[#22D3EE]/50 hover:border-[#22D3EE]',        headerBg: 'bg-gradient-to-r from-[#08252b] via-[#0B0B0B] to-[#101010]', cardGlow: 'shadow-[0_0_20px_rgba(34,211,238,0.10)]',  badgeBg: 'bg-[#22D3EE]/10 text-[#22D3EE] border-[#22D3EE]/40',   accentText: 'text-[#22D3EE]',   accentBg: 'bg-[#22D3EE]',   stripColor: '#22D3EE' },
   { theme: 'violet',  border: 'border-[#A78BFA]/50 hover:border-[#A78BFA]',        headerBg: 'bg-gradient-to-r from-[#17102b] via-[#0B0B0B] to-[#101010]', cardGlow: 'shadow-[0_0_20px_rgba(167,139,250,0.10)]', badgeBg: 'bg-[#A78BFA]/10 text-[#A78BFA] border-[#A78BFA]/40',   accentText: 'text-[#A78BFA]',   accentBg: 'bg-[#A78BFA]',   stripColor: '#A78BFA' },
   { theme: 'orange',  border: 'border-[#FB923C]/50 hover:border-[#FB923C]',        headerBg: 'bg-gradient-to-r from-[#27160a] via-[#0B0B0B] to-[#101010]', cardGlow: 'shadow-[0_0_20px_rgba(251,146,60,0.10)]',  badgeBg: 'bg-[#FB923C]/10 text-[#FB923C] border-[#FB923C]/40',   accentText: 'text-[#FB923C]',   accentBg: 'bg-[#FB923C]',   stripColor: '#FB923C' },
   { theme: 'rose',    border: 'border-[#FB7185]/50 hover:border-[#FB7185]',        headerBg: 'bg-gradient-to-r from-[#260b12] via-[#0B0B0B] to-[#101010]', cardGlow: 'shadow-[0_0_20px_rgba(251,113,133,0.10)]', badgeBg: 'bg-[#FB7185]/10 text-[#FB7185] border-[#FB7185]/40',   accentText: 'text-[#FB7185]',   accentBg: 'bg-[#FB7185]',   stripColor: '#FB7185' },
-  { theme: 'emerald', border: 'border-[#34D399]/50 hover:border-[#34D399]',        headerBg: 'bg-gradient-to-r from-[#0a2419] via-[#0B0B0B] to-[#101010]', cardGlow: 'shadow-[0_0_18px_rgba(52,211,153,0.10)]',  badgeBg: 'bg-[#34D399]/10 text-[#34D399] border-[#34D399]/40',   accentText: 'text-[#34D399]',   accentBg: 'bg-[#34D399]',   stripColor: '#34D399' },
   { theme: 'silver',  border: 'border-borderStrong hover:border-[#A3A3A3]/50',     headerBg: 'bg-gradient-to-r from-[#151515] via-[#0B0B0B] to-[#101010]', cardGlow: 'shadow-card',                              badgeBg: 'bg-surfaceHover text-secondaryText border-borderStrong', accentText: 'text-secondaryText', accentBg: 'bg-secondaryText', stripColor: '#A3A3A3' },
 ];
 
 function buildDynamicCategoryTheme(name, hexColor, iconName) {
   const IconComponent = CATEGORY_ICONS[iconName] || Tag;
-  const col = hexColor || '#58D20A';
+  const col = hexColor || '#0B2B26';
+  const dark = isDarkHex(col);
   return {
     name: name || 'Category',
     label: name || 'Cat',
     theme: 'custom',
     customColor: col,
     customHeaderStyle: { background: `linear-gradient(135deg, ${col}14, #0B0B0B)` },
-    customBadgeStyle: { backgroundColor: `${col}1f`, color: col, borderColor: `${col}66` },
-    customBorderStyle: { borderColor: `${col}55` },
+    customBadgeStyle: { backgroundColor: `${col}1f`, color: dark ? '#FFFFFF' : col, borderColor: `${col}${dark ? '99' : '66'}` },
+    customBorderStyle: { borderColor: `${col}${dark ? 'aa' : '55'}` },
     border: 'border-cardBorder',
     headerBg: 'bg-cardBg',
     cardGlow: 'shadow-card',
@@ -154,7 +153,7 @@ export function getCategoryTheme(categoryName, dbCategories = []) {
 
   if (typeof categoryName === 'object') {
     const name = categoryName.name || 'Category';
-    const color = categoryName.color || '#58D20A';
+    const color = categoryName.color || '#0B2B26';
     const iconName = categoryName.icon || 'Tag';
     return buildDynamicCategoryTheme(name, color, iconName);
   }
@@ -181,25 +180,25 @@ export function getCategoryTheme(categoryName, dbCategories = []) {
 // ─── Team Avatar Config ──────────────────────────────────────────────────────
 
 const ICON_PRESETS = [
-  { name: 'Shield',   Icon: Shield,   bg: 'from-[#12200E] via-[#0B0B0B] to-[#050505]',  accent: '#58D20A', border: 'border-neonGreen/40' },
+  { name: 'Shield',   Icon: Shield,   bg: 'from-[#0B2B26] via-[#0B0B0B] to-[#050505]',  accent: '#0B2B26', border: 'border-neonGreen/40' },
   { name: 'Trophy',   Icon: Trophy,   bg: 'from-[#1f1a08] via-[#0B0B0B] to-[#050505]',  accent: '#F4C542', border: 'border-warningGold/40' },
-  { name: 'Lightning', Icon: Zap,     bg: 'from-[#12200E] via-[#0B0B0B] to-[#050505]',  accent: '#72F21A', border: 'border-neonGreenHover/40' },
+  { name: 'Lightning', Icon: Zap,     bg: 'from-[#0B2B26] via-[#0B0B0B] to-[#050505]',  accent: '#0B2B26', border: 'border-neonGreenHover/40' },
   { name: 'Crown',    Icon: Crown,    bg: 'from-[#1f1a08] via-[#0B0B0B] to-[#050505]',  accent: '#F4C542', border: 'border-warningGold/40' },
   { name: 'Flame',    Icon: Flame,    bg: 'from-[#1c0a0c] via-[#0B0B0B] to-[#050505]',  accent: '#FF5C5C', border: 'border-urgentRedText/40' },
-  { name: 'Star',     Icon: Star,     bg: 'from-[#12200E] via-[#0B0B0B] to-[#050505]',  accent: '#35C759', border: 'border-successGreen/40' },
-  { name: 'Falcon',   Icon: Feather,  bg: 'from-[#12200E] via-[#0B0B0B] to-[#050505]',  accent: '#58D20A', border: 'border-neonGreen/40' },
+  { name: 'Star',     Icon: Star,     bg: 'from-[#0B2B26] via-[#0B0B0B] to-[#050505]',  accent: '#0B2B26', border: 'border-successGreen/40' },
+  { name: 'Falcon',   Icon: Feather,  bg: 'from-[#0B2B26] via-[#0B0B0B] to-[#050505]',  accent: '#0B2B26', border: 'border-neonGreen/40' },
   { name: 'Target',   Icon: Target,   bg: 'from-[#1c0a0c] via-[#0B0B0B] to-[#050505]',  accent: '#FF5C5C', border: 'border-urgentRedText/40' },
   { name: 'Sparkles', Icon: Sparkles, bg: 'from-[#1f1a08] via-[#0B0B0B] to-[#050505]',  accent: '#F4C542', border: 'border-warningGold/40' },
-  { name: 'Award',    Icon: Award,    bg: 'from-[#12200E] via-[#0B0B0B] to-[#050505]',  accent: '#35C759', border: 'border-successGreen/40' },
+  { name: 'Award',    Icon: Award,    bg: 'from-[#0B2B26] via-[#0B0B0B] to-[#050505]',  accent: '#0B2B26', border: 'border-successGreen/40' },
 ];
 
 const TEAM_COLOR_PALETTE = [
-  { bg: 'from-[#12200E] via-[#0B0B0B] to-[#050505]',  accent: '#58D20A', border: 'border-neonGreen/40' },
+  { bg: 'from-[#0B2B26] via-[#0B0B0B] to-[#050505]',  accent: '#0B2B26', border: 'border-neonGreen/40' },
   { bg: 'from-[#1f1a08] via-[#0B0B0B] to-[#050505]',  accent: '#F4C542', border: 'border-warningGold/40' },
   { bg: 'from-[#1c0a0c] via-[#0B0B0B] to-[#050505]',  accent: '#FF5C5C', border: 'border-urgentRedText/40' },
-  { bg: 'from-[#12200E] via-[#0B0B0B] to-[#050505]',  accent: '#72F21A', border: 'border-neonGreenHover/40' },
+  { bg: 'from-[#0B2B26] via-[#0B0B0B] to-[#050505]',  accent: '#0B2B26', border: 'border-neonGreenHover/40' },
   { bg: 'from-[#151515] via-[#0B0B0B] to-[#050505]',  accent: '#A3A3A3', border: 'border-borderStrong' },
-  { bg: 'from-[#12200E] via-[#0B0B0B] to-[#050505]',  accent: '#35C759', border: 'border-successGreen/40' },
+  { bg: 'from-[#0B2B26] via-[#0B0B0B] to-[#050505]',  accent: '#0B2B26', border: 'border-successGreen/40' },
 ];
 
 function stringHash(str) {
@@ -209,6 +208,31 @@ function stringHash(str) {
     hash |= 0;
   }
   return Math.abs(hash);
+}
+
+// ─── Accent readability helpers ──────────────────────────────────────────────
+// The primary brand green (#0B2B26) is intentionally VERY dark, so whenever a
+// category/team accent colour is used as TEXT, an ICON or a BUTTON LABEL it
+// must flip to a light tone. Surfaces/borders keep the raw accent.
+
+export function isDarkHex(hex, minLum = 0.22) {
+  try {
+    const raw = String(hex || '').replace('#', '');
+    const full = raw.length === 3 ? raw.split('').map((c) => c + c).join('') : raw;
+    if (!/^[0-9a-fA-F]{6}$/.test(full)) return false;
+    const lin = (c) => (c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4));
+    const r = lin(parseInt(full.slice(0, 2), 16) / 255);
+    const g = lin(parseInt(full.slice(2, 4), 16) / 255);
+    const b = lin(parseInt(full.slice(4, 6), 16) / 255);
+    return (0.2126 * r + 0.7152 * g + 0.0722 * b) < minLum;
+  } catch {
+    return false;
+  }
+}
+
+/** Foreground-safe accent: dark accents resolve to a light tone. */
+export function readableAccentText(hex, light = '#FFFFFF') {
+  return isDarkHex(hex) ? light : hex;
 }
 
 /**
@@ -240,7 +264,7 @@ export function getTeamAvatarConfig(team = {}) {
     IconComponent = iconPreset.Icon || Shield;
   }
 
-  const primaryColor = team.primaryColor || brand?.primaryColor || colorPreset.accent || '#58D20A';
+  const primaryColor = team.primaryColor || brand?.primaryColor || colorPreset.accent || '#0B2B26';
   const secondaryColor = team.secondaryColor || brand?.secondaryColor || '#0B0B0B';
 
   return {
@@ -262,12 +286,12 @@ export function getTeamAvatarConfig(team = {}) {
 // ─── Team Card Themes ────────────────────────────────────────────────────────
 
 export const TEAM_THEMES = [
-  { name: 'lime',    gradient: 'from-[#12200E]/60 via-cardBg/60 to-cardBg',   border: 'border-neonGreen/40',      ring: 'hover:shadow-[0_0_24px_rgba(88,210,10,0.15)]',   accent: 'bg-neonGreen',      badgeBg: 'bg-[#12200E] text-neonGreen border-neonGreen/30',        stat: 'text-neonGreen' },
+  { name: 'primary-green', gradient: 'from-[#0B2B26]/60 via-cardBg/60 to-cardBg', border: 'border-neonGreen/40',      ring: 'hover:shadow-[0_0_24px_rgba(11,43,38,0.85)]',    accent: 'bg-neonGreen',      badgeBg: 'bg-[#0B2B26] text-white border-neonGreen/30',            stat: 'text-white' },
   { name: 'gold',    gradient: 'from-[#1f1a08]/60 via-cardBg/60 to-cardBg',   border: 'border-warningGold/40',    ring: 'hover:shadow-[0_0_24px_rgba(244,197,66,0.12)]',  accent: 'bg-warningGold',    badgeBg: 'bg-[#1f1a08] text-warningGold border-warningGold/30',    stat: 'text-warningGold' },
-  { name: 'emerald', gradient: 'from-[#12200E]/60 via-cardBg/60 to-cardBg',   border: 'border-successGreen/40',   ring: 'hover:shadow-[0_0_24px_rgba(53,199,89,0.12)]',   accent: 'bg-successGreen',   badgeBg: 'bg-[#12200E] text-successGreen border-successGreen/30',  stat: 'text-successGreen' },
+  { name: 'green-surface', gradient: 'from-[#0B2B26]/60 via-cardBg/60 to-cardBg',   border: 'border-successGreen/40',   ring: 'hover:shadow-[0_0_24px_rgba(11,43,38,0.85)]',    accent: 'bg-successGreen',   badgeBg: 'bg-[#0B2B26] text-white border-successGreen/30',         stat: 'text-white' },
   { name: 'crimson', gradient: 'from-[#1c0a0c]/60 via-cardBg/60 to-cardBg',   border: 'border-urgentRedText/40',  ring: 'hover:shadow-[0_0_24px_rgba(255,92,92,0.10)]',   accent: 'bg-urgentRed',      badgeBg: 'bg-[#1c0a0c] text-urgentRedText border-urgentRedText/30', stat: 'text-urgentRedText' },
   { name: 'silver',  gradient: 'from-surfaceHover/60 via-cardBg/60 to-cardBg', border: 'border-borderStrong',     ring: 'hover:shadow-card-hover',                        accent: 'bg-secondaryText',  badgeBg: 'bg-surfaceHover text-secondaryText border-borderStrong', stat: 'text-secondaryText' },
-  { name: 'volt',    gradient: 'from-[#12200E]/60 via-cardBg/60 to-cardBg',   border: 'border-neonGreenHover/40', ring: 'hover:shadow-[0_0_24px_rgba(114,242,26,0.12)]',  accent: 'bg-neonGreenHover', badgeBg: 'bg-[#12200E] text-neonGreenHover border-neonGreenHover/30', stat: 'text-neonGreenHover' },
+  { name: 'volt',    gradient: 'from-[#0B2B26]/60 via-cardBg/60 to-cardBg',   border: 'border-neonGreenHover/40', ring: 'hover:shadow-[0_0_24px_rgba(11,43,38,0.85)]',    accent: 'bg-neonGreenHover', badgeBg: 'bg-[#0B2B26] text-white border-neonGreenHover/30',       stat: 'text-white' },
 ];
 
 /**
@@ -309,14 +333,14 @@ export function getTeamTheme(team) {
   if (nameLower.includes('warrior')) {
     return {
       name: 'warriors',
-      gradient: 'from-[#093514]/90 via-[#051c0b]/90 to-[#0d0d0d]',
-      border: 'border-emerald-600/60 hover:border-emerald-500',
-      ring: 'hover:shadow-[0_0_28px_rgba(16,185,129,0.3)]',
-      accent: 'bg-gradient-to-r from-emerald-600 to-teal-500',
-      badgeBg: 'bg-emerald-950/80 text-emerald-400 border-emerald-600/40',
-      stat: 'text-emerald-400',
-      primaryColor: '#10b981',
-      secondaryColor: '#064e3b',
+      gradient: 'from-[#0B2B26]/90 via-[#071b17]/90 to-[#0d0d0d]',
+      border: 'border-[#0B2B26] hover:border-[#0B2B26]/85',
+      ring: 'hover:shadow-[0_0_28px_rgba(11,43,38,0.85)]',
+      accent: 'bg-[#0B2B26]',
+      badgeBg: 'bg-[#0B2B26]/80 text-white border-[#0B2B26]/60',
+      stat: 'text-white',
+      primaryColor: '#0B2B26',
+      secondaryColor: '#0B2B26',
       iconName: 'Swords'
     };
   }

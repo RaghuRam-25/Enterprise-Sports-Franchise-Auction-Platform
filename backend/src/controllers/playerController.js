@@ -205,8 +205,186 @@ export const registerPlayer = async (req, res, next) => {
     }
 
     // 5. Default the player to the LAST category in the list (the one with the
-    //    highest priorityLevel). The admin assigns the real category later via
-    //    approvePlayer / editPlayer. basePrice follows the default category too.
+import { z } from 'zod';
+
+// ── GET OWN PLAYER PROFILE ───────────────────────────────────────────────────
+export const getMyPlayerProfile = async (req, res, next) => {
+  try {
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ success: false, message: 'Not authenticated' });
+    }
+
+    const player = await Player.findOne({ userId: req.user.id });
+
+    if (!player) {
+      return res.status(404).json({ success: false, message: 'Player profile not found for this user account.' });
+    }
+
+    res.json({ success: true, data: player });
+  } catch (e) {
+    next(e);
+  }
+};
+
+// ── Registration Status — event phase + AUTOMATIC scheduled window ────────────
+// The phase state machine is the lifecycle upper bound; the Super-Admin-set
+// registration window (start/end times) drives open/close automatically:
+// before start → closed, at start → open, after end → closed.
+export const getRegistrationStatus = async (req, res, next) => {
+  try {
+    const access = await evaluateRegistrationAccess();
+    res.json({
+      success: true,
+      isRegistrationFrozen: !access.isOpen,
+      isOpen: access.isOpen,
+      phase: access.phase,
+      registrationWindow: access.win,
+      message: access.message,
+      serverTime: new Date().toISOString(),
+    });
+  } catch (e) {
+    // Surface failures instead of silently claiming "frozen" (which would lock
+    // the registration UI on a DB/phase-service outage).
+    next(e);
+  }
+};
+
+// Retained endpoint: registration open/closed is controlled by advancing the
+// phase (PATCH /api/phase), so this now reports guidance rather than flipping a
+// standalone boolean that could drift from the phase.
+export const toggleRegistrationFreeze = async (req, res) => {
+  try {
+    const phase = await getCurrentPhase();
+    const isRegistrationFrozen = await isRegFrozenByPhase();
+    res.status(409).json({
+      success: false,
+      isRegistrationFrozen,
+      phase,
+      message:
+        'Registration open/closed is now controlled by the event phase. ' +
+        'Advance the phase via PATCH /api/phase (SETUP → REGISTRATION opens it, ' +
+        'REGISTRATION → AUCTION freezes it).',
+    });
+  } catch (e) {
+    res.status(500).json({ success: false, message: 'Failed to read registration phase' });
+  }
+};
+
+// ── Validation Schemas ────────────────────────────────────────────────────────
+const registerPlayerSchema = z.object({
+  name: z.string().min(2),
+  email: z.string().email(),
+  password: z.string().min(6),
+  studentId: z.string().min(3),
+  session: z.string().min(2),
+  jerseyName: z.string().max(15),
+  tShirtSize: z.enum(['S', 'M', 'L', 'XL', 'XXL']),
+  tShirtNumber: z.string().optional(),
+  positions: z.union([z.array(z.string()), z.string()]),
+  primaryPosition: z.string().min(1),
+  category: z.string().optional()
+});
+
+const updateProfileSchema = z.object({
+  name: z.string().min(2).optional(),
+  phone: z.string().optional(),
+  bio: z.string().optional(),
+  address: z.string().optional(),
+  session: z.string().min(2).optional(),
+  jerseyName: z.string().max(15).optional(),
+  positions: z.union([z.array(z.string()), z.string()]).optional(),
+  primaryPosition: z.string().optional(),
+  tShirtSize: z.enum(['S', 'M', 'L', 'XL', 'XXL']).optional(),
+  tShirtNumber: z.string().optional(),
+  imageUrl: z.string().optional(),
+  // Premium profile card attributes
+  age: z.union([z.number().int().min(5).max(120), z.string(), z.null()]).optional(),
+  height: z.string().max(20).optional(),
+  preferredFoot: z.enum(['', 'Left', 'Right', 'Both']).optional(),
+  nationality: z.string().max(80).optional(),
+  // Performance statistics
+  matchesPlayed: z.union([z.number().int().min(0).max(99), z.string(), z.null()]).optional(),
+  goals: z.union([z.number().int().min(0).max(99), z.string(), z.null()]).optional(),
+  assists: z.union([z.number().int().min(0).max(99), z.string(), z.null()]).optional(),
+  yellowCards: z.union([z.number().int().min(0).max(99), z.string(), z.null()]).optional(),
+  redCards: z.union([z.number().int().min(0).max(99), z.string(), z.null()]).optional(),
+  cleanSheets: z.union([z.number().int().min(0).max(99), z.string(), z.null()]).optional()
+}).partial();
+
+// ── Public player fields (visible to Spectators / unauthenticated) ────────────
+const PUBLIC_PLAYER_FIELDS = 'name jerseyName studentId basePrice positions primaryPosition category session imageUrl status soldToTeam finalPrice tShirtNumber';
+
+// ── REGISTER PLAYER ───────────────────────────────────────────────────────────
+export const registerPlayer = async (req, res, next) => {
+  try {
+    const currentPhase = await getCurrentPhase();
+    const schedule = await getRegistrationSchedule();
+    const win = resolveRegistrationWindow(schedule, new Date());
+
+    if (!isRegistrationOpen(currentPhase, win) && req.user?.role !== 'SUPER_ADMIN') {
+      return res.status(403).json({
+        success: false,
+        message: `Registration is currently closed. ${describeWindowState(win)}.`,
+        registrationWindow: win,
+        serverTime: new Date().toISOString(),
+      });
+    }
+
+    const body = req.body;
+    let positionsArr = Array.isArray(body.positions)
+      ? body.positions
+      : typeof body.positions === 'string'
+        ? JSON.parse(body.positions)
+        : [body.positions];
+
+    const parsed = registerPlayerSchema.parse({ ...body, positions: positionsArr });
+
+    const existingPlayer = await Player.findOne({ studentId: parsed.studentId });
+    if (existingPlayer) {
+      return res.status(409).json({ success: false, message: `Student ID ${parsed.studentId} is already registered.` });
+    }
+
+    const existingUser = await User.findOne({ email: parsed.email.toLowerCase() });
+    if (existingUser) {
+      return res.status(409).json({ success: false, message: `Email ${parsed.email} is already registered.` });
+    }
+
+    const sessionExists = await Session.findOne({ name: parsed.session });
+    if (!sessionExists) {
+      return res.status(400).json({ success: false, message: `Session '${parsed.session}' does not exist. Please select a valid session.` });
+    }
+
+    if (!positionsArr || positionsArr.length === 0) {
+      return res.status(400).json({ success: false, message: 'Must select at least one position' });
+    }
+
+    const validPositions = await Position.find({ code: { $in: positionsArr } });
+    const validCodes = validPositions.map(p => p.code);
+    const invalidCodes = positionsArr.filter(c => !validCodes.includes(c));
+    if (invalidCodes.length > 0) {
+      return res.status(400).json({ success: false, message: `Invalid position code(s): ${invalidCodes.join(', ')}` });
+    }
+
+    if (!positionsArr.includes(parsed.primaryPosition)) {
+      return res.status(400).json({ success: false, message: 'Primary position must be one of the selected positions' });
+    }
+
+    const passwordHash = await bcrypt.hash(parsed.password, 10);
+    const user = await User.create({
+      name: parsed.name,
+      email: parsed.email.toLowerCase(),
+      passwordHash,
+      role: 'PLAYER'
+    });
+
+    let imageUrl = null;
+    let imagePublicId = null;
+    if (req.file) {
+      const uploaded = await processAndUploadImage(req.file.buffer, parsed.studentId);
+      imageUrl = uploaded.url || null;
+      imagePublicId = uploaded.publicId || null;
+    }
+
     let category = parsed.category || 'B Grade';
     let basePrice = 2000000;
     if (!parsed.category) {
@@ -217,9 +395,6 @@ export const registerPlayer = async (req, res, next) => {
       }
     }
 
-    // 5b. Persist the player. If the database write fails AFTER a successful
-    //     Cloudinary upload, destroy the just-uploaded asset so no orphan is
-    //     left behind, then surface the original error.
     let player;
     try {
       player = await Player.create({
@@ -244,7 +419,6 @@ export const registerPlayer = async (req, res, next) => {
       throw dbErr;
     }
 
-    // Real-time Socket.IO emission to update all connected clients instantly
     const io = req.app?.get('io');
     if (io) {
       io.emit('player:updated', player);
@@ -273,15 +447,11 @@ export const getPlayers = async (req, res, next) => {
       ];
     }
 
-    // Determine caller's privilege level
     const role = req.user?.role;
     const isPrivileged = ['TEAM_MANAGER', 'PODIUM_ADMIN', 'SUPER_ADMIN'].includes(role);
 
     const projection = isPrivileged ? undefined : PUBLIC_PLAYER_FIELDS;
 
-    // Only CURRENT, valid records leave this API. Players whose owning User
-    // account no longer exists (e.g. account deleted directly in the DB) are
-    // stale orphans and must never reach the frontend.
     let players = await Player.find(query, projection).sort({ createdAt: -1 }).lean();
 
     const ownerIds = [...new Set(players.map((p) => p.userId?.toString()).filter(Boolean))];
@@ -298,14 +468,12 @@ export const getPlayers = async (req, res, next) => {
 // ── WITHDRAW PLAYER (own-resource guard enforced in route layer) ──────────────
 export const withdrawPlayer = async (req, res, next) => {
   try {
-    // Registration freeze is derived from the event phase (single source of truth).
     const isRegistrationFrozen = await isRegFrozenByPhase();
 
     if (isRegistrationFrozen && req.user?.role !== 'SUPER_ADMIN') {
       return res.status(403).json({ success: false, message: 'Cannot withdraw: Registration freeze is active.' });
     }
 
-    // For PLAYER role: verify they own this player record
     if (req.user?.role === 'PLAYER') {
       const player = await Player.findById(req.params.id);
       if (!player) return res.status(404).json({ success: false, message: 'Player not found' });
@@ -329,6 +497,30 @@ export const withdrawPlayer = async (req, res, next) => {
   } catch (e) { next(e); }
 };
 
+// Helper: Resolve player's position in sold team lineup (single source of truth)
+export const getPlayerLineupPosition = async (player) => {
+  if (player.status !== 'SOLD' || !player.soldToTeam) {
+    return { assignedPosition: player.primaryPosition, slot: null, isStarter: false, isSub: false };
+  }
+  const teamId = player.soldToTeam._id || player.soldToTeam;
+  const team = await Team.findById(teamId).select('formation lineup substitutes');
+  if (!team) {
+    return { assignedPosition: player.primaryPosition, slot: null, isStarter: false, isSub: false };
+  }
+  const playerIdStr = String(player._id || player.id);
+  if (Array.isArray(team.lineup)) {
+    const item = team.lineup.find(l => l && l.playerId && String(l.playerId) === playerIdStr);
+    if (item && item.slot) {
+      const posCode = String(item.slot).replace(/\d+$/, '').toUpperCase();
+      return { assignedPosition: posCode, slot: item.slot, isStarter: true, isSub: false, formation: team.formation };
+    }
+  }
+  if (Array.isArray(team.substitutes) && team.substitutes.some(id => String(id) === playerIdStr)) {
+    return { assignedPosition: 'SUB', slot: 'SUB', isStarter: false, isSub: true, formation: team.formation };
+  }
+  return { assignedPosition: player.primaryPosition, slot: null, isStarter: false, isSub: false, formation: team.formation };
+};
+
 // ── GET OWN PLAYER PROFILE (/api/players/me) ─────────────────────────────────
 export const getMyProfile = async (req, res, next) => {
   try {
@@ -340,7 +532,17 @@ export const getMyProfile = async (req, res, next) => {
     if (!player) {
       return res.status(404).json({ success: false, message: 'No player profile found for this account' });
     }
-    res.json({ success: true, data: player });
+
+    const playerObj = player.toObject();
+    if (player.status === 'SOLD' && player.soldToTeam) {
+      const posInfo = await getPlayerLineupPosition(player);
+      playerObj.assignedTeamPosition = posInfo.assignedPosition;
+      playerObj.assignedTeamSlot = posInfo.slot;
+    } else {
+      playerObj.assignedTeamPosition = player.primaryPosition;
+    }
+
+    res.json({ success: true, data: playerObj });
   } catch (e) { next(e); }
 };
 
@@ -348,9 +550,6 @@ export const getMyProfile = async (req, res, next) => {
 // Powers the full-screen "Field Position Reveal" page. Returns the sold
 // player's assigned team, their position code, and the pitch coordinates
 // (percentages, attacking-right) used to place the marker.
-//
-// Returns 404 when the requesting player has NOT been sold yet — the frontend
-// treats that as the "you haven't been drafted yet" state (not an error).
 export const getMyFieldPosition = async (req, res, next) => {
   try {
     const userId = req.user._id;
@@ -373,10 +572,9 @@ export const getMyFieldPosition = async (req, res, next) => {
       });
     }
 
-    // Resolve pitch coordinates from the player's primary position. Prefer the
-    // Position document's own fieldX/fieldY; fall back to the canonical map so
-    // positions created before those fields existed still render correctly.
-    const code = player.primaryPosition;
+    // Single Source of Truth: Get position from Manager's saved squad lineup
+    const posInfo = await getPlayerLineupPosition(player);
+    const code = posInfo.assignedPosition || player.primaryPosition;
     const positionDoc = code ? await Position.findOne({ code }) : null;
     const { fieldX, fieldY } = resolveFieldCoords(code, positionDoc);
 
@@ -400,25 +598,85 @@ export const getMyFieldPosition = async (req, res, next) => {
   } catch (e) { next(e); }
 };
 
+// ── GET PLAYER'S MY TEAM SQUAD LINEUP (/api/players/my-team) ─────────────────
+export const getMyTeamLineup = async (req, res, next) => {
+  try {
+    const userId = req.user._id;
+    let player = await Player.findOne({ userId }).populate('soldToTeam');
+    if (!player && req.user.email) {
+      player = await Player.findOne({ email: req.user.email }).populate('soldToTeam');
+    }
+
+    if (!player) {
+      return res.status(404).json({ success: false, message: 'No player profile found for this account' });
+    }
+
+    if (player.status !== 'SOLD' || !player.soldToTeam) {
+      return res.status(404).json({
+        success: false,
+        code: 'NOT_SOLD',
+        message: 'You have not been drafted yet.'
+      });
+    }
+
+    const teamId = player.soldToTeam._id || player.soldToTeam;
+    const team = await Team.findById(teamId)
+      .populate({ path: 'lineup.playerId', select: 'name jerseyName primaryPosition positions category finalPrice imageUrl studentId tShirtNumber' })
+      .populate({ path: 'substitutes', select: 'name jerseyName primaryPosition positions category finalPrice imageUrl studentId tShirtNumber' })
+      .populate('managerId', 'name email');
+
+    if (!team) {
+      return res.status(404).json({ success: false, message: 'Assigned franchise team not found' });
+    }
+
+    // Get all players sold to this team
+    const allRoster = await Player.find({ soldToTeam: team._id, status: 'SOLD' })
+      .select('name jerseyName primaryPosition positions category finalPrice imageUrl studentId tShirtNumber')
+      .sort({ finalPrice: -1 });
+
+    const posInfo = await getPlayerLineupPosition(player);
+
+    res.json({
+      success: true,
+      data: {
+        team: {
+          id: team._id,
+          name: team.name,
+          logoUrl: team.logoUrl || team.logo || '',
+          shortCode: team.shortCode,
+          primaryColor: team.primaryColor || '#0B2B26',
+          totalBudget: team.totalBudget || 0,
+          remainingBudget: team.remainingBudget || 0,
+        },
+        manager: team.managerId ? { name: team.managerId.name, email: team.managerId.email } : null,
+        formation: team.formation || '4-3-3',
+        lineup: team.lineup || [],
+        substitutes: team.substitutes || [],
+        roster: allRoster || [],
+        chemistry: team.chemistry || 0,
+        collectiveStrength: team.collectiveStrength || 0,
+        squadStatus: team.squadStatus || 'DRAFT',
+        myPosition: posInfo.assignedPosition
+      }
+    });
+  } catch (e) { next(e); }
+};
+
 // ── UPDATE OWN PLAYER PROFILE ────────────────────────────────────────────────
 export const updatePlayerProfile = async (req, res, next) => {
   try {
-    const isRegistrationFrozen = await isRegFrozenByPhase();
-
     const player = await Player.findById(req.params.id);
     if (!player) return res.status(404).json({ success: false, message: 'Player not found' });
 
-    // Ownership check for PLAYER role
-    if (req.user?.role === 'PLAYER') {
-      if (player.userId?.toString() !== req.user._id?.toString()) {
-        return res.status(403).json({ success: false, message: 'You can only update your own profile' });
-      }
+    // Authorization: User can update their own profile, Super Admins can update any
+    if (req.user?.role === 'PLAYER' && player.userId?.toString() !== req.user._id?.toString()) {
+      return res.status(403).json({ success: false, message: 'Forbidden' });
     }
 
-    const parsed = updateProfileSchema.parse(req.body);
+    const isRegistrationFrozen = await isRegFrozenByPhase();
+    const body = req.body;
+    const parsed = updateProfileSchema.parse(body);
 
-    // Handle photo upload if provided. The pipeline returns { url, publicId } —
-    // a permanent Cloudinary secure_url in production. A failed upload yields
     // url=null and the existing photo is kept untouched.
     let uploadedImage = null;
     if (req.file) {
@@ -520,6 +778,70 @@ export const updatePlayerProfile = async (req, res, next) => {
 };
 
 // ── REQUEST TEAM MANAGER ROLE (Player or General User -> Team Manager Request) ─────
+// ─── REQUEST PODIUM ADMIN / SUPER ADMIN ROLE (General member upgrades) ───────
+const ADMIN_REQUEST_TARGETS = {
+  PODIUM_ADMIN: { statusField: 'podiumAdminRequestStatus', noteField: 'podiumAdminRequestNote', label: 'Podium Admin' },
+  SUPER_ADMIN:  { statusField: 'superAdminRequestStatus',  noteField: 'superAdminRequestNote',  label: 'Super Admin' },
+};
+
+export const requestAdminRole = async (req, res, next) => {
+  try {
+    const target = ADMIN_REQUEST_TARGETS[req.params.targetRole];
+    if (!target) return res.status(400).json({ success: false, message: 'Invalid role requested.' });
+
+    const user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ success: false, message: 'User account not found' });
+
+    if (user.role === 'SUPER_ADMIN' || user.role === 'PODIUM_ADMIN') {
+      return res.status(400).json({ success: false, message: 'You already have an admin role.' });
+    }
+
+    if (user[target.statusField] === 'PENDING') {
+      return res.status(400).json({ success: false, message: `Your ${target.label} request is already PENDING review.` });
+    }
+
+    const { note } = req.body;
+    user[target.statusField] = 'PENDING';
+    user[target.noteField] = note || `Interested in ${target.label} access.`;
+    await user.save();
+
+    const io = req.app?.get('io');
+    if (io) io.emit('user:role_updated', { userId: user._id.toString(), [target.statusField]: 'PENDING' });
+
+    res.json({
+      success: true,
+      message: `${target.label} request submitted successfully to Super Admin.`,
+      data: { [target.statusField]: user[target.statusField], [target.noteField]: user[target.noteField] }
+    });
+  } catch (e) { next(e); }
+};
+
+export const cancelAdminRoleRequest = async (req, res, next) => {
+  try {
+    const target = ADMIN_REQUEST_TARGETS[req.params.targetRole];
+    if (!target) return res.status(400).json({ success: false, message: 'Invalid role requested.' });
+
+    const user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ success: false, message: 'User account not found' });
+
+    if (user[target.statusField] !== 'PENDING') {
+      return res.status(400).json({ success: false, message: `No pending ${target.label} request to cancel.` });
+    }
+
+    user[target.statusField] = 'NONE';
+    user[target.noteField] = '';
+    await user.save();
+
+    const io = req.app?.get('io');
+    if (io) io.emit('user:request_cancelled', { userId: String(user._id), [target.statusField]: 'NONE' });
+
+    res.json({
+      success: true,
+      message: `${target.label} request cancelled successfully.`,
+      data: { [target.statusField]: 'NONE' }
+    });
+  } catch (e) { next(e); }
+};
 export const requestManagerRole = async (req, res, next) => {
   try {
     const user = await User.findById(req.user._id);

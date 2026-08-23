@@ -579,6 +579,65 @@ export const handlePlayerRequest = async (req, res, next) => {
   } catch (e) { next(e); }
 };
 
+// ─── HANDLE PODIUM ADMIN / SUPER ADMIN ROLE REQUEST (Super Admin action) ────
+const ADMIN_PROMOTION_TARGETS = {
+  PODIUM_ADMIN: { statusField: 'podiumAdminRequestStatus', label: 'Podium Admin', logKey: 'PODIUM_ADMIN_REQUEST' },
+  SUPER_ADMIN:  { statusField: 'superAdminRequestStatus',  label: 'Super Admin',  logKey: 'SUPER_ADMIN_REQUEST' },
+};
+
+export const handleAdminRoleRequest = async (req, res, next) => {
+  try {
+    const target = ADMIN_PROMOTION_TARGETS[req.params.targetRole];
+    if (!target) return res.status(400).json({ success: false, message: 'Invalid role requested.' });
+
+    const { action } = req.body; // 'APPROVE' or 'REJECT'
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+
+    const io = req.app?.get('io');
+
+    if (action === 'APPROVE') {
+      user.role = req.params.targetRole;
+      user[target.statusField] = 'APPROVED';
+      await user.save();
+
+      await logAdminAction(`APPROVE_${target.logKey}`, req.user?.email || 'admin', { id: user._id, email: user.email });
+
+      if (io) {
+        io.emit('user:role_updated', {
+          userId: user._id.toString(),
+          newRole: req.params.targetRole,
+          [target.statusField]: 'APPROVED'
+        });
+      }
+
+      return res.json({
+        success: true,
+        message: `${target.label} request APPROVED for '${user.name}'. Account promoted to ${target.label} role.`,
+        data: user,
+        newRole: req.params.targetRole
+      });
+    }
+
+    if (action === 'REJECT') {
+      user[target.statusField] = 'REJECTED';
+      await user.save();
+
+      await logAdminAction(`REJECT_${target.logKey}`, req.user?.email || 'admin', { id: user._id, email: user.email });
+
+      if (io) {
+        io.emit('user:role_updated', {
+          userId: user._id.toString(),
+          [target.statusField]: 'REJECTED'
+        });
+      }
+
+      return res.json({ success: true, message: `${target.label} request REJECTED for '${user.name}'.`, data: user });
+    }
+
+    return res.status(400).json({ success: false, message: "Invalid action. Must be 'APPROVE' or 'REJECT'." });
+  } catch (e) { next(e); }
+};
 export const deleteManager = async (req, res, next) => {
   try {
     const user = await User.findById(req.params.id);

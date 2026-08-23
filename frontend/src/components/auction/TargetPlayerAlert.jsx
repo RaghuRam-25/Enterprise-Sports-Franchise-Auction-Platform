@@ -58,12 +58,12 @@ export default function TargetPlayerAlert({ targetItem, onQuickBid, onDismiss })
                 <span>&bull;</span>
                 <span>{player.category}</span>
                 <span>&bull;</span>
-                <span className="font-mono text-neonGreen">Base: {formatCurrency(player.basePrice)}</span>
+                <span className="font-mono text-white">Base: {formatCurrency(player.basePrice)}</span>
               </div>
               <div className="sm:hidden flex items-center gap-1.5 text-[10px] text-secondaryText truncate">
                 <span>{player.primaryPosition}</span>
                 <span>&bull;</span>
-                <span className="font-mono text-neonGreen">Base: {formatCurrency(player.basePrice)}</span>
+                <span className="font-mono text-white">Base: {formatCurrency(player.basePrice)}</span>
               </div>
             </div>
           </div>

@@ -25,7 +25,7 @@ export default function AdminConfigurationsLayout() {
               to={tab.path}
               className={`flex items-center gap-2 px-4 py-2.5 border-b-2 text-xs font-bold transition whitespace-nowrap ${
                 isActive
-                  ? 'border-neonGreen text-neonGreen bg-successGreen/10 rounded-t-xl'
+                  ? 'border-neonGreen text-white bg-successGreen/10 rounded-t-xl'
                   : 'border-transparent text-secondaryText hover:text-primaryText'
               }`}
             >

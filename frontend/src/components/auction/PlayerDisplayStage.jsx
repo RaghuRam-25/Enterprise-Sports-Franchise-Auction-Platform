@@ -245,7 +245,7 @@ export default function PlayerDisplayStage({
                         className="px-5 py-2.5 bg-darkBg/80 border border-warningGold/30 rounded-2xl"
                       >
                         <span className="block text-[10px] text-mutedText font-bold uppercase tracking-widest">Base Price</span>
-                        <span className="block text-xl font-black font-mono text-neonGreen mt-0.5">
+                        <span className="block text-xl font-black font-mono text-white mt-0.5">
                           ৳{(currentIntroPlayer.basePrice || 0).toLocaleString('en-IN')}
                         </span>
                       </motion.div>

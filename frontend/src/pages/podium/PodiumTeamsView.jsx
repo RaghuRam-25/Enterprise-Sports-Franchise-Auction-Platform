@@ -15,7 +15,7 @@ export default function PodiumTeamsView() {
         <div className="space-y-6">
             <div className="glass-card rounded-2xl p-6 border border-cardBorder">
                 <div className="flex items-center gap-3">
-                    <Icon className="w-6 h-6 text-neonGreen" />
+                    <Icon className="w-6 h-6 text-white" />
                     <div>
                         <h1 className="text-xl font-black text-white">{pageTitle}</h1>
                         <p className="text-xs text-secondaryText">
@@ -58,7 +58,7 @@ function BudgetsView({ teams, formatCurrency }) {
                                 </td>
                                 <td className="py-3 px-4 font-mono">{formatCurrency(team.totalBudget)}</td>
                                 <td className="py-3 px-4 font-mono text-urgentRedText">{formatCurrency((team.totalBudget || 0) - (team.remainingBudget || 0))}</td>
-                                <td className="py-3 px-4 font-mono font-bold text-neonGreen">{formatCurrency(team.remainingBudget)}</td>
+                                <td className="py-3 px-4 font-mono font-bold text-white">{formatCurrency(team.remainingBudget)}</td>
                                 <td className="py-3 px-4 font-bold">{team.currentRoster?.length || 0}</td>
                             </tr>
                         ))}
@@ -97,7 +97,7 @@ function PurchasesView({ teams, formatCurrency }) {
                                             <td className="py-2 px-3 font-bold text-white">{player.name}</td>
                                             <td className="py-2 px-3">{player.primaryPosition}</td>
                                             <td className="py-2 px-3">{player.category}</td>
-                                            <td className="py-2 px-3 font-mono text-neonGreen">{formatCurrency(player.finalPrice)}</td>
+                                            <td className="py-2 px-3 font-mono text-white">{formatCurrency(player.finalPrice)}</td>
                                         </tr>
                                     ))}
                                 </tbody>

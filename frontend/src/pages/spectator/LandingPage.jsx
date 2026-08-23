@@ -60,7 +60,7 @@ function ensureReadableHex(hex, minLum = 0.22) {
     }
     return `#${[r, g, b].map((v) => v.toString(16).padStart(2, '0')).join('')}`;
   } catch {
-    return '#58D20A';
+    return '#0B2B26';
   }
 }
 
@@ -81,9 +81,9 @@ function AnimatedCounter({ value, prefix = '', suffix = '' }) {
 
 // ── Mock Initial Fallback Teams if DB is empty ──────────────────────────────
 const DEMO_TEAMS = [
-  { _id: 't1', id: 't1', name: 'TEAM PHOENIX', shortCode: 'PHX', totalBudget: 20000, remainingBudget: 12500, currentRoster: Array(7).fill({}), currentRosterCount: 7, highestPurchase: 2100, primaryColor: '#58D20A', secondaryColor: '#12200E' },
+  { _id: 't1', id: 't1', name: 'TEAM PHOENIX', shortCode: 'PHX', totalBudget: 20000, remainingBudget: 12500, currentRoster: Array(7).fill({}), currentRosterCount: 7, highestPurchase: 2100, primaryColor: '#0B2B26', secondaryColor: '#0B2B26' },
   { _id: 't2', id: 't2', name: 'TEAM TITANS', shortCode: 'TTN', totalBudget: 20000, remainingBudget: 11300, currentRoster: Array(6).fill({}), currentRosterCount: 6, highestPurchase: 1800, primaryColor: '#22d3ee', secondaryColor: '#08252b' },
-  { _id: 't3', id: 't3', name: 'TEAM WARRIORS', shortCode: 'WRR', totalBudget: 20000, remainingBudget: 10800, currentRoster: Array(6).fill({}), currentRosterCount: 6, highestPurchase: 1450, primaryColor: '#34d399', secondaryColor: '#0a2419' },
+  { _id: 't3', id: 't3', name: 'TEAM WARRIORS', shortCode: 'WRR', totalBudget: 20000, remainingBudget: 10800, currentRoster: Array(6).fill({}), currentRosterCount: 6, highestPurchase: 1450, primaryColor: '#0B2B26', secondaryColor: '#071b17' },
   { _id: 't4', id: 't4', name: 'TEAM LEGENDS', shortCode: 'LGD', totalBudget: 20000, remainingBudget: 11000, currentRoster: Array(6).fill({}), currentRosterCount: 6, highestPurchase: 950, primaryColor: '#f4c542', secondaryColor: '#1f1a08' },
 ];
 
@@ -247,16 +247,16 @@ export default function LandingPage() {
   const hasLiveContent = Boolean(podiumPlayer) || isBroadcastingVideo || isIntroLooping;
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#07080a] text-slate-100 relative overflow-x-clip font-sans selection:bg-[#58D20A] selection:text-black">
+    <div className="min-h-screen flex flex-col bg-[#07080a] text-slate-100 relative overflow-x-clip font-sans selection:bg-[#0B2B26] selection:text-white">
       <header className="sticky top-0 z-50">
         <Navbar />
       </header>
 
       {/* ── Ambient Background Glow (Vibrant Neon Lime Green & Pitch Black) ──── */}
       <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1200px] h-[600px] bg-gradient-to-b from-[#58D20A]/[0.06] via-[#12200E]/10 to-transparent rounded-full blur-[160px]" />
-        <div className="absolute top-1/3 -left-40 w-[600px] h-[600px] bg-[#58D20A]/5 rounded-full blur-[140px]" />
-        <div className="absolute top-2/3 -right-40 w-[600px] h-[600px] bg-[#58D20A]/5 rounded-full blur-[140px]" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1200px] h-[600px] bg-gradient-to-b from-[#0B2B26]/[0.06] via-[#0B2B26]/10 to-transparent rounded-full blur-[160px]" />
+        <div className="absolute top-1/3 -left-40 w-[600px] h-[600px] bg-[#0B2B26]/5 rounded-full blur-[140px]" />
+        <div className="absolute top-2/3 -right-40 w-[600px] h-[600px] bg-[#0B2B26]/5 rounded-full blur-[140px]" />
       </div>
 
       <main className="flex-1 relative z-10 space-y-16 pb-24">
@@ -265,10 +265,10 @@ export default function LandingPage() {
         <section className="relative mt-8 lg:mt-11 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
           
           {/* Background Stadium Backdrop Layer — Soft Translucent Glow */}
-          <div className="absolute inset-0 rounded-3xl bg-gradient-to-b from-[#1c3816]/25 via-[#141b24]/40 to-[#0e131b]/30 overflow-hidden pointer-events-none -z-10 border border-white/10 shadow-[0_0_80px_rgba(88,210,10,0.18)] backdrop-blur-lg">
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#58D20A]/20 via-transparent to-transparent" />
-            <div className="absolute top-0 left-1/4 w-[500px] h-[580px] bg-[#58D20A]/[0.12] rotate-12 blur-3xl" />
-            <div className="absolute top-0 right-1/4 w-[500px] h-[580px] bg-emerald-400/[0.12] -rotate-12 blur-3xl" />
+          <div className="absolute inset-0 rounded-3xl bg-gradient-to-b from-[#0B2B26]/45 via-[#0B2B26]/25 to-[#0e131b]/30 overflow-hidden pointer-events-none -z-10 border border-white/10 shadow-[0_0_80px_rgba(11, 43, 38,0.45)] backdrop-blur-lg">
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#0B2B26]/20 via-transparent to-transparent" />
+            <div className="absolute top-0 left-1/4 w-[500px] h-[580px] bg-[#0B2B26]/[0.12] rotate-12 blur-3xl" />
+            <div className="absolute top-0 right-1/4 w-[500px] h-[580px] bg-[#0B2B26]/60 -rotate-12 blur-3xl" />
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-9 items-center p-8 sm:p-11 lg:p-14">
@@ -277,57 +277,70 @@ export default function LandingPage() {
             <div className="lg:col-span-7 space-y-7 sm:space-y-9 text-left">
               
               {/* Category Tagline */}
-              <div className="inline-flex items-center gap-2.5 px-5 py-2 rounded-full bg-[#182e13]/60 border border-[#58D20A]/40 text-xs sm:text-sm font-bold text-[#58D20A] shadow-lg backdrop-blur-md">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#58D20A] animate-pulse" />
+              <div className="inline-flex items-center gap-2.5 px-5 py-2 rounded-full bg-[#0B2B26]/60 border border-[#0B2B26]/40 text-xs sm:text-sm font-bold text-white shadow-lg backdrop-blur-md">
+                <span className="w-2.5 h-2.5 rounded-full bg-white animate-pulse" />
                 <span className="tracking-widest uppercase font-mono">DEPARTMENT FOOTBALL TOURNAMENT 2026</span>
               </div>
 
               {/* Main Headline — Exact 4-Font Inline Typography Match */}
               <motion.h1
-                className="flex flex-wrap items-baseline gap-x-3 sm:gap-x-4 gap-y-2.5 leading-none drop-shadow-[0_0_45px_rgba(88,210,10,0.4)] py-1"
+                className="flex flex-wrap items-baseline gap-x-3 sm:gap-x-4 gap-y-2.5 leading-none drop-shadow-[0_0_45px_rgba(11, 43, 38,0.4)] py-1"
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
               >
                 {/* 1. BUILD — Sports Heavy Italic */}
-                <span className="font-['Anton',sans-serif] italic font-black uppercase text-4xl sm:text-6xl lg:text-7xl text-white tracking-wider">
+                <span className="font-['Times_New_Roman',serif] font-black uppercase text-4xl sm:text-6xl lg:text-7xl text-white tracking-wider">
                   BUILD
                 </span>
 
                 {/* 2. YOUR — Elegant Flowing Cursive Script */}
-                <span className="font-['Great_Vibes',cursive] text-5xl sm:text-7xl lg:text-[92px] text-[#58D20A] font-normal tracking-wide drop-shadow-[0_0_28px_rgba(88,210,10,0.72)] pr-1">
-                  Your
+                <span className="font-['Times_New_Roman',serif]  font-black uppercase text-4xl sm:text-6xl lg:text-7xl text-white tracking-wider">
+                  YOUR
                 </span>
 
                 {/* 3. DREAM — Bold Decorative Serif Inline */}
-                <span className="font-['Cinzel_Decorative',serif] font-black uppercase text-4xl sm:text-6xl lg:text-7xl text-white tracking-widest">
+                <span className="font-['Times_New_Roman',serif] font-black uppercase text-4xl sm:text-6xl lg:text-7xl text-white tracking-widest">
                   DREAM
                 </span>
 
                 {/* 4. SQUAD. — Ornate Calligraphic Script */}
-                <span className="font-['Alex_Brush',cursive] text-5xl sm:text-7xl lg:text-[92px] text-[#58D20A] font-normal tracking-wide drop-shadow-[0_0_28px_rgba(88,210,10,0.72)]">
-                  Squad.
+                <span className="font-['Times_New_Roman',serif] font-black uppercase text-4xl sm:text-6xl lg:text-7xl text-white tracking-wider">
+                  SQUAD
                 </span>
               </motion.h1>
 
-              {/* Subtitle */}
-              <p className="text-lg sm:text-2xl text-slate-100 font-medium max-w-xl leading-relaxed">
-                Real Players. Live Bidding. One Champion.
+              {/* Subtitle - Same display system as the hero headline */}
+              <p className="flex flex-nowrap items-baseline gap-x-2 sm:gap-x-4 w-full py-1">
+                {/* 1. REAL PLAYERS. */}
+                <span className="whitespace-nowrap font-['Times_New_Roman',serif] font-black uppercase text-[9px] sm:text-xs lg:text-sm text-white tracking-widest drop-shadow-[0_0_28px_rgba(11, 43, 38,0.72)]">
+                  . Real Players.
+                </span>
+
+                {/* 2. LIVE BIDDING. */}
+                <span className="whitespace-nowrap font-['Times_New_Roman',serif] font-black uppercase text-[9px] sm:text-xs lg:text-sm text-white tracking-widest drop-shadow-[0_0_28px_rgba(11, 43, 38,0.72)]">
+                  . Live Bidding.
+                </span>
+
+                {/* 3. ONE CHAMPION. */}
+                <span className="whitespace-nowrap font-['Times_New_Roman',serif] font-black uppercase text-[9px] sm:text-xs lg:text-sm text-white tracking-widest drop-shadow-[0_0_28px_rgba(11, 43, 38,0.72)]">
+                  . One Champion.
+                </span>
               </p>
 
-              {/* CTA Buttons — always one row */}
-              <div className="flex flex-nowrap items-center gap-3.5 sm:gap-5 pt-3.5">
+              {/* CTA Buttons - always one row */}
+              <div className="flex flex-nowrap items-center gap-2.5 sm:gap-4 pt-3 sm:pt-4">
                 <Link
                   to="/live"
-                  className="whitespace-nowrap px-7 sm:px-11 py-4 sm:py-4.5 bg-[#58D20A] hover:bg-[#68e21a] text-[#050505] font-black text-sm sm:text-lg uppercase tracking-wider rounded-xl shadow-[0_0_42px_rgba(88,210,10,0.52)] transition transform hover:-translate-y-0.5 flex items-center justify-center gap-2.5"
+                  className="whitespace-nowrap px-5 sm:px-7 py-2.5 sm:py-3 bg-[#0B2B26] hover:bg-[#0B2B26] text-white font-black text-[11px] sm:text-sm uppercase tracking-wider rounded-lg shadow-[0_0_32px_rgba(11, 43, 38,0.52)] transition transform hover:-translate-y-0.5 flex items-center justify-center gap-2"
                 >
-                  <Radio className="w-5 h-5 sm:w-6 sm:h-6 animate-pulse text-[#050505]" />
+                  <Radio className="w-3.5 h-3.5 sm:w-4 sm:h-4 animate-pulse text-white" />
                   <span>ENTER LIVE AUCTION</span>
                 </Link>
 
                 <Link
                   to="/teams"
-                  className="whitespace-nowrap px-7 sm:px-11 py-4 sm:py-4.5 bg-white/10 hover:bg-white/20 text-slate-100 border border-white/20 font-black text-sm sm:text-lg uppercase tracking-wider rounded-xl shadow-xl backdrop-blur-md transition transform hover:-translate-y-0.5 flex items-center justify-center gap-2"
+                  className="whitespace-nowrap px-5 sm:px-7 py-2.5 sm:py-3 bg-white/10 hover:bg-white/20 text-slate-100 border border-white/20 font-black text-[11px] sm:text-sm uppercase tracking-wider rounded-lg shadow-xl backdrop-blur-md transition transform hover:-translate-y-0.5 flex items-center justify-center gap-2"
                 >
                   <span>EXPLORE TEAMS</span>
                 </Link>
@@ -340,7 +353,7 @@ export default function LandingPage() {
               <div className="bg-slate-900/40 border border-white/10 rounded-3xl p-5 sm:p-7 lg:p-8 shadow-[0_0_50px_rgba(0,0,0,0.5)] backdrop-blur-2xl space-y-5">
 
                 <div className="text-center space-y-1">
-                  <span className="text-sm sm:text-base font-mono font-black text-[#58D20A] uppercase tracking-widest block">
+                  <span className="text-sm sm:text-base font-mono font-black text-white uppercase tracking-widest block">
                     {countdown ? (countdown.started ? 'STAGE IS LIVE' : countdown.label) : (isAuctionActive ? 'AUCTION IS LIVE' : 'EVENT COUNTDOWN')}
                   </span>
                 </div>
@@ -353,8 +366,8 @@ export default function LandingPage() {
                     { label: 'MINS', value: countdown ? countdown.mins : 36 },
                     { label: 'SECS', value: countdown ? countdown.secs : 48 },
                   ].map(({ label, value }) => (
-                    <div key={label} className="bg-[#182e13]/50 border border-[#58D20A]/20 rounded-2xl px-1 py-3.5 sm:py-4 text-center backdrop-blur-md overflow-hidden min-w-0">
-                      <span className="block text-xl sm:text-2xl lg:text-3xl font-black font-mono text-[#58D20A] tabular-nums leading-tight drop-shadow-[0_0_12px_rgba(88,210,10,0.35)]">
+                    <div key={label} className="bg-[#0B2B26]/50 border border-[#0B2B26]/20 rounded-2xl px-1 py-3.5 sm:py-4 text-center backdrop-blur-md overflow-hidden min-w-0">
+                      <span className="block text-xl sm:text-2xl lg:text-3xl font-black font-mono text-white tabular-nums leading-tight drop-shadow-[0_0_12px_rgba(11, 43, 38,0.35)]">
                         {String(value).padStart(2, '0')}
                       </span>
                       <span className="mt-1 block text-[10px] sm:text-xs font-bold text-slate-200 uppercase tracking-wider truncate">{label}</span>
@@ -363,8 +376,8 @@ export default function LandingPage() {
                 </div>
 
                 {/* Event Date Info */}
-                <div className="flex items-center justify-center gap-2 text-xs sm:text-sm font-mono font-bold py-2.5 px-3 rounded-2xl border text-slate-100 bg-[#182e13]/50 border-[#58D20A]/25 shadow-md backdrop-blur-md">
-                  <Calendar className="w-4 h-4 text-[#58D20A] shrink-0" />
+                <div className="flex items-center justify-center gap-2 text-xs sm:text-sm font-mono font-bold py-2.5 px-3 rounded-2xl border text-slate-100 bg-[#0B2B26]/50 border-[#0B2B26]/25 shadow-md backdrop-blur-md">
+                  <Calendar className="w-4 h-4 text-white shrink-0" />
                   <span className="truncate">{eventDateLabel}</span>
                 </div>
 
@@ -372,9 +385,9 @@ export default function LandingPage() {
                 {(registrationOpen || phase === 'REGISTRATION' || milestone?.key === 'registrationEndTime') && (
                   <Link
                     to="/player/register"
-                    className="w-full py-4 px-5 bg-[#58D20A] hover:bg-[#68e21a] text-black font-black text-sm sm:text-base uppercase tracking-wider rounded-2xl shadow-[0_0_30px_rgba(88,210,10,0.5)] transition transform hover:-translate-y-0.5 flex items-center justify-center gap-2.5 text-center"
+                    className="w-full py-4 px-5 bg-[#0B2B26] hover:bg-[#0B2B26] text-white font-black text-sm sm:text-base uppercase tracking-wider rounded-2xl shadow-[0_0_30px_rgba(11, 43, 38,0.5)] transition transform hover:-translate-y-0.5 flex items-center justify-center gap-2.5 text-center"
                   >
-                    <UserCheck className="w-5 h-5 text-black" />
+                    <UserCheck className="w-5 h-5 text-white" />
                     <span>REGISTER AS A PLAYER NOW</span>
                   </Link>
                 )}
@@ -389,8 +402,8 @@ export default function LandingPage() {
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
             
             {/* 1. Teams Registered */}
-            <div className="bg-[#0c0e12] border border-white/10 hover:border-[#58D20A]/50 rounded-2xl p-4 flex items-center gap-3.5 shadow-xl transition">
-              <div className="w-11 h-11 rounded-full bg-[#12200E] border border-[#58D20A]/40 flex items-center justify-center text-[#58D20A] shrink-0">
+            <div className="bg-[#0c0e12] border border-white/10 hover:border-[#0B2B26]/50 rounded-2xl p-4 flex items-center gap-3.5 shadow-xl transition">
+              <div className="w-11 h-11 rounded-full bg-[#0B2B26] border border-[#0B2B26]/40 flex items-center justify-center text-white shrink-0">
                 <Flag className="w-5 h-5" />
               </div>
               <div className="min-w-0">
@@ -402,8 +415,8 @@ export default function LandingPage() {
             </div>
 
             {/* 2. Players Registered */}
-            <div className="bg-[#0c0e12] border border-white/10 hover:border-[#58D20A]/50 rounded-2xl p-4 flex items-center gap-3.5 shadow-xl transition">
-              <div className="w-11 h-11 rounded-full bg-[#12200E] border border-[#58D20A]/40 flex items-center justify-center text-[#58D20A] shrink-0">
+            <div className="bg-[#0c0e12] border border-white/10 hover:border-[#0B2B26]/50 rounded-2xl p-4 flex items-center gap-3.5 shadow-xl transition">
+              <div className="w-11 h-11 rounded-full bg-[#0B2B26] border border-[#0B2B26]/40 flex items-center justify-center text-white shrink-0">
                 <Users className="w-5 h-5" />
               </div>
               <div className="min-w-0">
@@ -415,39 +428,39 @@ export default function LandingPage() {
             </div>
 
             {/* 3. Players Sold */}
-            <div className="bg-[#0c0e12] border border-white/10 hover:border-[#58D20A]/50 rounded-2xl p-4 flex items-center gap-3.5 shadow-xl transition">
-              <div className="w-11 h-11 rounded-full bg-[#12200E] border border-[#58D20A]/40 flex items-center justify-center text-[#58D20A] shrink-0">
+            <div className="bg-[#0c0e12] border border-white/10 hover:border-[#0B2B26]/50 rounded-2xl p-4 flex items-center gap-3.5 shadow-xl transition">
+              <div className="w-11 h-11 rounded-full bg-[#0B2B26] border border-[#0B2B26]/40 flex items-center justify-center text-white shrink-0">
                 <UserCheck className="w-5 h-5" />
               </div>
               <div className="min-w-0">
                 <span className="text-[10px] font-bold text-slate-400 uppercase block tracking-wider">PLAYERS SOLD</span>
-                <span className="text-2xl font-black font-mono text-[#58D20A] block leading-tight">
+                <span className="text-2xl font-black font-mono text-white block leading-tight">
                   <AnimatedCounter value={soldCount} />
                 </span>
               </div>
             </div>
 
             {/* 4. Total Bids */}
-            <div className="bg-[#0c0e12] border border-white/10 hover:border-[#58D20A]/50 rounded-2xl p-4 flex items-center gap-3.5 shadow-xl transition">
-              <div className="w-11 h-11 rounded-full bg-[#12200E] border border-[#58D20A]/40 flex items-center justify-center text-[#58D20A] shrink-0">
+            <div className="bg-[#0c0e12] border border-white/10 hover:border-[#0B2B26]/50 rounded-2xl p-4 flex items-center gap-3.5 shadow-xl transition">
+              <div className="w-11 h-11 rounded-full bg-[#0B2B26] border border-[#0B2B26]/40 flex items-center justify-center text-white shrink-0">
                 <Coins className="w-5 h-5" />
               </div>
               <div className="min-w-0">
                 <span className="text-[10px] font-bold text-slate-400 uppercase block tracking-wider">TOTAL BIDS</span>
-                <span className="text-2xl font-black font-mono text-[#58D20A] block leading-tight">
+                <span className="text-2xl font-black font-mono text-white block leading-tight">
                   <AnimatedCounter value={totalBidsCount} />
                 </span>
               </div>
             </div>
 
             {/* 5. Total Spent */}
-            <div className="bg-[#0c0e12] border border-white/10 hover:border-[#58D20A]/50 rounded-2xl p-4 flex items-center gap-3.5 shadow-xl transition col-span-2 md:col-span-1">
-              <div className="w-11 h-11 rounded-full bg-[#12200E] border border-[#58D20A]/40 flex items-center justify-center text-[#58D20A] shrink-0 font-bold text-lg font-mono">
+            <div className="bg-[#0c0e12] border border-white/10 hover:border-[#0B2B26]/50 rounded-2xl p-4 flex items-center gap-3.5 shadow-xl transition col-span-2 md:col-span-1">
+              <div className="w-11 h-11 rounded-full bg-[#0B2B26] border border-[#0B2B26]/40 flex items-center justify-center text-white shrink-0 font-bold text-lg font-mono">
                 ৳
               </div>
               <div className="min-w-0">
                 <span className="text-[10px] font-bold text-slate-400 uppercase block tracking-wider">TOTAL SPENT</span>
-                <span className="text-2xl font-black font-mono text-[#58D20A] block leading-tight">
+                <span className="text-2xl font-black font-mono text-white block leading-tight">
                   <AnimatedCounter value={totalSpentAmount} prefix="৳" />
                 </span>
               </div>
@@ -466,8 +479,8 @@ export default function LandingPage() {
             {hasLiveContent && (
               <div className="fixed top-[76px] right-4 sm:right-6 z-40 flex items-center gap-2.5">
                 {/* LIVE NOW Pill */}
-                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-emerald-500 bg-[#050505]/85 backdrop-blur-md text-emerald-400 text-xs font-mono font-bold shadow-[0_0_15px_rgba(16,185,129,0.25)]">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-[#0B2B26] bg-[#050505]/85 backdrop-blur-md text-white text-xs font-mono font-bold shadow-[0_0_15px_rgba(11,43,38,0.85)]">
+                  <span className="w-2 h-2 rounded-full bg-white animate-ping" />
                   <span>{isBroadcastingVideo ? 'LIVE STREAM' : isIntroLooping ? 'LIVE NOW' : 'LIVE NOW'}</span>
                 </div>
                 {/* WATCH LIVE Pill */}
@@ -530,7 +543,7 @@ export default function LandingPage() {
                         <div className="w-px bg-white/10" />
                         <div>
                           <span className="text-slate-400 block text-[10px]">BASE PRICE</span>
-                          <span className="text-[#58D20A] font-bold">{formatCurrency(introCurrentPlayer.basePrice || 1000000)}</span>
+                          <span className="text-white font-bold">{formatCurrency(introCurrentPlayer.basePrice || 1000000)}</span>
                         </div>
                       </div>
                     </div>
@@ -567,10 +580,10 @@ export default function LandingPage() {
                 
                 <div className="flex items-center justify-between pb-4 border-b border-white/10">
                   <h3 className="text-base font-black text-white uppercase tracking-wider flex items-center gap-2">
-                    <ShoppingBag className="w-4 h-4 text-[#58D20A]" />
+                    <ShoppingBag className="w-4 h-4 text-white" />
                     RECENT PURCHASES
                   </h3>
-                  <Link to="/players/sold" className="text-xs font-bold text-[#58D20A] hover:underline">
+                  <Link to="/players/sold" className="text-xs font-bold text-white hover:underline">
                     View All
                   </Link>
                 </div>
@@ -587,15 +600,15 @@ export default function LandingPage() {
                     const posChip = (item.primaryPosition || '').toUpperCase().slice(0, 3);
 
                     return (
-                      <div key={item._id || item.id || idx} className="group/item bg-[#050505]/70 border border-white/10 rounded-xl p-3 flex items-center gap-3 hover:border-[#58D20A]/40 hover:bg-[#080b07] transition-all">
+                      <div key={item._id || item.id || idx} className="group/item bg-[#050505]/70 border border-white/10 rounded-xl p-3 flex items-center gap-3 hover:border-[#0B2B26]/40 hover:bg-[#080b07] transition-all">
                         {/* Player initial avatar */}
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#12200E] to-[#050505] border border-[#58D20A]/40 shrink-0 flex items-center justify-center text-sm font-black font-mono text-[#58D20A] shadow-[0_0_12px_rgba(88,210,10,0.15)]">
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#0B2B26] to-[#050505] border border-[#0B2B26]/40 shrink-0 flex items-center justify-center text-sm font-black font-mono text-white shadow-[0_0_12px_rgba(11, 43, 38,0.15)]">
                           {item.name?.charAt(0)?.toUpperCase() || 'P'}
                         </div>
 
                         {/* Name + position chip */}
                         <div className="min-w-0 flex-1">
-                          <span className="font-bold text-xs text-white block truncate group-hover/item:text-[#72F21A] transition">{item.name}</span>
+                          <span className="font-bold text-xs text-white block truncate group-hover/item:text-white transition">{item.name}</span>
                           {posChip && (
                             <span className="inline-block mt-1 text-[9px] font-mono font-black uppercase px-1.5 py-0.5 rounded-md bg-white/5 border border-white/10 text-slate-300 tracking-wider">
                               {posChip}
@@ -606,11 +619,11 @@ export default function LandingPage() {
                         {/* Team FULL NAME above the sale price */}
                         <div className="text-right shrink-0 max-w-[120px]">
                           {teamObj && (
-                            <span className="text-[10px] font-mono font-extrabold text-[#58D20A] block truncate leading-tight" title={teamObj.name}>
+                            <span className="text-[10px] font-mono font-extrabold text-white block truncate leading-tight" title={teamObj.name}>
                               {teamObj.name}
                             </span>
                           )}
-                          <span className="text-sm font-mono font-black text-[#58D20A] block drop-shadow-[0_0_10px_rgba(88,210,10,0.4)]">
+                          <span className="text-sm font-mono font-black text-white block drop-shadow-[0_0_10px_rgba(11, 43, 38,0.4)]">
                             ৳{(item.finalPrice || 1000).toLocaleString()}
                           </span>
                           {item.timeAgo && (
@@ -635,7 +648,7 @@ export default function LandingPage() {
             <div>
               <h2 className="text-2xl font-black uppercase text-white tracking-wide">FRANCHISE TEAMS</h2>
             </div>
-            <Link to="/teams" className="text-xs font-bold text-[#58D20A] hover:underline flex items-center gap-1">
+            <Link to="/teams" className="text-xs font-bold text-white hover:underline flex items-center gap-1">
               <span>View All Teams &gt;</span>
             </Link>
           </div>
@@ -660,8 +673,8 @@ export default function LandingPage() {
               // name-based & hash fallbacks provide the accent otherwise.
               // ensureReadableHex lightens near-black accents so numbers/text
               // are never invisible on the dark card.
-              const accentHex = ensureReadableHex(theme.primaryColor || team.primaryColor || '#58D20A');
-              const deepHex = theme.secondaryColor || team.secondaryColor || '#12200E';
+              const accentHex = ensureReadableHex(theme.primaryColor || team.primaryColor || '#0B2B26');
+              const deepHex = theme.secondaryColor || team.secondaryColor || '#0B2B26';
 
               return (
                 <div

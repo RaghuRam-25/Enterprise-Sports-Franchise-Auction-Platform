@@ -29,9 +29,9 @@ const formatDate = (dateString) => {
 };
 
 const statusStyle = (status) => ({
-  'Upcoming': 'bg-neonGreen/15 text-neonGreenHover border-neonGreen/30',
+  'Upcoming': 'bg-neonGreen/15 text-white border-neonGreen/30',
   'Live': 'bg-urgentRed/20 text-urgentRedText border-urgentRed/40 animate-pulse',
-  'Finished': 'bg-neonGreen/15 text-neonGreenHover border-neonGreen/30',
+  'Finished': 'bg-neonGreen/15 text-white border-neonGreen/30',
   'Cancelled': 'bg-surfaceHover text-secondaryText border-borderStrong',
 }[status] || 'bg-surfaceHover text-secondaryText border-borderStrong');
 
@@ -73,8 +73,8 @@ const numVal = (v) => {
 
 const TABLE_FIELDS = [
   { key: 'mp', header: 'Played', cls: 'text-secondaryText' },
-  { key: 'w', header: 'Won', cls: 'text-neonGreenHover' },
-  { key: 'd', header: 'Drawn', cls: 'text-neonGreenHover' },
+  { key: 'w', header: 'Won', cls: 'text-white' },
+  { key: 'd', header: 'Drawn', cls: 'text-white' },
   { key: 'l', header: 'Lost', cls: 'text-urgentRedText' },
   { key: 'gf', header: 'Goals For', cls: 'text-secondaryText' },
   { key: 'ga', header: 'Goals Against', cls: 'text-secondaryText' },
@@ -170,7 +170,7 @@ export default function AdminMatchResults() {
     <div className="space-y-5">
       {/* Header */}
       <div>
-        <span className="text-xs font-bold uppercase tracking-widest text-neonGreen">Tournament Management</span>
+        <span className="text-xs font-bold uppercase tracking-widest text-white">Tournament Management</span>
         <h1 className="text-2xl font-black font-heading text-white">Match Center</h1>
       </div>
 
@@ -182,8 +182,8 @@ export default function AdminMatchResults() {
             type="button"
             onClick={() => setTab(id)}
             className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold transition ${tab === id
-              ? 'bg-[#58D20A] text-[#050505] font-black shadow-md'
-              : 'bg-[#151515] text-[#F5F5F5] border border-[#333333] hover:border-[#58D20A] hover:text-[#58D20A]'
+              ? 'bg-[#0B2B26] text-white font-black shadow-md'
+              : 'bg-[#151515] text-[#F5F5F5] border border-[#333333] hover:border-[#0B2B26] hover:text-white'
             }`}
           >
             <Icon className="w-3.5 h-3.5" /> {label}
@@ -265,7 +265,7 @@ export default function AdminMatchResults() {
                           </td>
                           <td className="py-3 pr-2 text-xs text-secondaryText">
                             <div className="flex items-center gap-1.5">
-                              <Calendar className="w-3 h-3 text-neonGreen shrink-0" />
+                              <Calendar className="w-3 h-3 text-white shrink-0" />
                               <span className="font-semibold">{formatDate(m.matchDate)}</span>
                             </div>
                             <div className="flex items-center gap-1.5 mt-0.5 text-mutedText">
@@ -287,7 +287,7 @@ export default function AdminMatchResults() {
                             <button
                               type="button"
                               onClick={() => openEdit(m)}
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-neonGreen/40 bg-neonGreen/10 text-neonGreenHover hover:bg-neonGreen/20 text-[11px] font-bold transition"
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-neonGreen/40 bg-neonGreen/10 text-white hover:bg-neonGreen/20 text-[11px] font-bold transition"
                             >
                               <PenLine className="w-3 h-3" /> Edit Result
                             </button>
@@ -318,7 +318,7 @@ export default function AdminMatchResults() {
           <div className="glass-card w-full max-w-md rounded-2xl p-6 border border-borderStrong space-y-5 shadow-2xl">
             <div className="flex justify-between items-center">
               <h2 className="text-lg font-black text-white flex items-center gap-2">
-                <CheckCircle2 className="w-5 h-5 text-neonGreen" /> Edit Match Result
+                <CheckCircle2 className="w-5 h-5 text-white" /> Edit Match Result
               </h2>
               <button onClick={() => setEditing(null)} className="p-2 text-secondaryText hover:text-white hover:bg-surfaceHover rounded-lg transition">
                 <X className="w-4 h-4" />
@@ -341,7 +341,7 @@ export default function AdminMatchResults() {
                       type="button"
                       onClick={() => setEditForm(prev => ({ ...prev, status: s }))}
                       className={`py-2 rounded-xl border text-xs font-bold transition ${editForm.status === s
-                        ? 'bg-successGreen/20 border-neonGreen/50 text-neonGreenHover'
+                        ? 'bg-successGreen/20 border-neonGreen/50 text-white'
                         : 'bg-cardBg/60 border-cardBorder text-secondaryText hover:border-borderStrong'
                       }`}
                     >
@@ -382,7 +382,7 @@ export default function AdminMatchResults() {
 
               {editForm.status !== 'Finished' && (
                 <p className="text-[11px] text-mutedText bg-darkBg/60 border border-dashed border-cardBorder rounded-xl p-3">
-                  Scores only apply to Finished matches. Switch status to <span className="font-bold text-neonGreen">Finished</span> to record a result.
+                  Scores only apply to Finished matches. Switch status to <span className="font-bold text-white">Finished</span> to record a result.
                 </p>
               )}
             </div>
@@ -394,7 +394,7 @@ export default function AdminMatchResults() {
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="flex-1 py-2.5 bg-successGreen hover:bg-neonGreen disabled:opacity-60 text-darkBg rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition"
+                className="flex-1 py-2.5 bg-successGreen hover:bg-neonGreen disabled:opacity-60 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition"
               >
                 {saving ? <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Save className="w-3.5 h-3.5" />}
                 Save Changes
@@ -487,14 +487,14 @@ function TableOverrideTab({ matches, teams, triggerToast }) {
             role="switch"
             aria-checked={enabled}
             onClick={() => setEnabled(v => !v)}
-            className={`relative w-11 h-6 rounded-full transition shrink-0 ${enabled ? 'bg-neonGreen' : 'bg-surfaceHover'}`}
+            className={`relative w-11 h-6 rounded-full transition shrink-0 ${enabled ? 'bg-[#0B2B26] ring-1 ring-white/40' : 'bg-surfaceHover'}`}
           >
             <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${enabled ? 'translate-x-5' : ''}`} />
           </button>
           <div>
             <p className="text-xs font-black text-white">
               Manual Override {enabled ? (
-                <span className="ml-1.5 text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-neonGreen/15 text-neonGreenHover border border-neonGreen/30">Live</span>
+                <span className="ml-1.5 text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-neonGreen/15 text-white border border-neonGreen/30">Live</span>
               ) : (
                 <span className="ml-1.5 text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-surfaceHover text-secondaryText border border-borderStrong">Off</span>
               )}
@@ -522,7 +522,7 @@ function TableOverrideTab({ matches, teams, triggerToast }) {
             type="button"
             onClick={handleSave}
             disabled={saving || rows.length === 0}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-successGreen hover:bg-neonGreen disabled:opacity-60 text-darkBg text-xs font-bold transition"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-successGreen hover:bg-neonGreen disabled:opacity-60 text-white text-xs font-bold transition"
           >
             {saving ? <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Save className="w-3.5 h-3.5" />}
             Save Table
@@ -572,7 +572,7 @@ function TableOverrideTab({ matches, teams, triggerToast }) {
                             f.key === 'pts'
                               ? 'border-warningGold/40 text-warningGold focus:ring-warningGold/50'
                               : f.key === 'w'
-                                ? 'border-cardBorder text-neonGreenHover focus:ring-neonGreen/50'
+                                ? 'border-cardBorder text-white focus:ring-neonGreen/50'
                                 : f.key === 'l'
                                   ? 'border-cardBorder text-urgentRedText focus:ring-neonGreen/50'
                                   : 'border-cardBorder text-white focus:ring-neonGreen/50'
@@ -599,8 +599,8 @@ function TableOverrideTab({ matches, teams, triggerToast }) {
    leaderboards on /matches/stats. (Summary cards are computed automatically.)
    ═══════════════════════════════════════════════════════════════════════════ */
 const STAT_FIELDS = [
-  { key: 'goals', header: 'Goals', cls: 'text-neonGreenHover' },
-  { key: 'assists', header: 'Assists', cls: 'text-neonGreenHover' },
+  { key: 'goals', header: 'Goals', cls: 'text-white' },
+  { key: 'assists', header: 'Assists', cls: 'text-white' },
   { key: 'yellowCards', header: 'Yellow', cls: 'text-warningGold' },
   { key: 'redCards', header: 'Red', cls: 'text-urgentRedText' },
 ];
@@ -681,7 +681,7 @@ function StatsOverrideTab({ triggerToast }) {
           <button
             type="button"
             onClick={() => searchPlayers(playerSearch)}
-            className="px-4 py-2.5 rounded-xl bg-successGreen hover:bg-neonGreen text-darkBg text-sm font-bold transition"
+            className="px-4 py-2.5 rounded-xl bg-successGreen hover:bg-neonGreen text-white text-sm font-bold transition"
           >
             Search
           </button>
@@ -740,7 +740,7 @@ function StatsOverrideTab({ triggerToast }) {
                         type="button"
                         onClick={() => savePlayerStats(p)}
                         disabled={savingPlayerId === id}
-                        className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-successGreen/20 border border-neonGreen/40 text-neonGreenHover hover:bg-successGreen/30 disabled:opacity-50 text-xs font-bold transition"
+                        className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-successGreen/20 border border-neonGreen/40 text-white hover:bg-successGreen/30 disabled:opacity-50 text-xs font-bold transition"
                       >
                         {savingPlayerId === id
                           ? <span className="block w-3.5 h-3.5 border-2 border-neonGreenHover border-t-transparent rounded-full animate-spin" />

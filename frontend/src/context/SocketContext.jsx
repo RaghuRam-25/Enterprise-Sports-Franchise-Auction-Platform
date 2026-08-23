@@ -55,7 +55,7 @@ export const SocketProvider = ({ children }) => {
       setIsConnected(false);
     });
 
-    // ── REAL-TIME ROLE UPDATE ──────────────────────────────────────────────────
+    // -- REAL-TIME ROLE UPDATE --------------------------------------------------
     // Emitted by backend when Super Admin approves/rejects a manager request.
     // Only applies to the specific user whose ID matches.
     socketInstance.on('user:role_updated', (payload) => {
@@ -95,7 +95,7 @@ export const SocketProvider = ({ children }) => {
       }, 800);
     });
 
-    // ── REAL-TIME MANAGER REQUEST CANCELLED ─────────────────────────────────
+    // -- REAL-TIME MANAGER REQUEST CANCELLED ---------------------------------
     // Emitted by backend when the requesting player withdraws a PENDING
     // manager request. Keeps every open session of that user in sync (status
     // back to NONE) without forcing a redirect.

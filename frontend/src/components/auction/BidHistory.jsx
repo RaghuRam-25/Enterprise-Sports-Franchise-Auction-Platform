@@ -56,7 +56,7 @@ export default function BidHistory({ history = [], maxHeight = '240px', showHead
       {showHeader && (
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-xs font-bold uppercase tracking-wider text-[#A3A3A3] flex items-center gap-2">
-            <Clock className="w-4 h-4 text-[#58D20A]" />
+            <Clock className="w-4 h-4 text-white" />
             Live Bid Ledger ({safeHistory.length})
           </h3>
           {safeHistory.length > 0 && safeHistory.length > 1 && (
@@ -112,7 +112,7 @@ const BidRow = React.forwardRef(({ bid, idx, isLatest }, ref) => {
         flex items-center justify-between px-3 py-2 rounded-lg text-xs
         transition-all duration-200
         ${isLatest
-          ? 'bg-[#12200E] border border-[#58D20A]/40 text-[#58D20A]'
+          ? 'bg-[#0B2B26] border border-[#0B2B26]/40 text-white'
           : 'bg-[#0B0B0B] border border-[#222222] text-[#A3A3A3]'
         }
       `}
@@ -128,7 +128,7 @@ const BidRow = React.forwardRef(({ bid, idx, isLatest }, ref) => {
       <div className="flex items-center gap-2">
         {isLatest && (
           <motion.span
-            className="w-1.5 h-1.5 rounded-full bg-[#58D20A]"
+            className="w-1.5 h-1.5 rounded-full bg-[#0B2B26]"
             animate={{ scale: [1, 1.5, 1], opacity: [1, 0.7, 1] }}
             transition={{ duration: 1, repeat: Infinity }}
           />
@@ -144,7 +144,7 @@ const BidRow = React.forwardRef(({ bid, idx, isLatest }, ref) => {
         </span>
       </div>
 
-      <span className={`font-mono font-bold ${isLatest ? 'text-[#58D20A] text-lg' : 'text-[#666666]'}`}>
+      <span className={`font-mono font-bold ${isLatest ? 'text-white text-lg' : 'text-[#666666]'}`}>
         {bid.amount !== undefined ? `৳${Number(bid.amount).toLocaleString('en-IN')}` : '—'}
       </span>
     </motion.div>

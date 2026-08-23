@@ -19,18 +19,18 @@ export default function TeamRosterList({ players, team }) {
         <div className="glass-card rounded-2xl p-5 sm:p-6 border border-cardBorder space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
                 <h3 className="text-sm font-bold uppercase tracking-wider text-secondaryText flex items-center gap-2">
-                    <Users className="w-4 h-4 text-neonGreen" />
+                    <Users className="w-4 h-4 text-white" />
                     Acquired Franchise Squad
                 </h3>
 
                 <div className="flex items-center gap-2.5">
                     <div className="h-1.5 w-24 sm:w-32 bg-darkBg/80 border border-cardBorder/60 rounded-full overflow-hidden">
                         <div
-                            className={`h-full rounded-full transition-all duration-500 ${complete ? 'bg-successGreen' : pct >= 50 ? 'bg-neonGreen' : 'bg-warningGold'}`}
+                            className={`h-full rounded-full transition-all duration-500 ${complete ? 'bg-primaryText' : pct >= 50 ? 'bg-secondaryText' : 'bg-warningGold'}`}
                             style={{ width: `${Math.max(pct, 6)}%` }}
                         />
                     </div>
-                    <span className={`font-mono text-xs font-bold shrink-0 ${complete ? 'text-successGreen' : 'text-secondaryText'}`}>
+                    <span className={`font-mono text-xs font-bold shrink-0 ${complete ? 'text-white' : 'text-secondaryText'}`}>
                         {count}
                         <span className="text-mutedText font-medium">/{minTarget || '–'} min</span>
                     </span>

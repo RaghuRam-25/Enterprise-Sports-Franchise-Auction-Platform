@@ -49,8 +49,30 @@ export default function PlayerRegister() {
     { id: 'LW', code: 'LW', name: 'Left Wing' }
   ];
 
+  // Standard football codes guaranteed to always be selectable at registration,
+  // even if the DB positions collection is missing some of them.
+  const standardPositions = [
+    ...defaultPositions,
+    { id: 'LB', code: 'LB', name: 'Left Back' },
+    { id: 'RB', code: 'RB', name: 'Right Back' },
+    { id: 'CDM', code: 'CDM', name: 'Defensive Midfielder' },
+    { id: 'CAM', code: 'CAM', name: 'Attacking Midfielder' },
+    { id: 'LM', code: 'LM', name: 'Left Midfielder' },
+    { id: 'RM', code: 'RM', name: 'Right Midfielder' },
+    { id: 'CF', code: 'CF', name: 'Centre Forward' },
+  ];
+
   const availableSessions = Array.isArray(sessions) && sessions.length > 0 ? sessions : defaultSessions;
-  const availablePositions = Array.isArray(positions) && positions.length > 0 ? positions : defaultPositions;
+  const availablePositions = (() => {
+    const dbList = Array.isArray(positions) && positions.length > 0 ? positions : [];
+    const map = new Map();
+    [...dbList, ...standardPositions].forEach(p => {
+      const code = p.code || p.id;
+      if (!code || map.has(code)) return;
+      map.set(code, { ...p, id: p.id || code, code });
+    });
+    return [...map.values()];
+  })();
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -201,7 +223,7 @@ export default function PlayerRegister() {
         <div className="glass-card rounded-2xl p-8 border border-cardBorder space-y-6 shadow-2xl">
 
           <div className="text-center space-y-2 border-b border-cardBorder pb-6">
-            <div className="w-14 h-14 bg-neonGreen/10 text-neonGreen rounded-2xl border border-neonGreen/20 flex items-center justify-center mx-auto shadow-lg">
+            <div className="w-14 h-14 bg-neonGreen/10 text-white rounded-2xl border border-neonGreen/20 flex items-center justify-center mx-auto shadow-lg">
               <UserPlus className="w-7 h-7" />
             </div>
             <h1 className="text-2xl font-black font-heading text-white">Player Registration Portal</h1>
@@ -231,7 +253,7 @@ export default function PlayerRegister() {
           )}
 
           {!isRegistrationFrozen && registrationWindow.hasWindow && registrationWindow.endTime && (
-            <div className="p-3 bg-neonGreen/10 border border-neonGreen/30 text-neonGreen text-xs rounded-xl flex items-center gap-2">
+            <div className="p-3 bg-neonGreen/10 border border-neonGreen/30 text-white text-xs rounded-xl flex items-center gap-2">
               <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
               <span>
                 Registration is open until {formatDhakaDateTime(registrationWindow.endTime)} (Asia/Dhaka)
@@ -246,7 +268,7 @@ export default function PlayerRegister() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="flex items-center gap-1.5 text-xs font-semibold text-secondaryText mb-1">
-                  <User className="w-3.5 h-3.5 text-neonGreen" /> Full Name*
+                  <User className="w-3.5 h-3.5 text-white" /> Full Name*
                 </label>
                 <input
                   type="text"
@@ -261,7 +283,7 @@ export default function PlayerRegister() {
 
               <div>
                 <label className="flex items-center gap-1.5 text-xs font-semibold text-secondaryText mb-1">
-                  <Mail className="w-3.5 h-3.5 text-neonGreen" /> Gmail/Email*
+                  <Mail className="w-3.5 h-3.5 text-white" /> Gmail/Email*
                 </label>
                 <input
                   type="email"
@@ -279,7 +301,7 @@ export default function PlayerRegister() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="flex items-center gap-1.5 text-xs font-semibold text-secondaryText mb-1">
-                  <IdCard className="w-3.5 h-3.5 text-neonGreen" /> Student ID *
+                  <IdCard className="w-3.5 h-3.5 text-white" /> Student ID *
                 </label>
                 <input
                   type="text"
@@ -294,7 +316,7 @@ export default function PlayerRegister() {
 
               <div>
                 <label className="flex items-center gap-1.5 text-xs font-semibold text-secondaryText mb-1">
-                  <Calendar className="w-3.5 h-3.5 text-neonGreen" /> Session *
+                  <Calendar className="w-3.5 h-3.5 text-white" /> Session *
                 </label>
                 <select
                   value={selectedSession}
@@ -313,7 +335,7 @@ export default function PlayerRegister() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
                 <label className="flex items-center gap-1.5 text-xs font-semibold text-secondaryText mb-1">
-                  <Shirt className="w-3.5 h-3.5 text-neonGreen" /> Jersey Name*
+                  <Shirt className="w-3.5 h-3.5 text-white" /> Jersey Name*
                 </label>
                 <input
                   type="text"
@@ -330,7 +352,7 @@ export default function PlayerRegister() {
 
               <div>
                 <label className="flex items-center gap-1.5 text-xs font-semibold text-secondaryText mb-1">
-                  <Ruler className="w-3.5 h-3.5 text-neonGreen" /> T-Shirt Size *
+                  <Ruler className="w-3.5 h-3.5 text-white" /> T-Shirt Size *
                 </label>
                 <select
                   value={tShirtSize}
@@ -348,7 +370,7 @@ export default function PlayerRegister() {
 
               <div>
                 <label className="flex items-center gap-1.5 text-xs font-semibold text-secondaryText mb-1">
-                  <Hash className="w-3.5 h-3.5 text-neonGreen" /> T-Shirt Number *
+                  <Hash className="w-3.5 h-3.5 text-white" /> T-Shirt Number *
                 </label>
                 <input
                   type="text"
@@ -385,20 +407,20 @@ export default function PlayerRegister() {
                       tabIndex={0}
                       onKeyDown={(e) => { if ((e.key === 'Enter' || e.key === ' ') && !isRegistrationFrozen) handlePositionToggle(posKey); }}
                       className={`relative rounded-lg border px-2 py-3 flex flex-col items-center gap-1 transition-all duration-200 select-none ${isSelected
-                          ? 'border-neonGreen bg-neonGreen/[0.05] shadow-[0_0_14px_rgba(88,210,10,0.22)]'
+                          ? 'border-neonGreen bg-neonGreen/[0.05] shadow-[0_0_14px_rgba(11, 43, 38,0.22)]'
                           : 'border-[#262b26] bg-[#060806] hover:border-[#39413a]'
                         } ${isRegistrationFrozen ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
                     >
                       {/* Selected checkmark badge */}
                       {isSelected && (
-                        <span className="absolute top-1 right-1 w-3.5 h-3.5 rounded-full bg-neonGreen flex items-center justify-center shadow-[0_0_8px_rgba(88,210,10,0.5)]">
-                          <Check className="w-2 h-2 text-darkBg" strokeWidth={4} />
+                        <span className="absolute top-1 right-1 w-3.5 h-3.5 rounded-full bg-neonGreen border border-white/30 flex items-center justify-center shadow-[0_0_8px_rgba(11, 43, 38,0.5)]">
+                          <Check className="w-2 h-2 text-white" strokeWidth={4} />
                         </span>
                       )}
 
-                      <PosIcon className="w-5 h-5 text-neonGreen" strokeWidth={1.6} />
+                      <PosIcon className="w-5 h-5 text-white" strokeWidth={1.6} />
 
-                      <span className="font-mono font-black text-neonGreen text-xs tracking-[0.12em] leading-none">
+                      <span className="font-mono font-black text-white text-xs tracking-[0.12em] leading-none">
                         {p.code}
                       </span>
                       <span className="text-white text-[9px] font-semibold text-center leading-tight">
@@ -413,7 +435,7 @@ export default function PlayerRegister() {
                             e.stopPropagation();
                             setPrimaryPosId(posKey);
                           }}
-                          className={`mt-0.5 py-0.5 px-1.5 rounded-full text-[8px] font-bold tracking-wide transition ${isPrimary ? 'bg-neonGreen text-darkBg shadow-[0_0_8px_rgba(88,210,10,0.45)]' : 'bg-surfaceHover text-secondaryText hover:text-white'
+                          className={`mt-0.5 py-0.5 px-1.5 rounded-full text-[8px] font-bold tracking-wide transition ${isPrimary ? 'bg-neonGreen text-white shadow-[0_0_8px_rgba(11, 43, 38,0.45)]' : 'bg-surfaceHover text-secondaryText hover:text-white'
                             }`}
                         >
                           {isPrimary ? '★ PRIMARY' : 'SET PRIMARY'}
@@ -437,11 +459,11 @@ export default function PlayerRegister() {
                     <img src={imagePreview} alt="" className="w-20 h-20 rounded-2xl object-cover border-2 border-neonGreen/40" />
                     {optimizationInfo && (
                       <div className="text-left bg-cardBg p-3 rounded-xl border border-cardBorder text-xs space-y-1">
-                        <p className="text-neonGreen font-bold flex items-center gap-1">
+                        <p className="text-white font-bold flex items-center gap-1">
                           <CheckCircle2 className="w-3.5 h-3.5" /> Client-Side WebP Compression Ready
                         </p>
                         <p className="text-secondaryText">Original Upload: <span className="text-white font-mono">{optimizationInfo.originalSize}</span></p>
-                        <p className="text-secondaryText">Optimized WebP Storage: <span className="text-neonGreen font-mono font-bold">{optimizationInfo.compressedSize}</span> ({optimizationInfo.saved})</p>
+                        <p className="text-secondaryText">Optimized WebP Storage: <span className="text-white font-mono font-bold">{optimizationInfo.compressedSize}</span> ({optimizationInfo.saved})</p>
                       </div>
                     )}
                   </div>
@@ -476,7 +498,7 @@ export default function PlayerRegister() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="flex items-center gap-1.5 text-xs font-semibold text-secondaryText mb-1">
-                  <KeyRound className="w-3.5 h-3.5 text-neonGreen" /> Password *
+                  <KeyRound className="w-3.5 h-3.5 text-white" /> Password *
                 </label>
                 <input
                   type="password"
@@ -491,7 +513,7 @@ export default function PlayerRegister() {
 
               <div>
                 <label className="flex items-center gap-1.5 text-xs font-semibold text-secondaryText mb-1">
-                  <Lock className="w-3.5 h-3.5 text-neonGreen" /> Confirm Password *
+                  <Lock className="w-3.5 h-3.5 text-white" /> Confirm Password *
                 </label>
                 <input
                   type="password"

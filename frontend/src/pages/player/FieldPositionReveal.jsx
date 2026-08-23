@@ -129,7 +129,7 @@ export default function FieldPositionReveal() {
               <button
                 type="button"
                 onClick={load}
-                className="mt-5 rounded-xl bg-successGreen px-5 py-2 text-xs font-bold text-darkBg transition hover:bg-neonGreen"
+                className="mt-5 rounded-xl bg-successGreen px-5 py-2 text-xs font-bold text-white transition hover:bg-neonGreen"
               >
                 Try Again
               </button>
@@ -165,7 +165,7 @@ export default function FieldPositionReveal() {
                 <button
                   type="button"
                   onClick={() => navigate('/live')}
-                  className="rounded-xl bg-successGreen px-5 py-2.5 text-xs font-bold text-darkBg transition hover:bg-neonGreen"
+                  className="rounded-xl bg-successGreen px-5 py-2.5 text-xs font-bold text-white transition hover:bg-neonGreen"
                 >
                   Watch the Live Auction
                 </button>
@@ -224,7 +224,7 @@ export default function FieldPositionReveal() {
                 className="absolute inset-y-0 w-1/3"
                 style={{
                   background:
-                    'linear-gradient(90deg, transparent, rgba(88,210,10,0.10), transparent)',
+                    'linear-gradient(90deg, transparent, rgba(11, 43, 38,0.10), transparent)',
                   filter: 'blur(20px)',
                 }}
                 initial={{ left: '-40%' }}
@@ -255,7 +255,7 @@ export default function FieldPositionReveal() {
             >
               {/* Glow pulse */}
               <motion.div
-                className="absolute -inset-6 rounded-full bg-neonGreen/30 blur-2xl"
+                className="absolute -inset-6 rounded-full bg-[#0B2B26]/85 blur-2xl"
                 animate={
                   phase >= 1
                     ? { opacity: [0.4, 0.9, 0.4], scale: [0.9, 1.15, 0.9] }
@@ -264,8 +264,8 @@ export default function FieldPositionReveal() {
                 transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
               />
               {/* Jersey puck */}
-              <div className="relative flex h-16 w-16 items-center justify-center rounded-full border-2 border-neonGreenHover/70 bg-cardBg/90 shadow-[0_0_30px_rgba(88,210,10,0.5)] backdrop-blur-md">
-                <span className="font-black text-neonGreenHover" style={{ fontSize: '1.6rem' }}>
+              <div className="relative flex h-16 w-16 items-center justify-center rounded-full border-2 border-neonGreenHover/70 bg-cardBg/90 shadow-[0_0_30px_rgba(11, 43, 38,0.5)] backdrop-blur-md">
+                <span className="font-black text-white" style={{ fontSize: '1.6rem' }}>
                   {positionCode.slice(0, 3)}
                 </span>
               </div>
@@ -304,7 +304,7 @@ export default function FieldPositionReveal() {
                 <p className="text-[10px] font-bold uppercase tracking-widest text-secondaryText">
                   Position
                 </p>
-                <p className="font-black text-neonGreenHover">
+                <p className="font-black text-white">
                   {positionCode} <span className="text-sm font-semibold text-secondaryText">· {positionName}</span>
                 </p>
               </div>
@@ -313,7 +313,7 @@ export default function FieldPositionReveal() {
                 <p className="text-[10px] font-bold uppercase tracking-widest text-secondaryText">
                   Sold For
                 </p>
-                <p className="font-mono font-black text-neonGreen">
+                <p className="font-mono font-black text-white">
                   ৳{soldPrice.toLocaleString('en-IN')}
                 </p>
               </div>

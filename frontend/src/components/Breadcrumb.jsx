@@ -57,7 +57,7 @@ export default function Breadcrumb() {
         to="/"
         className="flex items-center gap-1 hover:text-primaryText transition-colors"
       >
-        <Home className="w-3.5 h-3.5 text-neonGreen" />
+        <Home className="w-3.5 h-3.5 text-white" />
         <span>Home</span>
       </Link>
 
@@ -75,7 +75,7 @@ export default function Breadcrumb() {
           <React.Fragment key={to}>
             <ChevronRight className="w-3.5 h-3.5 text-mutedText flex-shrink-0" />
             {isLast ? (
-              <span className="text-neonGreen font-bold capitalize truncate max-w-[200px]">
+              <span className="text-white font-bold capitalize truncate max-w-[200px]">
                 {label}
               </span>
             ) : (

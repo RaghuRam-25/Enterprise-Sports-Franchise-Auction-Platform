@@ -23,21 +23,21 @@ import { getImageUrl } from '../../utils/imageUrl';
 const PLAYER_FALLBACK_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="320" height="320" viewBox="0 0 320 320">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#0B0B0B"/><stop offset="100%" stop-color="#12200E"/>
+      <stop offset="0%" stop-color="#0B0B0B"/><stop offset="100%" stop-color="#0B2B26"/>
     </linearGradient>
     <linearGradient id="sk" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0%" stop-color="#e8b58a"/><stop offset="100%" stop-color="#b9835a"/>
     </linearGradient>
     <linearGradient id="js" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#58D20A"/><stop offset="100%" stop-color="#35C759"/>
+      <stop offset="0%" stop-color="#0B2B26"/><stop offset="100%" stop-color="#0B2B26"/>
     </linearGradient>
   </defs>
   <rect width="320" height="320" fill="url(#bg)"/>
-  <circle cx="160" cy="150" r="120" fill="rgba(88,210,10,0.10)"/>
+  <circle cx="160" cy="150" r="120" fill="rgba(11, 43, 38,0.10)"/>
   <path d="M120 96 a40 40 0 0 1 80 0 a40 40 0 0 1 -80 0" fill="url(#sk)"/>
   <path d="M112 100 a48 44 0 0 1 96 -6 c0 -6 -10 -34 -48 -34 s-48 24 -48 40 z" fill="#241a13"/>
   <path d="M96 250 q64 -44 128 0 l6 70 h-140 z" fill="url(#js)"/>
-  <text x="160" y="300" text-anchor="middle" font-size="52" font-weight="900" font-family="Arial" fill="#d1fae5" opacity="0.9">10</text>
+  <text x="160" y="300" text-anchor="middle" font-size="52" font-weight="900" font-family="Arial" fill="#F5F5F5" opacity="0.9">10</text>
 </svg>`;
 
 export default function RosterAnimation({
@@ -71,7 +71,7 @@ export default function RosterAnimation({
 
       if (counterRef.current) {
         tl.fromTo(counterRef.current,
-          { scale: 1.5, color: '#58D20A' },
+          { scale: 1.5, color: '#0B2B26' },
           { scale: 1, color: '#ffffff', duration: 0.4, ease: 'elastic.out(1, 0.3)' },
           0.5
         );
@@ -113,8 +113,8 @@ export default function RosterAnimation({
                 animate={{ scale: 1, rotate: 0 }}
                 transition={{ delay: 0.2, type: 'spring', stiffness: 100 }}
               >
-                <Trophy className="w-5 h-5 text-neonGreen" />
-                <span className="text-xs font-black text-neonGreen uppercase tracking-wider">
+                <Trophy className="w-5 h-5 text-white" />
+                <span className="text-xs font-black text-white uppercase tracking-wider">
                   Player Acquired
                 </span>
               </motion.div>
@@ -123,7 +123,7 @@ export default function RosterAnimation({
                 {player?.name || 'Player'}
               </h2>
               <p className="text-sm text-secondaryText mt-1">
-                Sold to <span className="text-neonGreen font-bold">{team?.name || 'Team'}</span>
+                Sold to <span className="text-white font-bold">{team?.name || 'Team'}</span>
               </p>
             </div>
 
@@ -139,11 +139,11 @@ export default function RosterAnimation({
               <div className="flex-1">
                 <p className="font-bold text-white text-sm">{player?.name}</p>
                 <p className="text-xs text-secondaryText">{player?.jerseyName} • {player?.category}</p>
-                <p className="text-xs text-neonGreen font-mono font-bold mt-1">
+                <p className="text-xs text-white font-mono font-bold mt-1">
                   ৳{(price || 0).toLocaleString('en-IN')}
                 </p>
               </div>
-              <ArrowRight className="w-5 h-5 text-neonGreen" />
+              <ArrowRight className="w-5 h-5 text-white" />
             </motion.div>
 
             <motion.div
@@ -152,7 +152,7 @@ export default function RosterAnimation({
             >
               <div className="bg-cardBg/60 rounded-xl p-3 border border-cardBorder text-center">
                 <span className="text-[10px] font-bold text-secondaryText uppercase">Budget Left</span>
-                <p className="text-lg font-black font-mono text-neonGreen mt-1">
+                <p className="text-lg font-black font-mono text-white mt-1">
                   ৳{((team?.remainingBudget || 0) - (price || 0)).toLocaleString('en-IN')}
                 </p>
               </div>

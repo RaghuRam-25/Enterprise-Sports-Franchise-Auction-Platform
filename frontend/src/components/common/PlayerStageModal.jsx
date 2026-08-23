@@ -44,7 +44,7 @@ export default function PlayerStageModal({ player, teams = [], categories = [], 
           type="button"
           onClick={(e) => { e.stopPropagation(); onClose?.(); }}
           title="Close"
-          className="absolute top-4 right-4 z-20 w-9 h-9 rounded-full bg-[#0c0e12] border border-white/20 text-slate-200 hover:text-white hover:border-[#58D20A]/60 flex items-center justify-center shadow-lg transition"
+          className="absolute top-4 right-4 z-20 w-9 h-9 rounded-full bg-[#0c0e12] border border-white/20 text-slate-200 hover:text-white hover:border-[#0B2B26]/60 flex items-center justify-center shadow-lg transition"
         >
           <X className="w-4 h-4" />
         </button>

@@ -21,7 +21,7 @@ export default function PodiumPlayersView() {
         <div className="space-y-6">
             <div className="glass-card rounded-2xl p-6 border border-cardBorder">
                 <div className="flex items-center gap-3">
-                    <Icon className="w-6 h-6 text-neonGreen" />
+                    <Icon className="w-6 h-6 text-white" />
                     <div>
                         <h1 className="text-xl font-black text-white">{pageTitle}</h1>
                         <p className="text-xs text-secondaryText">

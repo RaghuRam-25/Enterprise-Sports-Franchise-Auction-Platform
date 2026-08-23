@@ -85,9 +85,8 @@ export default function GeneralProfile() {
       {/* Page Header */}
       <div>
         <h1 className="flex items-center gap-2 text-2xl font-black font-heading text-white">
-          <User className="w-6 h-6 text-neonGreen" /> General Member Profile
+          <User className="w-6 h-6 text-white" /> General Member Profile
         </h1>
-        <p className="text-xs text-secondaryText mt-1">Manage your spectator account, update personal details, and request role upgrades.</p>
       </div>
 
       {/* Hero Account Overview Banner */}
@@ -100,28 +99,25 @@ export default function GeneralProfile() {
             {photoPreview ? (
               <img src={photoPreview} alt="Profile" className="w-24 h-24 sm:w-28 sm:h-28 rounded-3xl object-cover border-2 border-neonGreen/50 shadow-xl" />
             ) : (
-              <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-3xl bg-gradient-to-tr from-neonGreen via-neonGreenHover to-successGreen flex items-center justify-center text-3xl sm:text-4xl font-black text-darkBg uppercase shadow-xl">
+              <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-3xl bg-gradient-to-tr from-neonGreen via-neonGreenHover to-successGreen flex items-center justify-center text-3xl sm:text-4xl font-black text-white uppercase shadow-xl">
                 {user?.name?.[0] || 'U'}
               </div>
             )}
             <label className="absolute -bottom-2 -right-2 w-9 h-9 rounded-2xl bg-cardBg border border-borderStrong flex items-center justify-center cursor-pointer hover:border-neonGreen hover:scale-105 transition shadow-lg" title="Upload new photo">
               <input type="file" accept="image/*" onChange={handlePhotoChange} className="hidden" />
-              <ImagePlus className="w-4 h-4 text-neonGreenHover" />
+              <ImagePlus className="w-4 h-4 text-white" />
             </label>
           </div>
 
           {/* User Details Badges */}
           <div className="space-y-3 text-center sm:text-left min-w-0 flex-1">
             <div>
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-mono font-black uppercase bg-neonGreen/20 text-neonGreenHover border border-neonGreen/30">
-                <ShieldCheck className="w-3.5 h-3.5" /> General Member Account
-              </span>
               <h2 className="text-2xl sm:text-3xl font-black text-white mt-1.5 truncate">{user?.name}</h2>
             </div>
 
             <div className="flex flex-wrap items-center justify-center sm:justify-start gap-x-5 gap-y-2 text-xs text-secondaryText">
               <span className="flex items-center gap-1.5 bg-darkBg/60 px-3 py-1.5 rounded-xl border border-cardBorder">
-                <Mail className="w-3.5 h-3.5 text-neonGreen" /> {user?.email}
+                <Mail className="w-3.5 h-3.5 text-white" /> {user?.email}
               </span>
               {user?.phone && (
                 <span className="flex items-center gap-1.5 bg-darkBg/60 px-3 py-1.5 rounded-xl border border-cardBorder font-mono">
@@ -145,7 +141,7 @@ export default function GeneralProfile() {
         </h3>
 
         {message && (
-          <p className="flex items-center gap-2 bg-successGreen/60 border border-neonGreen/40 rounded-2xl p-4 text-xs font-bold text-neonGreenHover">
+          <p className="flex items-center gap-2 bg-successGreen/60 border border-neonGreen/40 rounded-2xl p-4 text-xs font-bold text-white">
             <CheckCircle className="w-4.5 h-4.5 shrink-0" /> {message}
           </p>
         )}
@@ -195,7 +191,7 @@ export default function GeneralProfile() {
               type="text"
               value="GENERAL_USER"
               disabled
-              className="glass-input w-full rounded-2xl px-4 py-3 text-xs font-mono uppercase opacity-60 cursor-not-allowed text-neonGreen font-bold"
+              className="glass-input w-full rounded-2xl px-4 py-3 text-xs font-mono uppercase opacity-60 cursor-not-allowed text-white font-bold"
             />
           </div>
         </div>
@@ -216,59 +212,99 @@ export default function GeneralProfile() {
 
       {/* ── Role Upgrade Requests Section ───────────────────────────────────── */}
       <RoleRequestsSection user={user} updateUser={updateUser} />
-
-      {/* Password link footer */}
-      <div className="p-4 bg-darkBg/60 rounded-2xl border border-cardBorder text-center text-xs text-secondaryText">
-        Need to update your login password? Go to <a href="/general/settings" className="text-neonGreen hover:text-neonGreenHover font-bold underline ml-1">Account Settings</a>.
-      </div>
     </div>
   );
 }
 
 function RoleRequestsSection({ user, updateUser }) {
-  const [playerNote, setPlayerNote] = useState('');
-  const [managerNote, setManagerNote] = useState('');
-  const [submittingPlayer, setSubmittingPlayer] = useState(false);
-  const [submittingManager, setSubmittingManager] = useState(false);
-  const [playerMsg, setPlayerMsg] = useState('');
-  const [managerMsg, setManagerMsg] = useState('');
+  const [notes, setNotes] = useState({ player: '', manager: '', podium: '', superadmin: '' });
+  const [submitting, setSubmitting] = useState({});
+  const [msgs, setMsgs] = useState({});
 
-  const pStatus = user?.playerRequestStatus || 'NONE';
-  const mStatus = user?.managerRequestStatus || 'NONE';
+  const setNote = (k) => (e) => setNotes(prev => ({ ...prev, [k]: e.target.value }));
+  const setBusy = (k, v) => setSubmitting(prev => ({ ...prev, [k]: v }));
+  const setMsg = (k, v) => setMsgs(prev => ({ ...prev, [k]: v }));
 
-  const handlePlayerSubmit = async () => {
-    setPlayerMsg('');
-    setSubmittingPlayer(true);
+  // Card registry — one entry per upgradeable role. Status lives on the user
+  // object; submit calls the matching playerAPI endpoint.
+  const ROLE_CARDS = [
+    {
+      key: 'player',
+      title: 'Player Role',
+      statusKey: 'playerRequestStatus',
+      noteKey: 'playerRequestNote',
+      notePlaceholder: 'Optional note for admin (e.g. position, experience)',
+      cta: 'Request Player Role',
+      approvedBlurb: 'Approved! You are a registered Player.',
+      submit: async (note) => {
+        const m = await import('../../services/api');
+        return m.playerAPI.requestPlayerRole(note);
+      },
+    },
+    {
+      key: 'manager',
+      title: 'Team Manager Role',
+      statusKey: 'managerRequestStatus',
+      noteKey: 'managerRequestNote',
+      notePlaceholder: 'Optional note for admin (e.g. franchise preference)',
+      cta: 'Request Team Manager Role',
+      approvedBlurb: 'Approved! You are a Team Manager.',
+      submit: async (note) => {
+        const m = await import('../../services/api');
+        return m.playerAPI.requestManagerRole(note);
+      },
+    },
+    {
+      key: 'podium',
+      title: 'Podium Admin Role',
+      targetRole: 'PODIUM_ADMIN',
+      statusKey: 'podiumAdminRequestStatus',
+      noteKey: 'podiumAdminRequestNote',
+      notePlaceholder: 'Optional note for admin (e.g. why you need display access)',
+      cta: 'Request Podium Admin Role',
+      approvedBlurb: 'Approved! You are a Podium Admin.',
+      submit: async (note) => {
+        const m = await import('../../services/api');
+        return m.playerAPI.requestAdminRole('PODIUM_ADMIN', note);
+      },
+    },
+    {
+      key: 'superadmin',
+      title: 'Super Admin Role',
+      targetRole: 'SUPER_ADMIN',
+      statusKey: 'superAdminRequestStatus',
+      noteKey: 'superAdminRequestNote',
+      notePlaceholder: 'Optional note for admin (e.g. responsibility statement)',
+      cta: 'Request Super Admin Role',
+      approvedBlurb: 'Approved! You are a Super Admin.',
+      submit: async (note) => {
+        const m = await import('../../services/api');
+        return m.playerAPI.requestAdminRole('SUPER_ADMIN', note);
+      },
+    },
+  ];
+
+  const handleSubmitCard = async (card) => {
+    setMsg(card.key, '');
+    setBusy(card.key, true);
     try {
-      const res = await authAPI.getMe();
-      // Use playerAPI.requestPlayerRole directly
-      const resp = await import('../../services/api').then(m => m.playerAPI.requestPlayerRole(playerNote));
+      const resp = await card.submit(notes[card.key]);
       if (resp?.success) {
-        updateUser({ playerRequestStatus: 'PENDING', playerRequestNote: playerNote });
-        setPlayerMsg('Player role request submitted to Super Admin!');
+        updateUser({ [card.statusKey]: 'PENDING', [card.noteKey]: notes[card.key] });
+        setMsg(card.key, `${card.title.replace(' Role', '')} request submitted to Super Admin!`);
       }
     } catch (err) {
-      setPlayerMsg(err?.response?.data?.message || 'Failed to submit request.');
+      setMsg(card.key, err?.response?.data?.message || 'Failed to submit request.');
     } finally {
-      setSubmittingPlayer(false);
+      setBusy(card.key, false);
     }
   };
 
-  const handleManagerSubmit = async () => {
-    setManagerMsg('');
-    setSubmittingManager(true);
-    try {
-      const resp = await import('../../services/api').then(m => m.playerAPI.requestManagerRole(managerNote));
-      if (resp?.success) {
-        updateUser({ managerRequestStatus: 'PENDING', managerRequestNote: managerNote });
-        setManagerMsg('Team Manager role request submitted to Super Admin!');
-      }
-    } catch (err) {
-      setManagerMsg(err?.response?.data?.message || 'Failed to submit request.');
-    } finally {
-      setSubmittingManager(false);
-    }
-  };
+  const statusBadgeCls = (status) =>
+    status === 'APPROVED' ? 'bg-neonGreen/20 text-white border border-neonGreen/30'
+    : status === 'PENDING' ? 'bg-warningGold/20 text-warningGold border border-warningGold/30 animate-pulse'
+    : status === 'REJECTED' ? 'bg-urgentRed/20 text-urgentRedText border border-urgentRed/30'
+    : 'bg-surfaceHover text-secondaryText';
 
   return (
     <section className="glass-card rounded-2xl p-6 border border-cardBorder space-y-6">
@@ -276,111 +312,63 @@ function RoleRequestsSection({ user, updateUser }) {
         <h3 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
           Role Upgrade Requests
         </h3>
-        <p className="text-xs text-secondaryText mt-0.5">
-          Request elevated privileges to join the player pool or manage a franchise team.
+        <p className="text-[11px] text-mutedText mt-1">
+          Submit a request and the Super Admin will review it from the Admin Panel.
         </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Player Request Card */}
-        <div className="p-4 rounded-xl border border-cardBorder bg-darkBg/60 space-y-3 flex flex-col justify-between">
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-black text-white uppercase tracking-wider">Player Role</span>
-              <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase ${
-                pStatus === 'APPROVED' ? 'bg-neonGreen/20 text-neonGreen border border-neonGreen/30' :
-                pStatus === 'PENDING' ? 'bg-warningGold/20 text-warningGold border border-warningGold/30 animate-pulse' :
-                pStatus === 'REJECTED' ? 'bg-urgentRed/20 text-urgentRedText border border-urgentRed/30' :
-                'bg-surfaceHover text-secondaryText'
-              }`}>
-                {pStatus === 'NONE' ? 'Not Requested' : pStatus}
-              </span>
-            </div>
-            <p className="text-[11px] text-secondaryText">
-              Enter the auction player pool to be drafted by franchise managers during live bidding.
-            </p>
-          </div>
+        {ROLE_CARDS.map((card) => {
+          const status = user?.[card.statusKey] || 'NONE';
+          const busy = !!submitting[card.key];
 
-          {pStatus === 'NONE' || pStatus === 'REJECTED' ? (
-            <div className="space-y-2 pt-2 border-t border-cardBorder">
-              <input
-                type="text"
-                value={playerNote}
-                onChange={e => setPlayerNote(e.target.value)}
-                placeholder="Optional note for admin (e.g. position, experience)"
-                className="glass-input w-full rounded-lg px-3 py-1.5 text-[11px]"
-              />
-              <button
-                onClick={handlePlayerSubmit}
-                disabled={submittingPlayer}
-                className="btn-primary w-full py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 disabled:opacity-50"
-              >
-                {submittingPlayer ? 'Submitting...' : 'Request Player Role'}
-              </button>
-            </div>
-          ) : pStatus === 'PENDING' ? (
-            <div className="p-2.5 bg-warningGold/10 border border-warningGold/20 rounded-lg text-[11px] text-warningGold">
-              ⌛ Request is under review by Super Admin.
-            </div>
-          ) : (
-            <div className="p-2.5 bg-neonGreen/10 border border-neonGreen/20 rounded-lg text-[11px] text-neonGreenHover">
-              ✅ Approved! You are a registered Player.
-            </div>
-          )}
+          return (
+            <div key={card.key} className="p-4 rounded-xl border border-cardBorder bg-darkBg/60 space-y-3 flex flex-col justify-between">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-xs font-black text-white uppercase tracking-wider">{card.title}</span>
+                  <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase ${statusBadgeCls(status)}`}>
+                    {status === 'NONE' ? 'Not Requested' : status}
+                  </span>
+                </div>
+              </div>
 
-          {playerMsg && <p className="text-[11px] text-neonGreen mt-1">{playerMsg}</p>}
-        </div>
+              {user?.role === card.targetRole ? (
+                <div className="p-2.5 bg-neonGreen/10 border border-neonGreen/20 rounded-lg text-[11px] text-white">
+                  ✓ You already have this role.
+                </div>
+              ) : status === 'NONE' || status === 'REJECTED' ? (
+                <div className="space-y-2 pt-2 border-t border-cardBorder">
+                  <input
+                    type="text"
+                    value={notes[card.key]}
+                    onChange={setNote(card.key)}
+                    placeholder={card.notePlaceholder}
+                    className="glass-input w-full rounded-lg px-3 py-1.5 text-[11px]"
+                  />
+                  <button
+                    onClick={() => handleSubmitCard(card)}
+                    disabled={busy}
+                    className="btn-primary w-full py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 disabled:opacity-50"
+                  >
+                    {busy ? 'Submitting...' : card.cta}
+                  </button>
+                </div>
+              ) : status === 'PENDING' ? (
+                <div className="p-2.5 bg-warningGold/10 border border-warningGold/20 rounded-lg text-[11px] text-warningGold">
+                  ⏳ Request is under review by Super Admin.
+                </div>
+              ) : (
+                <div className="p-2.5 bg-neonGreen/10 border border-neonGreen/20 rounded-lg text-[11px] text-white">
+                  ✓ {card.approvedBlurb}
+                </div>
+              )}
 
-        {/* Manager Request Card */}
-        <div className="p-4 rounded-xl border border-cardBorder bg-darkBg/60 space-y-3 flex flex-col justify-between">
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-black text-white uppercase tracking-wider">Team Manager Role</span>
-              <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase ${
-                mStatus === 'APPROVED' ? 'bg-neonGreen/20 text-neonGreen border border-neonGreen/30' :
-                mStatus === 'PENDING' ? 'bg-warningGold/20 text-warningGold border border-warningGold/30 animate-pulse' :
-                mStatus === 'REJECTED' ? 'bg-urgentRed/20 text-urgentRedText border border-urgentRed/30' :
-                'bg-surfaceHover text-secondaryText'
-              }`}>
-                {mStatus === 'NONE' ? 'Not Requested' : mStatus}
-              </span>
+              {msgs[card.key] && <p className="text-[11px] text-warningGold mt-1">{msgs[card.key]}</p>}
             </div>
-            <p className="text-[11px] text-secondaryText">
-              Manage a franchise team, build target shortlists, and participate in live auction bidding.
-            </p>
-          </div>
-
-          {mStatus === 'NONE' || mStatus === 'REJECTED' ? (
-            <div className="space-y-2 pt-2 border-t border-cardBorder">
-              <input
-                type="text"
-                value={managerNote}
-                onChange={e => setManagerNote(e.target.value)}
-                placeholder="Optional note for admin (e.g. franchise preference)"
-                className="glass-input w-full rounded-lg px-3 py-1.5 text-[11px]"
-              />
-              <button
-                onClick={handleManagerSubmit}
-                disabled={submittingManager}
-                className="btn-primary w-full py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 disabled:opacity-50"
-              >
-                {submittingManager ? 'Submitting...' : 'Request Team Manager Role'}
-              </button>
-            </div>
-          ) : mStatus === 'PENDING' ? (
-            <div className="p-2.5 bg-warningGold/10 border border-warningGold/20 rounded-lg text-[11px] text-warningGold">
-              ⌛ Request is under review by Super Admin.
-            </div>
-          ) : (
-            <div className="p-2.5 bg-neonGreen/10 border border-neonGreen/20 rounded-lg text-[11px] text-neonGreenHover">
-              ✅ Approved! You are a Team Manager.
-            </div>
-          )}
-
-          {managerMsg && <p className="text-[11px] text-warningGold mt-1">{managerMsg}</p>}
-        </div>
+          );
+        })}
       </div>
     </section>
   );
 }
-

@@ -175,7 +175,7 @@ export default function PlayerSettings() {
         {/* 1. Change Password */}
         <div className="bg-cardBg/90 rounded-2xl p-6 border border-cardBorder space-y-4">
           <h2 className="text-sm font-extrabold text-white flex items-center gap-2 border-b border-cardBorder pb-3">
-            <Key className="w-4 h-4 text-neonGreen" /> Change Password
+            <Key className="w-4 h-4 text-white" /> Change Password
           </h2>
 
           <form onSubmit={handleChangePassword} className="space-y-4 text-xs">
@@ -232,7 +232,7 @@ export default function PlayerSettings() {
                   <Clock className="w-3.5 h-3.5" /> Pending Review
                 </span>
               ) : managerRequestStatus === 'APPROVED' || managerRequestStatus === 'approved' ? (
-                <span className="flex items-center gap-1 text-neonGreen font-bold px-2 py-0.5 bg-neonGreen/10 rounded border border-neonGreen/20">
+                <span className="flex items-center gap-1 text-white font-bold px-2 py-0.5 bg-neonGreen/10 rounded border border-neonGreen/20">
                   <CheckCircle2 className="w-3.5 h-3.5" /> Approved
                 </span>
               ) : managerRequestStatus === 'REJECTED' || managerRequestStatus === 'rejected' ? (
@@ -273,7 +273,7 @@ export default function PlayerSettings() {
         {/* 3. Notification Preferences */}
         <div className="bg-cardBg/90 rounded-2xl p-6 border border-cardBorder space-y-4">
           <h2 className="text-sm font-extrabold text-white flex items-center gap-2 border-b border-cardBorder pb-3">
-            <Bell className="w-4 h-4 text-neonGreen" /> Notification Preferences
+            <Bell className="w-4 h-4 text-white" /> Notification Preferences
           </h2>
 
           <div className="space-y-3 text-xs">

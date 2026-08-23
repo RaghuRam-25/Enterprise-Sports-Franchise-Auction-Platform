@@ -37,8 +37,8 @@ const teamNameOf = (m, side) =>
 
 const PHASE_NOTICES = {
   AUCTION: { icon: Radio, tone: 'text-urgentRedText bg-urgentRed/50 border-urgentRed/30', title: 'Live auction is running', body: 'Players are on the block right now — watch the action unfold.', to: '/general/live', cta: 'Watch Live' },
-  REGISTRATION: { icon: Trophy, tone: 'text-neonGreenHover bg-successGreen/50 border-neonGreen/30', title: 'Player registration is open', body: 'New players are joining the tournament pool.', to: '/general/players', cta: 'Browse Players' },
-  TOURNAMENT: { icon: Trophy, tone: 'text-neonGreenHover bg-successGreen/50 border-neonGreen/30', title: 'Tournament in progress', body: 'Matches are being played — follow scores and standings.', to: '/general/matches', cta: 'Match Center' },
+  REGISTRATION: { icon: Trophy, tone: 'text-white bg-successGreen/50 border-neonGreen/30', title: 'Player registration is open', body: 'New players are joining the tournament pool.', to: '/general/players', cta: 'Browse Players' },
+  TOURNAMENT: { icon: Trophy, tone: 'text-white bg-successGreen/50 border-neonGreen/30', title: 'Tournament in progress', body: 'Matches are being played — follow scores and standings.', to: '/general/matches', cta: 'Match Center' },
 };
 
 /**
@@ -97,7 +97,7 @@ export default function GeneralNotifications() {
       items.push({
         id: `up-${m._id || m.id}`,
         icon: CalendarClock,
-        tone: 'text-neonGreenHover bg-successGreen/40 border-neonGreen/20',
+        tone: 'text-white bg-successGreen/40 border-neonGreen/20',
         title: `Match starting soon: ${teamNameOf(m, 'a')} vs ${teamNameOf(m, 'b')}`,
         body: `${m.matchDate || 'TBD'}${m.matchTime ? ` · ${m.matchTime}` : ''}`,
         to: '/general/schedule',
@@ -113,7 +113,7 @@ export default function GeneralNotifications() {
       items.push({
         id: `res-${latestResult._id || latestResult.id}`,
         icon: History,
-        tone: 'text-neonGreenHover bg-successGreen/40 border-neonGreen/20',
+        tone: 'text-white bg-successGreen/40 border-neonGreen/20',
         title: `Result published: ${teamNameOf(latestResult, 'a')} ${latestResult.scoreA ?? 0} - ${latestResult.scoreB ?? 0} ${teamNameOf(latestResult, 'b')}`,
         body: latestResult.matchDate || '',
         to: '/general/results',
@@ -139,14 +139,11 @@ export default function GeneralNotifications() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="flex items-center gap-2 text-xl font-black text-white">
-            <Bell className="w-5 h-5 text-neonGreen" /> Notifications
+            <Bell className="w-5 h-5 text-white" /> Notifications
           </h1>
-          <p className="text-xs text-secondaryText mt-1">
-            Tournament updates, match reminders and auction alerts.
-          </p>
         </div>
         {unreadCount > 0 && (
-          <span className="text-[11px] font-bold text-neonGreenHover bg-neonGreen/10 border border-neonGreen/30 rounded-full px-3 py-1">
+          <span className="text-[11px] font-bold text-white bg-neonGreen/10 border border-neonGreen/30 rounded-full px-3 py-1">
             {unreadCount} new
           </span>
         )}
@@ -175,11 +172,11 @@ export default function GeneralNotifications() {
                   <p className="text-xs font-bold text-primaryText">{n.title}</p>
                   {n.body && <p className="text-[11px] text-mutedText mt-0.5">{n.body}</p>}
                   <Link to={n.to} onClick={() => markRead(n.id)}
-                    className="inline-flex items-center gap-1 text-[11px] font-bold text-neonGreen hover:text-neonGreenHover mt-1.5">
+                    className="inline-flex items-center gap-1 text-[11px] font-bold text-white hover:text-white mt-1.5">
                     {n.cta} <ArrowRight className="w-3 h-3" />
                   </Link>
                 </div>
-                {isUnread && <span className="w-2 h-2 rounded-full bg-neonGreen mt-1.5 shrink-0" />}
+                {isUnread && <span className="w-2 h-2 rounded-full bg-white mt-1.5 shrink-0" />}
               </li>
             );
           })}

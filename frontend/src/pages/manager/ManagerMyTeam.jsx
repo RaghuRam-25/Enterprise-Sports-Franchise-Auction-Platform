@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 
 import {
   ShieldCheck, Save, Loader2, DollarSign, Users, Award, Edit3, X,
@@ -25,7 +26,7 @@ export default function ManagerMyTeam() {
   const [saving, setSaving] = useState(false);
   const [teamForm, setTeamForm] = useState({
     name: '', shortCode: '', description: '', motto: '',
-    ownerName: '', venue: '', contactEmail: '', primaryColor: '#58D20A'
+    ownerName: '', venue: '', contactEmail: '', primaryColor: '#0B2B26'
   });
   const [teamLogoFile, setTeamLogoFile] = useState(null);
   const [teamLogoPreview, setTeamLogoPreview] = useState(null);
@@ -73,7 +74,7 @@ export default function ManagerMyTeam() {
       ownerName: team.ownerName || '',
       venue: team.venue || '',
       contactEmail: team.contactEmail || '',
-      primaryColor: team.primaryColor || '#58D20A'
+      primaryColor: team.primaryColor || '#0B2B26'
     });
     setTeamLogoFile(null);
     setTeamLogoPreview(team.logoUrl || null);
@@ -160,7 +161,7 @@ export default function ManagerMyTeam() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="w-8 h-8 animate-spin text-neonGreen" />
+        <Loader2 className="w-8 h-8 animate-spin text-white" />
       </div>
     );
   }
@@ -185,7 +186,7 @@ export default function ManagerMyTeam() {
       label: 'Total Purse',
       value: formatCurrency ? formatCurrency(totalBudget) : totalBudget,
       icon: Wallet,
-      tone: 'text-neonGreenHover bg-neonGreen/10 border-neonGreen/20',
+      tone: 'text-white bg-neonGreen/10 border-neonGreen/20',
     },
     {
       label: 'Spent',
@@ -197,7 +198,7 @@ export default function ManagerMyTeam() {
       label: 'Remaining',
       value: formatCurrency ? formatCurrency(remainingBudget) : remainingBudget,
       icon: DollarSign,
-      tone: 'text-neonGreenHover bg-neonGreen/10 border-neonGreen/20',
+      tone: 'text-white bg-neonGreen/10 border-neonGreen/20',
     },
     {
       label: 'Squad Size',
@@ -226,11 +227,11 @@ export default function ManagerMyTeam() {
           <div className="relative h-full p-6 flex flex-col justify-between">
             <div className="flex items-center justify-between">
               <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/30 border border-white/10 text-[10px] font-bold tracking-wider uppercase text-primaryText backdrop-blur-sm">
-                <Sparkles className="w-3 h-3 text-neonGreen" />
+                <Sparkles className="w-3 h-3 text-white" />
                 Franchise Profile
               </span>
               <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/30 border border-white/10 text-[10px] font-bold tracking-wider uppercase text-primaryText backdrop-blur-sm">
-                <UserCog className="w-3 h-3 text-neonGreen" />
+                <UserCog className="w-3 h-3 text-white" />
                 {user?.name || 'Team Manager'}
               </span>
             </div>
@@ -253,7 +254,7 @@ export default function ManagerMyTeam() {
                 className="absolute -bottom-2 -right-2 w-9 h-9 rounded-xl bg-neonGreen hover:bg-neonGreen border-4 border-borderStrong flex items-center justify-center shadow-lg transition"
                 title="Change logo"
               >
-                <Camera className="w-4 h-4 text-darkBg" />
+                <Camera className="w-4 h-4 text-white" />
               </button>
             </div>
 
@@ -291,7 +292,7 @@ export default function ManagerMyTeam() {
       <div className="glass-card rounded-2xl border border-cardBorder p-5 shadow-xl">
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-xs font-bold uppercase tracking-wider text-secondaryText flex items-center gap-2">
-            <Award className="w-4 h-4 text-neonGreen" /> Purse Utilization
+            <Award className="w-4 h-4 text-white" /> Purse Utilization
           </h3>
           <span className="text-sm font-black text-white">{utilization}%</span>
         </div>
@@ -319,7 +320,7 @@ export default function ManagerMyTeam() {
       {/* ── Team Details ────────────────────────────────────────────────── */}
       <div className="glass-card rounded-2xl border border-cardBorder p-6 shadow-xl">
         <h3 className="text-xs font-bold uppercase tracking-wider text-secondaryText mb-4 flex items-center gap-2">
-          <Info className="w-4 h-4 text-neonGreen" /> Team Details
+          <Info className="w-4 h-4 text-white" /> Team Details
         </h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="flex items-start gap-3">
@@ -386,7 +387,7 @@ export default function ManagerMyTeam() {
       {team.description && (
         <div className="glass-card rounded-2xl border border-cardBorder p-6 shadow-xl">
           <h3 className="text-xs font-bold uppercase tracking-wider text-secondaryText mb-2 flex items-center gap-2">
-            <ShieldCheck className="w-4 h-4 text-neonGreen" /> About This Franchise
+            <ShieldCheck className="w-4 h-4 text-white" /> About This Franchise
           </h3>
           <p className="text-sm text-secondaryText leading-relaxed">{team.description}</p>
         </div>
@@ -396,8 +397,8 @@ export default function ManagerMyTeam() {
       <div className="glass-card rounded-2xl border border-cardBorder p-6 shadow-xl space-y-5">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <h3 className="text-xs font-bold uppercase tracking-wider text-secondaryText flex items-center gap-2">
-            <Shirt className="w-4 h-4 text-neonGreen" /> My Squad
-            <span className="ml-1 px-2 py-0.5 rounded-full bg-neonGreen/10 border border-neonGreen/30 text-neonGreenHover text-[10px] font-mono font-bold normal-case tracking-normal">
+            <Shirt className="w-4 h-4 text-white" /> My Squad
+            <span className="ml-1 px-2 py-0.5 rounded-full bg-neonGreen/10 border border-neonGreen/30 text-white text-[10px] font-mono font-bold normal-case tracking-normal">
               {squadSize}{squadTarget ? ` / ${squadTarget}` : ''} Players
             </span>
           </h3>
@@ -458,7 +459,7 @@ export default function ManagerMyTeam() {
           <div className="glass-card w-full max-w-md rounded-2xl p-6 border border-borderStrong space-y-5 shadow-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center">
               <h2 className="text-lg font-black text-white flex items-center gap-2">
-                <ShieldCheck className="w-5 h-5 text-neonGreen" /> Edit Franchise Profile
+                <ShieldCheck className="w-5 h-5 text-white" /> Edit Franchise Profile
               </h2>
               <button onClick={() => setShowEditModal(false)} className="btn-secondary w-8 h-8 rounded-lg flex items-center justify-center">
                 <X className="w-4 h-4" />

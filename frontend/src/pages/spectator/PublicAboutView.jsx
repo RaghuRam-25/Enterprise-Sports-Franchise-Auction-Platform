@@ -10,14 +10,14 @@ export default function PublicAboutView() {
             <main className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
                 {/* Header */}
                 <div className="text-center">
-                    <Building className="w-12 h-12 mx-auto text-neonGreen bg-neonGreen/10 p-3 rounded-2xl border border-neonGreen/20" />
+                    <Building className="w-12 h-12 mx-auto text-white bg-neonGreen/10 p-3 rounded-2xl border border-neonGreen/20" />
                     <h1 className="text-3xl font-black font-heading text-white mt-4">About Our Organization</h1>
                     <p className="text-sm text-secondaryText mt-1">Dedicated to fostering sports talent and competitive spirit.</p>
                 </div>
 
                 <div className="glass-card rounded-2xl p-6 border border-cardBorder space-y-6">
                     <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                        <Info className="w-5 h-5 text-neonGreen" /> Our Mission
+                        <Info className="w-5 h-5 text-white" /> Our Mission
                     </h2>
                     <p className="text-secondaryText leading-relaxed">
                         Our organization is committed to revolutionizing the way sports talent is discovered, nurtured, and celebrated.
@@ -45,14 +45,14 @@ export default function PublicAboutView() {
                     </p>
 
                     <h2 className="text-xl font-bold text-white flex items-center gap-2 pt-4 border-t border-cardBorder">
-                        <Mail className="w-5 h-5 text-neonGreen" /> Contact Us
+                        <Mail className="w-5 h-5 text-white" /> Contact Us
                     </h2>
                     <ul className="space-y-2 text-secondaryText text-sm">
                         <li className="flex items-center gap-2">
-                            <Mail className="w-4 h-4 text-neonGreen" /> Email: <a href="mailto:info@franchiseauction.com" className="text-neonGreenHover hover:underline">info@franchiseauction.com</a>
+                            <Mail className="w-4 h-4 text-white" /> Email: <a href="mailto:info@franchiseauction.com" className="text-white hover:underline">info@franchiseauction.com</a>
                         </li>
                         <li className="flex items-center gap-2">
-                            <Phone className="w-4 h-4 text-neonGreen" /> Phone: +1 (555) 123-4567
+                            <Phone className="w-4 h-4 text-white" /> Phone: +1 (555) 123-4567
                         </li>
                         <li className="flex items-center gap-2">
                             <MapPin className="w-4 h-4 text-urgentRedText" /> Address: 123 Sports Arena Rd, City, Country

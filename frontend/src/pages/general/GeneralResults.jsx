@@ -90,7 +90,7 @@ export default function GeneralResults() {
     <div className="space-y-6">
       <div>
         <h1 className="flex items-center gap-2 text-xl font-black text-white">
-          <History className="w-5 h-5 text-neonGreen" /> Results
+          <History className="w-5 h-5 text-white" /> Results
         </h1>
         <p className="text-xs text-secondaryText mt-1">Completed matches and final scores.</p>
       </div>
@@ -124,7 +124,7 @@ export default function GeneralResults() {
                         {teamNameOf(m, 'a')}
                       </span>
                     </div>
-                    <span className={`font-mono font-black text-base px-3 py-1 rounded-lg border shrink-0 ${m.calculatedStatus === 'Finished' ? 'bg-darkBg border-borderStrong text-neonGreen' : ''}`}>
+                    <span className={`font-mono font-black text-base px-3 py-1 rounded-lg border shrink-0 ${m.calculatedStatus === 'Finished' ? 'bg-darkBg border-borderStrong text-white' : ''}`}>
                       {sa} : {sb}
                     </span>
                     <div className="flex-1 min-w-0">

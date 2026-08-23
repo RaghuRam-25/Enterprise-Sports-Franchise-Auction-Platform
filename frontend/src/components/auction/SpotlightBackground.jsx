@@ -19,9 +19,9 @@ import { motion } from 'framer-motion';
 const THEME_CONFIGS = {
   default: {
     gradient: 'from-darkBg via-[#04121f] to-darkBg',
-    radial1: 'radial-gradient(ellipse 60% 50% at 50% 45%, rgba(88,210,10,0.18) 0%, transparent 70%)',
-    radial2: 'radial-gradient(ellipse 40% 35% at 70% 65%, rgba(88,210,10,0.14) 0%, transparent 70%)',
-    spotlight: 'rgba(88,210,10,0.25)',
+    radial1: 'radial-gradient(ellipse 60% 50% at 50% 45%, rgba(11, 43, 38,0.18) 0%, transparent 70%)',
+    radial2: 'radial-gradient(ellipse 40% 35% at 70% 65%, rgba(11, 43, 38,0.14) 0%, transparent 70%)',
+    spotlight: 'rgba(11, 43, 38,0.25)',
   },
   urgent: {
     gradient: 'from-darkBg via-[#1a0404] to-darkBg',

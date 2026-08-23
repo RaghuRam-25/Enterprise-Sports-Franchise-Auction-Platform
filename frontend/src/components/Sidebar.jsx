@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
+  LayoutGrid,
   Sliders,
   ShieldCheck,
   Users,
@@ -111,28 +112,28 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, mobileOpen = fals
 
   let currentNavConfig = [];
   let roleTitle = 'Platform User';
-  let roleBadgeColor = 'bg-[#12200E] text-[#58D20A] border-[#222222]';
+  let roleBadgeColor = 'bg-[#0B2B26] text-white border-[#222222]';
 
   if (role === 'SUPER_ADMIN') {
     currentNavConfig = superAdminNav;
     roleTitle = 'Super Admin';
-    roleBadgeColor = 'bg-[#12200E] text-[#58D20A] border-[#222222]';
+    roleBadgeColor = 'bg-[#0B2B26] text-white border-[#222222]';
   } else if (role === 'PODIUM_ADMIN') {
     currentNavConfig = podiumAdminNav;
     roleTitle = 'Podium Admin';
-    roleBadgeColor = 'bg-[#12200E] text-[#58D20A] border-[#222222]';
+    roleBadgeColor = 'bg-[#0B2B26] text-white border-[#222222]';
   } else if (role === 'TEAM_MANAGER') {
     currentNavConfig = teamManagerNav;
     roleTitle = 'Team Manager';
-    roleBadgeColor = 'bg-[#12200E] text-[#58D20A] border-[#222222]';
+    roleBadgeColor = 'bg-[#0B2B26] text-white border-[#222222]';
   } else if (role === 'PLAYER') {
     currentNavConfig = playerNav;
     roleTitle = 'Player Portal';
-    roleBadgeColor = 'bg-[#12200E] text-[#58D20A] border-[#222222]';
+    roleBadgeColor = 'bg-[#0B2B26] text-white border-[#222222]';
   } else if (role === 'GENERAL_USER') {
     currentNavConfig = generalUserNav;
     roleTitle = 'Fan Zone';
-    roleBadgeColor = 'bg-[#12200E] text-[#58D20A] border-[#222222]';
+    roleBadgeColor = 'bg-[#0B2B26] text-white border-[#222222]';
   }
 
   // Mobile nav builds a linear list (groups flattened so children are reachable
@@ -150,9 +151,9 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, mobileOpen = fals
 
   return (
     <>
-      {/* Desktop: always visible on lg+ */}
+      {/* Desktop: always visible on md+ */}
       <aside
-        className={`hidden lg:flex relative h-full flex-col bg-[#0B0B0B] border-r border-[#222222] transition-all duration-300 z-30 select-none ${isCollapsed ? 'w-20' : 'w-64'
+        className={`hidden md:flex relative h-full flex-col bg-[#0B0B0B] border-r border-[#222222] transition-all duration-300 z-30 select-none ${isCollapsed ? 'w-20' : 'w-64'
           }`}
       >
         <SidebarBody
@@ -172,7 +173,7 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, mobileOpen = fals
 
       {/* Mobile: slide-in overlay drawer */}
       <aside
-        className={`fixed lg:hidden top-0 left-0 z-50 flex h-full w-72 max-w-[85vw] flex-col bg-[#0B0B0B] border-r border-[#222222] shadow-2xl transition-transform duration-300 select-none ${
+        className={`fixed md:hidden top-0 left-0 z-50 flex h-full w-72 max-w-[85vw] flex-col bg-[#0B0B0B] border-r border-[#222222] shadow-2xl transition-transform duration-300 select-none ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
@@ -241,7 +242,7 @@ function SidebarBody({
                 to={item.path}
                 className={({ isActive }) =>
                   `flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition group relative ${isActive
-                    ? 'bg-[#12200E] text-[#58D20A] border border-[#58D20A]/40 shadow-sm'
+                    ? 'bg-[#0B2B26] text-white border border-[#0B2B26]/40 shadow-sm'
                     : 'text-[#A3A3A3] hover:text-[#F5F5F5] hover:bg-[#151515]'
                   }`
                 }
@@ -250,7 +251,7 @@ function SidebarBody({
                   <>
                     <Icon
                       className={`w-4 h-4 flex-shrink-0 transition-transform group-hover:scale-110 ${
-                        isActive ? 'text-[#58D20A]' : item.highlight ? 'text-[#58D20A] animate-pulse' : 'text-[#A3A3A3]'
+                        isActive ? 'text-white' : item.highlight ? 'text-white animate-pulse' : 'text-[#A3A3A3]'
                       }`}
                     />
                     {!isCollapsed && <span className="truncate">{item.label}</span>}
@@ -296,7 +297,7 @@ function SidebarBody({
                         to={child.path}
                         className={({ isActive }) =>
                           `block px-3 py-1.5 rounded-lg text-xs font-semibold transition ${isActive
-                            ? 'bg-[#12200E] text-[#58D20A] border-l-2 border-[#58D20A]'
+                            ? 'bg-[#0B2B26] text-white border-l-2 border-[#0B2B26]'
                             : 'text-[#A3A3A3] hover:text-[#F5F5F5] hover:bg-[#151515]'
                           }`
                         }
@@ -319,7 +320,7 @@ function SidebarBody({
         {!isCollapsed ? (
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-8 h-8 rounded-full bg-[#12200E] border border-[#58D20A]/40 flex items-center justify-center text-[#58D20A] font-bold text-xs uppercase flex-shrink-0">
+              <div className="w-8 h-8 rounded-full bg-[#0B2B26] border border-[#0B2B26]/40 flex items-center justify-center text-white font-bold text-xs uppercase flex-shrink-0">
                 {user.name?.[0] || 'U'}
               </div>
               <div className="truncate">

@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import {
   Users, Search, X, ChevronDown, Shield,
   Trophy, Zap, Eye, UserCheck, UserX, Clock, SlidersHorizontal,
@@ -15,18 +16,18 @@ import PlayerStageModal from '../../components/common/PlayerStageModal';
 
 // ── Status badge config ──────────────────────────────────────────────────────
 const STATUS_CONFIG = {
-  REGISTERED: { label: 'Registered', color: 'text-neonGreen', bg: 'bg-neonGreen/10', border: 'border-neonGreen/30', icon: UserCheck },
-  SOLD: { label: 'Sold', color: 'text-neonGreen', bg: 'bg-neonGreen/10', border: 'border-neonGreen/30', icon: Trophy },
+  REGISTERED: { label: 'Registered', color: 'text-white', bg: 'bg-neonGreen/10', border: 'border-neonGreen/30', icon: UserCheck },
+  SOLD: { label: 'Sold', color: 'text-white', bg: 'bg-neonGreen/10', border: 'border-neonGreen/30', icon: Trophy },
   UNSOLD: { label: 'Unsold', color: 'text-warningGold', bg: 'bg-warningGold/10', border: 'border-warningGold/30', icon: Clock },
   WITHDRAWN: { label: 'Withdrawn', color: 'text-urgentRedText', bg: 'bg-urgentRed/10', border: 'border-urgentRed/30', icon: UserX },
   PENDING: { label: 'Pending', color: 'text-secondaryText', bg: 'bg-surfaceActive/10', border: 'border-borderStrong/30', icon: Clock },
-  AVAILABLE: { label: 'Available', color: 'text-neonGreen', bg: 'bg-neonGreen/10', border: 'border-neonGreen/30', icon: Zap },
+  AVAILABLE: { label: 'Available', color: 'text-white', bg: 'bg-neonGreen/10', border: 'border-neonGreen/30', icon: Zap },
 };
 
 const ROLE_BADGE = {
-  SUPER_ADMIN: { label: 'Super Admin', color: 'text-neonGreenHover', bg: 'bg-successGreen/60', border: 'border-successGreen' },
+  SUPER_ADMIN: { label: 'Super Admin', color: 'text-white', bg: 'bg-successGreen/60', border: 'border-successGreen' },
   PODIUM_ADMIN: { label: 'Podium Admin', color: 'text-urgentRedText', bg: 'bg-urgentRed/60', border: 'border-urgentRed' },
-  TEAM_MANAGER: { label: 'Team Manager', color: 'text-neonGreenHover', bg: 'bg-successGreen/60', border: 'border-successGreen' },
+  TEAM_MANAGER: { label: 'Team Manager', color: 'text-white', bg: 'bg-successGreen/60', border: 'border-successGreen' },
   PLAYER: { label: 'Player', color: 'text-warningGold', bg: 'bg-warningGold/60', border: 'border-warningGold' },
   null: { label: 'Spectator', color: 'text-secondaryText', bg: 'bg-surfaceHover/60', border: 'border-borderStrong' },
 };
@@ -69,7 +70,7 @@ function PlayerListRow({ player, formatCurrency, teams = [] }) {
             className="w-9 h-9 rounded-lg object-cover border border-borderStrong"
           />
         ) : (
-          <div className="w-9 h-9 rounded-lg bg-gradient-to-tr from-neonGreen to-successGreen flex items-center justify-center text-darkBg font-black text-sm border border-borderStrong">
+          <div className="w-9 h-9 rounded-lg bg-gradient-to-tr from-neonGreen to-successGreen flex items-center justify-center text-white font-black text-sm border border-borderStrong">
             {(player.name || 'P')[0].toUpperCase()}
           </div>
         )}
@@ -112,7 +113,7 @@ function PlayerListRow({ player, formatCurrency, teams = [] }) {
             <p className="text-[10px] text-secondaryText">to {soldToTeam?.name || 'N/A'}</p>
           </>
         ) : (
-          <p className="font-mono font-bold text-neonGreen">{formatCurrency(player.basePrice)}</p>
+          <p className="font-mono font-bold text-white">{formatCurrency(player.basePrice)}</p>
         )}
       </div>
 
@@ -240,14 +241,14 @@ export default function PublicPlayersView() {
               <div className="flex rounded-xl overflow-hidden border border-[#333333] bg-[#151515] p-0.5">
                 <button
                   onClick={() => setViewMode('grid')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${viewMode === 'grid' ? 'bg-[#58D20A] text-[#050505] shadow-md' : 'text-[#F5F5F5] hover:text-[#58D20A] hover:bg-[#1A1A1A]'}`}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${viewMode === 'grid' ? 'bg-[#0B2B26] text-white shadow-md' : 'text-[#F5F5F5] hover:text-white hover:bg-[#1A1A1A]'}`}
                   title="Grid view"
                 >
                   ⊞ Grid
                 </button>
                 <button
                   onClick={() => setViewMode('list')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${viewMode === 'list' ? 'bg-[#58D20A] text-[#050505] shadow-md' : 'text-[#F5F5F5] hover:text-[#58D20A] hover:bg-[#1A1A1A]'}`}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${viewMode === 'list' ? 'bg-[#0B2B26] text-white shadow-md' : 'text-[#F5F5F5] hover:text-white hover:bg-[#1A1A1A]'}`}
                   title="List view"
                 >
                   ≡ List
@@ -260,9 +261,9 @@ export default function PublicPlayersView() {
         {/* ── Stats Strip ──────────────────────────────────────────────────── */}
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
           {[
-            { label: 'Total', value: stats.total, color: 'text-neonGreen', icon: Users },
-            { label: 'Active', value: stats.registered, color: 'text-neonGreen', icon: UserCheck },
-            { label: 'Sold', value: stats.sold, color: 'text-neonGreen', icon: Trophy },
+            { label: 'Total', value: stats.total, color: 'text-white', icon: Users },
+            { label: 'Active', value: stats.registered, color: 'text-white', icon: UserCheck },
+            { label: 'Sold', value: stats.sold, color: 'text-white', icon: Trophy },
             { label: 'Unsold', value: stats.unsold, color: 'text-warningGold', icon: TrendingUp },
             { label: 'Withdrawn', value: stats.withdrawn, color: 'text-urgentRedText', icon: UserX },
           ].map(({ label, value, color, icon: Icon }) => (
@@ -300,7 +301,7 @@ export default function PublicPlayersView() {
             <button
               onClick={() => setShowFilters(v => !v)}
               className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-xs font-bold transition ${showFilters || activeFiltersCount > 0
-                ? 'bg-[#58D20A] border-[#58D20A] text-[#050505] shadow-md font-extrabold'
+                ? 'bg-[#0B2B26] border-[#0B2B26] text-white shadow-md font-extrabold'
                 : 'btn-secondary'
                 }`}
             >
@@ -338,7 +339,7 @@ export default function PublicPlayersView() {
                       key={s}
                       onClick={() => setFilterStatus(s)}
                       className={`px-2.5 py-1 rounded-lg text-xs font-semibold border transition ${filterStatus === s
-                        ? 'bg-successGreen border-neonGreen text-darkBg'
+                        ? 'bg-successGreen border-neonGreen text-white'
                         : 'bg-surfaceHover border-borderStrong text-secondaryText hover:text-white hover:border-borderStrong'
                         }`}
                     >
@@ -426,7 +427,7 @@ export default function PublicPlayersView() {
             {(search || activeFiltersCount > 0) && (
               <button
                 onClick={clearAllFilters}
-                className="flex items-center gap-2 px-4 py-2 bg-successGreen hover:bg-neonGreen text-darkBg text-sm font-bold rounded-xl transition"
+                className="flex items-center gap-2 px-4 py-2 bg-successGreen hover:bg-neonGreen text-white text-sm font-bold rounded-xl transition"
               >
                 <RefreshCw className="w-4 h-4" />
                 Reset Filters
@@ -476,7 +477,7 @@ export default function PublicPlayersView() {
         {!isPrivileged && (
           <div className="flex items-center justify-center gap-2 py-3 text-xs text-mutedText">
             <Shield className="w-3.5 h-3.5" />
-            <span>Some player details are only visible to authenticated staff. <a href="/login" className="text-neonGreen hover:text-neonGreen underline">Sign in</a> for full access.</span>
+            <span>Some player details are only visible to authenticated staff. <Link to="/login" className="text-white hover:text-white underline">Sign in</Link> for full access.</span>
           </div>
         )}
 

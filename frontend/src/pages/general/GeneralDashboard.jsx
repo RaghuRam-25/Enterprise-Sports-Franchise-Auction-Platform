@@ -105,14 +105,14 @@ export default function GeneralDashboard() {
       label: 'Upcoming Matches',
       value: loading ? '—' : processed.filter(m => m.calculatedStatus === 'Upcoming').length,
       icon: CalendarClock,
-      accent: 'text-neonGreen bg-neonGreen/10 border-neonGreen/30',
+      accent: 'text-white bg-neonGreen/10 border-neonGreen/30',
       to: '/general/schedule',
     },
     {
       label: 'Recent Results',
       value: loading ? '—' : processed.filter(m => m.calculatedStatus === 'Finished').length,
       icon: History,
-      accent: 'text-neonGreen bg-neonGreen/10 border-neonGreen/30',
+      accent: 'text-white bg-neonGreen/10 border-neonGreen/30',
       to: '/general/results',
     },
   ];
@@ -121,15 +121,12 @@ export default function GeneralDashboard() {
     <div className="space-y-6">
       {/* ── Welcome Area ─────────────────────────────────────────────── */}
       <div className="relative overflow-hidden rounded-2xl border border-cardBorder bg-gradient-to-r from-successGreen/60 via-cardBg to-darkBg p-6 sm:p-8">
-        <div className="absolute -top-16 -right-16 w-64 h-64 rounded-full bg-neonGreen/10 blur-3xl pointer-events-none" />
+        <div className="absolute -top-16 -right-16 w-64 h-64 rounded-full bg-[#0B2B26]/45 blur-3xl pointer-events-none" />
         <div className="relative space-y-2">
-          <p className="flex items-center gap-1.5 text-[11px] font-mono font-bold uppercase tracking-widest text-neonGreen">
+          <p className="flex items-center gap-1.5 text-[11px] font-mono font-bold uppercase tracking-widest text-white">
             <Sparkles className="w-3.5 h-3.5" /> Fan Zone
           </p>
           <h1 className="text-2xl sm:text-3xl font-black text-white">Welcome back, {firstName}</h1>
-          <p className="text-xs sm:text-sm text-secondaryText max-w-2xl leading-relaxed">
-            Follow the latest tournament action — live auctions, matches, standings, and team rosters, all updated in real time.
-          </p>
         </div>
       </div>
 
@@ -166,9 +163,9 @@ export default function GeneralDashboard() {
         <section className="glass-card rounded-2xl p-5 border border-cardBorder space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-secondaryText">
-              <CalendarClock className="w-4 h-4 text-neonGreen" /> Upcoming Matches
+              <CalendarClock className="w-4 h-4 text-white" /> Upcoming Matches
             </h3>
-            <Link to="/general/schedule" className="flex items-center gap-1 text-[11px] font-bold text-neonGreen hover:text-neonGreenHover">
+            <Link to="/general/schedule" className="flex items-center gap-1 text-[11px] font-bold text-white hover:text-white">
               Schedule <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
@@ -197,9 +194,9 @@ export default function GeneralDashboard() {
         <section className="glass-card rounded-2xl p-5 border border-cardBorder space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-secondaryText">
-              <History className="w-4 h-4 text-neonGreen" /> Recent Results
+              <History className="w-4 h-4 text-white" /> Recent Results
             </h3>
-            <Link to="/general/results" className="flex items-center gap-1 text-[11px] font-bold text-neonGreen hover:text-neonGreenHover">
+            <Link to="/general/results" className="flex items-center gap-1 text-[11px] font-bold text-white hover:text-white">
               All results <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
@@ -215,7 +212,7 @@ export default function GeneralDashboard() {
                     </p>
                     <p className="text-[11px] text-mutedText mt-0.5">{m.matchDate || ''}</p>
                   </div>
-                  <span className="font-mono font-black text-sm text-neonGreen shrink-0">
+                  <span className="font-mono font-black text-sm text-white shrink-0">
                     {m.scoreA ?? 0} : {m.scoreB ?? 0}
                   </span>
                 </li>

@@ -9,11 +9,11 @@ import PlayerCardCard from '../../components/common/PlayerCardCard';
 import PlayerStageModal from '../../components/common/PlayerStageModal';
 
 const STATUS_STYLES = {
-  SOLD: 'bg-neonGreen/20 text-neonGreen border-neonGreen/30',
-  ON_PODIUM: 'bg-neonGreen/20 text-neonGreen border-neonGreen/30 animate-pulse',
+  SOLD: 'bg-neonGreen/20 text-white border-neonGreen/30',
+  ON_PODIUM: 'bg-neonGreen/20 text-white border-neonGreen/30 animate-pulse',
   BANNED: 'bg-urgentRed/20 text-urgentRedText border-urgentRed/30',
   WITHDRAWN: 'bg-surfaceHover/50 text-secondaryText border-borderStrong/30',
-  APPROVED: 'bg-neonGreen/20 text-neonGreen border-neonGreen/30',
+  APPROVED: 'bg-neonGreen/20 text-white border-neonGreen/30',
   REGISTERED: 'bg-warningGold/20 text-warningGold border-warningGold/30',
   UNSOLD: 'bg-warningGold/20 text-warningGold border-warningGold/30',
 };

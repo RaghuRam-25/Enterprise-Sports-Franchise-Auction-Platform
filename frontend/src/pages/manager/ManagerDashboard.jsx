@@ -245,30 +245,30 @@ export const ManagerDashboard = () => {
     <div className="flex flex-col flex-1 min-h-0 gap-1.5 sm:gap-2 lg:gap-3 overflow-hidden">
 
       {/* Top Team Header — premium franchise identity band */}
-      <div className="relative overflow-hidden flex-none glass-card rounded-xl sm:rounded-2xl lg:rounded-3xl p-2 sm:p-2.5 lg:p-3.5 border border-white/5 bg-gradient-to-br from-[#0e1713] via-cardBg/80 to-teal-500/15 shadow-md lg:shadow-xl shadow-teal-400/10">
-        <div className="pointer-events-none absolute -top-16 -right-10 w-40 h-40 sm:w-56 sm:h-56 bg-teal-400/10 blur-3xl rounded-full" />
+      <div className="relative overflow-hidden flex-none glass-card rounded-xl sm:rounded-2xl lg:rounded-3xl p-2 sm:p-2.5 lg:p-3.5 border border-white/5 bg-gradient-to-br from-[#0B2B26]/60 via-cardBg/80 to-[#0B2B26]/25 shadow-md lg:shadow-xl shadow-[#0B2B26]/60">
+        <div className="pointer-events-none absolute -top-16 -right-10 w-40 h-40 sm:w-56 sm:h-56 bg-[#0B2B26]/45 blur-3xl rounded-full" />
         <div className="relative flex flex-row justify-between items-center gap-2">
           <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
             {activeTeam.logoUrl ? (
               <img
                 src={activeTeam.logoUrl}
                 alt={activeTeam.name}
-                className="w-8 h-8 sm:w-9 sm:h-9 lg:w-11 lg:h-11 xl:w-12 xl:h-12 rounded-lg lg:rounded-xl object-cover border border-teal-300/30 shadow-md lg:shadow-lg shadow-teal-400/20 ring-1 lg:ring-2 ring-teal-300/10 shrink-0"
+                className="w-8 h-8 sm:w-9 sm:h-9 lg:w-11 lg:h-11 xl:w-12 xl:h-12 rounded-lg lg:rounded-xl object-cover border border-[#0B2B26]/85 shadow-md lg:shadow-lg shadow-[#0B2B26]/85 ring-1 lg:ring-2 ring-[#0B2B26]/60 shrink-0"
               />
             ) : (
-              <div className="w-8 h-8 sm:w-9 sm:h-9 lg:w-11 lg:h-11 xl:w-12 xl:h-12 rounded-lg lg:rounded-xl bg-gradient-to-br from-teal-400/20 to-teal-400/5 border border-teal-300/25 flex items-center justify-center text-base sm:text-lg lg:text-xl xl:text-2xl shadow-md lg:shadow-lg shadow-teal-400/20 shrink-0">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 lg:w-11 lg:h-11 xl:w-12 xl:h-12 rounded-lg lg:rounded-xl bg-gradient-to-br from-[#0B2B26]/35 to-[#0B2B26]/10 border border-[#0B2B26]/60 flex items-center justify-center text-base sm:text-lg lg:text-xl xl:text-2xl shadow-md lg:shadow-lg shadow-[#0B2B26]/85 shrink-0">
                 {activeTeam.logo || '🏆'}
               </div>
             )}
             <div className="min-w-0 leading-tight">
               <div className="flex items-center gap-1 sm:gap-1.5 flex-wrap min-w-0">
                 <h1 className="text-base sm:text-lg lg:text-xl xl:text-2xl font-display font-bold uppercase tracking-wide text-white truncate max-w-full">{activeTeam.name}</h1>
-                <span className="font-mono text-[8px] sm:text-[9px] lg:text-[10px] font-bold text-teal-200 bg-teal-400/10 px-1 py-px rounded border border-teal-300/25 shrink-0">
+                <span className="font-mono text-[8px] sm:text-[9px] lg:text-[10px] font-bold text-white bg-[#0B2B26]/25 px-1 py-px rounded border border-[#0B2B26]/60 shrink-0">
                   {activeTeam.shortCode || activeTeam.code}
                 </span>
               </div>
               {activeTeam.motto ? (
-                <p className="text-[9px] sm:text-[10px] lg:text-[11px] text-teal-200/70 italic mt-0.5 truncate">{activeTeam.motto}</p>
+                <p className="text-[9px] sm:text-[10px] lg:text-[11px] text-secondaryText/70 italic mt-0.5 truncate">{activeTeam.motto}</p>
               ) : (
                 <p className="text-[9px] sm:text-[10px] lg:text-[11px] text-secondaryText mt-0.5 truncate">Franchise Manager: {user?.name || 'Manager'}</p>
               )}
@@ -281,7 +281,7 @@ export const ManagerDashboard = () => {
           <div className="flex items-center shrink-0">
             <span className={`flex items-center gap-1 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-[8px] sm:text-[9px] lg:text-[10px] font-bold uppercase tracking-wider border ${biddingMode === 'blind'
               ? 'bg-warningGold/15 text-warningGold border-warningGold/40'
-              : 'bg-teal-400/10 text-teal-200 border-teal-300/35'
+              : 'bg-[#0B2B26]/25 text-white border-[#0B2B26]/60'
               }`}>
               <Radio className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> {biddingMode || 'normal'} Mode
             </span>
@@ -294,15 +294,15 @@ export const ManagerDashboard = () => {
       {/* Main surface — dark pitch-green. The Podium Display starts DIRECTLY
           beneath the team header (left, ~72%) with a compact manager sidebar
           (right, ~28%). Flexes to consume ALL remaining viewport height. */}
-      <div className="relative rounded-xl sm:rounded-2xl lg:rounded-3xl flex-1 min-h-0 p-2.5 sm:p-3 lg:p-4 border border-white/5 bg-gradient-to-b from-[#0c1410] via-[#0a110c] to-[#070c09] shadow-lg lg:shadow-2xl shadow-black/40 overflow-hidden">
+      <div className="relative rounded-xl sm:rounded-2xl lg:rounded-3xl flex-1 min-h-0 p-2.5 sm:p-3 lg:p-4 border border-white/5 bg-gradient-to-b from-[#0B2B26]/50 via-[#0B2B26]/25 to-[#050505] shadow-lg lg:shadow-2xl shadow-black/40 overflow-hidden">
         <div className="h-full min-h-0 flex flex-col lg:flex-row gap-2.5 sm:gap-3 overflow-y-auto lg:overflow-visible custom-scrollbar">
 
           {/* ── LEFT (~72%) — Podium Display / Live Auction stage ─────────── */}
           <div className="relative min-h-[420px] sm:min-h-[480px] lg:min-h-0 lg:flex-[72] min-w-0">
             {/* Decorative vertical spotlight beams — pure CSS, pointer-events-none */}
             <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-full flex justify-around px-3 sm:px-8 lg:px-12 overflow-hidden">
-              <div className="podium-beam w-16 sm:w-24 lg:w-32 h-full" style={{ '--beam-color': 'rgba(94, 234, 212, 0.30)' }} />
-              <div className="podium-beam w-20 sm:w-28 lg:w-36 h-full" style={{ '--beam-color': 'rgba(94, 234, 212, 0.22)' }} />
+              <div className="podium-beam w-16 sm:w-24 lg:w-32 h-full" style={{ '--beam-color': 'rgba(11, 43, 38, 0.85)' }} />
+              <div className="podium-beam w-20 sm:w-28 lg:w-36 h-full" style={{ '--beam-color': 'rgba(11, 43, 38, 0.60)' }} />
               <div className="podium-beam w-16 sm:w-24 lg:w-32 h-full" style={{ '--beam-color': 'rgba(244, 197, 66, 0.16)' }} />
             </div>
 
@@ -318,8 +318,8 @@ export const ManagerDashboard = () => {
             {!stageCinematicActive && (
               <div className="absolute top-1.5 left-1.5 sm:top-2 sm:left-2 z-40 flex items-center gap-1.5 pl-2 pr-2.5 py-1 rounded-full bg-black/50 backdrop-blur-md border border-neonGreen/40 shadow-lg">
                 <span className="relative flex h-1.5 w-1.5 sm:h-2 sm:w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-neonGreen opacity-75" />
-                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 sm:h-2 sm:w-2 bg-neonGreen" />
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
+                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 sm:h-2 sm:w-2 bg-white" />
                 </span>
                 <span className="font-display font-bold uppercase tracking-[0.18em] text-[9px] sm:text-[11px] leading-none text-white">Live Auction</span>
               </div>
@@ -414,21 +414,21 @@ export const ManagerDashboard = () => {
                 <p className="text-[8px] font-bold uppercase tracking-widest text-secondaryText truncate">Available Purse</p>
                 <h3 className="mt-0.5 text-xs sm:text-sm font-black font-mono tabular-nums text-warningGold truncate" title={formatCurrency(activeTeam.remainingBudget)}>{formatCurrency(activeTeam.remainingBudget)}</h3>
                 <div className="mt-1 h-0.5 rounded-full bg-surfaceHover overflow-hidden">
-                  <div className="h-full rounded-full bg-gradient-to-r from-teal-400 to-cyan-300 transition-all duration-500" style={{ width: `${pursePct}%` }} />
+                  <div className="h-full rounded-full bg-gradient-to-r from-white/85 to-white/40 transition-all duration-500" style={{ width: `${pursePct}%` }} />
                 </div>
               </div>
             </div>
 
             {/* 2 · Roster Slots */}
-            <div className="flex-none glass-card rounded-lg border border-white/5 bg-gradient-to-r from-[#111815] to-teal-500/10 hover:border-teal-300/30 transition-colors p-2 flex items-center gap-2 min-w-0">
-              <div className="w-7 h-7 shrink-0 rounded-md bg-teal-400/10 border border-teal-300/25 flex items-center justify-center text-teal-300">
+            <div className="flex-none glass-card rounded-lg border border-white/5 bg-gradient-to-r from-[#111815] to-[#0B2B26]/25 hover:border-[#0B2B26]/85 transition-colors p-2 flex items-center gap-2 min-w-0">
+              <div className="w-7 h-7 shrink-0 rounded-md bg-[#0B2B26]/25 border border-[#0B2B26]/60 flex items-center justify-center text-white">
                 <Users className="w-3.5 h-3.5" />
               </div>
               <div className="min-w-0 flex-1 leading-tight">
                 <p className="text-[8px] font-bold uppercase tracking-widest text-secondaryText truncate">Roster Slots</p>
                 <h3 className="mt-0.5 text-xs sm:text-sm font-black font-mono tabular-nums text-primaryText truncate">{currentRosterCount}<span className="text-mutedText text-[9px] sm:text-[10px] font-bold"> / {eligibility?.minimumPerTeam || minRoster} required</span></h3>
                 <div className="mt-1 h-0.5 rounded-full bg-surfaceHover overflow-hidden">
-                  <div className="h-full rounded-full bg-gradient-to-r from-teal-400 to-cyan-300 transition-all duration-500" style={{ width: `${rosterPct}%` }} />
+                  <div className="h-full rounded-full bg-gradient-to-r from-white/85 to-white/40 transition-all duration-500" style={{ width: `${rosterPct}%` }} />
                 </div>
               </div>
             </div>
@@ -450,13 +450,13 @@ export const ManagerDashboard = () => {
             </div>
 
             {/* 4 · Your Status */}
-            <div className={`flex-none glass-card rounded-lg border transition-colors p-2 flex items-center gap-2 min-w-0 ${isCurrentlyHighestBidder ? 'border-teal-300/40 bg-gradient-to-r from-teal-500/20 to-cardBg' : 'border-white/5 bg-gradient-to-r from-[#101512] to-transparent'}`}>
-              <div className={`w-7 h-7 shrink-0 rounded-md flex items-center justify-center border ${isCurrentlyHighestBidder ? 'bg-teal-400/15 border-teal-300/30 text-teal-300' : 'bg-surfaceHover/60 border-borderStrong text-secondaryText'}`}>
+            <div className={`flex-none glass-card rounded-lg border transition-colors p-2 flex items-center gap-2 min-w-0 ${isCurrentlyHighestBidder ? 'border-[#0B2B26] bg-gradient-to-r from-[#0B2B26]/35 to-cardBg' : 'border-white/5 bg-gradient-to-r from-[#101512] to-transparent'}`}>
+              <div className={`w-7 h-7 shrink-0 rounded-md flex items-center justify-center border ${isCurrentlyHighestBidder ? 'bg-[#0B2B26]/35 border-[#0B2B26]/85 text-white' : 'bg-surfaceHover/60 border-borderStrong text-secondaryText'}`}>
                 <TrendingUp className="w-3.5 h-3.5" />
               </div>
               <div className="min-w-0 flex-1 leading-tight">
                 <p className="text-[8px] font-bold uppercase tracking-widest text-secondaryText truncate">Your Status</p>
-                <h3 className={`mt-0.5 text-xs sm:text-sm font-black truncate ${isCurrentlyHighestBidder ? 'text-teal-300' : hasOptedOut ? 'text-warningGold' : 'text-primaryText'}`}>
+                <h3 className={`mt-0.5 text-xs sm:text-sm font-black truncate ${isCurrentlyHighestBidder ? 'text-white' : hasOptedOut ? 'text-warningGold' : 'text-primaryText'}`}>
                   {isCurrentlyHighestBidder ? 'Leading' : hasOptedOut ? 'Sitting Out' : podiumPlayer ? 'In The Race' : 'Standby'}
                 </h3>
               </div>
@@ -501,7 +501,7 @@ export const ManagerDashboard = () => {
                     <p className="text-[10px] sm:text-xs text-mutedText text-center py-3">No bids placed on current player yet.</p>
                   ) : (
                     [...safeBidHistory].reverse().map((bid, idx) => (
-                      <div key={bid.id || idx} className="flex justify-between items-center text-[11px] sm:text-xs px-2 sm:px-3 py-1.5 sm:py-2 rounded-md sm:rounded-lg bg-cardBg/60 border border-white/5 hover:border-teal-300/25 transition-colors gap-2">
+                      <div key={bid.id || idx} className="flex justify-between items-center text-[11px] sm:text-xs px-2 sm:px-3 py-1.5 sm:py-2 rounded-md sm:rounded-lg bg-cardBg/60 border border-white/5 hover:border-[#0B2B26]/60 transition-colors gap-2">
                         <span className="font-bold text-white truncate">{bid.bidder}</span>
                         <span className="font-mono font-bold tabular-nums text-warningGold shrink-0">{formatCurrency(bid.amount)}</span>
                       </div>

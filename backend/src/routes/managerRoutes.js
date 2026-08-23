@@ -7,6 +7,7 @@ import {
   updateOwnTeam,
   getOwnBudget,
   getOwnRoster,
+  getOwnLineup, saveOwnLineup,
   placeBid,
   placeBlindBid,
   changeOwnPassword,
@@ -44,6 +45,8 @@ router.get('/budget', authorize('TEAM_MANAGER', 'SUPER_ADMIN'), getOwnBudget);
 
 // GET /api/manager/roster — view acquired players (GAP 8 FIX)
 router.get('/roster', authorize('TEAM_MANAGER', 'SUPER_ADMIN'), getOwnRoster);
+router.get('/lineup', authorize('TEAM_MANAGER', 'SUPER_ADMIN'), getOwnLineup);
+router.put('/lineup', authorize('TEAM_MANAGER', 'SUPER_ADMIN'), saveOwnLineup);
 
 // GET /api/manager/history — view auction history (read-only)
 router.get('/history', authorize('TEAM_MANAGER', 'SUPER_ADMIN'), getAuctionHistory);

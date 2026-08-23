@@ -27,14 +27,14 @@ const formatDate = (dateString) => {
 const TEAM_THEMES = [
     { name: 'crimson',  bgGradient: 'from-[#FF5C5C] to-[#FF5C5C]',   borderColor: 'border-[#FF5C5C]/50',    badgeBg: 'bg-[#FF5C5C]/15 text-[#FF5C5C] border-[#FF5C5C]/30',       stat: 'text-[#FF5C5C]' },
     { name: 'amber',    bgGradient: 'from-warningGold to-warningGold', borderColor: 'border-warningGold/50', badgeBg: 'bg-warningGold/15 text-warningGold border-warningGold/30', stat: 'text-warningGold' },
-    { name: 'emerald',  bgGradient: 'from-neonGreen to-neonGreen',     borderColor: 'border-neonGreen/50',   badgeBg: 'bg-neonGreen/15 text-neonGreenHover border-neonGreen/30',  stat: 'text-neonGreenHover' },
-    { name: 'sky',      bgGradient: 'from-[#22D3EE] to-[#22D3EE]',     borderColor: 'border-[#22D3EE]/50',   badgeBg: 'bg-[#22D3EE]/15 text-[#22D3EE] border-[#22D3EE]/30',       stat: 'text-[#22D3EE]' },
+    { name: 'emerald',  bgGradient: 'from-neonGreen to-neonGreen',     borderColor: 'border-neonGreen/50',   badgeBg: 'bg-neonGreen/15 text-white border-neonGreen/30',  stat: 'text-white' },
+    { name: 'sky',      bgGradient: 'from-[#0B2B26] to-[#0B2B26]',     borderColor: 'border-[#0B2B26]/60',   badgeBg: 'bg-[#0B2B26]/25 text-white border-[#0B2B26]/60',           stat: 'text-white' },
     { name: 'violet',   bgGradient: 'from-[#A78BFA] to-[#A78BFA]',     borderColor: 'border-[#A78BFA]/50',   badgeBg: 'bg-[#A78BFA]/15 text-[#A78BFA] border-[#A78BFA]/30',       stat: 'text-[#A78BFA]' },
     { name: 'fuchsia',  bgGradient: 'from-[#E879F9] to-[#E879F9]',     borderColor: 'border-[#E879F9]/50',   badgeBg: 'bg-[#E879F9]/15 text-[#E879F9] border-[#E879F9]/30',       stat: 'text-[#E879F9]' },
-    { name: 'teal',     bgGradient: 'from-[#2DD4BF] to-[#2DD4BF]',     borderColor: 'border-[#2DD4BF]/50',   badgeBg: 'bg-[#2DD4BF]/15 text-[#2DD4BF] border-[#2DD4BF]/30',       stat: 'text-[#2DD4BF]' },
+    { name: 'teal',     bgGradient: 'from-[#0B2B26] to-[#0B2B26]',     borderColor: 'border-[#0B2B26]/60',   badgeBg: 'bg-[#0B2B26]/25 text-white border-[#0B2B26]/60',           stat: 'text-white' },
     { name: 'orange',   bgGradient: 'from-[#FB923C] to-[#FB923C]',     borderColor: 'border-[#FB923C]/50',   badgeBg: 'bg-[#FB923C]/15 text-[#FB923C] border-[#FB923C]/30',       stat: 'text-[#FB923C]' },
     { name: 'indigo',   bgGradient: 'from-[#818CF8] to-[#818CF8]',     borderColor: 'border-[#818CF8]/50',   badgeBg: 'bg-[#818CF8]/15 text-[#818CF8] border-[#818CF8]/30',       stat: 'text-[#818CF8]' },
-    { name: 'lime',     bgGradient: 'from-neonGreenHover to-neonGreenHover', borderColor: 'border-neonGreenHover/50', badgeBg: 'bg-neonGreenHover/15 text-neonGreenHover border-neonGreenHover/30', stat: 'text-neonGreenHover' },
+    { name: 'lime',     bgGradient: 'from-neonGreenHover to-neonGreenHover', borderColor: 'border-neonGreenHover/50', badgeBg: 'bg-neonGreenHover/15 text-white border-neonGreenHover/30', stat: 'text-white' },
 ];
 
 function hashString(str) {
@@ -264,7 +264,7 @@ export default function AdminFixtures() {
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div>
-                    <span className="text-xs font-bold uppercase tracking-widest text-neonGreen">Tournament Management</span>
+                    <span className="text-xs font-bold uppercase tracking-widest text-white">Tournament Management</span>
                     <h1 className="text-2xl font-black font-heading text-white">Fixtures & Scheduling</h1>
                     <p className="text-xs text-secondaryText mt-0.5">Decide which team plays which, and when.</p>
                 </div>
@@ -309,7 +309,7 @@ export default function AdminFixtures() {
                             key={key}
                             onClick={() => setMode(key)}
                             className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition ${mode === key
-                                    ? 'bg-[#58D20A] border-[#58D20A] text-[#050505] shadow-md font-black'
+                                    ? 'bg-[#0B2B26] border-[#0B2B26] text-white shadow-md font-black'
                                     : 'btn-secondary'
                                 }`}
                         >
@@ -330,7 +330,7 @@ export default function AdminFixtures() {
                                             : 'bg-[#151515] border-[#333333] hover:border-neonGreen/40'
                                         }`}
                                 >
-                                    <p className={`text-sm font-bold flex items-center gap-1.5 ${genType === key ? 'text-neonGreenHover' : 'text-primaryText'}`}>
+                                    <p className={`text-sm font-bold flex items-center gap-1.5 ${genType === key ? 'text-white' : 'text-primaryText'}`}>
                                         <Shuffle className="w-3.5 h-3.5" /> {label}
                                     </p>
                                     <p className="text-[11px] text-mutedText mt-1">{description}</p>
@@ -430,7 +430,7 @@ export default function AdminFixtures() {
                     {Object.entries(groupedByDate).map(([date, dateFixtures]) => (
                         <div key={date} className="space-y-4 bg-cardBg/40 border border-cardBorder/80 p-5 rounded-3xl backdrop-blur-md">
                             <div className="flex items-center gap-2.5 pb-2 border-b border-cardBorder">
-                                <div className="p-1.5 rounded-lg bg-neonGreen/10 border border-neonGreen/20 text-neonGreen">
+                                <div className="p-1.5 rounded-lg bg-neonGreen/10 border border-neonGreen/20 text-white">
                                     <Calendar className="w-4 h-4" />
                                 </div>
                                 <h2 className="text-sm font-bold text-white tracking-wide">{date}</h2>
@@ -470,11 +470,11 @@ export default function AdminFixtures() {
                                                     <span className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${
                                                         f.status === 'Live' ? 'bg-urgentRed/20 text-urgentRedText border-urgentRed/40 animate-pulse' :
                                                         f.status === 'Finished' ? 'bg-surfaceHover text-secondaryText border-borderStrong' :
-                                                        'bg-neonGreen/15 text-neonGreenHover border-neonGreen/30'
+                                                        'bg-neonGreen/15 text-white border-neonGreen/30'
                                                     }`}>
                                                         {f.status || 'Upcoming'}
                                                     </span>
-                                                    <button onClick={() => openEdit(f)} className="p-1 text-secondaryText hover:text-neonGreen hover:bg-neonGreen/10 rounded-lg transition" title="Edit Match">
+                                                    <button onClick={() => openEdit(f)} className="p-1 text-secondaryText hover:text-white hover:bg-neonGreen/10 rounded-lg transition" title="Edit Match">
                                                         <Edit3 className="w-3 h-3" />
                                                     </button>
                                                     <button
@@ -519,7 +519,7 @@ export default function AdminFixtures() {
                                             {/* Bottom Info: Time & Venue */}
                                             <div className="flex items-center justify-between pt-2 border-t border-white/[0.06] text-[11px] text-secondaryText">
                                                 <div className="flex items-center gap-1">
-                                                    <Clock className="w-3 h-3 text-neonGreen shrink-0" />
+                                                    <Clock className="w-3 h-3 text-white shrink-0" />
                                                     <span className="font-semibold truncate">{f.matchTime || 'TBD'}</span>
                                                 </div>
                                                 <div className="flex items-center gap-1">

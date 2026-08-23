@@ -16,7 +16,6 @@ const PublicPlayersView = lazy(() => import('./pages/spectator/PublicPlayersView
 const SoldPlayersView = lazy(() => import('./pages/spectator/SoldPlayersView'));
 const PublicTeamsView = lazy(() => import('./pages/spectator/PublicTeamsView'));
 
-
 // ── Auth (Universal) ──────────────────────────────────────────────────────────
 const ManagerLogin = lazy(() => import('./pages/manager/ManagerLogin'));
 const PlayerRegister = lazy(() => import('./pages/player/PlayerRegister'));
@@ -26,9 +25,7 @@ const ForgotPassword = lazy(() => import('./pages/auth/ForgotPassword'));
 const GeneralUserRegister = lazy(() => import('./pages/general/GeneralUserRegister'));
 const GeneralDashboard = lazy(() => import('./pages/general/GeneralDashboard'));
 const GeneralTournaments = lazy(() => import('./pages/general/GeneralTournaments'));
-const GeneralTeams = lazy(() => import('./pages/general/GeneralTeams'));
 const GeneralTeamProfile = lazy(() => import('./pages/general/GeneralTeamProfile'));
-const GeneralPlayers = lazy(() => import('./pages/general/GeneralPlayers'));
 const GeneralPlayerProfile = lazy(() => import('./pages/general/GeneralPlayerProfile'));
 const GeneralResults = lazy(() => import('./pages/general/GeneralResults'));
 const GeneralProfile = lazy(() => import('./pages/general/GeneralProfile'));
@@ -39,7 +36,6 @@ const GeneralSettings = lazy(() => import('./pages/general/GeneralSettings'));
 const PlayerDashboard = lazy(() => import('./pages/player/PlayerDashboard'));
 const PlayerSettings = lazy(() => import('./pages/player/PlayerSettings'));
 const PlayerMyTeam = lazy(() => import('./pages/player/PlayerMyTeam'));
-// Full-bleed reveal — rendered INSIDE DashboardLayout so the sidebar stays.
 const FieldPositionReveal = lazy(() => import('./pages/player/FieldPositionReveal'));
 
 // ── Manager War Room ──────────────────────────────────────────────────────────
@@ -48,9 +44,7 @@ const ManagerDashboard = lazy(() =>
   import('./pages/manager/ManagerDashboard').then((m) => ({ default: m.ManagerDashboard }))
 );
 const ManagerMyTeamView = lazy(() => import('./pages/manager/ManagerMyTeamView'));
-const ManagerMyTeam = lazy(() => import('./pages/manager/ManagerMyTeam'));
 const TargetPlayersView = lazy(() => import('./pages/manager/TargetPlayersView'));
-
 
 // ── Podium Admin Control Room ─────────────────────────────────────────────────
 // NOTE: PodiumDashboard is a NAMED export → unwrap to default for lazy().
@@ -77,9 +71,8 @@ const AccessDenied = lazy(() => import('./pages/AccessDenied'));
 // Branded fallback shown while a route chunk is fetched.
 function RouteFallback() {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-darkBg text-secondaryText">
-      <div className="w-10 h-10 rounded-full border-2 border-cardBorder border-t-neonGreen animate-spin" />
-      <span className="text-xs font-mono uppercase tracking-widest text-mutedText">Loading</span>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <span>Loading…</span>
     </div>
   );
 }
@@ -90,22 +83,20 @@ function App() {
       <Toast />
       <Suspense fallback={<RouteFallback />}>
         <Routes>
-          {/* ── Public Spectator Routes (Top Navbar Only, No Sidebar) ─────────── */}
+
+          {/* ── Public Spectator Routes (No Sidebar) ──────────────────────────── */}
           <Route path="/" element={<LandingPage />} />
           <Route path="/live" element={<PublicLiveView />} />
           <Route path="/matches" element={<MatchesHub />} />
-          {/* Full chronological match schedule (browse view) */}
           <Route path="/matches/schedule" element={<TeamsScudle />} />
-          {/* Live league table (browse view) */}
           <Route path="/matches/table" element={<LeagueTable />} />
-          {/* Tournament statistics (browse view) */}
           <Route path="/matches/stats" element={<LeagueStats />} />
           <Route path="/teams" element={<PublicTeamsView />} />
           <Route path="/about" element={<PublicAboutView />} />
           <Route path="/players" element={<PublicPlayersView />} />
           <Route path="/players/sold" element={<SoldPlayersView />} />
 
-          {/* ── Universal Auth Routes ─────────────────────────────────────────── */}
+          {/* ── Universal Auth Routes ──────────────────────────────────────────── */}
           <Route path="/login" element={<ManagerLogin />} />
           <Route path="/manager/login" element={<ManagerLogin />} />
           <Route path="/player/login" element={<ManagerLogin />} />
@@ -113,11 +104,11 @@ function App() {
           <Route path="/register" element={<PlayerRegister />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
 
-          {/* ── GENERAL USER (Fan Zone) — public auth routes ──────────────────── */}
+          {/* ── General User public auth ───────────────────────────────────────── */}
           <Route path="/general/login" element={<Navigate to="/login" replace />} />
           <Route path="/general/register" element={<GeneralUserRegister />} />
 
-          {/* ── Authenticated Enterprise Dashboard Layout (Sidebar + Top Navbar) */}
+          {/* ── Authenticated Dashboard Layout (Sidebar + Top Navbar) ─────────── */}
           <Route
             element={
               <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PODIUM_ADMIN', 'TEAM_MANAGER', 'PLAYER', 'GENERAL_USER']}>
@@ -126,7 +117,7 @@ function App() {
             }
           >
 
-            {/* ── SUPER ADMIN ROUTES ────────────────────────────────────────── */}
+            {/* ── SUPER ADMIN ───────────────────────────────────────────────── */}
             <Route path="/admin">
               <Route index element={<Navigate to="/admin/dashboard" replace />} />
               <Route
@@ -148,7 +139,6 @@ function App() {
                 <Route index element={<Navigate to="/admin/configurations/sessions" replace />} />
                 <Route path=":subtab" element={<AdminConfigurations />} />
               </Route>
-
               <Route
                 path="teams"
                 element={
@@ -199,7 +189,7 @@ function App() {
               />
             </Route>
 
-            {/* ── PODIUM ADMIN PANEL ────────────────────────────────────────── */}
+            {/* ── PODIUM ADMIN ──────────────────────────────────────────────── */}
             <Route path="/podium">
               <Route index element={<Navigate to="/podium/dashboard" replace />} />
               <Route
@@ -238,7 +228,7 @@ function App() {
                 path="live"
                 element={
                   <ProtectedRoute allowedRoles={['PODIUM_ADMIN', 'SUPER_ADMIN']}>
-                    <PublicLiveView />
+                    <PublicLiveView embedded />
                   </ProtectedRoute>
                 }
               />
@@ -292,7 +282,7 @@ function App() {
               />
             </Route>
 
-            {/* ── TEAM MANAGER ROUTES ───────────────────────────────────────── */}
+            {/* ── TEAM MANAGER ──────────────────────────────────────────────── */}
             <Route path="/manager">
               <Route index element={<Navigate to="/manager/dashboard" replace />} />
               <Route
@@ -311,12 +301,11 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-
               <Route
                 path="podium"
                 element={
                   <ProtectedRoute allowedRoles={['TEAM_MANAGER']}>
-                    <PublicLiveView />
+                    <PublicLiveView embedded />
                   </ProtectedRoute>
                 }
               />
@@ -324,7 +313,7 @@ function App() {
                 path="bid-center"
                 element={
                   <ProtectedRoute allowedRoles={['TEAM_MANAGER']}>
-                    <PublicLiveView />
+                    <PublicLiveView embedded />
                   </ProtectedRoute>
                 }
               />
@@ -333,38 +322,6 @@ function App() {
                 element={
                   <ProtectedRoute allowedRoles={['TEAM_MANAGER']}>
                     <ManagerMyTeamView />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="budget"
-                element={
-                  <ProtectedRoute allowedRoles={['TEAM_MANAGER']}>
-                    <ManagerDashboard />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="history"
-                element={
-                  <ProtectedRoute allowedRoles={['TEAM_MANAGER']}>
-                    <ManagerDashboard />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="settings"
-                element={
-                  <ProtectedRoute allowedRoles={['TEAM_MANAGER']}>
-                    <ManagerMyTeam />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="players"
-                element={
-                  <ProtectedRoute allowedRoles={['TEAM_MANAGER']}>
-                    <PublicPlayersView />
                   </ProtectedRoute>
                 }
               />
@@ -408,9 +365,17 @@ function App() {
                   </ProtectedRoute>
                 }
               />
+              <Route
+                path="settings"
+                element={
+                  <ProtectedRoute allowedRoles={['TEAM_MANAGER']}>
+                    <PlayerSettings />
+                  </ProtectedRoute>
+                }
+              />
             </Route>
 
-            {/* ── PLAYER ROUTES ────────────────────────────────────────────── */}
+            {/* ── PLAYER ────────────────────────────────────────────────────── */}
             <Route path="/player">
               <Route index element={<Navigate to="/player/dashboard" replace />} />
               <Route
@@ -421,18 +386,14 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-              {/* Live auction — in-layout so the sidebar stays. PublicLiveView
-                hides its own Navbar when a user is logged in. */}
               <Route
                 path="live"
                 element={
                   <ProtectedRoute allowedRoles={['PLAYER']}>
-                    <PublicLiveView />
+                    <PublicLiveView embedded />
                   </ProtectedRoute>
                 }
               />
-              {/* Field position reveal — immersive but kept INSIDE the layout so
-                the sidebar/navbar remain (fills the main content area). */}
               <Route
                 path="field-position"
                 element={
@@ -446,14 +407,6 @@ function App() {
                 element={
                   <ProtectedRoute allowedRoles={['PLAYER']}>
                     <PlayerDashboard />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="results"
-                element={
-                  <ProtectedRoute allowedRoles={['PLAYER']}>
-                    <Navigate to="/player/dashboard" replace />
                   </ProtectedRoute>
                 }
               />
@@ -521,9 +474,17 @@ function App() {
                   </ProtectedRoute>
                 }
               />
+              <Route
+                path="results"
+                element={
+                  <ProtectedRoute allowedRoles={['PLAYER']}>
+                    <Navigate to="/player/dashboard" replace />
+                  </ProtectedRoute>
+                }
+              />
             </Route>
 
-            {/* ── GENERAL USER (Spectator / Fan) ROUTES — read-only portal ──── */}
+            {/* ── GENERAL USER (Fan Zone) ───────────────────────────────────── */}
             <Route path="/general">
               <Route index element={<Navigate to="/general/dashboard" replace />} />
               <Route
@@ -534,14 +495,9 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-              {/* Live auction broadcast — strictly read-only for spectators */}
               <Route
                 path="live"
-                element={
-                  <ProtectedRoute allowedRoles={['GENERAL_USER']}>
-                    <PublicLiveView />
-                  </ProtectedRoute>
-                }
+                element={<PublicLiveView embedded />}
               />
               <Route
                 path="tournaments"
@@ -665,13 +621,14 @@ function App() {
               />
             </Route>
 
-          </Route>
+          </Route>{/* end DashboardLayout */}
 
-          {/* ── Error Pages ────────────────────────────────────────────────── */}
+          {/* ── Error Pages ──────────────────────────────────────────────────── */}
           <Route path="/access-denied" element={<AccessDenied />} />
 
-          {/* ── Catch-all ──────────────────────────────────────────────────── */}
+          {/* ── Catch-all ────────────────────────────────────────────────────── */}
           <Route path="*" element={<Navigate to="/" replace />} />
+
         </Routes>
       </Suspense>
     </Router>

@@ -33,7 +33,7 @@ export default function SoundToggle({ className = '', iconClassName = 'w-4 h-4' 
       className={`p-2 rounded-xl border transition flex items-center justify-center shrink-0 ${
         muted
           ? 'bg-surfaceHover/60 border-borderStrong text-secondaryText hover:text-white hover:border-warningGold/40'
-          : 'bg-neonGreen/10 border-neonGreen/30 text-neonGreenHover hover:bg-neonGreen/20'
+          : 'bg-[#0B2B26]/25 border-[#0B2B26]/60 text-white hover:bg-[#0B2B26]/45'
       } ${className}`}
     >
       {muted ? <VolumeX className={iconClassName} /> : <Volume2 className={iconClassName} />}

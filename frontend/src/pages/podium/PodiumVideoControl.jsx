@@ -150,7 +150,7 @@ export default function PodiumVideoControl() {
       {/* Header */}
       <div className="glass-card rounded-2xl p-6 border border-cardBorder">
         <h1 className="text-2xl font-black font-heading text-white flex items-center gap-3">
-          <Video className="w-6 h-6 text-neonGreen" />
+          <Video className="w-6 h-6 text-white" />
           Podium Video &amp; Player Intro Controls
         </h1>
       </div>
@@ -159,12 +159,12 @@ export default function PodiumVideoControl() {
       <div className="glass-card rounded-2xl p-6 border border-cardBorder space-y-4">
         <div className="flex items-center justify-between border-b border-cardBorder pb-3">
           <h3 className="text-sm font-black font-heading text-white uppercase tracking-wider flex items-center gap-2">
-            <Video className="w-4 h-4 text-neonGreen" />
+            <Video className="w-4 h-4 text-white" />
             Live Video Broadcast Control
           </h3>
           {activeVideoUrl ? (
-            <span className="px-3 py-1 bg-neonGreen/10 border border-neonGreen/30 text-neonGreen text-xs font-mono font-bold rounded-full animate-pulse flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-neonGreen" /> BROADCASTING LIVE
+            <span className="px-3 py-1 bg-[#0B2B26]/25 border border-[#0B2B26]/60 text-white text-xs font-mono font-bold rounded-full animate-pulse flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-white" /> BROADCASTING LIVE
             </span>
           ) : (
             <span className="px-3 py-1 bg-cardBg text-mutedText border border-cardBorder text-xs font-bold rounded-full">
@@ -260,7 +260,7 @@ export default function PodiumVideoControl() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-darkBg/60 p-4 rounded-xl border border-cardBorder">
           <div>
             <label className="block text-xs font-semibold text-secondaryText mb-1 flex items-center gap-1.5">
-              <Clock className="w-3.5 h-3.5 text-neonGreen" /> Card Display Duration (seconds)
+              <Clock className="w-3.5 h-3.5 text-white" /> Card Display Duration (seconds)
             </label>
             <input
               type="number"
@@ -369,7 +369,7 @@ export default function PodiumVideoControl() {
 
             <div className="text-right">
               <span className="text-[10px] text-mutedText font-bold uppercase">Base Price</span>
-              <p className="font-mono font-black text-neonGreen text-sm">
+              <p className="font-mono font-black text-white text-sm">
                 ৳{(currentIntroPlayer.basePrice || 2000000).toLocaleString('en-IN')}
               </p>
             </div>

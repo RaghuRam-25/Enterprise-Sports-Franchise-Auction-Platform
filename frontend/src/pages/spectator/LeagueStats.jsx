@@ -41,8 +41,8 @@ function computeStandings(teams, matches) {
 }
 
 const STATUS_STYLES = {
-  REGISTERED: 'text-neonGreen bg-neonGreen/10 border-neonGreen/30',
-  SOLD: 'text-neonGreen bg-neonGreen/10 border-neonGreen/30',
+  REGISTERED: 'text-white bg-neonGreen/10 border-neonGreen/30',
+  SOLD: 'text-white bg-neonGreen/10 border-neonGreen/30',
   UNSOLD: 'text-warningGold bg-warningGold/10 border-warningGold/30',
   WITHDRAWN: 'text-urgentRedText bg-urgentRed/10 border-urgentRed/30',
 };
@@ -128,9 +128,9 @@ export default function LeagueStats() {
 
   // ── Cards config ─────────────────────────────────────────────────────────
   const statCards = [
-    { label: 'Franchises', value: teams.length, icon: ShieldCheck, tone: 'text-neonGreen bg-neonGreen/10 border-neonGreen/30' },
-    { label: 'Players', value: playerStats.total, icon: Users, tone: 'text-neonGreen bg-neonGreen/10 border-neonGreen/30' },
-    { label: 'Players Sold', value: playerStats.statusCounts.SOLD || 0, icon: Trophy, tone: 'text-neonGreen bg-neonGreen/10 border-neonGreen/30' },
+    { label: 'Franchises', value: teams.length, icon: ShieldCheck, tone: 'text-white bg-neonGreen/10 border-neonGreen/30' },
+    { label: 'Players', value: playerStats.total, icon: Users, tone: 'text-white bg-neonGreen/10 border-neonGreen/30' },
+    { label: 'Players Sold', value: playerStats.statusCounts.SOLD || 0, icon: Trophy, tone: 'text-white bg-neonGreen/10 border-neonGreen/30' },
     { label: 'Matches Played', value: finishedMatches.length, icon: Target, tone: 'text-warningGold bg-warningGold/10 border-warningGold/30' },
   ];
 
@@ -168,7 +168,7 @@ export default function LeagueStats() {
   const activeTab = STAT_TABS.find(t => t.id === statTab) || STAT_TABS[0];
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#0b0f19] text-primaryText font-sans selection:bg-neonGreen selection:text-darkBg">
+    <div className="min-h-screen flex flex-col bg-black text-primaryText font-sans selection:bg-neonGreen selection:text-white">
       {!user && <Navbar />}
 
       <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 space-y-4">
@@ -213,7 +213,7 @@ export default function LeagueStats() {
             <section className="glass-card rounded-3xl overflow-hidden">
               <div className="px-4 sm:px-6 py-3.5 border-b border-cardBorder/80 flex flex-wrap items-center justify-between gap-2">
                 <div className="flex items-center gap-2.5">
-                  <div className="p-2 rounded-xl bg-neonGreen/10 border border-neonGreen/20 text-neonGreen shrink-0">
+                  <div className="p-2 rounded-xl bg-neonGreen/10 border border-neonGreen/20 text-white shrink-0">
                     <activeTab.icon className="w-4 h-4" />
                   </div>
                   <div className="min-w-0">
@@ -230,8 +230,8 @@ export default function LeagueStats() {
                           type="button"
                           onClick={() => setStatTab(tab.id)}
                           className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition ${isActive
-                            ? 'bg-[#58D20A] text-[#050505] font-black shadow-md'
-                            : 'bg-[#151515] text-[#F5F5F5] border border-[#333333] hover:border-[#58D20A] hover:text-[#58D20A]'
+                            ? 'bg-[#0B2B26] text-white font-black shadow-md'
+                            : 'bg-[#151515] text-[#F5F5F5] border border-[#333333] hover:border-[#0B2B26] hover:text-white'
                           }`}
                         >
                           {tab.label}
@@ -265,7 +265,7 @@ export default function LeagueStats() {
                             {row.team && ` (${row.team.shortCode || ''})`}
                           </p>
                         </div>
-                        <span className={`font-mono font-black text-lg ${statTab === 'redCards' ? 'text-urgentRedText' : statTab === 'yellowCards' ? 'text-warningGold' : 'text-neonGreen'}`}>
+                        <span className={`font-mono font-black text-lg ${statTab === 'redCards' ? 'text-urgentRedText' : statTab === 'yellowCards' ? 'text-warningGold' : 'text-white'}`}>
                           {row.value}
                         </span>
                       </li>
@@ -326,8 +326,8 @@ export default function LeagueStats() {
                 <h2 className="font-heading font-black text-sm tracking-wide text-white">Fixtures</h2>
                 <div className="flex items-stretch gap-3">
                   {[
-                    { label: 'Played', value: finishedMatches.length, cls: 'text-neonGreen' },
-                    { label: 'Upcoming', value: upcomingMatches.length, cls: 'text-neonGreen' },
+                    { label: 'Played', value: finishedMatches.length, cls: 'text-white' },
+                    { label: 'Upcoming', value: upcomingMatches.length, cls: 'text-white' },
                     { label: 'Goals', value: totalGoals, cls: 'text-warningGold' },
                   ].map(({ label, value, cls }) => (
                     <div key={label} className="flex-1 rounded-2xl border border-cardBorder bg-darkBg/50 p-3 text-center">
@@ -352,7 +352,7 @@ export default function LeagueStats() {
                           <p className="font-bold text-white text-sm truncate">{row.team.name}</p>
                           <p className="text-[10px] text-mutedText">P {row.mp} &bull; W{row.w} D{row.d} L{row.l}</p>
                         </div>
-                        <span className="font-mono font-black text-neonGreen">{row.pts}</span>
+                        <span className="font-mono font-black text-white">{row.pts}</span>
                       </div>
                     ))}
                   </div>

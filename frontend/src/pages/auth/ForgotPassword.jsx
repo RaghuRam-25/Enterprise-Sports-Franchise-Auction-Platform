@@ -91,10 +91,10 @@ export default function ForgotPassword() {
 
           {isResetDone ? (
             <div className="text-center space-y-4 py-4">
-              <div className="w-12 h-12 bg-neonGreen/20 text-neonGreen rounded-full flex items-center justify-center mx-auto">
+              <div className="w-12 h-12 bg-neonGreen/20 text-white rounded-full flex items-center justify-center mx-auto">
                 <CheckCircle2 className="w-6 h-6" />
               </div>
-              <p className="text-sm font-semibold text-neonGreen">Password Reset Complete!</p>
+              <p className="text-sm font-semibold text-white">Password Reset Complete!</p>
               <Link
                 to="/manager/login"
                 className="btn-primary block w-full py-3 text-center text-xs shadow-lg"
@@ -139,7 +139,7 @@ export default function ForgotPassword() {
           ) : (
             <form onSubmit={handleSendResetLink} className="space-y-4">
               {successMsg && (
-                <div className="p-3 bg-[#12200E] border border-[#58D20A]/40 text-[#58D20A] text-xs rounded-xl flex items-center gap-2 font-semibold">
+                <div className="p-3 bg-[#0B2B26] border border-[#0B2B26]/40 text-white text-xs rounded-xl flex items-center gap-2 font-semibold">
                   <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
                   <span>{successMsg}</span>
                 </div>

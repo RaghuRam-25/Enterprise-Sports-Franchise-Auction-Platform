@@ -9,23 +9,27 @@
  * Mirrored in tailwind.config.js. Never hardcode colors in components.
  * ═══════════════════════════════════════════════════════════════════════════ */
 :root {
+  /* Primary brand green — single source of truth */
+  --primary-green: #0B2B26;
+
   /* Base surfaces */
   --bg-page: #050505;
   --bg-secondary: #0B0B0B;
   --bg-card: #101010;
   --bg-hover: #151515;
   --bg-active: #1A1A1A;
-  --bg-green-surface: #12200E;
+  --bg-green-surface: var(--primary-green);
 
   /* Brand */
-  --accent: #58D20A;
-  --accent-hover: #72F21A;
-  --success: #35C759;
+  --accent: var(--primary-green);
+  --accent-hover: var(--primary-green);
+  --success: var(--primary-green);
+  --success-text: #F5F5F5;
 
   /* Text */
-  --text-primary: #F5F5F5;
-  --text-secondary: #A3A3A3;
-  --text-muted: #666666;
+  --text-primary: #FFFFFF;
+  --text-secondary: #D8E5DF;
+  --text-muted: #9FB3AA;
 
   /* Lines */
   --border-subtle: #222222;
@@ -48,16 +52,16 @@
   outline: none !important;
 }
 *:focus-visible {
-  outline: 2px solid #58D20A !important;
+  outline: 2px solid var(--primary-green) !important;
   outline-offset: 2px !important;
 }
 input:focus, select:focus, textarea:focus, button:focus, a:focus {
-  border-color: #58D20A !important;
-  box-shadow: 0 0 0 2px rgba(88, 210, 10, 0.25) !important;
+  border-color: rgba(11, 43, 38, 0.85) !important;
+  box-shadow: 0 0 0 2px rgba(11, 43, 38, 0.6) !important;
 }
 ::selection {
-  background-color: rgba(88, 210, 10, 0.3) !important;
-  color: #F5F5F5 !important;
+  background-color: rgba(11, 43, 38, 0.85) !important;
+  color: #FFFFFF !important;
 }
 
 h1, h2, h3, h4, h5, h6, .font-heading {
@@ -71,8 +75,8 @@ body {
   min-height: 100vh;
   overflow-x: clip;
   background-image:
-    radial-gradient(at 0% 0%, rgba(88, 210, 10, 0.04) 0px, transparent 45%),
-    radial-gradient(at 100% 0%, rgba(18, 32, 14, 0.35) 0px, transparent 50%),
+    radial-gradient(at 0% 0%, rgba(11, 43, 38, 0.35) 0px, transparent 45%),
+    radial-gradient(at 100% 0%, rgba(11, 43, 38, 0.60) 0px, transparent 50%),
     radial-gradient(at 50% 100%, rgba(5, 5, 5, 0.8) 0px, transparent 50%);
   background-attachment: fixed;
   transition: background-color 0.25s ease, color 0.25s ease;
@@ -92,7 +96,7 @@ body {
 }
 .glass-card-hover:hover {
   background: var(--bg-hover);
-  border-color: rgba(88, 210, 10, 0.4);
+  border-color: rgba(11, 43, 38, 0.85);
   transform: translateY(-2px);
   box-shadow: 0 12px 35px rgba(0, 0, 0, 0.6);
 }
@@ -108,8 +112,8 @@ body {
 .glass-input::placeholder { color: var(--text-muted); }
 .glass-input:focus {
   outline: none;
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(88, 210, 10, 0.2);
+  border-color: rgba(11, 43, 38, 0.85);
+  box-shadow: 0 0 0 3px rgba(11, 43, 38, 0.6);
 }
 select.glass-input option {
   background: var(--bg-card);
@@ -128,7 +132,7 @@ input[type='number'] {
 }
 
 /* ── Controlled glows (used sparingly) ───────────────────────────────────── */
-.neon-glow-green { box-shadow: 0 0 20px rgba(88, 210, 10, 0.25); }
+.neon-glow-green { box-shadow: 0 0 20px rgba(11, 43, 38, 0.85); }
 .neon-glow-red   { box-shadow: 0 0 20px rgba(176, 0, 18, 0.35); }
 
 /* ── Scrollbars ──────────────────────────────────────────────────────────── */
@@ -195,7 +199,7 @@ input[type='number'] {
 
 .ui-focus:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(88, 210, 10, 0.5);
+  box-shadow: 0 0 0 3px rgba(11, 43, 38, 0.85);
   border-radius: 0.5rem;
 }
 
@@ -229,7 +233,7 @@ input[type='number'] {
 /* ── Podium stage-light beams (purely decorative) ──────────────────────────── */
 .podium-beam {
   background: linear-gradient(to bottom,
-    var(--beam-color, rgba(94, 234, 212, 0.28)) 0%,
+    var(--beam-color, rgba(11, 43, 38, 0.85)) 0%,
     transparent 78%);
   filter: blur(18px);
   transform-origin: top center;
@@ -267,16 +271,18 @@ input[type='number'] {
   font-weight: 700; font-size: 0.75rem; letter-spacing: 0.05em;
   text-transform: uppercase; border-radius: 0.75rem; border: none;
   cursor: pointer; position: relative; overflow: hidden;
-  background: var(--accent);
-  color: #050505;
-  box-shadow: 0 4px 16px rgba(88, 210, 10, 0.3);
-  transition: transform 0.15s ease, background 0.2s ease, box-shadow 0.2s ease;
+  background: var(--primary-green);
+  color: #FFFFFF;
+  border: 1px solid rgba(11, 43, 38, 0.85);
+  box-shadow: 0 4px 16px rgba(11, 43, 38, 0.60);
+  transition: transform 0.15s ease, background 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
   will-change: transform;
 }
 .btn-primary:hover, .btn-accent:hover {
-  background: var(--accent-hover);
+  background: var(--primary-green);
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(114, 242, 26, 0.45);
+  filter: brightness(1.35);
+  box-shadow: 0 8px 24px rgba(11, 43, 38, 0.85);
 }
 .btn-primary:active, .btn-accent:active { transform: scale(0.97); }
 .btn-primary:disabled, .btn-accent:disabled { opacity: 0.5; pointer-events: none; }
@@ -312,7 +318,7 @@ input[type='number'] {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
   transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
 }
-.btn-secondary:hover { background: #1A1A1A; border-color: var(--accent); color: var(--accent); transform: translateY(-1px); }
+.btn-secondary:hover { background: #1A1A1A; border-color: rgba(11, 43, 38, 0.85); color: var(--text-primary); transform: translateY(-1px); }
 .btn-secondary:active { transform: scale(0.97); }
 .btn-secondary:disabled { opacity: 0.5; pointer-events: none; }
 
@@ -328,15 +334,15 @@ input[type='number'] {
 .badge-upcoming {
   display: inline-flex; align-items: center; gap: 0.3rem;
   padding: 0.2rem 0.65rem; border-radius: 9999px;
-  background: var(--bg-green-surface); color: var(--accent);
-  border: 1px solid rgba(88, 210, 10, 0.4);
+  background: var(--bg-green-surface); color: var(--text-primary);
+  border: 1px solid rgba(11, 43, 38, 0.85);
   font-size: 0.65rem; font-weight: 700; text-transform: uppercase;
 }
 .badge-finished {
   display: inline-flex; align-items: center; gap: 0.3rem;
   padding: 0.2rem 0.65rem; border-radius: 9999px;
-  background: rgba(53, 199, 89, 0.15); color: var(--success);
-  border: 1px solid rgba(53, 199, 89, 0.4);
+  background: rgba(11, 43, 38, 0.25); color: var(--success-text);
+  border: 1px solid rgba(11, 43, 38, 0.60);
   font-size: 0.65rem; font-weight: 700; text-transform: uppercase;
 }
 .badge-warning {

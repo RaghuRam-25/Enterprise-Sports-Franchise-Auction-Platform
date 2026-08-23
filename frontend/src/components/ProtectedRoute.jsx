@@ -10,10 +10,10 @@ const getLoginRedirect = () => '/login';
 /**
  * <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PODIUM_ADMIN']} />
  *
- * - Loading         → Displays spinner
- * - Unauthenticated → Redirects to role-appropriate login
- * - Wrong role      → Redirects to /access-denied
- * - Correct role    → Renders children
+ * - Loading         ? Displays spinner
+ * - Unauthenticated ? Redirects to role-appropriate login
+ * - Wrong role      ? Redirects to /access-denied
+ * - Correct role    ? Renders children
  */
 export default function ProtectedRoute({ children, allowedRoles = [], redirectTo }) {
   const { user, loading } = useAuth();
@@ -28,13 +28,13 @@ export default function ProtectedRoute({ children, allowedRoles = [], redirectTo
     );
   }
 
-  // Not authenticated → redirect to appropriate login
+  // Not authenticated ? redirect to appropriate login
   if (!user) {
     const loginPath = redirectTo || getLoginRedirect(location.pathname);
     return <Navigate to={loginPath} state={{ from: location }} replace />;
   }
 
-  // No role restriction → any authenticated user can pass
+  // No role restriction ? any authenticated user can pass
   if (allowedRoles.length === 0) {
     return children;
   }
@@ -42,7 +42,7 @@ export default function ProtectedRoute({ children, allowedRoles = [], redirectTo
   const normalizedUserRole = ROLE_MAP[user.role] || user.role;
   const normalizedAllowed = allowedRoles.map(r => ROLE_MAP[r] || r);
 
-  // Wrong role → go to access denied page
+  // Wrong role ? go to access denied page
   if (!normalizedAllowed.includes(normalizedUserRole)) {
     return <Navigate to="/access-denied" replace />;
   }

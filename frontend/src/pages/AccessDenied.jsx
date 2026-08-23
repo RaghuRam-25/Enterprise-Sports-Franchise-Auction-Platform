@@ -90,7 +90,7 @@ export default function AccessDenied() {
           {user ? (
             <Link
               to={homeRoute}
-              className="flex items-center justify-center gap-2 px-5 py-2.5 bg-successGreen hover:bg-neonGreen text-darkBg text-sm font-semibold rounded-xl transition shadow-lg shadow-neonGreen/20"
+              className="flex items-center justify-center gap-2 px-5 py-2.5 bg-successGreen hover:bg-neonGreen text-white text-sm font-semibold rounded-xl transition shadow-lg shadow-neonGreen/20"
             >
               <Home className="w-4 h-4" />
               My Dashboard
@@ -98,7 +98,7 @@ export default function AccessDenied() {
           ) : (
             <Link
               to="/manager/login"
-              className="flex items-center justify-center gap-2 px-5 py-2.5 bg-successGreen hover:bg-neonGreen text-darkBg text-sm font-semibold rounded-xl transition shadow-lg shadow-neonGreen/20"
+              className="flex items-center justify-center gap-2 px-5 py-2.5 bg-successGreen hover:bg-neonGreen text-white text-sm font-semibold rounded-xl transition shadow-lg shadow-neonGreen/20"
             >
               <LogIn className="w-4 h-4" />
               Login

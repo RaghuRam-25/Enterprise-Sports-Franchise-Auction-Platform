@@ -1,19 +1,19 @@
 import React, { useState } from 'react';
 import { Trophy, Zap, Star, CheckCircle, Ban, Clock, UserX, Edit3, Lock, Tag, DollarSign, Award } from 'lucide-react';
-import { getCategoryTheme } from '../../utils/themeConfig';
+import { getCategoryTheme, readableAccentText } from '../../utils/themeConfig';
 import { getImageUrl } from '../../utils/imageUrl';
 import { playerFallback } from '../../utils/playerFallback';
 import TeamBadge from '../common/TeamBadge';
 
 const STATUS_BADGES = {
-  SOLD: { label: 'Sold', color: 'bg-neonGreen/20 text-[#35C759] border-[#35C759]/40', icon: Trophy },
-  ON_PODIUM: { label: 'On Podium', color: 'bg-[#12200E] text-[#58D20A] border-[#58D20A]/40 animate-pulse', icon: Zap },
+  SOLD: { label: 'Sold', color: 'bg-neonGreen/20 text-white border-[#0B2B26]/40', icon: Trophy },
+  ON_PODIUM: { label: 'On Podium', color: 'bg-[#0B2B26] text-white border-[#0B2B26]/40 animate-pulse', icon: Zap },
   BANNED: { label: 'Banned', color: 'bg-[#B00012]/20 text-urgentRedText border-[#B00012]/40', icon: Ban },
   WITHDRAWN: { label: 'Withdrawn', color: 'bg-[#151515] text-[#A3A3A3] border-[#222222]', icon: UserX },
-  APPROVED: { label: 'Approved', color: 'bg-[#12200E] text-[#58D20A] border-[#58D20A]/40', icon: CheckCircle },
+  APPROVED: { label: 'Approved', color: 'bg-[#0B2B26] text-white border-[#0B2B26]/40', icon: CheckCircle },
   REGISTERED: { label: 'Registered', color: 'bg-[#151515] text-[#F4C542] border-[#F4C542]/40', icon: Clock },
   UNSOLD: { label: 'Unsold', color: 'bg-[#151515] text-[#A3A3A3] border-[#222222]', icon: Clock },
-  AVAILABLE: { label: 'Available', color: 'bg-[#12200E] text-[#58D20A] border-[#58D20A]/40', icon: Zap },
+  AVAILABLE: { label: 'Available', color: 'bg-[#0B2B26] text-white border-[#0B2B26]/40', icon: Zap },
 };
 
 /**
@@ -51,7 +51,7 @@ export default function PlayerCardCard({
 
   // Card background follows the resolved category accent — every category gets
   // its own subtle tint instead of a single fixed color.
-  const accentHex = theme.stripColor || '#58D20A';
+  const accentHex = theme.stripColor || '#0B2B26';
 
   return (
     <div
@@ -102,7 +102,7 @@ export default function PlayerCardCard({
               ) : (
                 <div
                   className="w-full h-full flex items-center justify-center font-black text-2xl"
-                  style={{ background: `${theme.stripColor}14`, color: theme.stripColor }}
+                  style={{ background: `${theme.stripColor}14`, color: readableAccentText(theme.stripColor) }}
                 >
                   {(player?.name || 'P')[0].toUpperCase()}
                 </div>
@@ -111,14 +111,14 @@ export default function PlayerCardCard({
 
             {/* Jersey Number / Short Name Badge (fixed position below photo) */}
             <div className="bg-[#050505] text-[#F5F5F5] font-mono font-black text-[10px] px-1.5 py-0.5 rounded-md border border-[#222222] shadow flex items-center gap-0.5 whitespace-nowrap">
-              <span className="text-[#58D20A] shrink-0">#</span>
+              <span className="text-white shrink-0">#</span>
               <span>{(String(player?.jerseyNumber ?? player?.jerseyName ?? '').match(/\d+/) || ['—'])[0]}</span>
             </div>
           </div>
 
           {/* Name & Academic Session */}
           <div className="flex-1 min-w-0">
-            <h3 className="font-black text-[#F5F5F5] text-sm sm:text-base leading-snug truncate group-hover:text-[#58D20A] transition-colors">
+            <h3 className="font-black text-[#F5F5F5] text-sm sm:text-base leading-snug truncate group-hover:text-white transition-colors">
               {player?.name || 'Unknown Player'}
             </h3>
             <p className="text-[10px] font-mono text-[#A3A3A3] truncate mt-0.5">
@@ -132,8 +132,8 @@ export default function PlayerCardCard({
 
         {/* Position Badges */}
         <div className="flex flex-wrap gap-1 pt-1">
-          <span className={`px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase tracking-wide border shadow-sm bg-[#12200E] text-[#58D20A] border-[#58D20A]/40`}>
-            <Star className="w-2.5 h-2.5 inline mr-1 -mt-0.5 fill-current text-[#58D20A]" />
+          <span className={`px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase tracking-wide border shadow-sm bg-[#0B2B26] text-white border-[#0B2B26]/40`}>
+            <Star className="w-2.5 h-2.5 inline mr-1 -mt-0.5 fill-current text-white" />
             {primaryPos}
           </span>
           {positions.filter(p => p !== primaryPos).map(pos => (
@@ -149,7 +149,7 @@ export default function PlayerCardCard({
             <span className="text-[11px] text-[#A3A3A3] font-medium flex items-center gap-1">
               <DollarSign className="w-3 h-3 text-[#666666]" /> Base Price
             </span>
-            <span className="font-mono font-black text-[#58D20A] text-xs sm:text-sm">
+            <span className="font-mono font-black text-white text-xs sm:text-sm">
               {formatCurrency(player?.basePrice || 0)}
             </span>
           </div>
@@ -185,8 +185,9 @@ export default function PlayerCardCard({
             <>
               {player?.status === 'REGISTERED' && onApprove && (
                 <button
+                  type="button"
                   id={`approve-${id}`}
-                  onClick={() => onApprove(id, player?.name)}
+                  onClick={(e) => { e.stopPropagation(); onApprove(id, player?.name); }}
                   title="Approve Player"
                   className="btn-primary text-[11px] py-1 px-3"
                 >
@@ -195,18 +196,20 @@ export default function PlayerCardCard({
               )}
               {onEdit && (
                 <button
+                  type="button"
                   id={`edit-${id}`}
-                  onClick={() => onEdit(player)}
+                  onClick={(e) => { e.stopPropagation(); onEdit(player); }}
                   title="Edit Player Details"
-                  className="p-1.5 text-[#A3A3A3] hover:text-[#58D20A] hover:bg-[#151515] rounded-lg transition"
+                  className="p-1.5 text-[#A3A3A3] hover:text-white hover:bg-[#151515] rounded-lg transition"
                 >
                   <Edit3 className="w-3.5 h-3.5" />
                 </button>
               )}
               {onToggleBan && (
                 <button
+                  type="button"
                   id={`ban-${id}`}
-                  onClick={() => onToggleBan(id, player?.status)}
+                  onClick={(e) => { e.stopPropagation(); onToggleBan(id, player?.status); }}
                   title={player?.status === 'BANNED' ? 'Unban Player' : 'Ban Player'}
                   className={`p-1.5 rounded-lg transition ${player?.status === 'BANNED' ? 'text-[#F4C542] hover:bg-[#151515]' : 'text-[#A3A3A3] hover:text-[#B00012] hover:bg-[#151515]'}`}
                 >

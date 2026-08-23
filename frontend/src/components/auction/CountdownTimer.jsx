@@ -90,21 +90,21 @@ export default function CountdownTimer({
   const theme = getTheme();
 
   const ringColor = {
-    default: '#58D20A',
+    default: '#0B2B26',
     urgent: '#B00012',
     amber: '#F4C542',
     winner: '#F4C542',
   }[theme];
 
   const ringBg = {
-    default: 'rgba(88,210,10,0.12)',
+    default: 'rgba(11, 43, 38,0.12)',
     urgent: 'rgba(176,0,18,0.15)',
     amber: 'rgba(244,197,66,0.15)',
     winner: 'rgba(244,197,66,0.15)',
   }[theme];
 
   const textColor = {
-    default: 'text-[#58D20A]',
+    default: 'text-white',
     urgent: 'text-[#B00012]',
     amber: 'text-[#F4C542]',
     winner: 'text-[#F4C542]',
@@ -170,7 +170,7 @@ export default function CountdownTimer({
         </span>
         {isRunning && (
           <motion.div
-            className="w-2 h-2 rounded-full bg-[#58D20A]"
+            className="w-2 h-2 rounded-full bg-[#0B2B26]"
             animate={{ opacity: [1, 0.3, 1], scale: [1, 0.8, 1] }}
             transition={{ duration: 1.5, repeat: Infinity }}
           />

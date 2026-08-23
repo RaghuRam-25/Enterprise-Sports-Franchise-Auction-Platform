@@ -31,7 +31,19 @@ const userSchema = new mongoose.Schema({
     enum: ['NONE', 'PENDING', 'APPROVED', 'REJECTED'],
     default: 'NONE'
   },
-  playerRequestNote: { type: String, default: '' }
+  playerRequestNote: { type: String, default: '' },
+  podiumAdminRequestStatus: {
+    type: String,
+    enum: ['NONE', 'PENDING', 'APPROVED', 'REJECTED'],
+    default: 'NONE'
+  },
+  podiumAdminRequestNote: { type: String, default: '' },
+  superAdminRequestStatus: {
+    type: String,
+    enum: ['NONE', 'PENDING', 'APPROVED', 'REJECTED'],
+    default: 'NONE'
+  },
+  superAdminRequestNote: { type: String, default: '' }
 }, { timestamps: true });
 
 export const User = mongoose.model('User', userSchema);

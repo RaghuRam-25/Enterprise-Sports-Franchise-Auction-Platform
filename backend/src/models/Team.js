@@ -28,7 +28,19 @@ const teamSchema = new mongoose.Schema({
   borderColor: { type: String, default: 'border-blue-500/40' },
   glowColor: { type: String, default: 'rgba(59,130,246,0.3)' },
   logoSvg: { type: String, default: '' },
-  logoKey: { type: String, default: '' }
+  logoKey: { type: String, default: '' },
+
+  // Squad builder (drag & drop formation tool)
+  formation: { type: String, default: '4-3-3' },
+  lineup: [{
+    _id: false,
+    slot: { type: String, required: true },
+    playerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Player', default: null }
+  }],
+  substitutes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Player' }],
+  chemistry: { type: Number, default: 0 },
+  collectiveStrength: { type: Number, default: 0 },
+  squadStatus: { type: String, enum: ['DRAFT', 'SAVED'], default: 'DRAFT' }
 }, { timestamps: true });
 
 export const Team = mongoose.model('Team', teamSchema);

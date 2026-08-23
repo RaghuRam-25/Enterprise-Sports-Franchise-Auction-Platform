@@ -38,9 +38,9 @@ const teamNameOf = (m, side) =>
 
 const PHASE_META = {
   SETUP: { label: 'Pre-Season Setup', color: 'text-secondaryText bg-surfaceHover border-borderStrong' },
-  REGISTRATION: { label: 'Player Registration Open', color: 'text-neonGreenHover bg-successGreen/60 border-neonGreen/40' },
+  REGISTRATION: { label: 'Player Registration Open', color: 'text-white bg-successGreen/60 border-neonGreen/40' },
   AUCTION: { label: 'Live Auction Season', color: 'text-urgentRedText bg-urgentRed/60 border-urgentRed/40' },
-  TOURNAMENT: { label: 'Tournament In Progress', color: 'text-neonGreenHover bg-successGreen/60 border-neonGreen/40' },
+  TOURNAMENT: { label: 'Tournament In Progress', color: 'text-white bg-successGreen/60 border-neonGreen/40' },
 };
 
 export default function GeneralTournaments() {
@@ -100,8 +100,8 @@ export default function GeneralTournaments() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           { label: 'Live Auction', icon: Radio, to: '/general/live', accent: 'text-urgentRedText' },
-          { label: 'Schedule', icon: CalendarClock, to: '/general/schedule', accent: 'text-neonGreen' },
-          { label: 'Standings', icon: ListOrdered, to: '/general/standings', accent: 'text-neonGreen' },
+          { label: 'Schedule', icon: CalendarClock, to: '/general/schedule', accent: 'text-white' },
+          { label: 'Standings', icon: ListOrdered, to: '/general/standings', accent: 'text-white' },
           { label: 'Teams', icon: ShieldCheck, to: '/general/teams', accent: 'text-warningGold' },
         ].map(link => {
           const Icon = link.icon;
@@ -120,7 +120,7 @@ export default function GeneralTournaments() {
         {/* Upcoming fixtures */}
         <section className="glass-card rounded-2xl p-5 border border-cardBorder space-y-4">
           <h3 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-secondaryText">
-            <CalendarClock className="w-4 h-4 text-neonGreen" /> Upcoming Matches
+            <CalendarClock className="w-4 h-4 text-white" /> Upcoming Matches
           </h3>
           {upcoming.length === 0 ? (
             <p className="text-xs text-mutedText py-6 text-center">No matches scheduled yet.</p>
@@ -143,7 +143,7 @@ export default function GeneralTournaments() {
         {/* Recent results */}
         <section className="glass-card rounded-2xl p-5 border border-cardBorder space-y-4">
           <h3 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-secondaryText">
-            <History className="w-4 h-4 text-neonGreen" /> Recent Results
+            <History className="w-4 h-4 text-white" /> Recent Results
           </h3>
           {recent.length === 0 ? (
             <p className="text-xs text-mutedText py-6 text-center">No results published yet.</p>
@@ -154,7 +154,7 @@ export default function GeneralTournaments() {
                   <p className="font-bold text-primaryText truncate">
                     {teamNameOf(m, 'a')} <span className="text-mutedText font-medium">vs</span> {teamNameOf(m, 'b')}
                   </p>
-                  <span className="font-mono font-black text-sm text-neonGreen shrink-0">
+                  <span className="font-mono font-black text-sm text-white shrink-0">
                     {m.scoreA ?? 0} : {m.scoreB ?? 0}
                   </span>
                 </li>
@@ -177,7 +177,7 @@ export default function GeneralTournaments() {
                 to={`/general/teams/${t._id || t.id}`}
                 className="flex items-center gap-2 bg-surfaceActive border border-borderStrong hover:border-borderStrong rounded-xl px-3 py-2 transition"
               >
-                <span className="font-mono text-[10px] font-black text-neonGreen bg-neonGreen/10 border border-neonGreen/30 rounded px-1.5 py-0.5">
+                <span className="font-mono text-[10px] font-black text-white bg-neonGreen/10 border border-neonGreen/30 rounded px-1.5 py-0.5">
                   {t.shortCode || t.code || 'TM'}
                 </span>
                 <span className="text-xs font-bold text-primaryText truncate">{t.name}</span>

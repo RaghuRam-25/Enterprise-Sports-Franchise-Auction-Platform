@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+﻿import { useState, useEffect, useMemo } from 'react';
 import { Trophy, Shield, RefreshCw, ArrowUp } from 'lucide-react';
 import Navbar from '../../components/Navbar';
 import CompetitionHeader from '../../components/common/CompetitionHeader';
@@ -65,7 +65,7 @@ function TeamCrest({ team, size = 'md' }) {
     <div
       className={`relative flex-shrink-0 flex items-center justify-center font-black overflow-hidden border shadow-md ${dims} ${avatarConfig.borderColor}`}
       style={customColors
-        ? { backgroundImage: `linear-gradient(135deg, ${teamRef.primaryColor || '#58D20A'}, ${teamRef.secondaryColor || '#050505'})` }
+        ? { backgroundImage: `linear-gradient(135deg, ${teamRef.primaryColor || '#0B2B26'}, ${teamRef.secondaryColor || '#050505'})` }
         : undefined}
     >
       {showImg ? (
@@ -153,7 +153,7 @@ export default function LeagueTable() {
   const maxPoints = standings[0]?.pts || 0;
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#0b0f19] text-primaryText font-sans selection:bg-neonGreen selection:text-darkBg">
+    <div className="min-h-screen flex flex-col bg-black text-primaryText font-sans selection:bg-neonGreen selection:text-white">
       {!user && <Navbar />}
 
       <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 space-y-4">
@@ -206,8 +206,8 @@ export default function LeagueTable() {
                     <th className="text-left py-3 pl-4 sm:pl-6 pr-2 text-mutedText">#</th>
                     <th className="text-left py-3 pr-2 text-mutedText">Team</th>
                     <th className="text-center py-3 px-2 text-secondaryText">Played</th>
-                    <th className="text-center py-3 px-2 text-neonGreen">Won</th>
-                    <th className="text-center py-3 px-2 text-neonGreen">Drawn</th>
+                    <th className="text-center py-3 px-2 text-white">Won</th>
+                    <th className="text-center py-3 px-2 text-white">Drawn</th>
                     <th className="text-center py-3 px-2 text-urgentRedText">Lost</th>
                     <th className="text-center py-3 px-2 text-secondaryText">Goals For</th>
                     <th className="text-center py-3 px-2 text-secondaryText">Goals Against</th>
@@ -216,7 +216,7 @@ export default function LeagueTable() {
                 </thead>
                 <tbody className="divide-y divide-cardBorder/50">
                   {standings.map((row, idx) => {
-                    const posClass = idx === 0 ? 'text-neonGreen' : idx === 1 ? 'text-neonGreen' : idx === 2 ? 'text-warningGold' : 'text-mutedText';
+                    const posClass = idx === 0 ? 'text-white' : idx === 1 ? 'text-white' : idx === 2 ? 'text-warningGold' : 'text-mutedText';
                     const promotionTint = idx <= 2 ? 'bg-neonGreen/[0.04]' : '';
                     const pct = maxPoints > 0 ? (row.pts / maxPoints) * 100 : 0;
                     return (
@@ -234,7 +234,7 @@ export default function LeagueTable() {
                           </div>
                         </td>
                         <td className="text-center py-3 px-2 font-mono font-bold text-base text-secondaryText">{row.mp}</td>
-                        <td className="text-center py-3 px-2 font-mono font-bold text-base text-neonGreen">{row.w}</td>
+                        <td className="text-center py-3 px-2 font-mono font-bold text-base text-white">{row.w}</td>
                         <td className="text-center py-3 px-2 font-mono font-bold text-base text-secondaryText">{row.d}</td>
                         <td className="text-center py-3 px-2 font-mono font-bold text-base text-urgentRedText">{row.l}</td>
                         <td className="text-center py-3 px-2 font-mono font-bold text-base text-secondaryText">{row.gf}</td>

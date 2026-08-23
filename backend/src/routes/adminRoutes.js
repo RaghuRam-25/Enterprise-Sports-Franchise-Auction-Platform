@@ -6,7 +6,7 @@ import {
   getCategories, createCategory, updateCategory, deleteCategory,
   getBiddingTiers, createBiddingTier, updateBiddingTier, deleteBiddingTier,
   getTeams, createTeam, editTeam, deleteTeam,
-  getManagers, createManager, editManager, deleteManager, resetManagerPassword, handleManagerRequest, handlePlayerRequest,
+  getManagers, createManager, editManager, deleteManager, resetManagerPassword, handleManagerRequest, handleAdminRoleRequest, handlePlayerRequest,
   createPodiumAdmin,
   getAdminPlayers, editPlayer, approvePlayer, banPlayer, deletePlayer,
   getReports, exportReports
@@ -47,6 +47,7 @@ router.put('/managers/:id',                   protect, authorize('SUPER_ADMIN'),
 router.put('/managers/:id/request',           protect, authorize('SUPER_ADMIN'), handleManagerRequest);
 router.put('/managers/:id/player-request',    protect, authorize('SUPER_ADMIN'), handlePlayerRequest);
 router.put('/users/:id/player-request',       protect, authorize('SUPER_ADMIN'), handlePlayerRequest);
+router.put('/users/:id/admin-request/:targetRole', protect, authorize('SUPER_ADMIN'), handleAdminRoleRequest);
 router.delete('/managers/:id',                protect, authorize('SUPER_ADMIN'), deleteManager);
 router.put('/managers/:id/reset-password',    protect, authorize('SUPER_ADMIN'), resetManagerPassword);
 router.post('/podium-admins',                 protect, authorize('SUPER_ADMIN'), createPodiumAdmin);

@@ -92,7 +92,7 @@ export default function SoldPlayersView() {
           <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div>
               <h1 className="text-3xl sm:text-4xl font-black uppercase tracking-tight text-primaryText flex items-center gap-3">
-                <ShoppingBag className="w-8 h-8 text-neonGreen" />
+                <ShoppingBag className="w-8 h-8 text-white" />
                 Sold Players
               </h1>
               <p className="text-sm text-secondaryText mt-2 font-medium">
@@ -102,17 +102,17 @@ export default function SoldPlayersView() {
             {/* Summary stats */}
             <div className="grid grid-cols-3 gap-3">
               <div className="bg-surfaceHover/60 border border-borderStrong rounded-xl px-4 py-3 text-center">
-                <Users className="w-4 h-4 text-neonGreen mx-auto" />
+                <Users className="w-4 h-4 text-white mx-auto" />
                 <span className="block text-lg font-black font-mono text-primaryText mt-1">{soldPlayers.length}</span>
                 <span className="block text-[9px] uppercase tracking-widest text-mutedText font-bold">Sold</span>
               </div>
               <div className="bg-surfaceHover/60 border border-borderStrong rounded-xl px-4 py-3 text-center">
-                <TrendingUp className="w-4 h-4 text-neonGreen mx-auto" />
+                <TrendingUp className="w-4 h-4 text-white mx-auto" />
                 <span className="block text-lg font-black font-mono text-primaryText mt-1">{formatCurrency(topSale?.finalPrice || 0)}</span>
                 <span className="block text-[9px] uppercase tracking-widest text-mutedText font-bold">Top Sale</span>
               </div>
               <div className="bg-surfaceHover/60 border border-borderStrong rounded-xl px-4 py-3 text-center">
-                <ShoppingBag className="w-4 h-4 text-neonGreen mx-auto" />
+                <ShoppingBag className="w-4 h-4 text-white mx-auto" />
                 <span className="block text-lg font-black font-mono text-primaryText mt-1">{formatCurrency(totalSpent)}</span>
                 <span className="block text-[9px] uppercase tracking-widest text-mutedText font-bold">Total Spent</span>
               </div>
@@ -169,7 +169,7 @@ export default function SoldPlayersView() {
 
         {/* Back link */}
         <div className="pb-8">
-          <Link to="/" className="text-xs font-bold text-neonGreen hover:text-neonGreenHover hover:underline">← Back to Home</Link>
+          <Link to="/" className="text-xs font-bold text-white hover:text-white hover:underline">← Back to Home</Link>
         </div>
       </main>
 

@@ -32,16 +32,16 @@ export default function WaitingForAuction({
     <div className="py-12 flex flex-col items-center justify-center gap-6 text-center">
       {/* Pulsing broadcast ring */}
       <div className="relative w-24 h-24">
-        <span className="absolute inset-0 rounded-full border-2 border-[#58D20A]/30 animate-ping" />
-        <span className="absolute inset-0 rounded-full border-2 border-dashed border-[#58D20A]/50 animate-spin [animation-duration:6s]" />
-        <div className="absolute inset-2 rounded-full bg-[#12200E] border border-[#58D20A]/50 flex items-center justify-center shadow-[0_0_30px_rgba(88,210,10,0.25)]">
-          <Radio className="w-9 h-9 text-[#58D20A] animate-pulse" />
+        <span className="absolute inset-0 rounded-full border-2 border-[#0B2B26]/30 animate-ping" />
+        <span className="absolute inset-0 rounded-full border-2 border-dashed border-[#0B2B26]/50 animate-spin [animation-duration:6s]" />
+        <div className="absolute inset-2 rounded-full bg-[#0B2B26] border border-[#0B2B26]/50 flex items-center justify-center shadow-[0_0_30px_rgba(11, 43, 38,0.25)]">
+          <Radio className="w-9 h-9 text-white animate-pulse" />
         </div>
       </div>
 
       <div>
         <h3 className="text-xl sm:text-2xl font-black uppercase tracking-wider text-white">{title}</h3>
-        <p className="text-xs font-mono font-bold text-[#58D20A] uppercase tracking-widest mt-2">{subline}</p>
+        <p className="text-xs font-mono font-bold text-white uppercase tracking-widest mt-2">{subline}</p>
         {detailLine && (
           <p className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-widest mt-1.5">{detailLine}</p>
         )}
@@ -50,7 +50,7 @@ export default function WaitingForAuction({
       {/* Bouncing dots */}
       <div className="flex items-center gap-2.5">
         {[0, 1, 2].map((i) => (
-          <span key={i} className="w-2.5 h-2.5 rounded-full bg-[#58D20A] animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
+          <span key={i} className="w-2.5 h-2.5 rounded-full bg-white animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
         ))}
       </div>
 

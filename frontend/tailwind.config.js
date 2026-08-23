@@ -4,23 +4,28 @@ export default {
     theme: {
         extend: {
             colors: {
+                /* ── Primary brand green (single source of truth) ────────── */
+                primaryGreen: "#0B2B26",
+
                 /* ── Base surfaces (single source of truth) ──────────────── */
                 darkBg: "#050505",            // main page background
                 secondaryBg: "#0B0B0B",       // nav / sidebar / raised page surface
                 cardBg: "#101010",            // card background
                 surfaceHover: "#151515",      // row / item hover
                 surfaceActive: "#1A1A1A",     // pressed / selected item
-                darkGreenSurface: "#12200E",  // elevated dark-green accent surface
+                darkGreenSurface: "#0B2B26",  // elevated dark-green accent surface
 
-                /* ── Brand ───────────────────────────────────────────────── */
-                neonGreen: "#58D20A",         // primary accent
-                neonGreenHover: "#72F21A",    // hover / active accent
-                successGreen: "#35C759",      // success state
+                /* ── Brand (all green surfaces/borders/glows = #0B2B26) ──── */
+                neonGreen: "#0B2B26",         // legacy alias → primary green
+                neonGreenHover: "#0B2B26",    // legacy alias → primary green
+                successGreen: "#0B2B26",      // success state surface
 
                 /* ── Text tiers ──────────────────────────────────────────── */
-                primaryText: "#F5F5F5",
-                secondaryText: "#A3A3A3",
-                mutedText: "#666666",
+                primaryText: "#FFFFFF",
+                softText: "#D8E5DF",
+                secondaryText: "#D8E5DF",
+                mutedText: "#9FB3AA",
+                faintText: "#9FB3AA",
 
                 /* ── Lines ───────────────────────────────────────────────── */
                 cardBorder: "#222222",
@@ -48,8 +53,9 @@ export default {
             boxShadow: {
                 'card': '0 8px 30px rgba(0, 0, 0, 0.45)',
                 'card-hover': '0 12px 35px rgba(0, 0, 0, 0.6)',
-                'accent': '0 4px 16px rgba(88, 210, 10, 0.3)',
-                'accent-hover': '0 8px 24px rgba(114, 242, 26, 0.45)',
+                'accent': '0 4px 16px rgba(11, 43, 38, 0.60)',
+                'accent-hover': '0 8px 24px rgba(11, 43, 38, 0.85)',
+                'green-glow': '0 0 20px rgba(11, 43, 38, 0.85)',
             },
         },
     },

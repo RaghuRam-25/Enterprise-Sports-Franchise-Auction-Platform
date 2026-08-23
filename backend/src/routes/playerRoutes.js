@@ -5,12 +5,15 @@ import {
   getPlayers,
   getMyProfile,
   getMyFieldPosition,
+  getMyTeamLineup,
   withdrawPlayer,
   updatePlayerProfile,
   getRegistrationStatus,
   toggleRegistrationFreeze,
   requestManagerRole,
+  requestAdminRole,
   cancelManagerRequest,
+  cancelAdminRoleRequest,
   requestPlayerRole
 } from '../controllers/playerController.js';
 import { protect, optionalAuth, authorize } from '../middleware/auth.js';
@@ -25,6 +28,9 @@ router.get('/status', getRegistrationStatus);
 
 // GET /api/players/me — logged-in player profile
 router.get('/me', protect, getMyProfile);
+
+// GET /api/players/my-team — logged-in player's assigned team & squad lineup
+router.get('/my-team', protect, getMyTeamLineup);
 
 // GET /api/players/field-position — logged-in player's assigned pitch position
 // (SOLD players only; 404 with code NOT_SOLD otherwise). Drives the Reveal page.
@@ -49,6 +55,12 @@ router.post('/request-manager/cancel', protect, authorize('PLAYER', 'SPECTATOR',
 
 // POST /api/players/request-player — GENERAL_USER request for Player role
 router.post('/request-player', protect, authorize('GENERAL_USER', 'SPECTATOR'), requestPlayerRole);
+// POST /api/players/request-admin/:targetRole - GENERAL member upgrade request
+// targetRole is whitelisted server-side: PODIUM_ADMIN | SUPER_ADMIN
+router.post('/request-admin/:targetRole', protect, authorize('GENERAL_USER', 'SPECTATOR'), requestAdminRole);
+
+// POST /api/players/request-admin/:targetRole/cancel - withdraw a PENDING admin request
+router.post('/request-admin/:targetRole/cancel', protect, authorize('GENERAL_USER', 'SPECTATOR'), cancelAdminRoleRequest);
 
 // PUT /api/players/:id/withdraw — PLAYER (own only) or SUPER_ADMIN
 // Self-service withdraw is a REGISTRATION-phase action; Super Admin overrides

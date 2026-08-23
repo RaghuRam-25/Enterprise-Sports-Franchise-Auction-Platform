@@ -6,8 +6,8 @@ import TeamBadge from '../../components/common/TeamBadge';
 
 const CATEGORY_STYLES = {
   'Icon Category': 'bg-warningGold/50 border-warningGold/50 text-warningGold',
-  'A Grade': 'bg-successGreen/50 border-successGreen/60 text-neonGreenHover',
-  'B Grade': 'bg-successGreen/50 border-successGreen/50 text-neonGreenHover',
+  'A Grade': 'bg-successGreen/50 border-successGreen/60 text-white',
+  'B Grade': 'bg-successGreen/50 border-successGreen/50 text-white',
   'Emerging Youth': 'bg-warningGold/50 border-warningGold/50 text-warningGold',
   default: 'bg-cardBg/60 border-cardBorder text-secondaryText',
 };
@@ -55,7 +55,7 @@ export default function GeneralTeamProfile() {
       <div className="glass-card rounded-2xl p-10 border border-cardBorder text-center space-y-3">
         <Info className="w-8 h-8 mx-auto text-mutedText" />
         <p className="text-sm font-bold text-secondaryText">Team not found</p>
-        <Link to="/general/teams" className="inline-flex items-center gap-1.5 text-xs font-bold text-neonGreen hover:text-neonGreenHover">
+        <Link to="/general/teams" className="inline-flex items-center gap-1.5 text-xs font-bold text-white hover:text-white">
           <ArrowLeft className="w-3.5 h-3.5" /> Back to Teams
         </Link>
       </div>
@@ -100,7 +100,7 @@ export default function GeneralTeamProfile() {
           <div className="space-y-2 min-w-0">
             <h1 className="text-2xl sm:text-3xl font-black text-white">{team.name}</h1>
             <div className="flex flex-wrap items-center gap-2 text-xs">
-              <span className="font-mono font-black px-2 py-0.5 rounded bg-neonGreen/15 text-neonGreenHover border border-neonGreen/30">
+              <span className="font-mono font-black px-2 py-0.5 rounded bg-neonGreen/15 text-white border border-neonGreen/30">
                 {team.shortCode || team.code || 'TEAM'}
               </span>
               {managerName && (
@@ -123,7 +123,7 @@ export default function GeneralTeamProfile() {
       <section className="glass-card rounded-2xl p-5 border border-cardBorder space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center gap-3">
           <h3 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-secondaryText shrink-0">
-            <ShieldCheck className="w-4 h-4 text-neonGreen" /> Squad ({roster.length})
+            <ShieldCheck className="w-4 h-4 text-white" /> Squad ({roster.length})
           </h3>
 
           {/* Name search + price sort */}
@@ -184,7 +184,7 @@ export default function GeneralTeamProfile() {
                     <p className="text-[11px] text-mutedText truncate">{p.primaryPosition || p.positions?.[0] || '—'}</p>
                   </div>
                   <div className="flex flex-col items-end gap-1 shrink-0">
-                    <span className="text-[11px] font-mono font-black text-neonGreenHover">৳{priceOf(p).toLocaleString()}</span>
+                    <span className="text-[11px] font-mono font-black text-white">৳{priceOf(p).toLocaleString()}</span>
                     {p.category && (
                       <span className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded border ${catStyle}`}>
                         {p.category}

@@ -50,8 +50,8 @@ export default function PlayerAuctionStageCard({
       <div className="flex items-center justify-between pb-5 border-b border-red-950/40 relative z-10">
         
         {/* LIVE NOW Pill */}
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-emerald-500 bg-emerald-950/30 text-emerald-400 text-xs font-mono font-bold shadow-[0_0_15px_rgba(16,185,129,0.2)]">
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-[#0B2B26] bg-[#0B2B26]/30 text-white text-xs font-mono font-bold shadow-[0_0_15px_rgba(11,43,38,0.85)]">
+          <span className="w-2 h-2 rounded-full bg-white animate-ping" />
           <span>LIVE NOW</span>
         </div>
 
@@ -196,14 +196,14 @@ export default function PlayerAuctionStageCard({
           </div>
 
           {/* Row 4: NEXT MINIMUM BID (Highlighted Green) */}
-          <div className="bg-[#0e0f14] border border-emerald-950/50 rounded-2xl p-3.5 flex items-center justify-between shadow-md">
+          <div className="bg-[#0e0f14] border border-[#0B2B26]/50 rounded-2xl p-3.5 flex items-center justify-between shadow-md">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-emerald-950/40 border border-emerald-500/50 flex items-center justify-center text-emerald-400 shrink-0">
+              <div className="w-10 h-10 rounded-xl bg-[#0B2B26]/40 border border-[#0B2B26]/50 flex items-center justify-center text-white shrink-0">
                 <Target className="w-5 h-5" />
               </div>
               <span className="text-xs font-mono font-bold text-slate-400 uppercase">NEXT MINIMUM BID</span>
             </div>
-            <span className="text-lg sm:text-xl font-black font-mono text-emerald-400">
+            <span className="text-lg sm:text-xl font-black font-mono text-white">
               {formatCurrency(computedNextMinBid)}
             </span>
           </div>

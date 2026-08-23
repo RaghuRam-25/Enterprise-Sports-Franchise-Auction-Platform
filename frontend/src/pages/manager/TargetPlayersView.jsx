@@ -456,7 +456,7 @@ export default function TargetPlayersView() {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-bold uppercase tracking-wider text-secondaryText flex items-center gap-2">
-              <Users className="w-4 h-4 text-neonGreen" /> Available Player Pool ({filteredPlayers.length})
+              <Users className="w-4 h-4 text-white" /> Available Player Pool ({filteredPlayers.length})
             </h2>
           </div>
 
@@ -475,7 +475,7 @@ export default function TargetPlayersView() {
                   customActions={
                     isTargeted ? (
                       <div className="w-full flex items-center gap-1.5">
-                        <span className="px-2.5 py-1 bg-successGreen/15 text-neonGreen border border-successGreen/40 rounded-lg text-xs font-bold flex items-center justify-center gap-1 flex-shrink-0">
+                        <span className="px-2.5 py-1 bg-successGreen/15 text-white border border-successGreen/40 rounded-lg text-xs font-bold flex items-center justify-center gap-1 flex-shrink-0">
                           <Check className="w-3.5 h-3.5" /> Targeted
                         </span>
                         <button
@@ -491,7 +491,7 @@ export default function TargetPlayersView() {
                       <button
                         onClick={() => handleAddTarget(player)}
                         disabled={player.status === 'SOLD'}
-                        className="px-2.5 py-1 bg-successGreen hover:bg-neonGreen disabled:opacity-50 text-darkBg rounded-lg text-xs font-bold flex items-center gap-1 transition shadow"
+                        className="px-2.5 py-1 bg-successGreen hover:bg-neonGreen disabled:opacity-50 text-white rounded-lg text-xs font-bold flex items-center gap-1 transition shadow"
                       >
                         <Plus className="w-3.5 h-3.5" /> Target
                       </button>

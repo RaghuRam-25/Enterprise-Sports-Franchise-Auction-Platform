@@ -6,16 +6,16 @@ import TeamBadge from '../../components/common/TeamBadge';
 
 const CATEGORY_STYLES = {
   'Icon Category': 'bg-warningGold/50 border-warningGold/50 text-warningGold',
-  'A Grade': 'bg-successGreen/50 border-successGreen/60 text-neonGreenHover',
-  'B Grade': 'bg-successGreen/50 border-successGreen/50 text-neonGreenHover',
+  'A Grade': 'bg-successGreen/50 border-successGreen/60 text-white',
+  'B Grade': 'bg-successGreen/50 border-successGreen/50 text-white',
   'Emerging Youth': 'bg-warningGold/50 border-warningGold/50 text-warningGold',
   default: 'bg-cardBg/60 border-cardBorder text-secondaryText',
 };
 
 const STATUS_STYLES = {
-  SOLD: 'bg-successGreen/50 border-neonGreen/40 text-neonGreenHover',
-  REGISTERED: 'bg-successGreen/50 border-neonGreen/40 text-neonGreenHover',
-  APPROVED: 'bg-successGreen/50 border-neonGreen/40 text-neonGreenHover',
+  SOLD: 'bg-successGreen/50 border-neonGreen/40 text-white',
+  REGISTERED: 'bg-successGreen/50 border-neonGreen/40 text-white',
+  APPROVED: 'bg-successGreen/50 border-neonGreen/40 text-white',
   ON_PODIUM: 'bg-urgentRed/50 border-urgentRed/40 text-urgentRedText animate-pulse',
   UNSOLD: 'bg-cardBg/60 border-borderStrong text-secondaryText',
   WITHDRAWN: 'bg-cardBg/60 border-borderStrong text-mutedText',
@@ -73,7 +73,7 @@ export default function GeneralPlayers() {
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
           <h1 className="flex items-center gap-2 text-xl font-black text-white">
-            <UserCheck className="w-5 h-5 text-neonGreen" /> Players
+            <UserCheck className="w-5 h-5 text-white" /> Players
           </h1>
           <p className="text-xs text-secondaryText mt-1">
             Every registered player in the league — public profiles only.
@@ -152,7 +152,7 @@ export default function GeneralPlayers() {
                   </span>
                 )}
                 <div className="min-w-0 flex-1 space-y-1.5">
-                  <p className="text-sm font-black text-white truncate group-hover:text-neonGreenHover transition">
+                  <p className="text-sm font-black text-white truncate group-hover:text-white transition">
                     {player.jerseyName || player.name}
                   </p>
                   <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-mutedText">
@@ -179,7 +179,7 @@ export default function GeneralPlayers() {
                     )}
                   </div>
                 </div>
-                <span className="w-8 h-8 rounded-xl bg-cardBg/80 border border-cardBorder flex items-center justify-center text-mutedText group-hover:text-neonGreenHover group-hover:border-neonGreen/40 transition shrink-0">
+                <span className="w-8 h-8 rounded-xl bg-cardBg/80 border border-cardBorder flex items-center justify-center text-mutedText group-hover:text-white group-hover:border-neonGreen/40 transition shrink-0">
                   <Eye className="w-4 h-4" />
                 </span>
               </Link>

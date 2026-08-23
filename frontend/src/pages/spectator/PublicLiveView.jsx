@@ -17,7 +17,7 @@ import SoundToggle from '../../components/SoundToggle';
 import { WaitingAnimation } from '../../components/auction';
 import LandingLiveStageCard from '../../components/LandingLiveStageCard';
 
-export default function PublicLiveView() {
+export default function PublicLiveView({ embedded = false }) {
   const {
     teams = [],
     categories = [],
@@ -65,7 +65,7 @@ export default function PublicLiveView() {
     // Full-viewport live auction surface — the page itself NEVER scrolls.
     // Standalone (no login): owns its navbar inside the h-dvh shell; when
     // rendered inside DashboardLayout it fills the layout's flex column.
-    <div className={`${user ? 'h-full' : 'h-dvh'} flex flex-col bg-darkBg text-primaryText relative overflow-hidden`}>
+    <div className={`${embedded ? 'h-full' : 'h-dvh'} flex flex-col bg-darkBg text-primaryText relative overflow-hidden`}>
       {!user && <Navbar />}
 
       <main
@@ -137,7 +137,7 @@ export default function PublicLiveView() {
             <aside className="w-full lg:w-auto lg:max-w-[320px] xl:max-w-[360px] lg:flex-[28] min-w-0 flex flex-col rounded-xl sm:rounded-2xl border border-cardBorder/80 bg-black/30 min-h-0">
               <div className="flex-none px-3 sm:px-3.5 pt-2.5 pb-1.5">
                 <h3 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-secondaryText flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-neonGreen shrink-0" /> Live Bid Ledger
+                  <Clock className="w-4 h-4 text-white shrink-0" /> Live Bid Ledger
                 </h3>
                 <p className="text-[10px] text-secondaryText truncate">Real-time audited auction bid stream</p>
               </div>
@@ -156,7 +156,7 @@ export default function PublicLiveView() {
                         <p className="font-extrabold text-xs text-white truncate">{log.bidder || 'Unknown Team'}</p>
                         <span className="text-[10px] text-mutedText">{log.time || '--'} &bull; {log.type || 'Normal'}</span>
                       </div>
-                      <span className="font-mono font-black text-sm tabular-nums text-neonGreen flex-shrink-0">
+                      <span className="font-mono font-black text-sm tabular-nums text-white flex-shrink-0">
                         {formatCurrency(log.amount)}
                       </span>
                     </div>

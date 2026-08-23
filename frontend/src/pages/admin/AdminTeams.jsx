@@ -50,7 +50,7 @@ export default function AdminTeams() {
   const [budget, setBudget] = useState(eventConfig?.defaultTeamBudget?.toString() || '100000000');
   const [selectedExistingManagerId, setSelectedExistingManagerId] = useState('');
   const [creating, setCreating] = useState(false);
-  const [primaryColor, setPrimaryColor] = useState('#58D20A');
+  const [primaryColor, setPrimaryColor] = useState('#0B2B26');
   const [secondaryColor, setSecondaryColor] = useState('#050505');
   const [icon, setIcon] = useState('Shield');
   const [iconMenuOpen, setIconMenuOpen] = useState(false);
@@ -160,7 +160,7 @@ export default function AdminTeams() {
 
       // Reset form
       setName(''); setCode(''); setBudget(eventConfig?.defaultTeamBudget?.toString() || '100000000'); setSelectedExistingManagerId('');
-      setPrimaryColor('#58D20A'); setSecondaryColor('#050505'); setIcon('Shield');
+      setPrimaryColor('#0B2B26'); setSecondaryColor('#050505'); setIcon('Shield');
       triggerToast(`Franchise "${name}" created successfully!`, 'success');
 
     } catch (err) {
@@ -210,7 +210,7 @@ export default function AdminTeams() {
       shortCode: team.shortCode || team.code || '',
       totalBudget: team.totalBudget || 0,
       managerId: team.managerId || '',
-      primaryColor: (team.primaryColor || '#58D20A').toLowerCase(),
+      primaryColor: (team.primaryColor || '#0B2B26').toLowerCase(),
       secondaryColor: (team.secondaryColor || '#050505').toLowerCase(),
       icon: team.icon || 'Shield',
     });
@@ -386,7 +386,7 @@ export default function AdminTeams() {
                             type="button"
                             onClick={() => { setIcon(iconName); setIconMenuOpen(false); }}
                             title={iconName}
-                            className={`w-8 h-8 rounded-md flex items-center justify-center transition ${icon === iconName ? 'bg-successGreen text-darkBg shadow-md' : 'text-secondaryText hover:text-white hover:bg-surfaceHover'}`}
+                            className={`w-8 h-8 rounded-md flex items-center justify-center transition ${icon === iconName ? 'bg-successGreen text-white shadow-md' : 'text-secondaryText hover:text-white hover:bg-surfaceHover'}`}
                           >
                             <Icon className="w-4 h-4" />
                           </button>
@@ -405,7 +405,7 @@ export default function AdminTeams() {
 
         {isSuperAdmin && selectedManager && (
           <div className="bg-successGreen/90 border border-neonGreen/40 rounded-2xl p-5 space-y-3">
-            <div className="flex justify-between items-center text-neonGreenHover font-bold text-xs">
+            <div className="flex justify-between items-center text-white font-bold text-xs">
               <span className="flex items-center gap-1.5"><CheckCircle className="w-4 h-4" /> Credentials Created</span>
               <button onClick={() => setSelectedManager(null)} className="text-xs text-secondaryText hover:text-white">Dismiss</button>
             </div>
@@ -413,11 +413,11 @@ export default function AdminTeams() {
               <div>
                 <p><strong className="text-secondaryText">Account Name:</strong> {selectedManager.name}</p>
                 <p><strong className="text-secondaryText">Username/Email:</strong> {selectedManager.email || selectedManager.username}</p>
-                <p><strong className="text-neonGreen">Generated Password:</strong> {tempPass}</p>
+                <p><strong className="text-white">Generated Password:</strong> {tempPass}</p>
               </div>
               <button
                 onClick={() => copyCredentials(`Username: ${selectedManager.email || selectedManager.username}\nPassword: ${tempPass}`)}
-                className="px-3 py-1.5 bg-successGreen hover:bg-neonGreen text-darkBg rounded-lg font-bold flex items-center gap-1"
+                className="px-3 py-1.5 bg-successGreen hover:bg-neonGreen text-white rounded-lg font-bold flex items-center gap-1"
               >
                 <Copy className="w-3.5 h-3.5" /> Copy
               </button>
@@ -468,7 +468,7 @@ export default function AdminTeams() {
                           id={`edit-team-${id}`}
                           onClick={(e) => { e.stopPropagation(); openEdit(team); }}
                           title="Edit Team"
-                          className="btn-secondary p-1.5 rounded-lg text-[#58D20A] transition"
+                          className="btn-secondary p-1.5 rounded-lg text-white transition"
                         >
                           <Edit3 className="w-3.5 h-3.5" />
                         </button>
@@ -608,14 +608,14 @@ export default function AdminTeams() {
                     <div className="flex items-center gap-2 bg-cardBg/60 border border-cardBorder rounded-xl px-3 py-2">
                       <input
                         type="color"
-                        value={/^#[0-9a-fA-F]{6}$/.test(editForm.primaryColor || '') ? editForm.primaryColor : '#58D20A'}
+                        value={/^#[0-9a-fA-F]{6}$/.test(editForm.primaryColor || '') ? editForm.primaryColor : '#0B2B26'}
                         onChange={e => setEditForm(prev => ({ ...prev, primaryColor: e.target.value }))}
                         className="w-9 h-7 rounded-lg cursor-pointer bg-transparent border border-borderStrong p-0.5"
                         title="Primary Color"
                       />
                       <div className="leading-tight">
                         <p className="text-[10px] font-bold uppercase tracking-wider text-secondaryText">Primary</p>
-                        <p className="font-mono text-[11px] text-secondaryText uppercase">{(editForm.primaryColor || '#58D20A').toUpperCase()}</p>
+                        <p className="font-mono text-[11px] text-secondaryText uppercase">{(editForm.primaryColor || '#0B2B26').toUpperCase()}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2 bg-cardBg/60 border border-cardBorder rounded-xl px-3 py-2">
@@ -634,7 +634,7 @@ export default function AdminTeams() {
                   </div>
                   {/* ── Live Card Preview ──────────────────────────────── */}
                   {(() => {
-                    const p = editForm.primaryColor || '#58D20A';
+                    const p = editForm.primaryColor || '#0B2B26';
                     const s = editForm.secondaryColor || '#050505';
                     const SelectedIcon = (TEAM_ICON_OPTIONS.find(o => o.name === (editForm.icon || 'Shield')) || TEAM_ICON_OPTIONS[0]).Icon;
                     return (
@@ -689,7 +689,7 @@ export default function AdminTeams() {
                             type="button"
                             onClick={() => { setEditForm(prev => ({ ...prev, icon: iconName })); setEditIconMenuOpen(false); }}
                             title={iconName}
-                            className={`w-8 h-8 rounded-md flex items-center justify-center transition ${(editForm.icon || 'Shield') === iconName ? 'bg-successGreen text-darkBg shadow-md' : 'text-secondaryText hover:text-white hover:bg-surfaceHover'}`}
+                            className={`w-8 h-8 rounded-md flex items-center justify-center transition ${(editForm.icon || 'Shield') === iconName ? 'bg-successGreen text-white shadow-md' : 'text-secondaryText hover:text-white hover:bg-surfaceHover'}`}
                           >
                             <Icon className="w-4 h-4" />
                           </button>
@@ -708,7 +708,7 @@ export default function AdminTeams() {
                   id="save-team-edit"
                   onClick={handleSaveEdit}
                   disabled={saving}
-                  className="flex-1 py-2.5 bg-successGreen hover:bg-neonGreen disabled:opacity-60 text-darkBg rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition"
+                  className="flex-1 py-2.5 bg-successGreen hover:bg-neonGreen disabled:opacity-60 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition"
                 >
                   {saving ? <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Save className="w-3.5 h-3.5" />}
                   Save Changes

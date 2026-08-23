@@ -308,7 +308,7 @@ export default function WinnerAnimation({
 
               {/* Manager win / lose banner */}
               <motion.div
-                className={`mt-4 flex items-center justify-center gap-2 ${isManagerWinner ? 'text-neonGreen' : 'text-secondaryText'}`}
+                className={`mt-4 flex items-center justify-center gap-2 ${isManagerWinner ? 'text-white' : 'text-secondaryText'}`}
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 1.5, type: 'spring' }}

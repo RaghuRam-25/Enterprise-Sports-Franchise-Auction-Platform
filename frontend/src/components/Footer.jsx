@@ -40,12 +40,12 @@ export default function Footer() {
           {/* Col 1: Logo & Brand Info */}
           <div className="lg:col-span-1 space-y-4">
             <Link to="/" className="flex items-center space-x-3 group">
-              <div className="w-10 h-10 rounded-xl bg-[#12200E] border border-[#58D20A]/50 p-0.5 shadow-lg flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-[#0B2B26] border border-[#0B2B26]/50 p-0.5 shadow-lg flex items-center justify-center">
                 <span className="text-lg">⚽</span>
               </div>
               <div>
                 <span className="font-black text-sm tracking-wider text-white uppercase block">
-                  FRANCHISE<span className="text-[#58D20A]">AUCTION</span>
+                  FRANCHISE<span className="text-white">AUCTION</span>
                 </span>
                 <span className="block text-[9px] tracking-widest text-slate-400 uppercase font-bold">
                   ENTERPRISE PLATFORM
@@ -69,27 +69,27 @@ export default function Footer() {
             </h4>
             <ul className="space-y-2 text-xs">
               <li>
-                <Link to="/" className="hover:text-[#58D20A] transition">
+                <Link to="/" className="hover:text-white transition">
                   Home
                 </Link>
               </li>
               <li>
-                <Link to="/live" className="hover:text-[#58D20A] transition">
+                <Link to="/live" className="hover:text-white transition">
                   Live Auction
                 </Link>
               </li>
               <li>
-                <Link to="/teams" className="hover:text-[#58D20A] transition">
+                <Link to="/teams" className="hover:text-white transition">
                   Franchise Teams
                 </Link>
               </li>
               <li>
-                <Link to="/players" className="hover:text-[#58D20A] transition">
+                <Link to="/players" className="hover:text-white transition">
                   Player Directory
                 </Link>
               </li>
               <li>
-                <Link to="/player/register" className="hover:text-[#58D20A] transition">
+                <Link to="/player/register" className="hover:text-white transition">
                   Player Registration
                 </Link>
               </li>
@@ -107,14 +107,14 @@ export default function Footer() {
                 <span>GSTU Campus, Gopalganj</span>
               </li>
               <li className="flex items-center gap-2">
-                <Mail className="w-3.5 h-3.5 text-[#58D20A] shrink-0" />
-                <a href="mailto:cse@gstu.ac.bd" className="hover:text-[#58D20A] transition">
+                <Mail className="w-3.5 h-3.5 text-white shrink-0" />
+                <a href="mailto:cse@gstu.ac.bd" className="hover:text-white transition">
                   cse@gstu.ac.bd
                 </a>
               </li>
               <li className="flex items-center gap-2">
-                <Globe className="w-3.5 h-3.5 text-[#58D20A] shrink-0" />
-                <a href="https://gstu.ac.bd" target="_blank" rel="noopener noreferrer" className="hover:text-[#58D20A] transition">
+                <Globe className="w-3.5 h-3.5 text-white shrink-0" />
+                <a href="https://gstu.ac.bd" target="_blank" rel="noopener noreferrer" className="hover:text-white transition">
                   gstu.ac.bd
                 </a>
               </li>
@@ -141,7 +141,7 @@ export default function Footer() {
               </li>
               <li>
                 <span className="text-slate-400 block text-[10px] uppercase">REGISTRATION STATUS</span>
-                <span className="inline-block mt-1 px-2.5 py-0.5 rounded-full bg-[#12200E] text-[#58D20A] border border-[#58D20A]/40 text-[10px] font-mono font-bold uppercase">
+                <span className="inline-block mt-1 px-2.5 py-0.5 rounded-full bg-[#0B2B26] text-white border border-[#0B2B26]/40 text-[10px] font-mono font-bold uppercase">
                   OPEN
                 </span>
               </li>
@@ -158,7 +158,7 @@ export default function Footer() {
                 href="https://facebook.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-9 h-9 rounded-full bg-[#12200E] hover:bg-[#58D20A] text-[#58D20A] hover:text-black flex items-center justify-center transition border border-[#58D20A]/30"
+                className="w-9 h-9 rounded-full bg-[#0B2B26] hover:bg-[#0B2B26] text-white hover:text-white flex items-center justify-center transition border border-[#0B2B26]/30"
               >
                 <FacebookIcon />
               </a>
@@ -166,7 +166,7 @@ export default function Footer() {
                 href="https://twitter.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-9 h-9 rounded-full bg-[#12200E] hover:bg-[#58D20A] text-[#58D20A] hover:text-black flex items-center justify-center transition border border-[#58D20A]/30"
+                className="w-9 h-9 rounded-full bg-[#0B2B26] hover:bg-[#0B2B26] text-white hover:text-white flex items-center justify-center transition border border-[#0B2B26]/30"
               >
                 <TwitterIcon />
               </a>
@@ -174,7 +174,7 @@ export default function Footer() {
                 href="https://instagram.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-9 h-9 rounded-full bg-[#12200E] hover:bg-[#58D20A] text-[#58D20A] hover:text-black flex items-center justify-center transition border border-[#58D20A]/30"
+                className="w-9 h-9 rounded-full bg-[#0B2B26] hover:bg-[#0B2B26] text-white hover:text-white flex items-center justify-center transition border border-[#0B2B26]/30"
               >
                 <InstagramIcon />
               </a>
@@ -182,7 +182,7 @@ export default function Footer() {
                 href="https://youtube.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-9 h-9 rounded-full bg-[#12200E] hover:bg-[#58D20A] text-[#58D20A] hover:text-black flex items-center justify-center transition border border-[#58D20A]/30"
+                className="w-9 h-9 rounded-full bg-[#0B2B26] hover:bg-[#0B2B26] text-white hover:text-white flex items-center justify-center transition border border-[#0B2B26]/30"
               >
                 <YoutubeIcon />
               </a>

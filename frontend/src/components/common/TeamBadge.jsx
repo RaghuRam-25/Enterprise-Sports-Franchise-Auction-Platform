@@ -118,7 +118,7 @@ export default function TeamBadge({
 
           <div className="flex items-center gap-2 flex-wrap mt-0.5">
             {showCode && (team.shortCode || team.code) && (
-              <span className={`font-mono font-extrabold px-1.5 py-0.5 rounded border bg-cardBg/90 text-neonGreen border-neonGreen/30 ${textSizes.code}`}>
+              <span className={`font-mono font-extrabold px-1.5 py-0.5 rounded border bg-cardBg/90 text-white border-neonGreen/30 ${textSizes.code}`}>
                 {team.shortCode || team.code}
               </span>
             )}

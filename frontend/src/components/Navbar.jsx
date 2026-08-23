@@ -50,12 +50,12 @@ export default function Navbar({ onOpenMobileSidebar }) {
           {/* Left Brand Logo & Mobile Menu Toggle */}
           <div className="flex items-center gap-3 min-w-0">
             <Link to="/" className="flex items-center space-x-3 group shrink-0">
-              <div className="w-10 h-10 rounded-xl bg-[#12200E] border border-[#58D20A]/50 p-0.5 shadow-[0_0_15px_rgba(88,210,10,0.25)] group-hover:scale-105 transition-transform flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-[#0B2B26] border border-[#0B2B26]/50 p-0.5 shadow-[0_0_15px_rgba(11, 43, 38,0.25)] group-hover:scale-105 transition-transform flex items-center justify-center">
                 <span className="text-lg">⚽</span>
               </div>
               <div className="min-w-0">
                 <span className="font-black text-base tracking-wider text-white uppercase whitespace-nowrap block">
-                  FRANCHISE<span className="text-[#58D20A]">AUCTION</span>
+                  FRANCHISE<span className="text-white">AUCTION</span>
                 </span>
                 <span className="block text-[9px] tracking-widest text-slate-400 uppercase font-bold">
                   ENTERPRISE PLATFORM
@@ -66,7 +66,7 @@ export default function Navbar({ onOpenMobileSidebar }) {
             {user && (
               <button
                 onClick={onOpenMobileSidebar}
-                className="lg:hidden p-2 text-slate-400 hover:text-white hover:bg-slate-800/80 rounded-xl transition"
+                className="md:hidden p-2 text-slate-400 hover:text-white hover:bg-slate-800/80 rounded-xl transition"
                 title="Open Menu"
                 aria-label="Open Menu"
               >
@@ -85,7 +85,7 @@ export default function Navbar({ onOpenMobileSidebar }) {
                   to="/"
                   className={`flex items-center gap-1.5 px-4 py-1.5 rounded-xl transition-all ${
                     location.pathname === '/'
-                      ? 'bg-[#58D20A] text-[#050505] font-extrabold shadow-[0_0_18px_rgba(88,210,10,0.45)]'
+                      ? 'bg-[#0B2B26] text-white font-extrabold border border-white/10 shadow-[0_0_18px_rgba(11, 43, 38,0.85)]'
                       : 'text-slate-300 hover:text-white hover:bg-white/5'
                   }`}
                 >
@@ -98,7 +98,7 @@ export default function Navbar({ onOpenMobileSidebar }) {
                   to="/matches"
                   className={`flex items-center gap-1.5 px-4 py-1.5 rounded-xl transition-all ${
                     location.pathname.startsWith('/matches')
-                      ? 'bg-[#58D20A] text-[#050505] font-extrabold shadow-[0_0_18px_rgba(88,210,10,0.45)]'
+                      ? 'bg-[#0B2B26] text-white font-extrabold border border-white/10 shadow-[0_0_18px_rgba(11, 43, 38,0.85)]'
                       : 'text-slate-300 hover:text-white hover:bg-white/5'
                   }`}
                 >
@@ -111,7 +111,7 @@ export default function Navbar({ onOpenMobileSidebar }) {
                   to="/about"
                   className={`flex items-center gap-1.5 px-4 py-1.5 rounded-xl transition-all ${
                     location.pathname === '/about'
-                      ? 'bg-[#58D20A] text-[#050505] font-extrabold shadow-[0_0_18px_rgba(88,210,10,0.45)]'
+                      ? 'bg-[#0B2B26] text-white font-extrabold border border-white/10 shadow-[0_0_18px_rgba(11, 43, 38,0.85)]'
                       : 'text-slate-300 hover:text-white hover:bg-white/5'
                   }`}
                 >
@@ -126,7 +126,7 @@ export default function Navbar({ onOpenMobileSidebar }) {
             {!user ? (
               <Link
                 to="/login"
-                className="px-5 py-2 bg-[#58D20A] hover:bg-[#68e21a] text-[#050505] font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-[0_0_20px_rgba(88,210,10,0.35)] transition flex items-center gap-1.5"
+                className="px-5 py-2 bg-[#0B2B26] hover:brightness-125 text-white font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-[0_0_20px_rgba(11, 43, 38,0.35)] transition flex items-center gap-1.5"
               >
                 <User className="w-3.5 h-3.5" />
                 <span>LOGIN</span>

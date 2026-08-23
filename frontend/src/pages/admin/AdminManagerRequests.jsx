@@ -1,9 +1,65 @@
 import { useState, useEffect, useCallback } from 'react';
-import { ShieldAlert, CheckCircle2, Clock, XCircle, Check, X, Loader2, RefreshCw, AlertTriangle, Users, UserCheck, Crown, Shield } from 'lucide-react';
+import {
+  ShieldAlert, CheckCircle2, Clock, XCircle, Check, X, Loader2, RefreshCw,
+  AlertTriangle, Users, UserCheck, Crown, MonitorPlay, Shield
+} from 'lucide-react';
 
 import { useAuction } from '../../context/AuctionContext';
 import { useSocket } from '../../context/SocketContext';
 import { adminAPI } from '../../services/api';
+
+// ── Request type registry ────────────────────────────────────────────────────
+// Adding a new upgradeable role = one entry here + a backend status field.
+const REQUEST_TYPES = [
+  {
+    key: 'MANAGER',
+    label: 'Team Manager',
+    tabLabel: 'Team Manager Requests',
+    icon: Crown,
+    statusKey: 'managerRequestStatus',
+    noteKey: 'managerRequestNote',
+    approveApi: (id) => adminAPI.updateManagerRequest(id, 'APPROVE'),
+    rejectApi: (id) => adminAPI.updateManagerRequest(id, 'REJECT'),
+    approveText: 'Promoted to Team Manager',
+    bannerText: 'Approving will promote the user to Team Manager and auto-assign an unassigned team.',
+  },
+  {
+    key: 'PODIUM_ADMIN',
+    label: 'Podium Admin',
+    tabLabel: 'Podium Admin Requests',
+    icon: MonitorPlay,
+    statusKey: 'podiumAdminRequestStatus',
+    noteKey: 'podiumAdminRequestNote',
+    approveApi: (id) => adminAPI.updateAdminRoleRequest(id, 'PODIUM_ADMIN', 'APPROVE'),
+    rejectApi: (id) => adminAPI.updateAdminRoleRequest(id, 'PODIUM_ADMIN', 'REJECT'),
+    approveText: 'Promoted to Podium Admin',
+    bannerText: 'Approving will promote the user to Podium Admin (broadcast & display control).',
+  },
+  {
+    key: 'SUPER_ADMIN',
+    label: 'Super Admin',
+    tabLabel: 'Super Admin Requests',
+    icon: Shield,
+    statusKey: 'superAdminRequestStatus',
+    noteKey: 'superAdminRequestNote',
+    approveApi: (id) => adminAPI.updateAdminRoleRequest(id, 'SUPER_ADMIN', 'APPROVE'),
+    rejectApi: (id) => adminAPI.updateAdminRoleRequest(id, 'SUPER_ADMIN', 'REJECT'),
+    approveText: 'Promoted to Super Admin',
+    bannerText: 'Approving grants FULL platform control. Review carefully.',
+  },
+  {
+    key: 'PLAYER',
+    label: 'Player',
+    tabLabel: 'Player Requests',
+    icon: Users,
+    statusKey: 'playerRequestStatus',
+    noteKey: 'playerRequestNote',
+    approveApi: (id) => adminAPI.updatePlayerRequest(id, 'APPROVE'),
+    rejectApi: (id) => adminAPI.updatePlayerRequest(id, 'REJECT'),
+    approveText: 'Promoted to Player',
+    bannerText: 'Approving will promote the user to Player role and create their player pool record.',
+  },
+];
 
 export default function AdminManagerRequests() {
   const { triggerToast, refetchTeams } = useAuction();
@@ -12,11 +68,12 @@ export default function AdminManagerRequests() {
   const [allUsers, setAllUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState(null);
-  
-  // Outer request type tab: 'MANAGER' | 'PLAYER'
+
+  // Outer request type tab (see REQUEST_TYPES) | inner status filter
   const [typeTab, setTypeTab] = useState('MANAGER');
-  // Inner status filter: 'ALL' | 'PENDING' | 'APPROVED' | 'REJECTED'
   const [filter, setFilter] = useState('PENDING');
+
+  const activeType = REQUEST_TYPES.find(t => t.key === typeTab) || REQUEST_TYPES[0];
 
   // ── Fetch all users ────────────────────────────────────────────────────────
   const fetchRequests = useCallback(async () => {
@@ -55,46 +112,40 @@ export default function AdminManagerRequests() {
     };
   }, [socket, fetchRequests, refetchTeams]);
 
-  // ── Filter manager & player requests ─────────────────────────────────────
-  const managerRequests = allUsers.filter(u => u.managerRequestStatus && u.managerRequestStatus !== 'NONE');
-  const playerRequests = allUsers.filter(u => u.playerRequestStatus && u.playerRequestStatus !== 'NONE');
+  // ── Per-type request lists ────────────────────────────────────────────────
+  const listsByType = Object.fromEntries(
+    REQUEST_TYPES.map(t => [
+      t.key,
+      allUsers.filter(u => u[t.statusKey] && u[t.statusKey] !== 'NONE')
+    ])
+  );
 
-  const currentList = typeTab === 'MANAGER' ? managerRequests : playerRequests;
-  const statusKey = typeTab === 'MANAGER' ? 'managerRequestStatus' : 'playerRequestStatus';
-  const noteKey = typeTab === 'MANAGER' ? 'managerRequestNote' : 'playerRequestNote';
-
-  const filtered = filter === 'ALL' ? currentList : currentList.filter(r => r[statusKey] === filter);
-  const pendingManagerCount = managerRequests.filter(r => r.managerRequestStatus === 'PENDING').length;
-  const pendingPlayerCount = playerRequests.filter(r => r.playerRequestStatus === 'PENDING').length;
-  const currentPendingCount = typeTab === 'MANAGER' ? pendingManagerCount : pendingPlayerCount;
+  const currentList = listsByType[typeTab] || [];
+  const pendingCountByType = Object.fromEntries(
+    REQUEST_TYPES.map(t => [
+      t.key,
+      (listsByType[t.key] || []).filter(r => r[t.statusKey] === 'PENDING').length
+    ])
+  );
+  const currentPendingCount = pendingCountByType[typeTab] || 0;
 
   // ── Approve or Reject handler ──────────────────────────────────────────────
   const handleAction = async (userId, action) => {
     setProcessingId(userId);
     try {
       let res;
-      if (typeTab === 'MANAGER') {
-        res = await adminAPI.updateManagerRequest(userId, action);
-      } else {
-        res = await adminAPI.updatePlayerRequest(userId, action);
-      }
+      if (action === 'APPROVE') res = await activeType.approveApi(userId);
+      else res = await activeType.rejectApi(userId);
 
       if (res?.success) {
         setAllUsers(prev => prev.map(r => {
           if ((r._id || r.id) === userId) {
-            if (typeTab === 'MANAGER') {
-              return {
-                ...r,
-                role: action === 'APPROVE' ? 'TEAM_MANAGER' : r.role,
-                managerRequestStatus: action === 'APPROVE' ? 'APPROVED' : 'REJECTED'
-              };
-            } else {
-              return {
-                ...r,
-                role: action === 'APPROVE' ? 'PLAYER' : r.role,
-                playerRequestStatus: action === 'APPROVE' ? 'APPROVED' : 'REJECTED'
-              };
-            }
+            return {
+              ...r,
+              ...(action === 'APPROVE' && typeTab !== 'PLAYER' ? { role: typeTab } : {}),
+              ...(action === 'APPROVE' && typeTab === 'PLAYER' ? { role: 'PLAYER' } : {}),
+              [activeType.statusKey]: action === 'APPROVE' ? 'APPROVED' : 'REJECTED'
+            };
           }
           return r;
         }));
@@ -109,10 +160,10 @@ export default function AdminManagerRequests() {
             triggerToast(`✅ Team Manager Request Approved! ${teamInfo}`, res.noTeamAvailable ? 'warning' : 'success');
             if (typeof refetchTeams === 'function') setTimeout(refetchTeams, 500);
           } else {
-            triggerToast('✅ Player Request Approved! User promoted to Player role.', 'success');
+            triggerToast(`✅ ${activeType.label} request approved!`, 'success');
           }
         } else {
-          triggerToast(`Request rejected. Role unchanged.`, 'warning');
+          triggerToast('Request rejected. Role unchanged.', 'warning');
         }
       }
     } catch (err) {
@@ -122,6 +173,10 @@ export default function AdminManagerRequests() {
       setProcessingId(null);
     }
   };
+
+  const filtered = filter === 'ALL'
+    ? currentList
+    : currentList.filter(r => r[activeType.statusKey] === filter);
 
   return (
     <div className="space-y-6">
@@ -146,49 +201,43 @@ export default function AdminManagerRequests() {
           </button>
         </div>
 
-        {/* Category Request Tabs (Manager Requests vs Player Requests) */}
+        {/* Category Request Tabs */}
         <div className="flex flex-wrap gap-3 mt-5 pt-4 border-t border-cardBorder/80">
-          <button
-            onClick={() => { setTypeTab('MANAGER'); setFilter('PENDING'); }}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition ${
-              typeTab === 'MANAGER'
-                ? 'bg-[#58D20A] text-[#050505] shadow-lg shadow-[#58D20A]/40 border border-[#58D20A]'
-                : 'bg-[#151515] text-[#F5F5F5] border border-[#333333] hover:border-[#58D20A] hover:text-[#58D20A]'
-            }`}
-          >
-            <Crown className="w-4 h-4" />
-            Team Manager Requests
-            {pendingManagerCount > 0 && (
-              <span className="px-2 py-0.5 rounded-full text-[10px] bg-[#050505]/40 text-[#050505] font-mono font-extrabold border border-[#050505]/20">
-                {pendingManagerCount}
-              </span>
-            )}
-          </button>
-
-          <button
-            onClick={() => { setTypeTab('PLAYER'); setFilter('PENDING'); }}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition ${
-              typeTab === 'PLAYER'
-                ? 'bg-[#58D20A] text-[#050505] shadow-lg shadow-[#58D20A]/40'
-                : 'bg-[#151515] text-[#F5F5F5] border border-[#333333] hover:border-[#58D20A] hover:text-[#58D20A]'
-            }`}
-          >
-            <Users className="w-4 h-4" />
-            Player Requests
-            {pendingPlayerCount > 0 && (
-              <span className="px-2 py-0.5 rounded-full text-[10px] bg-[#58D20A]/20 text-[#58D20A] font-mono font-extrabold border border-[#58D20A]/40">
-                {pendingPlayerCount}
-              </span>
-            )}
-          </button>
+          {REQUEST_TYPES.map(t => {
+            const Icon = t.icon;
+            const count = pendingCountByType[t.key] || 0;
+            const isActive = typeTab === t.key;
+            return (
+              <button
+                key={t.key}
+                onClick={() => { setTypeTab(t.key); setFilter('PENDING'); }}
+                className={`flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition ${
+                  isActive
+                    ? 'bg-[#0B2B26] text-white shadow-lg shadow-[#0B2B26]/40 border border-[#0B2B26]'
+                    : 'bg-[#151515] text-[#F5F5F5] border border-[#333333] hover:border-[#0B2B26] hover:text-white'
+                }`}
+              >
+                <Icon className="w-4 h-4" />
+                <span className="hidden sm:inline">{t.tabLabel}</span>
+                <span className="sm:hidden">{t.label}</span>
+                {count > 0 && (
+                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-extrabold ${
+                    isActive ? 'bg-black/40 text-white border border-white/10' : 'bg-[#0B2B26]/20 text-white border border-[#0B2B26]/40'
+                  }`}>
+                    {count}
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
 
         {/* Stats Row for active tab */}
         <div className="grid grid-cols-3 gap-3 mt-4">
           {[
-            { label: 'Pending Review', count: currentList.filter(r => r[statusKey] === 'PENDING').length, color: 'text-warningGold', bg: 'bg-warningGold/10 border-warningGold/20' },
-            { label: 'Approved', count: currentList.filter(r => r[statusKey] === 'APPROVED').length, color: 'text-neonGreen', bg: 'bg-neonGreen/10 border-neonGreen/20' },
-            { label: 'Rejected', count: currentList.filter(r => r[statusKey] === 'REJECTED').length, color: 'text-urgentRedText', bg: 'bg-urgentRed/10 border-urgentRed/20' },
+            { label: 'Pending Review', count: currentList.filter(r => r[activeType.statusKey] === 'PENDING').length, color: 'text-warningGold', bg: 'bg-warningGold/10 border-warningGold/20' },
+            { label: 'Approved', count: currentList.filter(r => r[activeType.statusKey] === 'APPROVED').length, color: 'text-white', bg: 'bg-neonGreen/10 border-neonGreen/20' },
+            { label: 'Rejected', count: currentList.filter(r => r[activeType.statusKey] === 'REJECTED').length, color: 'text-urgentRedText', bg: 'bg-urgentRed/10 border-urgentRed/20' },
           ].map(stat => (
             <div key={stat.label} className={`p-3 rounded-xl border ${stat.bg} text-center`}>
               <p className={`text-2xl font-black ${stat.color}`}>{stat.count}</p>
@@ -203,10 +252,8 @@ export default function AdminManagerRequests() {
         <div className="p-4 bg-warningGold/10 border border-warningGold/30 rounded-2xl flex items-center gap-3 text-warningGold text-xs font-semibold">
           <AlertTriangle className="w-5 h-5 flex-shrink-0 text-warningGold animate-pulse" />
           <span>
-            <strong>{currentPendingCount}</strong> {typeTab === 'MANAGER' ? 'Team Manager' : 'Player'} request{currentPendingCount > 1 ? 's' : ''} awaiting your review.
-            {typeTab === 'MANAGER'
-              ? ' Approving will promote the user to Team Manager and auto-assign an unassigned team.'
-              : ' Approving will promote the user to Player role and create their player pool record.'}
+            <strong>{currentPendingCount}</strong> {activeType.label} request{currentPendingCount > 1 ? 's' : ''} awaiting your review.
+            {' '}{activeType.bannerText}
           </span>
         </div>
       )}
@@ -219,8 +266,8 @@ export default function AdminManagerRequests() {
             onClick={() => setFilter(f)}
             className={`px-4 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider border transition ${
               filter === f
-                ? 'bg-[#58D20A] text-[#050505] border-[#58D20A] shadow-lg font-extrabold'
-                : 'bg-[#151515] text-[#F5F5F5] border-[#333333] hover:border-[#58D20A] hover:text-[#58D20A]'
+                ? 'bg-[#0B2B26] text-white border-[#0B2B26] shadow-lg font-extrabold'
+                : 'bg-[#151515] text-[#F5F5F5] border border-[#333333] hover:border-[#0B2B26] hover:text-white'
             }`}
           >
             {f === 'ALL' ? `All (${currentList.length})` : f}
@@ -232,14 +279,14 @@ export default function AdminManagerRequests() {
       <div className="bg-cardBg/90 rounded-2xl border border-cardBorder overflow-hidden">
         {loading ? (
           <div className="flex items-center justify-center py-16">
-            <Loader2 className="w-8 h-8 animate-spin text-neonGreen" />
+            <Loader2 className="w-8 h-8 animate-spin text-white" />
           </div>
         ) : filtered.length === 0 ? (
           <div className="py-16 text-center text-mutedText">
             <Users className="w-10 h-10 mx-auto mb-3 opacity-30" />
-            <p className="font-semibold">No {filter !== 'ALL' ? filter.toLowerCase() : ''} {typeTab === 'MANAGER' ? 'manager' : 'player'} requests found.</p>
+            <p className="font-semibold">No {filter !== 'ALL' ? filter.toLowerCase() : ''} {activeType.label} requests found.</p>
             <p className="text-xs mt-1 text-mutedText">
-              Users can submit {typeTab === 'MANAGER' ? 'Team Manager' : 'Player'} role requests from their Profile/Settings page.
+              Users can submit {activeType.label} role requests from their Profile page.
             </p>
           </div>
         ) : (
@@ -259,8 +306,8 @@ export default function AdminManagerRequests() {
                 {filtered.map((req) => {
                   const id = req._id || req.id;
                   const isProcessing = processingId === id;
-                  const status = req[statusKey];
-                  const note = req[noteKey];
+                  const status = req[activeType.statusKey];
+                  const note = req[activeType.noteKey];
 
                   return (
                     <tr key={id} className="hover:bg-surfaceHover/30 transition">
@@ -269,7 +316,7 @@ export default function AdminManagerRequests() {
                           {req.profilePhoto ? (
                             <img src={req.profilePhoto} alt="" className="w-7 h-7 rounded-full object-cover border border-borderStrong shrink-0" />
                           ) : (
-                            <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-neonGreen to-successGreen flex items-center justify-center text-darkBg font-bold text-xs uppercase flex-shrink-0">
+                            <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-neonGreen to-successGreen flex items-center justify-center text-white font-bold text-xs uppercase flex-shrink-0">
                               {req.name?.[0] || '?'}
                             </div>
                           )}
@@ -280,10 +327,10 @@ export default function AdminManagerRequests() {
                       <td className="px-5 py-3.5">
                         <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase ${
                           req.role === 'TEAM_MANAGER'
-                            ? 'bg-neonGreen/20 text-neonGreen'
+                            ? 'bg-neonGreen/20 text-white'
                             : req.role === 'PLAYER'
                             ? 'bg-warningGold/20 text-warningGold'
-                            : 'bg-neonGreen/20 text-neonGreen'
+                            : 'bg-neonGreen/20 text-white'
                         }`}>
                           {req.role?.replace('_', ' ')}
                         </span>
@@ -294,7 +341,7 @@ export default function AdminManagerRequests() {
                       <td className="px-5 py-3.5">
                         <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-mono font-bold uppercase border ${
                           status === 'APPROVED'
-                            ? 'bg-neonGreen/20 text-neonGreen border-neonGreen/20'
+                            ? 'bg-neonGreen/20 text-white border-neonGreen/20'
                             : status === 'REJECTED'
                             ? 'bg-urgentRed/20 text-urgentRedText border-urgentRed/20'
                             : 'bg-warningGold/20 text-warningGold border-warningGold/20'
@@ -329,9 +376,9 @@ export default function AdminManagerRequests() {
                           </div>
                         )}
                         {status === 'APPROVED' && (
-                          <span className="text-neonGreen font-semibold text-[11px] flex items-center justify-end gap-1">
+                          <span className="text-white font-semibold text-[11px] flex items-center justify-end gap-1">
                             <UserCheck className="w-3.5 h-3.5" />
-                            {typeTab === 'MANAGER' ? 'Promoted to Manager' : 'Promoted to Player'}
+                            {activeType.approveText}
                           </span>
                         )}
                         {status === 'REJECTED' && (
@@ -349,4 +396,3 @@ export default function AdminManagerRequests() {
     </div>
   );
 }
-

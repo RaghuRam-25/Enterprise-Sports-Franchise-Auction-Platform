@@ -112,7 +112,7 @@ function TeamCrest({ team, size = 'md', ring = false }) {
     <div
       className={`relative flex-shrink-0 flex items-center justify-center font-black overflow-hidden border shadow-md ${dims} ${avatarConfig.borderColor} ${ring ? 'ring-1 ring-borderStrong ring-offset-1 ring-offset-slate-950' : ''}`}
       style={customColors
-        ? { backgroundImage: `linear-gradient(135deg, ${teamRef.primaryColor || '#58D20A'}, ${teamRef.secondaryColor || '#050505'})` }
+        ? { backgroundImage: `linear-gradient(135deg, ${teamRef.primaryColor || '#0B2B26'}, ${teamRef.secondaryColor || '#050505'})` }
         : undefined}
     >
       {showImg ? (
@@ -224,7 +224,7 @@ function MatchDetailModal({ match, onClose }) {
                 <span className="w-1.5 h-1.5 rounded-full bg-urgentRed animate-ping" /> Live Now
               </span>
             ) : status === 'Finished' ? (
-              <span className="inline-flex items-center gap-1.5 text-neonGreenHover bg-neonGreen/15 border border-neonGreen/40 px-2.5 py-0.5 rounded-full">
+              <span className="inline-flex items-center gap-1.5 text-white bg-neonGreen/15 border border-neonGreen/40 px-2.5 py-0.5 rounded-full">
                 {match.scoreA} : {match.scoreB} Full Time
               </span>
             ) : (
@@ -360,7 +360,7 @@ export default function MatchesHub() {
         : '/matches/table';
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#0b0f19] text-primaryText font-sans selection:bg-neonGreen selection:text-darkBg">
+    <div className="min-h-screen flex flex-col bg-black text-primaryText font-sans selection:bg-neonGreen selection:text-white">
       {!user && <Navbar />}
 
       <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 space-y-4">
@@ -376,7 +376,7 @@ export default function MatchesHub() {
             {/* Card header */}
             <div className="flex items-center justify-between gap-3 px-5 py-3.5 border-b border-cardBorder/80">
               <div className="flex items-center gap-2.5 min-w-0">
-                <div className="p-2 rounded-xl bg-neonGreen/10 border border-neonGreen/20 text-neonGreen shrink-0">
+                <div className="p-2 rounded-xl bg-neonGreen/10 border border-neonGreen/20 text-white shrink-0">
                   <Calendar className="w-4 h-4" />
                 </div>
                 <div className="min-w-0">
@@ -434,7 +434,7 @@ export default function MatchesHub() {
                         </>
                       ) : featured.calculatedStatus === 'Finished' ? (
                         <>
-                          <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-neonGreenHover bg-neonGreen/15 border border-neonGreen/40 px-2.5 py-1 rounded-full">
+                          <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-white bg-neonGreen/15 border border-neonGreen/40 px-2.5 py-1 rounded-full">
                             Full-time
                           </span>
                           <span className="text-sm font-black font-mono tabular-nums text-white mt-2">
@@ -444,7 +444,7 @@ export default function MatchesHub() {
                         </>
                       ) : (
                         <>
-                          <span className="text-[10px] font-black uppercase tracking-widest text-neonGreenHover bg-neonGreen/10 border border-neonGreen/30 px-2.5 py-1 rounded-full">
+                          <span className="text-[10px] font-black uppercase tracking-widest text-white bg-neonGreen/10 border border-neonGreen/30 px-2.5 py-1 rounded-full">
                             {matchDayLabel(featured)}
                           </span>
                           <span className="text-sm sm:text-lg font-black font-mono text-white mt-2">
@@ -475,7 +475,7 @@ export default function MatchesHub() {
                 {recentResults.length > 0 && (
                   <div>
                     <p className="text-[10px] font-black uppercase tracking-widest text-secondaryText mb-2 flex items-center gap-1.5">
-                      <Clock className="w-3 h-3 text-neonGreen" /> Match Recap
+                      <Clock className="w-3 h-3 text-white" /> Match Recap
                     </p>
                     <div className="divide-y divide-cardBorder/60 border border-cardBorder/70 rounded-2xl overflow-hidden bg-darkBg/40">
                       {recentResults.map(m => (
@@ -496,7 +496,7 @@ export default function MatchesHub() {
                           </span>
                           <TeamCrest team={m.teamB} size="xs" />
                           <span className="shrink-0 w-24 text-right">
-                            <span className="block text-[10px] font-bold text-neonGreenHover uppercase">FT</span>
+                            <span className="block text-[10px] font-bold text-white uppercase">FT</span>
                             <span className="block text-[10px] font-mono text-secondaryText">{resultDayLabel(m)}</span>
                           </span>
                         </button>
@@ -542,8 +542,8 @@ export default function MatchesHub() {
                         <th className="text-left py-3 pl-4 sm:pl-6 pr-2 text-mutedText">#</th>
                         <th className="text-left py-3 pr-2 text-mutedText">Team</th>
                         <th className="text-center py-3 px-2 text-secondaryText">Played</th>
-                        <th className="text-center py-3 px-2 text-neonGreen">Won</th>
-                        <th className="text-center py-3 px-2 text-neonGreen">Drawn</th>
+                        <th className="text-center py-3 px-2 text-white">Won</th>
+                        <th className="text-center py-3 px-2 text-white">Drawn</th>
                         <th className="text-center py-3 px-2 text-urgentRedText">Lost</th>
                         <th className="text-center py-3 px-2 text-secondaryText">Goals For</th>
                         <th className="text-center py-3 px-2 text-secondaryText">Goals Against</th>
@@ -552,7 +552,7 @@ export default function MatchesHub() {
                     </thead>
                     <tbody className="divide-y divide-cardBorder/50">
                       {standings.slice(0, 8).map((row, idx) => {
-                        const posClass = idx === 0 ? 'text-neonGreen' : idx === 1 ? 'text-neonGreen' : idx === 2 ? 'text-warningGold' : 'text-mutedText';
+                        const posClass = idx === 0 ? 'text-white' : idx === 1 ? 'text-white' : idx === 2 ? 'text-warningGold' : 'text-mutedText';
                         const promotionTint = idx <= 2 ? 'bg-neonGreen/[0.04]' : '';
                         const pct = maxPoints > 0 ? (row.pts / maxPoints) * 100 : 0;
                         return (
@@ -570,7 +570,7 @@ export default function MatchesHub() {
                               </div>
                             </td>
                             <td className="text-center py-3 px-2 font-mono font-bold text-base text-secondaryText">{row.mp}</td>
-                            <td className="text-center py-3 px-2 font-mono font-bold text-base text-neonGreen">{row.w}</td>
+                            <td className="text-center py-3 px-2 font-mono font-bold text-base text-white">{row.w}</td>
                             <td className="text-center py-3 px-2 font-mono font-bold text-base text-secondaryText">{row.d}</td>
                             <td className="text-center py-3 px-2 font-mono font-bold text-base text-urgentRedText">{row.l}</td>
                             <td className="text-center py-3 px-2 font-mono font-bold text-base text-secondaryText">{row.gf}</td>
@@ -593,8 +593,8 @@ export default function MatchesHub() {
 
               {/* Legend */}
               <div className="mt-auto flex flex-wrap items-center justify-center gap-2 text-[10px] font-bold text-mutedText uppercase tracking-widest py-3 px-5 border-t border-cardBorder/60">
-                <span className="inline-flex h-8 w-52 items-center justify-center gap-1.5"><ArrowUp className="w-3 h-3 text-neonGreen shrink-0" /> Points = 3 win / 1 draw</span>
-                <span className="inline-flex h-8 w-52 items-center justify-center gap-1.5"><Shield className="w-3 h-3 text-neonGreen shrink-0" /> Top 3 shaded</span>
+                <span className="inline-flex h-8 w-52 items-center justify-center gap-1.5"><ArrowUp className="w-3 h-3 text-white shrink-0" /> Points = 3 win / 1 draw</span>
+                <span className="inline-flex h-8 w-52 items-center justify-center gap-1.5"><Shield className="w-3 h-3 text-white shrink-0" /> Top 3 shaded</span>
                 {maxPoints > 0 && <span className="inline-flex h-8 w-52 items-center justify-center gap-1.5"><Trophy className="w-3 h-3 text-warningGold shrink-0" /> Max {maxPoints} pts</span>}
               </div>
             </section>

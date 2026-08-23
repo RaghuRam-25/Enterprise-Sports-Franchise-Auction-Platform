@@ -20,6 +20,7 @@ const FULL_FIT_ROUTES = new Set([
   '/podium/monitor',
   '/podium/settings',
   '/player/live',
+  '/general/live',
 ]);
 
 export default function DashboardLayout() {
@@ -51,7 +52,7 @@ export default function DashboardLayout() {
         {/* Mobile overlay backdrop behind the drawer */}
         {isMobileSidebarOpen && (
           <div
-            className="fixed inset-0 z-30 bg-black/60 backdrop-blur-sm lg:hidden"
+            className="fixed inset-0 z-30 bg-black/60 backdrop-blur-sm md:hidden"
             onClick={() => setIsMobileSidebarOpen(false)}
           />
         )}

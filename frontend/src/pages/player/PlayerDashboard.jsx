@@ -44,8 +44,8 @@ const POSITION_CODE_MAP = {
 
 const CATEGORY_TONE = {
   "Icon Category": { text: "text-warningGold", bg: "bg-warningGold/10", border: "border-warningGold/30" },
-  "A Grade": { text: "text-neonGreen", bg: "bg-neonGreen/10", border: "border-neonGreen/30" },
-  "B Grade": { text: "text-neonGreen", bg: "bg-neonGreen/10", border: "border-neonGreen/30" },
+  "A Grade": { text: "text-white", bg: "bg-neonGreen/10", border: "border-neonGreen/30" },
+  "B Grade": { text: "text-white", bg: "bg-neonGreen/10", border: "border-neonGreen/30" },
   "Emerging Youth": { text: "text-warningGold", bg: "bg-warningGold/10", border: "border-warningGold/30" },
 };
 const getCategoryTone = (cat) => CATEGORY_TONE[cat] || { text: "text-secondaryText", bg: "bg-surfaceHover/60", border: "border-borderStrong" };
@@ -281,9 +281,17 @@ export default function PlayerDashboard() {
   );
 
   const currentAvatar = removeImage ? `${DEFAULT_AVATAR}${encodeURIComponent(myPlayer.name)}` : (filePreview || myPlayer.imageUrl || `${DEFAULT_AVATAR}${encodeURIComponent(myPlayer.name)}`);
-  const catTone = getCategoryTone(myPlayer.category);
-  const pitchMarks = (myPlayer.positions || []).map(resolvePosition).filter(Boolean);
-  const primaryName = (resolvePosition(myPlayer.primaryPosition)?.name) || (myPlayer.primaryPosition || "");
+  const activePositionCode = myPlayer.assignedTeamPosition || myPlayer.primaryPosition;
+  const primaryName = (resolvePosition(activePositionCode)?.name) || (activePositionCode || "");
+  // Single source of truth: place animated marker at manager's assigned squad position
+  const pitchMarks = useMemo(() => {
+    const mainMark = resolvePosition(activePositionCode);
+    const otherMarks = (myPlayer.positions || [])
+      .filter(p => String(p).toUpperCase() !== String(activePositionCode).toUpperCase())
+      .map(resolvePosition)
+      .filter(Boolean);
+    return mainMark ? [mainMark, ...otherMarks] : (myPlayer.positions || []).map(resolvePosition).filter(Boolean);
+  }, [activePositionCode, myPlayer.positions]);
   const isSold = myPlayer.status === "SOLD";
   const isHalted = myPlayer.status === "WITHDRAWN" || myPlayer.status === "BANNED";
 
@@ -302,10 +310,10 @@ export default function PlayerDashboard() {
 
   // Bid status → label + tone (every status the backend can emit).
   const AUCTION_STATUS_META = {
-    REGISTERED: { label: "Registered", tone: "text-neonGreen bg-neonGreen/10 border-neonGreen/30" },
-    APPROVED: { label: "Verified", tone: "text-neonGreen bg-neonGreen/10 border-neonGreen/30" },
+    REGISTERED: { label: "Registered", tone: "text-white bg-neonGreen/10 border-neonGreen/30" },
+    APPROVED: { label: "Verified", tone: "text-white bg-neonGreen/10 border-neonGreen/30" },
     ON_PODIUM: { label: "On Podium", tone: "text-warningGold bg-warningGold/10 border-warningGold/30" },
-    SOLD: { label: "Sold", tone: "text-neonGreen bg-neonGreen/10 border-neonGreen/30" },
+    SOLD: { label: "Sold", tone: "text-white bg-neonGreen/10 border-neonGreen/30" },
     UNSOLD: { label: "Unsold", tone: "text-urgentRedText bg-urgentRed/10 border-urgentRed/30" },
     WITHDRAWN: { label: "Withdrawn", tone: "text-secondaryText bg-surfaceActive/10 border-borderStrong/30" },
     BANNED: { label: "Banned", tone: "text-urgentRedText bg-urgentRed/10 border-urgentRed/30" },
@@ -379,7 +387,7 @@ export default function PlayerDashboard() {
               onClick={openEdit}
               title="Edit Profile"
               aria-label="Edit Profile"
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-neonGreen/15 border border-neonGreen/50 text-[#58D20A] hover:bg-[#58D20A] hover:text-darkBg hover:border-[#58D20A] active:scale-[0.97] font-black text-xs uppercase tracking-wider transition shadow-lg shadow-neonGreen/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#58D20A]/70 ui-focus"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-neonGreen/15 border border-neonGreen/50 text-white hover:bg-[#0B2B26] hover:text-white hover:border-[#0B2B26] active:scale-[0.97] font-black text-xs uppercase tracking-wider transition shadow-lg shadow-neonGreen/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0B2B26]/70 ui-focus"
             >
               <Edit3 className="w-3.5 h-3.5" /> Edit Profile
             </button>
@@ -426,7 +434,7 @@ export default function PlayerDashboard() {
             </h1>
 
             {/* Position */}
-            <p className="text-xs sm:text-sm font-black uppercase tracking-[0.3em] text-neonGreenHover">
+            <p className="text-xs sm:text-sm font-black uppercase tracking-[0.3em] text-white">
               {primaryName || "Position Not Set"}
             </p>
 
@@ -437,7 +445,7 @@ export default function PlayerDashboard() {
                 {myPlayer.category || 'Unranked'}
               </span>
               <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-wider text-primaryText backdrop-blur-sm">
-                <span className={`inline-block h-1.5 w-1.5 rounded-full ${isSold ? 'bg-neonGreen' : 'bg-neonGreen'} animate-pulse`} />
+                <span className={`inline-block h-1.5 w-1.5 rounded-full bg-white animate-pulse`} />
                 {isSold ? "Sold" : "Registered"}
               </span>
             </div>
@@ -467,7 +475,7 @@ export default function PlayerDashboard() {
 
             <div className="rounded-xl border border-white/10 bg-darkBg/50 p-3.5 flex flex-col justify-center">
               <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-mutedText">
-                <GraduationCap className="w-3.5 h-3.5 text-neonGreen" /> Session
+                <GraduationCap className="w-3.5 h-3.5 text-white" /> Session
               </span>
               <span className="mt-1 block text-sm font-bold text-white truncate">
                 {myPlayer.session || "—"}
@@ -476,9 +484,9 @@ export default function PlayerDashboard() {
 
             <div className="rounded-xl border border-white/10 bg-darkBg/50 p-3.5 flex flex-col justify-center sm:col-span-2">
               <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-mutedText">
-                <Mail className="w-3.5 h-3.5 text-neonGreen" /> Email Address
+                <Mail className="w-3.5 h-3.5 text-white" /> Email Address
               </span>
-              <span className="mt-1 block text-sm font-bold text-neonGreenHover font-mono truncate">
+              <span className="mt-1 block text-sm font-bold text-white font-mono truncate">
                 {myPlayer.email || "—"}
               </span>
             </div>
@@ -505,7 +513,7 @@ export default function PlayerDashboard() {
               <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-mutedText">
                 <Award className="w-3.5 h-3.5 text-warningGold" /> Base Price
               </span>
-              <span className="mt-1 block text-sm font-black text-neonGreen truncate">
+              <span className="mt-1 block text-sm font-black text-white truncate">
                 {myPlayer.basePrice != null ? formatCurrency(myPlayer.basePrice) : "—"}
               </span>
             </div>
@@ -516,7 +524,7 @@ export default function PlayerDashboard() {
         <div className="glass-card rounded-2xl border border-cardBorder p-5 sm:p-6 flex flex-col justify-between h-full">
           <div className="flex items-center justify-between mb-4 border-b border-cardBorder/80 pb-3">
             <h3 className="text-xs font-black uppercase tracking-widest text-secondaryText flex items-center gap-2">
-              <MapPin className="w-4 h-4 text-neonGreen" /> Position on Pitch
+              <MapPin className="w-4 h-4 text-white" /> Position on Pitch
             </h3>
             {myPlayer.primaryPosition && (
               <span className="text-[10px] font-bold text-warningGold flex items-center gap-1">
@@ -568,12 +576,12 @@ export default function PlayerDashboard() {
                     ) : (
                       <>
                         <motion.span
-                          className="pointer-events-none absolute top-1/2 left-1/2 h-8 w-8 rounded-full bg-neonGreenHover/20"
+                          className="pointer-events-none absolute top-1/2 left-1/2 h-8 w-8 rounded-full bg-white/10"
                           style={{ margin: '-16px 0 0 -16px' }}
                           animate={{ opacity: [0.3, 0.7, 0.3], scale: [0.8, 1.3, 0.8] }}
                           transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                         />
-                        <span className="relative block h-8 w-8 sm:h-9 sm:w-9 rounded-full border-2 border-white/90 bg-darkBg/70 p-0.5 shadow-[0_0_10px_rgba(88,210,10,0.45)] backdrop-blur-sm">
+                        <span className="relative block h-8 w-8 sm:h-9 sm:w-9 rounded-full border-2 border-white/90 bg-darkBg/70 p-0.5 shadow-[0_0_10px_rgba(11, 43, 38,0.45)] backdrop-blur-sm">
                           <img
                             src={getImageUrl(myPlayer.imageUrl, myPlayer.imageUrl ? playerFallback('emerald') : `${DEFAULT_AVATAR}${encodeURIComponent(myPlayer.name)}`)}
                             alt={mark.name}
@@ -582,7 +590,7 @@ export default function PlayerDashboard() {
                         </span>
                       </>
                     )}
-                    <span className={`pointer-events-none mt-1 rounded px-1 py-px text-[9px] font-black uppercase tracking-widest shadow-sm ${isPrimary ? "bg-warningGold/90 text-warningGold" : "bg-darkBg/75 text-neonGreenHover/90"}`}>
+                    <span className={`pointer-events-none mt-1 rounded px-1 py-px text-[9px] font-black uppercase tracking-widest shadow-sm ${isPrimary ? "bg-warningGold/90 text-warningGold" : "bg-darkBg/75 text-white/90"}`}>
                       {mark.code}
                     </span>
                   </button>
@@ -613,7 +621,7 @@ export default function PlayerDashboard() {
                     />
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-xs font-black text-white">{myPlayer.name}</p>
-                      <p className="truncate text-[10px] font-semibold text-neonGreenHover">
+                      <p className="truncate text-[10px] font-semibold text-white">
                         {resolvePosition(activePos)?.name || activePos} <span className="text-mutedText">· {activePos}</span>
                       </p>
                     </div>
@@ -642,7 +650,7 @@ export default function PlayerDashboard() {
               <Clock className="w-3.5 h-3.5" /> Pending
             </span>
           )}
-          {user?.managerRequestStatus === "APPROVED" && <span className="px-3 py-1 bg-neonGreen/20 text-neonGreen border border-neonGreen/30 rounded-lg text-xs font-bold">Approved</span>}
+          {user?.managerRequestStatus === "APPROVED" && <span className="px-3 py-1 bg-neonGreen/20 text-white border border-neonGreen/30 rounded-lg text-xs font-bold">Approved</span>}
           {user?.managerRequestStatus === "REJECTED" && <span className="px-3 py-1 bg-urgentRed/20 text-urgentRedText border border-urgentRed/30 rounded-lg text-xs font-bold">Declined</span>}
         </div>
 
@@ -664,7 +672,7 @@ export default function PlayerDashboard() {
             } catch (e) {
               triggerToast(e?.response?.data?.message || "Failed to submit request.", "error");
             }
-          }} className="px-4 py-2.5 bg-gradient-to-r from-neonGreen to-successGreen hover:from-neonGreen hover:to-neonGreen text-darkBg font-black text-xs uppercase tracking-wider rounded-xl transition shadow-lg">
+          }} className="px-4 py-2.5 bg-gradient-to-r from-neonGreen to-successGreen hover:from-neonGreen hover:to-neonGreen text-white font-black text-xs uppercase tracking-wider rounded-xl transition shadow-lg">
             Request Team Manager Role
           </button>
         )}
@@ -698,7 +706,7 @@ export default function PlayerDashboard() {
             </div>
             <div className="flex border-b border-cardBorder px-6 overflow-x-auto">
               {[{ id: "stats", label: "Stats", icon: Goal }, { id: "personal", label: "Personal", icon: User }, { id: "photo", label: "Photo", icon: Camera }, { id: "sports", label: "Positions", icon: Shield }, { id: "kit", label: "Kit & Jersey", icon: Shirt }].map(tab => (
-                <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex items-center gap-1.5 px-4 py-3 text-xs font-bold border-b-2 whitespace-nowrap transition ${activeTab === tab.id ? "border-[#58D20A] text-[#58D20A]" : "border-transparent text-[#F5F5F5] bg-transparent hover:text-[#58D20A]"}`}>
+                <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex items-center gap-1.5 px-4 py-3 text-xs font-bold border-b-2 whitespace-nowrap transition ${activeTab === tab.id ? "border-[#0B2B26] text-white" : "border-transparent text-[#F5F5F5] bg-transparent hover:text-white"}`}>
                   <tab.icon className="w-3.5 h-3.5" />{tab.label}
                 </button>
               ))}
@@ -708,7 +716,7 @@ export default function PlayerDashboard() {
                 <div className="space-y-4 text-xs">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block font-semibold text-secondaryText mb-1.5 flex items-center gap-1.5"><User className="w-3.5 h-3.5 text-neonGreen" /> Full Name</label>
+                      <label className="block font-semibold text-secondaryText mb-1.5 flex items-center gap-1.5"><User className="w-3.5 h-3.5 text-white" /> Full Name</label>
                       <input type="text" value={editForm.name} onChange={e => setEditForm(prev => ({ ...prev, name: e.target.value }))} className="glass-input w-full px-3 py-2.5 rounded-xl text-white" placeholder="Your full name" />
                     </div>
                     <div>
@@ -717,12 +725,12 @@ export default function PlayerDashboard() {
                     </div>
                   </div>
                   <div>
-                    <label className="block font-semibold text-secondaryText mb-1.5 flex items-center gap-1.5"><GraduationCap className="w-3.5 h-3.5 text-neonGreen" /> Academic Session</label>
+                    <label className="block font-semibold text-secondaryText mb-1.5 flex items-center gap-1.5"><GraduationCap className="w-3.5 h-3.5 text-white" /> Academic Session</label>
                     <input type="text" value={editForm.session} onChange={e => setEditForm(prev => ({ ...prev, session: e.target.value }))} className="glass-input w-full px-3 py-2.5 rounded-xl text-white" placeholder="e.g. 2020-2021" />
                   </div>
                   <div className="p-3 bg-darkBg/60 rounded-xl border border-cardBorder flex items-start gap-2">
                     <Mail className="w-3.5 h-3.5 text-mutedText mt-0.5 flex-shrink-0" />
-                    <div><span className="text-mutedText font-semibold">Email (read-only)</span><p className="text-neonGreenHover font-mono mt-0.5">{myPlayer.email}</p></div>
+                    <div><span className="text-mutedText font-semibold">Email (read-only)</span><p className="text-white font-mono mt-0.5">{myPlayer.email}</p></div>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -751,18 +759,18 @@ export default function PlayerDashboard() {
               {activeTab === "stats" && (
                 <div className="space-y-4 text-xs">
                   <div>
-                    <p className="text-[11px] text-mutedText mb-3 flex items-center gap-1.5"><Activity className="w-3.5 h-3.5 text-neonGreen" /> Match performance stats — used in the Player Overview.</p>
+                    <p className="text-[11px] text-mutedText mb-3 flex items-center gap-1.5"><Activity className="w-3.5 h-3.5 text-white" /> Match performance stats — used in the Player Overview.</p>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block font-semibold text-secondaryText mb-1.5 flex items-center gap-1.5"><Activity className="w-3.5 h-3.5 text-neonGreen" /> Matches Played</label>
+                        <label className="block font-semibold text-secondaryText mb-1.5 flex items-center gap-1.5"><Activity className="w-3.5 h-3.5 text-white" /> Matches Played</label>
                         <input type="number" min="0" max="9999" value={editForm.matchesPlayed === 0 ? "" : editForm.matchesPlayed ?? ""} onChange={e => setEditForm(prev => ({ ...prev, matchesPlayed: e.target.value.replace(/\D/g, "").slice(0, 4) }))} className="glass-input w-full px-3 py-2.5 rounded-xl text-white" placeholder="e.g. 25" />
                       </div>
                       <div>
-                        <label className="block font-semibold text-secondaryText mb-1.5 flex items-center gap-1.5"><Goal className="w-3.5 h-3.5 text-neonGreen" /> Goals</label>
+                        <label className="block font-semibold text-secondaryText mb-1.5 flex items-center gap-1.5"><Goal className="w-3.5 h-3.5 text-white" /> Goals</label>
                         <input type="number" min="0" max="9999" value={editForm.goals === 0 ? "" : editForm.goals ?? ""} onChange={e => setEditForm(prev => ({ ...prev, goals: e.target.value.replace(/\D/g, "").slice(0, 4) }))} className="glass-input w-full px-3 py-2.5 rounded-xl text-white" placeholder="e.g. 15" />
                       </div>
                       <div>
-                        <label className="block font-semibold text-secondaryText mb-1.5 flex items-center gap-1.5"><Footprints className="w-3.5 h-3.5 text-neonGreen" /> Assists</label>
+                        <label className="block font-semibold text-secondaryText mb-1.5 flex items-center gap-1.5"><Footprints className="w-3.5 h-3.5 text-white" /> Assists</label>
                         <input type="number" min="0" max="9999" value={editForm.assists === 0 ? "" : editForm.assists ?? ""} onChange={e => setEditForm(prev => ({ ...prev, assists: e.target.value.replace(/\D/g, "").slice(0, 4) }))} className="glass-input w-full px-3 py-2.5 rounded-xl text-white" placeholder="e.g. 10" />
                       </div>
                       <div>
@@ -774,7 +782,7 @@ export default function PlayerDashboard() {
                         <input type="number" min="0" max="9999" value={editForm.redCards === 0 ? "" : editForm.redCards ?? ""} onChange={e => setEditForm(prev => ({ ...prev, redCards: e.target.value.replace(/\D/g, "").slice(0, 4) }))} className="glass-input w-full px-3 py-2.5 rounded-xl text-white" placeholder="e.g. 1" />
                       </div>
                       <div>
-                        <label className="block font-semibold text-secondaryText mb-1.5 flex items-center gap-1.5"><Shield className="w-3.5 h-3.5 text-neonGreen" /> Clean Sheets</label>
+                        <label className="block font-semibold text-secondaryText mb-1.5 flex items-center gap-1.5"><Shield className="w-3.5 h-3.5 text-white" /> Clean Sheets</label>
                         <input type="number" min="0" max="9999" value={editForm.cleanSheets === 0 ? "" : editForm.cleanSheets ?? ""} onChange={e => setEditForm(prev => ({ ...prev, cleanSheets: e.target.value.replace(/\D/g, "").slice(0, 4) }))} className="glass-input w-full px-3 py-2.5 rounded-xl text-white" placeholder="e.g. 8" />
                       </div>
                     </div>
@@ -789,7 +797,7 @@ export default function PlayerDashboard() {
                   <div className="flex flex-col items-center gap-3">
                     <div className="relative">
                       <img src={getImageUrl(currentAvatar, playerFallback('emerald'))} alt="Preview" className="w-28 h-28 rounded-2xl object-cover border-2 border-warningGold/40 shadow-2xl" />
-                      {filePreview && !removeImage && <span className="absolute -top-2 -right-2 px-1.5 py-0.5 bg-successGreen text-darkBg text-[9px] font-bold rounded-full">NEW</span>}
+                      {filePreview && !removeImage && <span className="absolute -top-2 -right-2 px-1.5 py-0.5 bg-successGreen text-white text-[9px] font-bold rounded-full">NEW</span>}
                     </div>
                     <p className="text-mutedText">Profile photo preview</p>
                   </div>
@@ -849,10 +857,10 @@ export default function PlayerDashboard() {
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block font-semibold text-secondaryText mb-1.5 flex items-center gap-1.5"><Shirt className="w-3.5 h-3.5 text-neonGreen" /> T-Shirt Size</label>
+                      <label className="block font-semibold text-secondaryText mb-1.5 flex items-center gap-1.5"><Shirt className="w-3.5 h-3.5 text-white" /> T-Shirt Size</label>
                       <div className="flex gap-1.5">
                         {TSHIRT_SIZES.map(s => (
-                          <button key={s} type="button" onClick={() => setEditForm(prev => ({ ...prev, tShirtSize: s }))} className={`flex-1 py-2 rounded-xl border font-bold transition text-xs ${editForm.tShirtSize === s ? "bg-[#58D20A]/20 border-[#58D20A]/50 text-[#58D20A]" : "bg-[#151515] border-[#333333] text-[#F5F5F5] hover:border-[#58D20A]/50"}`}>{s}</button>
+                          <button key={s} type="button" onClick={() => setEditForm(prev => ({ ...prev, tShirtSize: s }))} className={`flex-1 py-2 rounded-xl border font-bold transition text-xs ${editForm.tShirtSize === s ? "bg-[#0B2B26]/20 border-[#0B2B26]/50 text-white" : "bg-[#151515] border-[#333333] text-[#F5F5F5] hover:border-[#0B2B26]/50"}`}>{s}</button>
                         ))}
                       </div>
                     </div>

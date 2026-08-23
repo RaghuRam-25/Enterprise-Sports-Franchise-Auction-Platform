@@ -94,9 +94,8 @@ export default function GeneralSettings() {
     <div className="w-full space-y-6">
       <div>
         <h1 className="flex items-center gap-2 text-xl font-black text-white">
-          <Settings className="w-5 h-5 text-neonGreen" /> Settings
+          <Settings className="w-5 h-5 text-white" /> Settings
         </h1>
-        <p className="text-xs text-secondaryText mt-1">Manage your fan account preferences.</p>
       </div>
 
       {/* Account overview */}
@@ -113,7 +112,7 @@ export default function GeneralSettings() {
           </div>
           <div className="bg-cardBg/60 border border-cardBorder rounded-xl p-4 space-y-1 sm:col-span-2">
             <p className="text-[10px] font-bold uppercase tracking-wider text-mutedText">Role</p>
-            <p className="font-mono font-bold text-neonGreenHover uppercase">GENERAL_USER — Spectator / Fan access only</p>
+            <p className="font-mono font-bold text-white uppercase">GENERAL_USER — Spectator / Fan access only</p>
           </div>
         </div>
       </section>
@@ -121,11 +120,11 @@ export default function GeneralSettings() {
       {/* Password change */}
       <section className="glass-card rounded-2xl p-6 border border-cardBorder space-y-4">
         <h3 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-secondaryText">
-          <KeyRound className="w-4 h-4 text-neonGreen" /> Change Password
+          <KeyRound className="w-4 h-4 text-white" /> Change Password
         </h3>
 
         {pwMessage && (
-          <p className="flex items-center gap-2 bg-successGreen/50 border border-neonGreen/30 rounded-xl p-3 text-xs text-neonGreenHover">
+          <p className="flex items-center gap-2 bg-successGreen/50 border border-neonGreen/30 rounded-xl p-3 text-xs text-white">
             <CheckCircle className="w-4 h-4 shrink-0" /> {pwMessage}
           </p>
         )}
@@ -182,7 +181,7 @@ export default function GeneralSettings() {
           <Bell className="w-4 h-4 text-warningGold" /> Notification Preferences
         </h3>
         {prefsMessage && (
-          <p className="flex items-center gap-2 bg-successGreen/50 border border-neonGreen/30 rounded-xl p-3 text-xs text-neonGreenHover">
+          <p className="flex items-center gap-2 bg-successGreen/50 border border-neonGreen/30 rounded-xl p-3 text-xs text-white">
             <CheckCircle className="w-4 h-4 shrink-0" /> {prefsMessage}
           </p>
         )}
@@ -191,14 +190,13 @@ export default function GeneralSettings() {
             <li key={row.key} className="py-3 flex items-center justify-between gap-4">
               <div className="min-w-0">
                 <p className="text-xs font-bold text-primaryText">{row.label}</p>
-                <p className="text-[11px] text-mutedText">{row.desc}</p>
               </div>
               <button
                 role="switch"
                 aria-checked={!!prefs[row.key]}
                 disabled={prefsSaving}
                 onClick={() => togglePref(row.key)}
-                className={`relative w-10 h-5.5 h-[22px] rounded-full transition shrink-0 ${prefs[row.key] ? 'bg-successGreen' : 'bg-surfaceHover'}`}
+                className={`relative w-10 h-5.5 h-[22px] rounded-full transition shrink-0 ${prefs[row.key] ? 'bg-[#0B2B26] ring-1 ring-white/40' : 'bg-surfaceHover'}`}
               >
                 <span
                   className={`absolute top-[3px] w-4 h-4 rounded-full bg-white shadow transition-all ${prefs[row.key] ? 'left-[22px]' : 'left-[3px]'}`}

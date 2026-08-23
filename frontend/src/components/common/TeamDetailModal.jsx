@@ -24,8 +24,8 @@ const POSITION_PILL_STYLES = {
   DEFENDER: 'bg-amber-950/80 text-amber-400 border-amber-800/50',
   CB: 'bg-amber-950/80 text-amber-400 border-amber-800/50',
 
-  GOALKEEPER: 'bg-emerald-950/80 text-emerald-400 border-emerald-800/50',
-  GK: 'bg-emerald-950/80 text-emerald-400 border-emerald-800/50',
+  GOALKEEPER: 'bg-[#0B2B26]/80 text-white border-[#0B2B26]/50',
+  GK: 'bg-[#0B2B26]/80 text-white border-[#0B2B26]/50',
 };
 
 const DEMO_SQUAD = [
@@ -144,14 +144,14 @@ export default function TeamDetailModal({ team, onClose, players = [], formatCur
           </div>
 
           {/* Card 2: AVAILABLE BALANCE (Highlighted with Green Border) */}
-          <div className="bg-[#090b10] border-2 border-emerald-500/60 rounded-2xl p-4 flex flex-col justify-between shadow-xl relative overflow-hidden">
+          <div className="bg-[#090b10] border-2 border-[#0B2B26]/60 rounded-2xl p-4 flex flex-col justify-between shadow-xl relative overflow-hidden">
             <div className="flex items-center gap-3.5">
-              <div className="w-12 h-12 rounded-2xl bg-emerald-950/80 border border-emerald-800/50 flex items-center justify-center text-emerald-400 shrink-0">
+              <div className="w-12 h-12 rounded-2xl bg-[#0B2B26]/80 border border-[#0B2B26]/50 flex items-center justify-center text-white shrink-0">
                 <Coins className="w-6 h-6" />
               </div>
               <div className="min-w-0">
                 <span className="text-[10px] font-bold text-slate-400 uppercase block tracking-wider">AVAILABLE BALANCE</span>
-                <AutoFitText className="font-black font-mono text-emerald-400">
+                <AutoFitText className="font-black font-mono text-white">
                   {fmtPrice(purseLeft)}
                 </AutoFitText>
               </div>

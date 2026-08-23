@@ -124,10 +124,10 @@ export default function PublicTeamsView() {
             className="absolute inset-x-0 top-0 h-24 -z-10 opacity-50 pointer-events-none"
             style={{
               background:
-                "radial-gradient(ellipse at center, rgba(88,210,10,0.12) 0%, transparent 70%)",
+                "radial-gradient(ellipse at center, rgba(11, 43, 38,0.12) 0%, transparent 70%)",
             }}
           />
-          <Shield className="w-10 h-10 mx-auto text-neonGreen bg-neonGreen/10 p-2 rounded-xl border border-neonGreen/20 shadow-md shadow-neonGreen/10" />
+          <Shield className="w-10 h-10 mx-auto text-white bg-neonGreen/10 p-2 rounded-xl border border-neonGreen/20 shadow-md shadow-neonGreen/10" />
           <h1 className="text-2xl sm:text-3xl font-black font-heading bg-gradient-to-r from-white via-primaryText to-secondaryText bg-clip-text text-transparent uppercase tracking-wide">All Franchises</h1>
         </div>
 
@@ -208,7 +208,7 @@ export default function PublicTeamsView() {
             <p className="font-bold text-secondaryText">No teams match your search</p>
             <button
               onClick={() => setSearch('')}
-              className="text-xs text-neonGreen hover:underline font-semibold"
+              className="text-xs text-white hover:underline font-semibold"
             >
               Clear Search Query
             </button>

@@ -221,6 +221,105 @@ export const getOwnRoster = async (req, res, next) => {
 
 
 // ── PLACE NORMAL BID — GAP 3 & 12 FIX ────────────────────────────────────────
+// SQUAD BUILDER LINEUP (formation, starting XI, substitutes, strength)
+// Tournament squad rules — server-owned so the UI never hardcodes them.
+const SQUAD_RULES = {
+  maxSquadSize: 23,
+  startingXI: 11,
+  maxSubstitutes: 7,
+  foreignPlayerLimit: null,
+  localPlayerMinimum: null,
+  goalkeeperRequired: 1
+};
+
+const resolveManagerTeamId = async (req) => {
+  let teamId = req.user.teamId;
+  if (!teamId) {
+    const foundTeam = await Team.findOne({ managerId: req.user._id || req.user.id });
+    if (foundTeam) teamId = foundTeam._id;
+  }
+  return teamId;
+};
+
+export const getOwnLineup = async (req, res, next) => {
+  try {
+    const teamId = await resolveManagerTeamId(req);
+    if (!teamId) {
+      return res.json({ success: true, data: { formation: '4-3-3', lineup: [], substitutes: [], chemistry: 0, collectiveStrength: 0, squadStatus: 'DRAFT', rules: SQUAD_RULES } });
+    }
+
+    const team = await Team.findById(teamId).select('formation lineup substitutes chemistry collectiveStrength squadStatus');
+    return res.json({
+      success: true,
+      data: {
+        formation: team?.formation || '4-3-3',
+        lineup: team?.lineup || [],
+        substitutes: team?.substitutes || [],
+        chemistry: team?.chemistry || 0,
+        collectiveStrength: team?.collectiveStrength || 0,
+        squadStatus: team?.squadStatus || 'DRAFT',
+        rules: SQUAD_RULES
+      }
+    });
+  } catch (e) { next(e); }
+};
+
+export const saveOwnLineup = async (req, res, next) => {
+  try {
+    const teamId = await resolveManagerTeamId(req);
+    if (!teamId) return res.status(400).json({ success: false, message: 'No team assigned to this manager' });
+
+    const { formation, lineup, substitutes, chemistry, collectiveStrength } = req.body || {};
+    if (formation && typeof formation !== 'string') {
+      return res.status(400).json({ success: false, message: 'Invalid formation.' });
+    }
+    if (lineup !== undefined && !Array.isArray(lineup)) {
+      return res.status(400).json({ success: false, message: 'Invalid lineup payload.' });
+    }
+    if (substitutes !== undefined && !Array.isArray(substitutes)) {
+      return res.status(400).json({ success: false, message: 'Invalid substitutes payload.' });
+    }
+    if (Array.isArray(substitutes) && substitutes.length > SQUAD_RULES.maxSubstitutes) {
+      return res.status(400).json({ success: false, message: `Maximum ${SQUAD_RULES.maxSubstitutes} substitutes allowed.` });
+    }
+
+    const update = {};
+    if (formation) update.formation = formation.slice(0, 12);
+    if (Array.isArray(lineup)) {
+      update.lineup = lineup
+        .filter((l) => l && typeof l.slot === 'string' && l.playerId)
+        .slice(0, SQUAD_RULES.startingXI)
+        .map((l) => ({ slot: String(l.slot).slice(0, 12), playerId: l.playerId }));
+    }
+    if (Array.isArray(substitutes)) update.substitutes = substitutes.slice(0, SQUAD_RULES.maxSubstitutes);
+    if (Number.isFinite(Number(chemistry))) update.chemistry = Math.max(0, Math.min(100, Number(chemistry)));
+    if (Number.isFinite(Number(collectiveStrength))) update.collectiveStrength = Math.max(0, Number(collectiveStrength));
+    update.squadStatus = 'SAVED';
+
+    const team = await Team.findByIdAndUpdate(teamId, update, { new: true }).select('formation lineup substitutes chemistry collectiveStrength squadStatus');
+    if (!team) return res.status(404).json({ success: false, message: 'Team not found' });
+
+    const io = req.app?.get('io');
+    if (io) {
+      io.emit('teams:updated', { teamId: String(teamId) });
+      io.emit('lineup:updated', { teamId: String(teamId) });
+    }
+
+    return res.json({
+      success: true,
+      message: 'Squad saved successfully.',
+      data: {
+        formation: team.formation,
+        lineup: team.lineup,
+        substitutes: team.substitutes,
+        chemistry: team.chemistry,
+        collectiveStrength: team.collectiveStrength,
+        squadStatus: team.squadStatus,
+        rules: SQUAD_RULES
+      }
+    });
+  } catch (e) { next(e); }
+};
 export const placeBid = async (req, res, next) => {
   try {
     const teamId = req.user.teamId;
