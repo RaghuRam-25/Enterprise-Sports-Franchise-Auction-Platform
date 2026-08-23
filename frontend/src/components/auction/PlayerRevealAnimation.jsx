@@ -5,6 +5,7 @@ import SpotlightBackground from './SpotlightBackground';
 import FloatingParticles from './FloatingParticles';
 import { soundManager, AUCTION_SOUNDS } from './soundManager';
 import { getImageUrl } from '../../utils/imageUrl';
+import { playerFallback } from '../../utils/playerFallback';
 
 const PLAYER_FALLBACK_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="320" height="320" viewBox="0 0 320 320">
   <defs>
