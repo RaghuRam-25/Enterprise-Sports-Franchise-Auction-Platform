@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Trophy, Zap, Star, CheckCircle, Ban, Clock, UserX, Edit3, Lock, Tag, DollarSign, Award } from 'lucide-react';
+import { Trophy, Zap, Star, CheckCircle, Ban, Clock, UserX, Edit3, Lock, Tag, DollarSign, Award, Trash2 } from 'lucide-react';
 import { getCategoryTheme, readableAccentText } from '../../utils/themeConfig';
 import { getImageUrl } from '../../utils/imageUrl';
 import { playerFallback } from '../../utils/playerFallback';
@@ -26,6 +26,7 @@ export default function PlayerCardCard({
   onApprove,
   onEdit,
   onToggleBan,
+  onDelete,
   teams = [],
   categories = [],
   customActions = null,
@@ -204,7 +205,17 @@ export default function PlayerCardCard({
                   <Edit3 className="w-3.5 h-3.5" />
                 </button>
               )}
-              {onToggleBan && (
+              {onDelete && (
+                <button
+                  type="button"
+                  id={`delete-${id}`}
+                  onClick={(e) => { e.stopPropagation(); onDelete(player); }}
+                  title="Delete Player (permanent)"
+                  className="p-1.5 rounded-lg transition text-[#A3A3A3] hover:text-red-400 hover:bg-[#151515]"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              )}              {onToggleBan && (
                 <button
                   type="button"
                   id={`ban-${id}`}

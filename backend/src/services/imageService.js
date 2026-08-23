@@ -42,6 +42,9 @@ if (isCloudinaryConfigured()) {
 
 // Upload a processed buffer to Cloudinary and resolve { url, publicId } from
 // the uploader result. Rejects on any Cloudinary error.
+// Inline WebP data URL - guarantees the image stays visible on ANY host even
+// when Cloudinary is unreachable or not configured (~15-30KB per 512px photo).
+const toInlineDataUrl = (buffer) => `data:image/webp;base64,${buffer.toString('base64')}`;
 const uploadBufferToCloudinary = (buffer, publicId) =>
   new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
@@ -87,27 +90,17 @@ export const processAndUploadImage = async (fileBuffer, fileNameHint = 'player')
         return await uploadBufferToCloudinary(processedWebpBuffer, `${fileNameHint}_${Date.now()}`);
       } catch (clErr) {
         console.error('[imageService] Cloudinary upload FAILED — refusing to store a device-bound local URL.', clErr?.message || clErr);
-        // Signal "no image" instead of persisting a localhost-only path.
-        return { url: null, publicId: null };
+        return { url: toInlineDataUrl(processedWebpBuffer), publicId: null };
       }
     }
 
-    // 3. Dev-only fallback: no real Cloudinary credentials configured.
-    //    Files live under backend/public/uploads and are served by THIS server
-    //    process only — fine for local development, never for production.
+    // 3. No Cloudinary credentials - inline base64 keeps the image visible on
+    //    every device/deployment without depending on local disk persistence.
     console.warn(
       '[imageService] Cloudinary NOT configured (set CLOUDINARY_CLOUD_NAME/API_KEY/API_SECRET). ' +
-      'Storing image LOCALLY — it will NOT be visible from other devices or after deployment.'
+      'Using inline base64 data URL so images remain visible everywhere.'
     );
-    const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
-    if (!fs.existsSync(uploadsDir)) {
-      fs.mkdirSync(uploadsDir, { recursive: true });
-    }
-    const fileName = `${fileNameHint}_${Date.now()}.webp`;
-    const filePath = path.join(uploadsDir, fileName);
-    await fs.promises.writeFile(filePath, processedWebpBuffer);
-
-    return { url: `/uploads/${fileName}`, publicId: null };
+    return { url: toInlineDataUrl(processedWebpBuffer), publicId: null };
   } catch (error) {
     console.error('Image Processing Error:', error);
     // On failure, return null url so the client renders its generic footballer

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { UserCheck, Ban, CheckCircle2, Search, Edit3, Lock, Unlock, X, Save } from 'lucide-react';
+import { UserCheck, Ban, CheckCircle2, Search, Edit3, Lock, Unlock, X, Save, Trash2, AlertTriangle } from 'lucide-react';
 import { useAuction } from '../../context/AuctionContext';
 import { useAuth } from '../../context/AuthContext';
 import { adminAPI } from '../../services/api';
@@ -59,6 +59,8 @@ export default function AdminPlayers() {
   const [editForm, setEditForm] = useState({});
   const [saving, setSaving] = useState(false);
   const [selectedPlayer, setSelectedPlayer] = useState(null);
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   const safePlayers = Array.isArray(players) ? players : [];
 
@@ -109,6 +111,25 @@ export default function AdminPlayers() {
       }
     } catch (err) {
       triggerToast(err?.response?.data?.message || 'Action failed', 'error');
+    }
+  };
+
+  // Permanently deletes the player from the database (full cascade:
+  // team rosters, lineups, auction references, Cloudinary image).
+  const handleDeleteConfirm = async () => {
+    if (!deleteConfirm) return;
+    const id = deleteConfirm._id || deleteConfirm.id;
+    setDeleting(true);
+    try {
+      await adminAPI.deletePlayer(id);
+      setPlayers(prev => prev.filter(p => (p._id || p.id) !== id));
+      if (typeof refetchPlayers === 'function') refetchPlayers();
+      triggerToast(`Player '${deleteConfirm.name}' permanently deleted.`, 'success');
+      setDeleteConfirm(null);
+    } catch (err) {
+      triggerToast(err?.response?.data?.message || 'Failed to delete player.', 'error');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -213,7 +234,8 @@ export default function AdminPlayers() {
                 categories={categories}
                 onApprove={handleApprove}
                 onEdit={openEdit}
-                onToggleBan={handleToggleBan}
+                onToggleBan={canManage ? handleToggleBan : undefined}
+                onDelete={canManage ? (p) => setDeleteConfirm(p) : undefined}
                 onCardClick={() => setSelectedPlayer(player)}
               />
             ))}
@@ -292,6 +314,51 @@ export default function AdminPlayers() {
               >
                 {saving ? <span className="w-3.5 h-3.5 border-2 border-black border-t-transparent rounded-full animate-spin" /> : <Save className="w-3.5 h-3.5" />}
                 Save Changes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Delete Player Confirmation Modal (SUPER_ADMIN ONLY) ─────────────── */}
+      {canManage && deleteConfirm && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => !deleting && setDeleteConfirm(null)}>
+          <div className="glass-card w-full max-w-sm rounded-2xl p-6 border border-urgentRed/40 space-y-4 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-start gap-3">
+              <span className="w-10 h-10 rounded-xl bg-urgentRed/15 border border-urgentRed/30 flex items-center justify-center shrink-0">
+                <Trash2 className="w-5 h-5 text-urgentRedText" />
+              </span>
+              <div>
+                <h3 className="text-sm font-black uppercase tracking-wider text-white flex items-center gap-1.5">
+                  Delete Player? <AlertTriangle className="w-4 h-4 text-warningGold" />
+                </h3>
+                <p className="text-xs text-secondaryText mt-1">
+                  <strong className="text-white">{deleteConfirm.name}</strong> ({deleteConfirm.studentId || '—'}) will be
+                  <strong className="text-urgentRedText"> permanently removed</strong> from the database — including team rosters, lineups and auction references.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex gap-3 pt-1">
+              <button
+                onClick={() => setDeleteConfirm(null)}
+                disabled={deleting}
+                className="btn-secondary flex-1 py-2.5 text-xs"
+              >
+                Cancel
+              </button>
+              <button
+                id={`confirm-delete-${deleteConfirm._id || deleteConfirm.id}`}
+                onClick={handleDeleteConfirm}
+                disabled={deleting}
+                className="flex-1 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-black uppercase tracking-wide flex items-center justify-center gap-2 transition disabled:opacity-50"
+              >
+                {deleting ? (
+                  <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <Trash2 className="w-3.5 h-3.5" />
+                )}
+                Delete
               </button>
             </div>
           </div>

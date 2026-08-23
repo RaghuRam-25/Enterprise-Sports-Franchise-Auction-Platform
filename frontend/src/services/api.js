@@ -129,6 +129,7 @@ export const adminAPI = {
   editPlayer: (id, data) => api.put(`/admin/players/${id}`, data),
   approvePlayer: (id) => api.put(`/admin/players/${id}/approve`),
   banPlayer: (id) => api.put(`/admin/players/${id}/ban`),
+  deletePlayer: (id) => api.delete(`/admin/players/${id}`),
 
   // Reports
   getReports: () => api.get('/admin/reports'),
