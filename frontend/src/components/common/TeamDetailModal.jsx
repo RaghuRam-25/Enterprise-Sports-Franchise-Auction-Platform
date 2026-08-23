@@ -87,8 +87,11 @@ export default function TeamDetailModal({ team, onClose, players = [], formatCur
   const maxSquadSize = team.maxRoster || 15;
 
   const fmtPrice = (val, rawItem) => {
+    // "BDT" suffix is stripped here — the AutoFitText value box clips it.
     if (rawItem?.formattedPrice) return rawItem.formattedPrice;
-    if (typeof formatCurrency === 'function') return formatCurrency(val);
+    if (typeof formatCurrency === 'function') {
+      return String(formatCurrency(val)).replace(/\s*BDT\s*$/i, '').trim();
+    }
     if (!val) return '৳0';
     return `৳${val.toLocaleString()}`;
   };

@@ -21,6 +21,7 @@ import PlayerDisplayStage from '../../components/auction/PlayerDisplayStage';
 import { useAuctionAnimation } from '../../hooks/useAuctionAnimation';
 import { WaitingAnimation } from '../../components/auction';
 import EmbeddedVideoPlayer from '../../components/auction/EmbeddedVideoPlayer';
+import SoundToggle from '../../components/SoundToggle';
 import { getImageUrl } from '../../utils/imageUrl';
 import { playerFallback } from '../../utils/playerFallback';
 import { getTeamTheme } from '../../utils/themeConfig';
@@ -480,7 +481,11 @@ export default function LandingPage() {
               </div>
             )}
 
-            <div className="lg:col-span-8 flex flex-col h-full">
+            <div className="lg:col-span-8 flex flex-col h-full relative">
+              {/* Global sound on/off — top-right corner of the live stage */}
+              <div className="absolute top-2 right-2 sm:top-3 sm:right-3 z-40">
+                <SoundToggle iconClassName="w-3.5 h-3.5 sm:w-4 sm:h-4" className="!p-1.5 sm:!p-2" />
+              </div>
               {isBroadcastingVideo ? (
                 /* ── Podium Video Control stream — mirrors the podium spotlight ── */
                 <div className="relative bg-black border border-white/10 rounded-3xl shadow-2xl overflow-hidden min-h-[480px]">

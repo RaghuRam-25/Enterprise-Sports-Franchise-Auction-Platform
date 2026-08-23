@@ -24,6 +24,14 @@ export const handleSocketConnections = (io) => {
       socket.emit('auction:state', auctionEngine.getState());
     });
 
+    // GAP FIX: Podium screens ask for the current intro-loop status so they can
+    // resync after (re)connecting. The frontend listens for the state on
+    // 'podium:intro-loop-state' — reply directly to the requester with the
+    // engine's live loop state.
+    socket.on('podium:get-intro-loop-status', () => {
+      socket.emit('podium:intro-loop-state', auctionEngine.introLoopState);
+    });
+
     // Handle Podium Video Control
     socket.on('podium:video-control', (data) => {
       const action = data?.action;

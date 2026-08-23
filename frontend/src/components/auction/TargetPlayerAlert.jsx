@@ -23,20 +23,20 @@ export default function TargetPlayerAlert({ targetItem, onQuickBid, onDismiss })
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: -20, scale: 0.96 }}
         transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-        className="relative overflow-hidden rounded-2xl border-2 border-warningGold/60 bg-gradient-to-r from-warningGold/90 via-cardBg/95 to-darkBg shadow-2xl shadow-warningGold/20 p-4 sm:p-5 backdrop-blur-xl"
+        className="relative overflow-hidden rounded-xl sm:rounded-2xl border-2 border-warningGold/60 bg-gradient-to-r from-warningGold/90 via-cardBg/95 to-darkBg shadow-2xl shadow-warningGold/20 p-2.5 sm:p-4 backdrop-blur-xl flex-none"
       >
         {/* Animated background glow */}
         <div className="pointer-events-none absolute -top-12 -right-12 w-48 h-48 bg-warningGold/20 blur-3xl rounded-full animate-pulse" />
 
-        <div className="relative flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div className="relative flex flex-col md:flex-row items-start md:items-center justify-between gap-2.5 sm:gap-4">
           
           {/* Header & Target Identity */}
-          <div className="flex items-start sm:items-center gap-3.5 min-w-0">
+          <div className="flex items-start sm:items-center gap-2.5 sm:gap-3.5 min-w-0">
             <div className="relative flex-shrink-0">
               <img
                 src={player.imageUrl || playerFallback('amber')}
                 alt={player.name}
-                className="w-14 h-14 rounded-2xl object-cover border-2 border-warningGold/80 shadow-lg"
+                className="w-11 h-11 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl object-cover border-2 border-warningGold/80 shadow-lg"
               />
               <span className="absolute -top-2 -left-2 px-2 py-0.5 bg-warningGold text-darkBg font-black text-[10px] rounded-full uppercase shadow">
                 #{priority}
@@ -52,11 +52,16 @@ export default function TargetPlayerAlert({ targetItem, onQuickBid, onDismiss })
                   (On Your Private Shortlist)
                 </span>
               </div>
-              <h3 className="text-lg font-black text-white truncate">{player.name}</h3>
-              <div className="flex items-center gap-2 text-xs text-secondaryText">
+              <h3 className="text-base sm:text-lg font-black text-white truncate">{player.name}</h3>
+              <div className="hidden sm:flex items-center gap-2 text-xs text-secondaryText">
                 <span>{player.primaryPosition}</span>
                 <span>&bull;</span>
                 <span>{player.category}</span>
+                <span>&bull;</span>
+                <span className="font-mono text-neonGreen">Base: {formatCurrency(player.basePrice)}</span>
+              </div>
+              <div className="sm:hidden flex items-center gap-1.5 text-[10px] text-secondaryText truncate">
+                <span>{player.primaryPosition}</span>
                 <span>&bull;</span>
                 <span className="font-mono text-neonGreen">Base: {formatCurrency(player.basePrice)}</span>
               </div>

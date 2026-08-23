@@ -49,7 +49,7 @@ export default function PlayerRegister() {
     { id: 'LW', code: 'LW', name: 'Left Wing' }
   ];
 
-  const availableSessions  = Array.isArray(sessions) && sessions.length > 0 ? sessions : defaultSessions;
+  const availableSessions = Array.isArray(sessions) && sessions.length > 0 ? sessions : defaultSessions;
   const availablePositions = Array.isArray(positions) && positions.length > 0 ? positions : defaultPositions;
 
   const [name, setName] = useState('');
@@ -197,15 +197,14 @@ export default function PlayerRegister() {
       <Navbar />
 
       <main className="flex-1 max-w-3xl w-full mx-auto px-4 py-8">
-        
+
         <div className="glass-card rounded-2xl p-8 border border-cardBorder space-y-6 shadow-2xl">
-          
+
           <div className="text-center space-y-2 border-b border-cardBorder pb-6">
             <div className="w-14 h-14 bg-neonGreen/10 text-neonGreen rounded-2xl border border-neonGreen/20 flex items-center justify-center mx-auto shadow-lg">
               <UserPlus className="w-7 h-7" />
             </div>
             <h1 className="text-2xl font-black font-heading text-white">Player Registration Portal</h1>
-            <p className="text-xs text-secondaryText">Enterprise Franchise Sports Draft Onboarding</p>
           </div>
 
           {/* Automatic Registration Window Status */}
@@ -242,7 +241,7 @@ export default function PlayerRegister() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            
+
             {/* Name & Email */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
@@ -385,11 +384,10 @@ export default function PlayerRegister() {
                       role="button"
                       tabIndex={0}
                       onKeyDown={(e) => { if ((e.key === 'Enter' || e.key === ' ') && !isRegistrationFrozen) handlePositionToggle(posKey); }}
-                      className={`relative rounded-lg border px-2 py-3 flex flex-col items-center gap-1 transition-all duration-200 select-none ${
-                        isSelected
+                      className={`relative rounded-lg border px-2 py-3 flex flex-col items-center gap-1 transition-all duration-200 select-none ${isSelected
                           ? 'border-neonGreen bg-neonGreen/[0.05] shadow-[0_0_14px_rgba(88,210,10,0.22)]'
                           : 'border-[#262b26] bg-[#060806] hover:border-[#39413a]'
-                      } ${isRegistrationFrozen ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
+                        } ${isRegistrationFrozen ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
                     >
                       {/* Selected checkmark badge */}
                       {isSelected && (
@@ -415,9 +413,8 @@ export default function PlayerRegister() {
                             e.stopPropagation();
                             setPrimaryPosId(posKey);
                           }}
-                          className={`mt-0.5 py-0.5 px-1.5 rounded-full text-[8px] font-bold tracking-wide transition ${
-                            isPrimary ? 'bg-neonGreen text-darkBg shadow-[0_0_8px_rgba(88,210,10,0.45)]' : 'bg-surfaceHover text-secondaryText hover:text-white'
-                          }`}
+                          className={`mt-0.5 py-0.5 px-1.5 rounded-full text-[8px] font-bold tracking-wide transition ${isPrimary ? 'bg-neonGreen text-darkBg shadow-[0_0_8px_rgba(88,210,10,0.45)]' : 'bg-surfaceHover text-secondaryText hover:text-white'
+                            }`}
                         >
                           {isPrimary ? '★ PRIMARY' : 'SET PRIMARY'}
                         </button>
@@ -466,9 +463,8 @@ export default function PlayerRegister() {
                 />
                 <label
                   htmlFor="picture-upload"
-                  className={`btn-secondary inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl cursor-pointer transition ${
-                    isRegistrationFrozen ? 'opacity-50 cursor-not-allowed' : ''
-                  }`}
+                  className={`btn-secondary inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl cursor-pointer transition ${isRegistrationFrozen ? 'opacity-50 cursor-not-allowed' : ''
+                    }`}
                 >
                   {imagePreview ? 'Change Photo' : 'Select Photo File'}
                 </label>
@@ -512,9 +508,8 @@ export default function PlayerRegister() {
             <button
               type="submit"
               disabled={isRegistrationFrozen}
-              className={`btn-primary w-full py-3.5 text-xs shadow-xl ${
-                isRegistrationFrozen ? 'opacity-50 cursor-not-allowed' : ''
-              }`}
+              className={`btn-primary w-full py-3.5 text-xs shadow-xl ${isRegistrationFrozen ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
             >
               Submit Player Registration
             </button>

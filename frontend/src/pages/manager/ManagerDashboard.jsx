@@ -228,265 +228,293 @@ export const ManagerDashboard = () => {
 
   const showTargetAlert = Boolean(activeTargetItem && activeTargetItem.playerId?._id !== dismissedAlertPlayerId && activeTargetItem.playerId?.id !== dismissedAlertPlayerId);
 
+  // Display-only flag for the stage's floating LIVE AUCTION badge: true while
+  // a broadcast cinematic (waiting / intro / sell / roster) owns the stage
+  // surface — its own HUD supplies the LIVE / AUCTION CENTRE badges then.
+  const stageCinematicActive = Boolean(
+    (!podiumPlayer && animState === ANIM_STATES_HOOK.IDLE) ||
+    (animState === ANIM_STATES_HOOK.INTRO && introPlayer) ||
+    (animState === ANIM_STATES_HOOK.SELL && winnerData) ||
+    (animState === ANIM_STATES_HOOK.ROSTER && rosterUpdate)
+  );
+
   return (
-    <div className="space-y-6">
+    // Full-screen dashboard shell — fills the layout viewport (h-dvh chain)
+    // exactly. The page itself NEVER scrolls; only the bid stream (and the
+    // stage body on small screens) scroll internally.
+    <div className="flex flex-col flex-1 min-h-0 gap-1.5 sm:gap-2 lg:gap-3 overflow-hidden">
 
       {/* Top Team Header — premium franchise identity band */}
-      <div className="relative overflow-hidden glass-card rounded-3xl p-6 sm:p-7 border border-white/5 bg-gradient-to-br from-cardBg via-cardBg/80 to-successGreen/30 shadow-2xl shadow-successGreen/20">
-        <div className="pointer-events-none absolute -top-16 -right-10 w-72 h-72 bg-neonGreen/10 blur-3xl rounded-full" />
-        <div className="relative flex flex-col md:flex-row justify-between items-start md:items-center gap-5">
-          <div className="flex items-center gap-4">
+      <div className="relative overflow-hidden flex-none glass-card rounded-xl sm:rounded-2xl lg:rounded-3xl p-2 sm:p-2.5 lg:p-3.5 border border-white/5 bg-gradient-to-br from-[#0e1713] via-cardBg/80 to-teal-500/15 shadow-md lg:shadow-xl shadow-teal-400/10">
+        <div className="pointer-events-none absolute -top-16 -right-10 w-40 h-40 sm:w-56 sm:h-56 bg-teal-400/10 blur-3xl rounded-full" />
+        <div className="relative flex flex-row justify-between items-center gap-2">
+          <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
             {activeTeam.logoUrl ? (
               <img
                 src={activeTeam.logoUrl}
                 alt={activeTeam.name}
-                className="w-16 h-16 rounded-2xl object-cover border border-neonGreen/30 shadow-lg shadow-successGreen/40 ring-2 ring-neonGreen/10"
+                className="w-8 h-8 sm:w-9 sm:h-9 lg:w-11 lg:h-11 xl:w-12 xl:h-12 rounded-lg lg:rounded-xl object-cover border border-teal-300/30 shadow-md lg:shadow-lg shadow-teal-400/20 ring-1 lg:ring-2 ring-teal-300/10 shrink-0"
               />
             ) : (
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-neonGreen/20 to-neonGreen/5 border border-neonGreen/20 flex items-center justify-center text-3xl shadow-lg shadow-successGreen/40">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 lg:w-11 lg:h-11 xl:w-12 xl:h-12 rounded-lg lg:rounded-xl bg-gradient-to-br from-teal-400/20 to-teal-400/5 border border-teal-300/25 flex items-center justify-center text-base sm:text-lg lg:text-xl xl:text-2xl shadow-md lg:shadow-lg shadow-teal-400/20 shrink-0">
                 {activeTeam.logo || '🏆'}
               </div>
             )}
-            <div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-2xl sm:text-3xl font-black font-heading text-white tracking-tight">{activeTeam.name}</h1>
-                <span className="font-mono text-[11px] font-bold text-neonGreenHover bg-neonGreen/10 px-2 py-0.5 rounded-md border border-neonGreen/25">
+            <div className="min-w-0 leading-tight">
+              <div className="flex items-center gap-1 sm:gap-1.5 flex-wrap min-w-0">
+                <h1 className="text-base sm:text-lg lg:text-xl xl:text-2xl font-display font-bold uppercase tracking-wide text-white truncate max-w-full">{activeTeam.name}</h1>
+                <span className="font-mono text-[8px] sm:text-[9px] lg:text-[10px] font-bold text-teal-200 bg-teal-400/10 px-1 py-px rounded border border-teal-300/25 shrink-0">
                   {activeTeam.shortCode || activeTeam.code}
                 </span>
               </div>
               {activeTeam.motto ? (
-                <p className="text-xs text-neonGreen/80 italic mt-1">{activeTeam.motto}</p>
+                <p className="text-[9px] sm:text-[10px] lg:text-[11px] text-teal-200/70 italic mt-0.5 truncate">{activeTeam.motto}</p>
               ) : (
-                <p className="text-xs text-secondaryText mt-1">Franchise Manager: {user?.name || 'Manager'}</p>
+                <p className="text-[9px] sm:text-[10px] lg:text-[11px] text-secondaryText mt-0.5 truncate">Franchise Manager: {user?.name || 'Manager'}</p>
               )}
               {activeTeam.description && (
-                <p className="text-[11px] text-mutedText mt-0.5">{activeTeam.description}</p>
+                <p className="hidden md:block text-[9px] lg:text-[10px] text-mutedText mt-px truncate">{activeTeam.description}</p>
               )}
             </div>
           </div>
 
-          <div className="flex items-center gap-3 self-stretch md:self-auto">
-            <span className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider border ${biddingMode === 'blind'
+          <div className="flex items-center shrink-0">
+            <span className={`flex items-center gap-1 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-[8px] sm:text-[9px] lg:text-[10px] font-bold uppercase tracking-wider border ${biddingMode === 'blind'
               ? 'bg-warningGold/15 text-warningGold border-warningGold/40'
-              : 'bg-neonGreen/15 text-neonGreenHover border-neonGreen/40'
+              : 'bg-teal-400/10 text-teal-200 border-teal-300/35'
               }`}>
-              <Radio className="w-3.5 h-3.5" /> {biddingMode || 'normal'} Mode
+              <Radio className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> {biddingMode || 'normal'} Mode
             </span>
           </div>
         </div>
       </div>
 
-      {/* Franchise stat cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="group glass-card rounded-2xl p-4 border border-white/5 bg-gradient-to-br from-cardBg to-successGreen/20 hover:border-neonGreen/30 transition-all duration-300 hover:-translate-y-0.5">
-          <div className="flex items-center gap-2 text-neonGreen">
-            <div className="w-9 h-9 rounded-xl bg-neonGreen/10 border border-neonGreen/20 flex items-center justify-center">
-              <Wallet className="w-4.5 h-4.5" />
+      {/* Franchise stat cards now live in the right-hand manager sidebar. */}
+
+      {/* Main surface — dark pitch-green. The Podium Display starts DIRECTLY
+          beneath the team header (left, ~72%) with a compact manager sidebar
+          (right, ~28%). Flexes to consume ALL remaining viewport height. */}
+      <div className="relative rounded-xl sm:rounded-2xl lg:rounded-3xl flex-1 min-h-0 p-2.5 sm:p-3 lg:p-4 border border-white/5 bg-gradient-to-b from-[#0c1410] via-[#0a110c] to-[#070c09] shadow-lg lg:shadow-2xl shadow-black/40 overflow-hidden">
+        <div className="h-full min-h-0 flex flex-col lg:flex-row gap-2.5 sm:gap-3 overflow-y-auto lg:overflow-visible custom-scrollbar">
+
+          {/* ── LEFT (~72%) — Podium Display / Live Auction stage ─────────── */}
+          <div className="relative min-h-[420px] sm:min-h-[480px] lg:min-h-0 lg:flex-[72] min-w-0">
+            {/* Decorative vertical spotlight beams — pure CSS, pointer-events-none */}
+            <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-full flex justify-around px-3 sm:px-8 lg:px-12 overflow-hidden">
+              <div className="podium-beam w-16 sm:w-24 lg:w-32 h-full" style={{ '--beam-color': 'rgba(94, 234, 212, 0.30)' }} />
+              <div className="podium-beam w-20 sm:w-28 lg:w-36 h-full" style={{ '--beam-color': 'rgba(94, 234, 212, 0.22)' }} />
+              <div className="podium-beam w-16 sm:w-24 lg:w-32 h-full" style={{ '--beam-color': 'rgba(244, 197, 66, 0.16)' }} />
             </div>
-            <span className="text-[10px] font-bold text-secondaryText uppercase tracking-widest">Available Purse</span>
-          </div>
-          <h3 className="mt-3 text-xl font-black font-mono text-neonGreen">{formatCurrency(activeTeam.remainingBudget)}</h3>
-          <p className="mt-1 text-[10px] font-mono text-mutedText truncate" title={`Reserve for ${eligibility?.remainingMinimumPlayers ?? 0} more minimum players`}>
-            Reserve: {formatCurrency(reserveBudget)} · Bid Bal: {formatCurrency(Math.max(0, bidBalance))}
-          </p>
-          <div className="mt-2 h-1.5 rounded-full bg-surfaceHover overflow-hidden">
-            <div className="h-full rounded-full bg-gradient-to-r from-neonGreen to-neonGreen transition-all duration-500" style={{ width: `${pursePct}%` }} />
-          </div>
-        </div>
 
-        <div className="group glass-card rounded-2xl p-4 border border-white/5 bg-gradient-to-br from-cardBg to-successGreen/20 hover:border-neonGreen/30 transition-all duration-300 hover:-translate-y-0.5">
-          <div className="flex items-center gap-2 text-neonGreen">
-            <div className="w-9 h-9 rounded-xl bg-neonGreen/10 border border-neonGreen/20 flex items-center justify-center">
-              <Users className="w-4.5 h-4.5" />
+            {/* Elegant gold floor glow + podium edge line — purely decorative */}
+            <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 h-28 overflow-hidden">
+              <div className="absolute inset-x-8 sm:inset-x-24 bottom-12 h-24 rounded-full bg-warningGold/10 blur-3xl animate-pulse" />
+              <div className="absolute inset-x-10 sm:inset-x-32 bottom-11 h-px bg-gradient-to-r from-transparent via-warningGold/40 to-transparent" />
             </div>
-            <span className="text-[10px] font-bold text-secondaryText uppercase tracking-widest">Roster Slots</span>
-          </div>
-          <h3 className="mt-3 text-xl font-black font-mono text-primaryText">{currentRosterCount}<span className="text-mutedText text-sm"> / {eligibility?.minimumPerTeam || minRoster} required</span></h3>
-          <p className="mt-1 text-[10px] font-mono text-mutedText truncate">
-            {eligibility?.remainingMinimumPlayers > 0
-              ? `${eligibility.remainingMinimumPlayers} more to secure`
-              : eligibility?.leagueExtraPlayers > 0
-                ? `${eligibility.leagueExtraPlayers} extra in pool`
-                : 'Minimum complete'}
-          </p>
-          <div className="mt-2 h-1.5 rounded-full bg-surfaceHover overflow-hidden">
-            <div className="h-full rounded-full bg-gradient-to-r from-neonGreen to-neonGreen transition-all duration-500" style={{ width: `${rosterPct}%` }} />
-          </div>
-        </div>
 
-        <div className="group glass-card rounded-2xl p-4 border border-white/5 bg-gradient-to-br from-cardBg to-warningGold/20 hover:border-warningGold/30 transition-all duration-300 hover:-translate-y-0.5">
-          <div className="flex items-center gap-2 text-warningGold">
-            <div className="w-9 h-9 rounded-xl bg-warningGold/10 border border-warningGold/20 flex items-center justify-center">
-              <Crown className="w-4.5 h-4.5" />
-            </div>
-            <span className="text-[10px] font-bold text-secondaryText uppercase tracking-widest">{isBlindMode ? 'Sealed Bids' : 'Leading Bid'}</span>
-          </div>
-          {isBlindMode ? (
-            <>
-              {/* §1/§3/§4 — no amounts, no team identities during a blind round */}
-              <h3 className="mt-3 text-xl font-black font-mono text-slate-500 tracking-widest select-none">•••••</h3>
-              <p className="mt-2 text-[11px] text-mutedText truncate">All bids are confidential until the round ends</p>
-            </>
-          ) : (
-            <>
-              <h3 className="mt-3 text-xl font-black font-mono text-warningGold">{formatCurrency(safeCurrentBid)}</h3>
-              <p className="mt-2 text-[11px] text-mutedText truncate">{highestBidder ? highestBidder.name : 'Awaiting opening bid'}</p>
-            </>
-          )}
-        </div>
-
-        <div className={`group glass-card rounded-2xl p-4 border transition-all duration-300 hover:-translate-y-0.5 ${isCurrentlyHighestBidder ? 'border-neonGreen/40 bg-gradient-to-br from-successGreen/40 to-cardBg' : 'border-white/5 bg-gradient-to-br from-cardBg to-darkBg'}`}>
-          <div className={`flex items-center gap-2 ${isCurrentlyHighestBidder ? 'text-neonGreen' : 'text-secondaryText'}`}>
-            <div className={`w-9 h-9 rounded-xl flex items-center justify-center border ${isCurrentlyHighestBidder ? 'bg-neonGreen/15 border-neonGreen/30' : 'bg-surfaceHover/60 border-borderStrong'}`}>
-              <TrendingUp className="w-4.5 h-4.5" />
-            </div>
-            <span className="text-[10px] font-bold text-secondaryText uppercase tracking-widest">Your Status</span>
-          </div>
-          <h3 className={`mt-3 text-base font-black ${isCurrentlyHighestBidder ? 'text-neonGreen' : hasOptedOut ? 'text-warningGold' : 'text-primaryText'}`}>
-            {isCurrentlyHighestBidder ? 'Leading' : hasOptedOut ? 'Sitting Out' : podiumPlayer ? 'In The Race' : 'Standby'}
-          </h3>
-          <p className="mt-2 text-[11px] text-mutedText truncate">{podiumPlayer ? podiumPlayer.name : 'No active player'}</p>
-        </div>
-      </div>
-
-      {/* Full-width main content */}
-      <div className="glass-card rounded-3xl p-5 sm:p-6 border border-white/5 space-y-6 shadow-2xl shadow-black/20">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <span className="relative flex h-2.5 w-2.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-neonGreen opacity-75" />
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-neonGreen" />
-            </span>
-            <div>
-              <span className="text-[11px] font-bold uppercase tracking-widest text-neonGreen">Live Stage</span>
-              <h2 className="text-lg font-black font-heading text-white leading-tight">Podium Display</h2>
-            </div>
-          </div>
-        </div>
-
-        {/* Target Player Alert — shown INSIDE the live auction stage (not above
-            the dashboard). Socket-pushed alert beats the polling-derived one. */}
-        {targetAlert && targetAlert.player && (
-          <TargetPlayerAlert
-            targetItem={{
-              playerId: targetAlert.player,
-              note: targetAlert.note,
-              optionalBudgetLimit: targetAlert.optionalBudgetLimit,
-              priority: targetAlert.priority,
-            }}
-            onQuickBid={handleNormalBidSubmit}
-            onDismiss={dismissTargetAlert}
-          />
-        )}
-
-        {showTargetAlert && !targetAlert && (
-          <TargetPlayerAlert
-            targetItem={activeTargetItem}
-            onQuickBid={handleNormalBidSubmit}
-            onDismiss={() => setDismissedAlertPlayerId(podiumPlayerId)}
-          />
-        )}
-
-        {/* Shared confined Player Display stage — premium cinematic surface for
-            the Manager / Player panel. Confined to this card; the team header,
-            bid controls, opt-out, and bid stream below all stay visible. */}
-        <div className="relative">
-          {/* Global sound on/off — same spot as the live auction page */}
-          <div className="absolute top-3 left-3 z-40">
-            <SoundToggle />
-          </div>
-
-          <PlayerDisplayStage
-          className="rounded-2xl"
-          cinematicHeight="min-h-[440px] sm:min-h-[520px] lg:min-h-[600px]"
-          animState={animState}
-          ANIM_STATES={ANIM_STATES_HOOK}
-          introPlayer={introPlayer}
-          winnerData={winnerData}
-          rosterUpdate={rosterUpdate}
-          onAnimationComplete={onAnimationComplete}
-          isManagerWinner={Boolean(
-            highestBidder &&
-            (highestBidder.id === activeTeam.id || highestBidder._id === activeTeam._id)
-          )}
-          showWaiting={!podiumPlayer && animState === ANIM_STATES_HOOK.IDLE}
-        >
-          {podiumPlayer && (
-            <LandingLiveStageCard
-              player={podiumPlayer}
-              currentBid={currentBid}
-              highestBidder={highestBidder}
-              timerRemaining={timerRemaining}
-              timerStatus={timerStatus}
-              mode="manager"
-              onPlaceBid={handleStageAction}
-              hideBidButton={rosterFull}
-              blindMode={isBlindMode}
-              blindAmount={blindBidAmount}
-              onBlindAmountChange={setBlindBidAmount}
-              bidLabel={isBlindMode
-                ? 'Place Blind Bid'
-                : (isBidding ? 'Placing Bid…' : bidButtonLabel)}
-              bidDisabled={isBlindMode ? !blindReady : (bidButtonDisabled || isBidding)}
-              categories={categories}
-              positions={positions}
-              formatCurrency={formatCurrency}
-            />
-          )}
-          </PlayerDisplayStage>
-        </div>
-
-        {/* My Bid Out Card */}
-        <div className={`flex flex-col sm:flex-row items-center justify-between gap-3 p-4 sm:p-5 rounded-2xl border ${hasOptedOut ? 'bg-warningGold/10 border-warningGold/30' : 'bg-darkBg/60 border-cardBorder'}`}>
-          <div className="flex items-center gap-3 text-center sm:text-left">
-            <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 border ${hasOptedOut ? 'bg-warningGold/15 border-warningGold/30 text-warningGold' : 'bg-surfaceHover/60 border-borderStrong text-secondaryText'}`}>
-              <ShieldOff className="w-4.5 h-4.5" />
-            </div>
-            <div>
-              <p className={`text-sm font-bold ${hasOptedOut ? 'text-warningGold' : 'text-primaryText'}`}>
-                {hasOptedOut ? "You're sitting this player out" : 'Not interested in this player?'}
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={handleOptOut}
-            disabled={!podiumPlayer || hasOptedOut}
-            className="flex-shrink-0 px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider border transition flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed bg-surfaceActive border-urgentRed/30 text-urgentRedText hover:bg-urgentRed/10 hover:border-urgentRed/50"
-          >
-            <LogOut className="w-3.5 h-3.5" /> {hasOptedOut ? 'Bid Out' : 'My Bid Out'}
-          </button>
-        </div>
-
-        {/* Bid History Table — §1/§11: hidden entirely during Blind Mode so no
-            team identity or amount is ever surfaced to competing managers. */}
-        {!isBlindMode && (
-        <div className="space-y-3 pt-2">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-secondaryText flex items-center justify-between">
-            <span>Live Bid Stream ({safeBidHistory.length})</span>
-            {highestBidder && (
-              <span className="text-neonGreen flex items-center gap-1 font-mono text-[11px]">
-                <TrendingUp className="w-3.5 h-3.5" /> Leader: {highestBidder.name}
-              </span>
+            {/* LIVE AUCTION indicator — floating badge inside the stage. Hidden
+                while a broadcast cinematic owns the surface (its own LIVE /
+                AUCTION CENTRE HUD badges take over then). */}
+            {!stageCinematicActive && (
+              <div className="absolute top-1.5 left-1.5 sm:top-2 sm:left-2 z-40 flex items-center gap-1.5 pl-2 pr-2.5 py-1 rounded-full bg-black/50 backdrop-blur-md border border-neonGreen/40 shadow-lg">
+                <span className="relative flex h-1.5 w-1.5 sm:h-2 sm:w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-neonGreen opacity-75" />
+                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 sm:h-2 sm:w-2 bg-neonGreen" />
+                </span>
+                <span className="font-display font-bold uppercase tracking-[0.18em] text-[9px] sm:text-[11px] leading-none text-white">Live Auction</span>
+              </div>
             )}
-          </h3>
 
-          <div className="bg-darkBg/70 rounded-xl border border-white/5 p-3 max-h-40 overflow-y-auto space-y-1.5">
-            {safeBidHistory.length === 0 ? (
-              <p className="text-xs text-mutedText text-center py-4">No bids placed on current player yet.</p>
-            ) : (
-              [...safeBidHistory].reverse().map((bid, idx) => (
-                <div key={bid.id || idx} className="flex justify-between items-center text-xs px-3 py-2 rounded-lg bg-cardBg/60 border border-white/5 hover:border-neonGreen/25 transition-colors">
-                  <span className="font-bold text-white">{bid.bidder}</span>
-                  <span className="font-mono font-bold text-neonGreen">{formatCurrency(bid.amount)}</span>
+            {/* Global sound on/off — top-right corner of the stage */}
+            <div className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 z-40">
+              <SoundToggle iconClassName="w-3.5 h-3.5 sm:w-4 sm:h-4" className="!p-1.5 sm:!p-2" />
+            </div>
+
+            {/* Target Player Alert — floating glass overlay over the stage top
+                so the podium always starts directly beneath the team header.
+                Socket-pushed alert beats the polling-derived one. */}
+            {(targetAlert?.player || showTargetAlert) && (
+              <div className="absolute left-1/2 -translate-x-1/2 top-8 sm:top-9 z-40 w-[min(94%,600px)]">
+                {targetAlert && targetAlert.player && (
+                  <TargetPlayerAlert
+                    targetItem={{
+                      playerId: targetAlert.player,
+                      note: targetAlert.note,
+                      optionalBudgetLimit: targetAlert.optionalBudgetLimit,
+                      priority: targetAlert.priority,
+                    }}
+                    onQuickBid={handleNormalBidSubmit}
+                    onDismiss={dismissTargetAlert}
+                  />
+                )}
+                {showTargetAlert && !targetAlert && (
+                  <TargetPlayerAlert
+                    targetItem={activeTargetItem}
+                    onQuickBid={handleNormalBidSubmit}
+                    onDismiss={() => setDismissedAlertPlayerId(podiumPlayerId)}
+                  />
+                )}
+              </div>
+            )}
+
+            <PlayerDisplayStage
+              className="rounded-2xl"
+              fillHeight
+              transparentBg
+              showLeaderboard={false}
+              cinematicHeight="min-h-[240px] sm:min-h-[300px]"
+              animState={animState}
+              ANIM_STATES={ANIM_STATES_HOOK}
+              introPlayer={introPlayer}
+              winnerData={winnerData}
+              rosterUpdate={rosterUpdate}
+              onAnimationComplete={onAnimationComplete}
+              isManagerWinner={Boolean(
+                highestBidder &&
+                (highestBidder.id === activeTeam.id || highestBidder._id === activeTeam._id)
+              )}
+              showWaiting={!podiumPlayer && animState === ANIM_STATES_HOOK.IDLE}
+            >
+              {podiumPlayer && (
+                <LandingLiveStageCard
+                  player={podiumPlayer}
+                  currentBid={currentBid}
+                  highestBidder={highestBidder}
+                  timerRemaining={timerRemaining}
+                  timerStatus={timerStatus}
+                  mode="manager"
+                  fitContainer
+                  onPlaceBid={handleStageAction}
+                  hideBidButton={rosterFull}
+                  blindMode={isBlindMode}
+                  blindAmount={blindBidAmount}
+                  onBlindAmountChange={setBlindBidAmount}
+                  bidLabel={isBlindMode
+                    ? 'Place Blind Bid'
+                    : (isBidding ? 'Placing Bid…' : bidButtonLabel)}
+                  bidDisabled={isBlindMode ? !blindReady : (bidButtonDisabled || isBidding)}
+                  categories={categories}
+                  positions={positions}
+                  formatCurrency={formatCurrency}
+                />
+              )}
+            </PlayerDisplayStage>
+          </div>
+
+          {/* ── RIGHT (~28%) — compact manager control sidebar.
+              Order: Purse → Roster → Leading Bid → Status → Bid Out → Stream.
+              Blind Mode hides the stream entirely (§1/§11). */}
+          <aside className="w-full lg:w-auto lg:max-w-[320px] xl:max-w-[360px] lg:flex-[28] min-w-0 flex flex-col gap-1.5 sm:gap-2 min-h-0">
+            {/* 1 · Available Purse */}
+            <div className="flex-none glass-card rounded-lg border border-white/5 bg-gradient-to-r from-[#121814] to-warningGold/10 hover:border-warningGold/30 transition-colors p-2 flex items-center gap-2 min-w-0">
+              <div className="w-7 h-7 shrink-0 rounded-md bg-warningGold/10 border border-warningGold/25 flex items-center justify-center text-warningGold">
+                <Wallet className="w-3.5 h-3.5" />
+              </div>
+              <div className="min-w-0 flex-1 leading-tight">
+                <p className="text-[8px] font-bold uppercase tracking-widest text-secondaryText truncate">Available Purse</p>
+                <h3 className="mt-0.5 text-xs sm:text-sm font-black font-mono tabular-nums text-warningGold truncate" title={formatCurrency(activeTeam.remainingBudget)}>{formatCurrency(activeTeam.remainingBudget)}</h3>
+                <div className="mt-1 h-0.5 rounded-full bg-surfaceHover overflow-hidden">
+                  <div className="h-full rounded-full bg-gradient-to-r from-teal-400 to-cyan-300 transition-all duration-500" style={{ width: `${pursePct}%` }} />
                 </div>
-              ))
+              </div>
+            </div>
+
+            {/* 2 · Roster Slots */}
+            <div className="flex-none glass-card rounded-lg border border-white/5 bg-gradient-to-r from-[#111815] to-teal-500/10 hover:border-teal-300/30 transition-colors p-2 flex items-center gap-2 min-w-0">
+              <div className="w-7 h-7 shrink-0 rounded-md bg-teal-400/10 border border-teal-300/25 flex items-center justify-center text-teal-300">
+                <Users className="w-3.5 h-3.5" />
+              </div>
+              <div className="min-w-0 flex-1 leading-tight">
+                <p className="text-[8px] font-bold uppercase tracking-widest text-secondaryText truncate">Roster Slots</p>
+                <h3 className="mt-0.5 text-xs sm:text-sm font-black font-mono tabular-nums text-primaryText truncate">{currentRosterCount}<span className="text-mutedText text-[9px] sm:text-[10px] font-bold"> / {eligibility?.minimumPerTeam || minRoster} required</span></h3>
+                <div className="mt-1 h-0.5 rounded-full bg-surfaceHover overflow-hidden">
+                  <div className="h-full rounded-full bg-gradient-to-r from-teal-400 to-cyan-300 transition-all duration-500" style={{ width: `${rosterPct}%` }} />
+                </div>
+              </div>
+            </div>
+
+            {/* 3 · Leading Bid / Sealed Bids */}
+            <div className="flex-none glass-card rounded-lg border border-white/5 bg-gradient-to-r from-[#14120c] to-warningGold/10 hover:border-warningGold/30 transition-colors p-2 flex items-center gap-2 min-w-0">
+              <div className="w-7 h-7 shrink-0 rounded-md bg-warningGold/10 border border-warningGold/25 flex items-center justify-center text-warningGold">
+                <Crown className="w-3.5 h-3.5" />
+              </div>
+              <div className="min-w-0 flex-1 leading-tight">
+                <p className="text-[8px] font-bold uppercase tracking-widest text-secondaryText truncate">{isBlindMode ? 'Sealed Bids' : 'Leading Bid'}</p>
+                {isBlindMode ? (
+                  /* §1/§3/§4 — no amounts during a blind round */
+                  <h3 className="mt-0.5 text-xs sm:text-sm font-black font-mono tracking-widest text-slate-500 select-none truncate">•••••</h3>
+                ) : (
+                  <h3 className="mt-0.5 text-xs sm:text-sm font-black font-mono tabular-nums text-warningGold truncate" title={formatCurrency(safeCurrentBid)}>{formatCurrency(safeCurrentBid)}</h3>
+                )}
+              </div>
+            </div>
+
+            {/* 4 · Your Status */}
+            <div className={`flex-none glass-card rounded-lg border transition-colors p-2 flex items-center gap-2 min-w-0 ${isCurrentlyHighestBidder ? 'border-teal-300/40 bg-gradient-to-r from-teal-500/20 to-cardBg' : 'border-white/5 bg-gradient-to-r from-[#101512] to-transparent'}`}>
+              <div className={`w-7 h-7 shrink-0 rounded-md flex items-center justify-center border ${isCurrentlyHighestBidder ? 'bg-teal-400/15 border-teal-300/30 text-teal-300' : 'bg-surfaceHover/60 border-borderStrong text-secondaryText'}`}>
+                <TrendingUp className="w-3.5 h-3.5" />
+              </div>
+              <div className="min-w-0 flex-1 leading-tight">
+                <p className="text-[8px] font-bold uppercase tracking-widest text-secondaryText truncate">Your Status</p>
+                <h3 className={`mt-0.5 text-xs sm:text-sm font-black truncate ${isCurrentlyHighestBidder ? 'text-teal-300' : hasOptedOut ? 'text-warningGold' : 'text-primaryText'}`}>
+                  {isCurrentlyHighestBidder ? 'Leading' : hasOptedOut ? 'Sitting Out' : podiumPlayer ? 'In The Race' : 'Standby'}
+                </h3>
+              </div>
+            </div>
+
+            {/* 5 · My Bid Out */}
+            <div className={`flex-none flex items-center justify-between gap-2.5 sm:gap-3 p-2 sm:p-2.5 rounded-xl sm:rounded-2xl border ${hasOptedOut ? 'bg-warningGold/10 border-warningGold/30' : 'bg-black/30 border-white/5'}`}>
+              <div className="flex items-center gap-2 sm:gap-2.5 text-left min-w-0">
+                <div className={`w-7 h-7 sm:w-8 sm:h-8 lg:w-9 lg:h-9 rounded-lg flex items-center justify-center flex-shrink-0 border ${hasOptedOut ? 'bg-warningGold/15 border-warningGold/30 text-warningGold' : 'bg-surfaceHover/60 border-borderStrong text-secondaryText'}`}>
+                  <ShieldOff className="w-3 h-3 sm:w-3.5 sm:h-3.5 lg:w-4 lg:h-4" />
+                </div>
+                <p className={`text-[11px] sm:text-xs lg:text-sm font-bold leading-snug ${hasOptedOut ? 'text-warningGold' : 'text-primaryText'}`}>
+                  {hasOptedOut ? "You're sitting this player out" : 'Not interested in this player?'}
+                </p>
+              </div>
+              <button
+                onClick={handleOptOut}
+                disabled={!podiumPlayer || hasOptedOut}
+                className="flex-shrink-0 px-2.5 sm:px-3 lg:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-bold uppercase tracking-wider border transition flex items-center gap-1 sm:gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed bg-surfaceActive border-urgentRed/30 text-urgentRedText hover:bg-urgentRed/10 hover:border-urgentRed/50"
+              >
+                <LogOut className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> {hasOptedOut ? 'Bid Out' : 'My Bid Out'}
+              </button>
+            </div>
+
+            {/* Bid History Table — §1/§11: hidden entirely during Blind Mode so
+                no team identity or amount is ever surfaced to competing managers.
+                The list itself is THE scrolling section: it takes whatever height
+                remains and scrolls internally instead of growing the page. */}
+            {!isBlindMode && (
+              <div className="flex-1 min-h-0 flex flex-col gap-1.5 sm:gap-2 pt-0 lg:pt-1">
+                <h3 className="flex-none text-[10px] sm:text-xs font-bold uppercase tracking-wider text-secondaryText flex items-center justify-between gap-2">
+                  <span>Live Bid Stream ({safeBidHistory.length})</span>
+                  {highestBidder && (
+                    <span className="text-warningGold flex items-center gap-1 font-mono text-[9px] sm:text-[11px] truncate">
+                      <TrendingUp className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0" /> Leader: {highestBidder.name}
+                    </span>
+                  )}
+                </h3>
+
+                <div className="flex-1 min-h-0 max-h-36 sm:max-h-44 lg:max-h-none overflow-y-auto custom-scrollbar bg-black/30 rounded-lg sm:rounded-xl border border-white/5 p-2 space-y-1 sm:space-y-1.5">
+                  {safeBidHistory.length === 0 ? (
+                    <p className="text-[10px] sm:text-xs text-mutedText text-center py-3">No bids placed on current player yet.</p>
+                  ) : (
+                    [...safeBidHistory].reverse().map((bid, idx) => (
+                      <div key={bid.id || idx} className="flex justify-between items-center text-[11px] sm:text-xs px-2 sm:px-3 py-1.5 sm:py-2 rounded-md sm:rounded-lg bg-cardBg/60 border border-white/5 hover:border-teal-300/25 transition-colors gap-2">
+                        <span className="font-bold text-white truncate">{bid.bidder}</span>
+                        <span className="font-mono font-bold tabular-nums text-warningGold shrink-0">{formatCurrency(bid.amount)}</span>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
             )}
-          </div>
+          </aside>
         </div>
-        )}
       </div>
 
-      {/* Cinematic overlays are now rendered confined inside the Podium Display
+      {/* Cinematic overlays are rendered confined inside the Podium Display
           stage above (via PlayerDisplayStage) — no full-screen overlays. */}
 
     </div>

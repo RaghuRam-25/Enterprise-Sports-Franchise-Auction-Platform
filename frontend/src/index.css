@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700;800&family=Barlow+Condensed:wght@500;600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -226,12 +226,29 @@ input[type='number'] {
 }
 .ui-pop-in { animation: ui-pop-in 0.35s cubic-bezier(0.22, 1, 0.36, 1) both; }
 
+/* ── Podium stage-light beams (purely decorative) ──────────────────────────── */
+.podium-beam {
+  background: linear-gradient(to bottom,
+    var(--beam-color, rgba(94, 234, 212, 0.28)) 0%,
+    transparent 78%);
+  filter: blur(18px);
+  transform-origin: top center;
+  animation: podium-beam 7s ease-in-out infinite;
+}
+.podium-beam:nth-child(2) { animation-delay: -2.2s; }
+.podium-beam:nth-child(3) { animation-delay: -4.6s; }
+@keyframes podium-beam {
+  0%, 100% { opacity: 0.30; transform: skewX(-7deg) scaleY(1); }
+  50%      { opacity: 0.75; transform: skewX(-4deg) scaleY(1.04); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .ui-lift, .ui-btn, .ui-fade-up, .ui-pop-in, .ui-skeleton,
-  .animate-slide-in-right, .animate-pulse-ring {
+  .animate-slide-in-right, .animate-pulse-ring, .podium-beam {
     animation: none !important;
     transition: none !important;
   }
+  .podium-beam { opacity: 0.45; transform: skewX(-6deg); }
   .ui-btn::after { display: none; }
 }
 

@@ -327,9 +327,6 @@ export default function PlayerSettings() {
               </div>
             ) : (
               <div className="space-y-2">
-                <p className="text-secondaryText">
-                  Withdrawing will remove your profile from the live auction pool.
-                </p>
                 <button
                   onClick={handleWithdraw}
                   disabled={myPlayer?.status === 'WITHDRAWN' || myPlayer?.status === 'withdrawn' || withdrawing}

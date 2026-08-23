@@ -2,6 +2,7 @@ import {
   PHASES,
   getCurrentPhase,
   forceSetPhase,
+  isRegistrationFrozen,
 } from '../services/phaseService.js';
 import { Player } from '../models/Player.js';
 import { Team } from '../models/Team.js';
@@ -269,6 +270,16 @@ export const setPhase = async (req, res, next) => {
       const io = req.app.get('io');
       if (io) {
         io.emit('phase:changed', { phase: target, rosterSizing, locked: isLocked });
+
+        // GAP FIX: the frontend (AuctionContext) listens for
+        // 'registration:freeze-toggled' with { isRegistrationFrozen } but the
+        // backend never emitted it — registration freeze state changes were
+        // only inferable from phase:changed. Emit it explicitly whenever the
+        // transition enters or leaves the REGISTRATION stage.
+        if (target === 'REGISTRATION' || target === 'AUCTION' || target === 'TOURNAMENT') {
+          const isRegistrationFrozenNow = await isRegistrationFrozen();
+          io.emit('registration:freeze-toggled', { isRegistrationFrozen: isRegistrationFrozenNow });
+        }
       }
 
       return res.json({

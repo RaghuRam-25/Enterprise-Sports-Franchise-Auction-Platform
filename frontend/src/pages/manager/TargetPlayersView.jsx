@@ -433,13 +433,13 @@ export default function TargetPlayersView() {
                             >
                               <FileText className="w-3 h-3 text-warningGold" /> Edit
                             </button>
-                            <button
-                              onClick={() => handleRemoveTarget(target._id || target.id, player.name)}
-                              className="btn-danger flex-1 px-2 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wide flex items-center justify-center gap-1 ui-focus"
-                              title="Cancel this target and remove it from your list"
-                              aria-label={`Cancel Player ${player.name || ''} from target list`}
-                            >
-                              <XCircle className="w-3.5 h-3.5" /> Cancel
+                            <button 
+                                 onClick={() => handleRemoveTarget(target._id || target.id, player.name)} 
+                                 className="btn-danger flex-1 px-1 py-1 rounded-lg text-[10px] font-black uppercase tracking-wide flex items-center justify-center gap-1 ui-focus" 
+                                 title="Cancel this target and remove it from your list" 
+                                 aria-label={`Cancel Player ${player.name || ''} from target list`} 
+                              >
+                              <XCircle className="w-3 h-3" /> X
                             </button>
                           </div>
                         </div>

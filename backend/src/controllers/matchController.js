@@ -166,6 +166,15 @@ export const updateMatch = async (req, res, next) => {
 
     const updatedMatch = await Match.findByIdAndUpdate(req.params.id, updates, { new: true });
     notifyClients(req, 'match_updated', { action: 'update', match: updatedMatch });
+
+    // GAP FIX: the frontend schedule/scoreboard (TeamsScudle) also listens for
+    // a dedicated 'score_update' event which the backend never emitted — score
+    // / live-status changes now notify on both channels.
+    const scoreKeys = ['scoreA', 'scoreB', 'status', 'liveScore', 'winnerNotes'];
+    if (scoreKeys.some((k) => updates[k] !== undefined)) {
+      notifyClients(req, 'score_update', { action: 'score', match: updatedMatch });
+    }
+
     res.json({ success: true, message: 'Match updated successfully', data: updatedMatch });
   } catch (e) { next(e); }
 };

@@ -16,12 +16,15 @@ export default function LiveAuctionLeaderboard() {
 
     return (
         <div className="w-full h-full bg-darkBg/80 backdrop-blur-sm border-t-2 border-cardBorder p-3 flex flex-col rounded-b-2xl">
-            <h5 className="text-xs font-bold uppercase tracking-wider text-secondaryText flex items-center gap-2 mb-2">
-                <Clock className="w-3 h-3 text-neonGreen" /> Live Bids
-            </h5>
-            <div ref={scrollRef} className="flex-1 overflow-y-auto custom-scrollbar text-xs space-y-1.5 pr-1">
+            <div className="flex-1 overflow-y-auto custom-scrollbar text-xs space-y-1.5 pr-1">
                 {safeHistory.length === 0 ? (
-                    <p className="text-mutedText text-center py-2">Waiting for the first bid...</p>
+                    <p className="h-full flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-widest text-neonGreen">
+                        <span className="relative flex h-2 w-2">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-neonGreen opacity-75" />
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-neonGreen" />
+                        </span>
+                        Live Auction
+                    </p>
                 ) : (
                     [...safeHistory].reverse().map((bid, index) => (
                         <div key={bid.id || index} className={`flex justify-between items-center text-secondaryText transition-colors p-1 rounded ${index === 0 ? 'bg-neonGreen/10' : ''}`}>

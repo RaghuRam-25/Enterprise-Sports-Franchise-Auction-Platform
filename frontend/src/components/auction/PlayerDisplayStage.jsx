@@ -39,6 +39,14 @@ import { getImageUrl } from '../../utils/imageUrl';
  *   - showWaiting:      boolean — parent decides when the idle/waiting scene
  *                       is appropriate (usually: no podium player + idle)
  *   - children:         the view's own LIVE bidding UI (shown during LIVE)
+ *   - fillHeight:       when true, the live children stretch to fill the whole
+ *                       stage box (`h-full`) instead of sizing to their content
+ *                       — used by full-screen dashboards whose stage must fit
+ *                       the viewport exactly. Default false (content-sized).
+ *   - transparentBg:    when true the stage's own dark backdrop is removed so
+ *                       the live surface sits directly on the parent card's
+ *                       background (purely visual; fullscreen video still
+ *                       goes black). Default false keeps the boxed look.
  *   - className:        optional extra classes for the positioned container
  *
  * IMPORTANT: the container MUST be positioned (this component adds `relative`)
@@ -55,6 +63,8 @@ export default function PlayerDisplayStage({
   waitingStats = {},
   showWaiting = false,
   showLeaderboard = true,
+  fillHeight = false,
+  transparentBg = false,
   children,
   className = '',
   // Responsive broadcast height reserved for the cinematic surface. It is
@@ -90,7 +100,10 @@ export default function PlayerDisplayStage({
     <div className={`relative ${className} h-full`}>
       {/* Fullscreen toggle is offered ONLY while the Podium Admin's broadcast
           video (Video Control) is playing — every other scene stays inline. */}
-      <FullscreenWrapper showToggle={isBroadcastingVideo}>
+      <FullscreenWrapper
+        showToggle={isBroadcastingVideo}
+        className={transparentBg ? '!bg-transparent' : ''}
+      >
         <div className="relative h-full flex flex-col">
           <div className="flex-1 relative overflow-hidden rounded-t-2xl">
             {/* Cinematic broadcast surface */}
@@ -274,7 +287,9 @@ export default function PlayerDisplayStage({
                     ? 'absolute inset-0 z-10 flex flex-col justify-end bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-[:fullscreen]:opacity-100'
                     : (cinematicActive || hasBroadcastOverlay) // This is a spectator view or admin view
                       ? 'pointer-events-none absolute inset-0 select-none opacity-0'
-                      : 'relative opacity-100' // Not cinematic, normal view
+                      : fillHeight
+                        ? 'relative h-full min-h-0 opacity-100' // Full-fit dashboards: stretch to the stage box
+                        : 'relative opacity-100' // Not cinematic, normal view
                   }`}
                 aria-hidden={cinematicActive || hasBroadcastOverlay}
               >

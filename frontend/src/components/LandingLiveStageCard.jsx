@@ -45,6 +45,12 @@ const POSITION_FULL_NAMES = {
  * mode="spectator"  → shows no bid button (spectator only watches)
  * mode="manager"    → shows ⚡ PLACE BID NOW button
  * mode="podium"     → shows podiumControls JSX
+ *
+ * fitContainer — when true the card stretches to FILL its parent's height
+ * (`h-full`) and scales itself down responsively (photo, type, paddings,
+ * tiles) so a full-screen dashboard can show it without any page scrolling.
+ * Default false keeps the classic content-sized card used on landing/live/
+ * podium/modal pages untouched.
  */
 export default function LandingLiveStageCard({
   player,
@@ -65,6 +71,7 @@ export default function LandingLiveStageCard({
   categories = [],
   positions = [],
   formatCurrency = (val) => val != null ? `Tk ${Number(val).toLocaleString('en-US')}` : 'Tk 0',
+  fitContainer = false,
 }) {
   // ── Category-driven accent (DB-matched, same resolution as PlayerCardCard) ──
   const catTheme = getCategoryTheme(player?.category, categories);
@@ -174,30 +181,80 @@ export default function LandingLiveStageCard({
     color: accent,
   };
 
+  // ── fitContainer sizing tokens ─────────────────────────────────────────────
+  // Compact equivalents used only by full-screen dashboards; the classic card
+  // keeps its original classes when fitContainer is false.
+  const rootCls = fitContainer
+    // Full-fit dashboards: NO boxed panel — transparent surface that sits
+    // directly on the parent card's background (stage-lighting look).
+    ? 'relative h-full flex flex-col overflow-x-hidden text-slate-100 font-sans'
+    : 'rounded-3xl p-5 sm:p-7 relative overflow-hidden text-slate-100 font-sans';
+  const gridCls = fitContainer
+    ? 'grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-4 lg:gap-6 xl:gap-8 items-center my-auto w-full relative z-10'
+    : 'grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-center relative z-10';
+  const leftColCls = fitContainer
+    ? 'lg:col-span-5 min-w-0 flex flex-col items-center text-center space-y-2 sm:space-y-2.5'
+    : 'lg:col-span-5 min-w-0 flex flex-col items-center text-center space-y-4';
+  const hexCls = fitContainer
+    ? 'relative w-36 h-36 sm:w-44 sm:h-44 xl:w-52 xl:h-52 2xl:w-56 2xl:h-56 flex items-center justify-center'
+    : 'relative w-48 h-48 sm:w-56 sm:h-56 flex items-center justify-center';
+  const nameBlockCls = fitContainer ? 'pt-1 w-full min-w-0 overflow-hidden' : 'pt-2 w-full min-w-0 overflow-hidden';
+  const nameTextCls = fitContainer
+    ? 'block w-max max-w-full mx-auto whitespace-nowrap text-xl sm:text-2xl lg:text-3xl font-black uppercase tracking-tight leading-tight'
+    : 'block w-max max-w-full mx-auto whitespace-nowrap text-2xl sm:text-4xl font-black uppercase tracking-tight leading-tight';
+  const actionAreaCls = fitContainer ? 'w-full pt-1' : 'w-full pt-2';
+  const blindInputCls = fitContainer
+    ? 'w-full mb-2 px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl bg-[#0e0f14] border font-mono text-sm sm:text-base text-white text-center placeholder:text-slate-600 focus:outline-none'
+    : 'w-full mb-2.5 px-4 py-3.5 rounded-2xl bg-[#0e0f14] border font-mono text-base text-white text-center placeholder:text-slate-600 focus:outline-none';
+  const bidBtnCls = fitContainer
+    ? 'w-full py-3 sm:py-3.5 font-black text-xs sm:text-sm uppercase tracking-wider rounded-xl sm:rounded-2xl transition flex items-center justify-center gap-2'
+    : 'w-full py-4 font-black text-sm uppercase tracking-wider rounded-2xl transition flex items-center justify-center gap-2';
+  const rightColCls = fitContainer
+    ? 'lg:col-span-7 min-w-0 space-y-2 sm:space-y-2.5'
+    : 'lg:col-span-7 min-w-0 space-y-3';
+  const tilePadCls = fitContainer ? 'p-2.5 sm:p-3' : 'p-3.5';
+  const tileIconCls = fitContainer
+    ? 'w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center shrink-0'
+    : 'w-10 h-10 rounded-xl flex items-center justify-center shrink-0';
+  const tileSvgCls = fitContainer ? 'w-4 h-4 lg:w-5 lg:h-5' : 'w-5 h-5';
+  const tileLabelCls = fitContainer
+    ? 'text-[10px] sm:text-[11px] font-mono font-bold text-slate-400 uppercase'
+    : 'text-xs font-mono font-bold text-slate-400 uppercase';
+  const tileValueCls = fitContainer
+    ? 'text-base sm:text-lg lg:text-xl font-black font-mono'
+    : 'text-lg sm:text-xl font-black font-mono';
+  const ringCls = fitContainer
+    ? 'w-10 h-10 sm:w-11 sm:h-11 rounded-full border-2 flex items-center justify-center font-mono font-black text-white text-xs sm:text-sm'
+    : 'w-12 h-12 rounded-full border-2 flex items-center justify-center font-mono font-black text-white text-sm';
+
   return (
     <div
-      className="rounded-3xl p-5 sm:p-7 relative overflow-hidden text-slate-100 font-sans"
-      style={{
+      className={rootCls}
+      style={fitContainer ? undefined : {
         background: 'linear-gradient(175deg, #0a0a0c 0%, #08080a 55%, #050506 100%)',
         border: `1px solid ${alpha(accent, 0.45)}`,
         boxShadow: `0 0 50px ${alpha(accent, 0.14)}, inset 0 0 80px ${alpha(accent, 0.04)}`,
       }}
     >
 
-      {/* Radial ambient background glow — category tinted */}
-      <div className="absolute -top-24 -left-24 w-96 h-96 rounded-full blur-3xl pointer-events-none" style={{ background: alpha(accent, 0.10) }} />
-      <div className="absolute -bottom-24 -right-24 w-96 h-96 rounded-full blur-3xl pointer-events-none" style={{ background: alpha(accent, 0.10) }} />
+      {/* Radial ambient background glow — category tinted. Confined to a
+          clipping layer so the blobs can never create phantom scroll space
+          when this card is an internal-scrolling full-fit surface. */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-3xl">
+        <div className="absolute -top-24 -left-24 w-96 h-96 rounded-full blur-3xl" style={{ background: alpha(accent, 0.10) }} />
+        <div className="absolute -bottom-24 -right-24 w-96 h-96 rounded-full blur-3xl" style={{ background: alpha(accent, 0.10) }} />
+      </div>
 
       {/* ── Main Stage Grid ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-center relative z-10">
+      <div className={gridCls}>
 
         {/* ── Left Column: Hexagon Photo & Identity ── */}
-        <div className="lg:col-span-5 min-w-0 flex flex-col items-center text-center space-y-4">
+        <div className={leftColCls}>
 
           {/* Category badge — above the picture */}
           {player?.category && (
             <div
-              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full font-mono font-black text-[11px] sm:text-xs uppercase tracking-widest"
+              className={`inline-flex items-center gap-2 ${fitContainer ? 'px-3 py-1' : 'px-4 py-1.5'} rounded-full font-mono font-black ${fitContainer ? 'text-[10px]' : 'text-[11px] sm:text-xs'} uppercase tracking-widest`}
               style={{
                 background: alpha(accent, 0.12),
                 border: `1px solid ${accent}`,
@@ -211,7 +268,7 @@ export default function LandingLiveStageCard({
           )}
 
           {/* Hexagon Photo Frame */}
-          <div className="relative w-48 h-48 sm:w-56 sm:h-56 flex items-center justify-center">
+          <div className={hexCls}>
 
             {/* Jersey number badge — top-left */}
             {jerseyNumber !== '' && (
@@ -276,16 +333,16 @@ export default function LandingLiveStageCard({
               to the container, so long names can never wrap or push into the
               neighbouring TIME LEFT column. Block-level h2 keeps the full-form
               position pinned BELOW the name on every screen size. */}
-          <div ref={nameWrapRef} className="pt-2 w-full min-w-0 overflow-hidden">
+          <div ref={nameWrapRef} className={nameBlockCls}>
             <h2
               ref={nameElRef}
-              className="block w-max max-w-full mx-auto whitespace-nowrap text-2xl sm:text-4xl font-black uppercase tracking-tight leading-tight"
+              className={nameTextCls}
             >
               <span className="text-white">{firstName} </span>
               <span style={{ color: accent }}>{lastName}</span>
             </h2>
             <div className="inline-block mt-1">
-              <span className="text-xs font-mono font-bold uppercase tracking-widest block" style={{ color: accent }}>
+              <span className={`${fitContainer ? 'text-[10px] sm:text-xs' : 'text-xs'} font-mono font-bold uppercase tracking-widest block`} style={{ color: accent }}>
                 {fullPositionName}
               </span>
               <div className="w-12 h-0.5 mx-auto mt-1 rounded-full" style={{ background: accent }} />
@@ -293,7 +350,7 @@ export default function LandingLiveStageCard({
           </div>
 
           {/* ── Mode-Based Action Area ── */}
-          <div className="w-full pt-2">
+          <div className={actionAreaCls}>
             {/* SPECTATOR: no button */}
             {mode === 'spectator' && null}
 
@@ -312,7 +369,7 @@ export default function LandingLiveStageCard({
                 value={blindAmount}
                 onChange={(e) => onBlindAmountChange?.(e.target.value)}
                 placeholder={`Min ${formatCurrency(basePrice)}`}
-                className="w-full mb-2.5 px-4 py-3.5 rounded-2xl bg-[#0e0f14] border font-mono text-base text-white text-center placeholder:text-slate-600 focus:outline-none"
+                className={blindInputCls}
                 style={{ borderColor: alpha(accent, 0.45) }}
               />
             )}
@@ -320,14 +377,14 @@ export default function LandingLiveStageCard({
               <button
                 onClick={onPlaceBid}
                 disabled={bidDisabled}
-                className={`w-full py-4 font-black text-sm uppercase tracking-wider rounded-2xl transition flex items-center justify-center gap-2 ${bidDisabled ? 'cursor-not-allowed opacity-60 saturate-50' : 'transform hover:-translate-y-0.5 hover:brightness-110 active:scale-[0.99]'}`}
+                className={`${bidBtnCls} ${bidDisabled ? 'cursor-not-allowed opacity-60 saturate-50' : 'transform hover:-translate-y-0.5 hover:brightness-110 active:scale-[0.99]'}`}
                 style={{
                   backgroundColor: accent,
                   color: '#050505',
                   boxShadow: bidDisabled ? 'none' : `0 0 30px ${alpha(accent, 0.5)}`,
                 }}
               >
-                <Zap className="w-5 h-5 fill-current" />
+                <Zap className={fitContainer ? 'w-4 h-4 fill-current' : 'w-5 h-5 fill-current'} />
                 <span>{bidLabel}</span>
               </button>
             )}
@@ -342,86 +399,86 @@ export default function LandingLiveStageCard({
         </div>
 
         {/* ── Right Column: Bidding Metric Cards ── */}
-        <div className="lg:col-span-7 min-w-0 space-y-3">
+        <div className={rightColCls}>
 
           {/* BASE PRICE */}
-          <div className="rounded-2xl p-3.5 flex items-center justify-between shadow-md" style={tileStyle}>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={iconBoxStyle}>
-                <Tag className="w-5 h-5" />
+          <div className={`rounded-2xl ${tilePadCls} flex items-center justify-between shadow-md gap-2`} style={tileStyle}>
+            <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+              <div className={tileIconCls} style={iconBoxStyle}>
+                <Tag className={tileSvgCls} />
               </div>
-              <span className="text-xs font-mono font-bold text-slate-400 uppercase">BASE PRICE</span>
+              <span className={`${tileLabelCls} truncate`}>BASE PRICE</span>
             </div>
-            <span className="text-lg sm:text-xl font-black font-mono text-white">
+            <span className={`${tileValueCls} text-white shrink-0`}>
               {formatCurrency(basePrice)}
             </span>
           </div>
 
           {/* CURRENT BID — sealed in Blind Mode (§3) */}
-          <div className="rounded-2xl p-3.5 flex items-center justify-between shadow-md" style={tileStyle}>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={iconBoxStyle}>
-                <TrendingUp className="w-5 h-5" />
+          <div className={`rounded-2xl ${tilePadCls} flex items-center justify-between shadow-md gap-2`} style={tileStyle}>
+            <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+              <div className={tileIconCls} style={iconBoxStyle}>
+                <TrendingUp className={tileSvgCls} />
               </div>
-              <span className="text-xs font-mono font-bold text-slate-400 uppercase">{blindMode ? 'SEALED' : 'CURRENT BID'}</span>
+              <span className={`${tileLabelCls} truncate`}>{blindMode ? 'SEALED' : 'CURRENT BID'}</span>
             </div>
             {blindMode ? (
-              <span className="text-sm sm:text-base font-black font-mono tracking-widest text-slate-500 select-none">••••• HIDDEN</span>
+              <span className={`${fitContainer ? 'text-xs sm:text-sm' : 'text-sm sm:text-base'} font-black font-mono tracking-widest text-slate-500 select-none shrink-0`}>••••• HIDDEN</span>
             ) : (
-              <span className="text-lg sm:text-xl font-black font-mono" style={{ color: accent }}>
+              <span className={`${tileValueCls} shrink-0`} style={{ color: accent }}>
                 {formatCurrency(activeCurrentBid)}
               </span>
             )}
           </div>
 
           {/* BIDDING TEAM — anonymous in Blind Mode (§4) */}
-          <div className="rounded-2xl p-3.5 flex items-center justify-between shadow-md" style={tileStyle}>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={iconBoxStyle}>
-                <Trophy className="w-5 h-5" />
+          <div className={`rounded-2xl ${tilePadCls} flex items-center justify-between shadow-md gap-2`} style={tileStyle}>
+            <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+              <div className={tileIconCls} style={iconBoxStyle}>
+                <Trophy className={tileSvgCls} />
               </div>
-              <span className="text-xs font-mono font-bold text-slate-400 uppercase">{blindMode ? 'BIDDERS' : 'BIDDING TEAM'}</span>
+              <span className={`${tileLabelCls} truncate`}>{blindMode ? 'BIDDERS' : 'BIDDING TEAM'}</span>
             </div>
             {blindMode ? (
-              <span className="text-sm sm:text-base font-black text-slate-500 italic tracking-wide select-none">Anonymous</span>
+              <span className={`${fitContainer ? 'text-xs sm:text-sm' : 'text-sm sm:text-base'} font-black text-slate-500 italic tracking-wide select-none shrink-0`}>Anonymous</span>
             ) : teamName ? (
               <div className="flex items-center gap-2 max-w-[55%]">
-                {teamLogo && <span className="text-xl">{teamLogo}</span>}
-                <span className="text-base sm:text-lg font-black text-white truncate">{teamName}</span>
+                {teamLogo && <span className="text-lg sm:text-xl">{teamLogo}</span>}
+                <span className={`${fitContainer ? 'text-sm sm:text-base' : 'text-base sm:text-lg'} font-black text-white truncate`}>{teamName}</span>
               </div>
             ) : (
-              <span className="text-sm text-slate-500 italic font-bold">Opening at base…</span>
+              <span className={`${fitContainer ? 'text-[11px] sm:text-xs' : 'text-sm'} text-slate-500 italic font-bold truncate`}>Opening at base…</span>
             )}
           </div>
 
           {/* NEXT MINIMUM BID / MINIMUM VALID BID — brighter accent highlight */}
-          <div className="rounded-2xl p-3.5 flex items-center justify-between shadow-md" style={{ ...tileStyle, borderColor: alpha(accent, 0.55) }}>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={iconBoxStyle}>
-                <Target className="w-5 h-5" />
+          <div className={`rounded-2xl ${tilePadCls} flex items-center justify-between shadow-md gap-2`} style={{ ...tileStyle, borderColor: alpha(accent, 0.55) }}>
+            <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+              <div className={tileIconCls} style={iconBoxStyle}>
+                <Target className={tileSvgCls} />
               </div>
-              <span className="text-xs font-mono font-bold text-slate-400 uppercase">{blindMode ? 'MINIMUM VALID BID' : 'NEXT MINIMUM BID'}</span>
+              <span className={`${tileLabelCls} truncate`}>{blindMode ? 'MINIMUM VALID BID' : 'NEXT MINIMUM BID'}</span>
             </div>
-            <span className="text-lg sm:text-xl font-black font-mono" style={{ color: accent }}>
+            <span className={`${tileValueCls} shrink-0`} style={{ color: accent }}>
               {formatCurrency(computedNextMinBid)}
             </span>
           </div>
 
           {/* TIME LEFT + circular ring */}
-          <div className="rounded-2xl p-3.5 flex items-center justify-between shadow-md" style={tileStyle}>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={iconBoxStyle}>
-                <Clock className="w-5 h-5" />
+          <div className={`rounded-2xl ${tilePadCls} flex items-center justify-between shadow-md gap-2`} style={tileStyle}>
+            <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+              <div className={tileIconCls} style={iconBoxStyle}>
+                <Clock className={tileSvgCls} />
               </div>
-              <div>
-                <span className="text-xs font-mono font-bold text-slate-400 uppercase block">TIME LEFT</span>
-                <span className="text-[10px] text-slate-500 font-mono block">30 SEC PER BID</span>
+              <div className="min-w-0">
+                <span className={`${tileLabelCls} block truncate`}>TIME LEFT</span>
+                <span className={`${fitContainer ? 'text-[9px]' : 'text-[10px]'} text-slate-500 font-mono block truncate`}>30 SEC PER BID</span>
               </div>
             </div>
 
             {/* Circular countdown ring */}
             <div
-              className={`w-12 h-12 rounded-full border-2 flex items-center justify-center font-mono font-black text-white text-sm ${isUrgent ? 'animate-pulse' : ''}`}
+              className={`${ringCls} shrink-0 ${isUrgent ? 'animate-pulse' : ''}`}
               style={{
                 borderColor: isUrgent ? '#FF5C5C' : accent,
                 backgroundColor: alpha(isUrgent ? '#FF5C5C' : accent, 0.15),
@@ -433,25 +490,25 @@ export default function LandingLiveStageCard({
           </div>
 
           {/* SESSION & BATCH — 2 equal cards */}
-          <div className="grid grid-cols-2 gap-3 pt-1">
+          <div className={`grid grid-cols-2 ${fitContainer ? 'gap-2 sm:gap-2.5 pt-0.5' : 'gap-3 pt-1'}`}>
 
-            <div className="rounded-2xl p-3 flex items-center gap-3 shadow-md" style={tileStyle}>
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={iconBoxStyle}>
-                <Calendar className="w-4 h-4" />
+            <div className={`rounded-2xl ${fitContainer ? 'p-2.5' : 'p-3'} flex items-center gap-2.5 sm:gap-3 shadow-md min-w-0`} style={tileStyle}>
+              <div className={`${fitContainer ? 'w-8 h-8 sm:w-9 sm:h-9' : 'w-9 h-9'} rounded-xl flex items-center justify-center shrink-0`} style={iconBoxStyle}>
+                <Calendar className={fitContainer ? 'w-3.5 h-3.5 sm:w-4 sm:h-4' : 'w-4 h-4'} />
               </div>
-              <div>
-                <span className="text-[10px] font-mono font-bold text-slate-400 uppercase block">SESSION</span>
-                <span className="text-xs font-black font-mono text-white">{sessionLabel}</span>
+              <div className="min-w-0">
+                <span className={`${fitContainer ? 'text-[9px] sm:text-[10px]' : 'text-[10px]'} font-mono font-bold text-slate-400 uppercase block truncate`}>SESSION</span>
+                <span className={`${fitContainer ? 'text-[11px] sm:text-xs' : 'text-xs'} font-black font-mono text-white truncate`}>{sessionLabel}</span>
               </div>
             </div>
 
-            <div className="rounded-2xl p-3 flex items-center gap-3 shadow-md" style={tileStyle}>
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={iconBoxStyle}>
-                <Calendar className="w-4 h-4" />
+            <div className={`rounded-2xl ${fitContainer ? 'p-2.5' : 'p-3'} flex items-center gap-2.5 sm:gap-3 shadow-md min-w-0`} style={tileStyle}>
+              <div className={`${fitContainer ? 'w-8 h-8 sm:w-9 sm:h-9' : 'w-9 h-9'} rounded-xl flex items-center justify-center shrink-0`} style={iconBoxStyle}>
+                <Calendar className={fitContainer ? 'w-3.5 h-3.5 sm:w-4 sm:h-4' : 'w-4 h-4'} />
               </div>
-              <div>
-                <span className="text-[10px] font-mono font-bold text-slate-400 uppercase block">BATCH</span>
-                <span className="text-xs font-black font-mono text-white">{batchLabel}</span>
+              <div className="min-w-0">
+                <span className={`${fitContainer ? 'text-[9px] sm:text-[10px]' : 'text-[10px]'} font-mono font-bold text-slate-400 uppercase block truncate`}>BATCH</span>
+                <span className={`${fitContainer ? 'text-[11px] sm:text-xs' : 'text-xs'} font-black font-mono text-white truncate`}>{batchLabel}</span>
               </div>
             </div>
 
