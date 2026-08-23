@@ -10,6 +10,7 @@ import {
   getRegistrationStatus,
   toggleRegistrationFreeze,
   requestManagerRole,
+  cancelManagerRequest,
   requestPlayerRole
 } from '../controllers/playerController.js';
 import { protect, optionalAuth, authorize } from '../middleware/auth.js';
@@ -42,6 +43,9 @@ router.get('/', optionalAuth, getPlayers);
 
 // POST /api/players/request-manager — PLAYER or GENERAL_USER role upgrade request
 router.post('/request-manager', protect, authorize('PLAYER', 'SPECTATOR', 'GENERAL_USER'), requestManagerRole);
+
+// POST /api/players/request-manager/cancel — withdraw a PENDING manager request
+router.post('/request-manager/cancel', protect, authorize('PLAYER', 'SPECTATOR', 'GENERAL_USER'), cancelManagerRequest);
 
 // POST /api/players/request-player — GENERAL_USER request for Player role
 router.post('/request-player', protect, authorize('GENERAL_USER', 'SPECTATOR'), requestPlayerRole);

@@ -4,7 +4,6 @@ import {
   Search,
   Filter,
   Plus,
-  Trash2,
   MoveUp,
   MoveDown,
   FileText,
@@ -12,6 +11,7 @@ import {
   AlertCircle,
   Users,
   Check,
+  XCircle,
   Award,
   BookOpen,
   Tag,
@@ -435,10 +435,11 @@ export default function TargetPlayersView() {
                             </button>
                             <button
                               onClick={() => handleRemoveTarget(target._id || target.id, player.name)}
-                              className="btn-danger p-1.5 rounded-lg"
-                              title="Remove Target"
+                              className="btn-danger flex-1 px-2 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wide flex items-center justify-center gap-1 ui-focus"
+                              title="Cancel this target and remove it from your list"
+                              aria-label={`Cancel Player ${player.name || ''} from target list`}
                             >
-                              <Trash2 className="w-3.5 h-3.5" />
+                              <XCircle className="w-3.5 h-3.5" /> Cancel
                             </button>
                           </div>
                         </div>
@@ -473,12 +474,19 @@ export default function TargetPlayersView() {
                   onCardClick={() => setSelectedPlayer(player)}
                   customActions={
                     isTargeted ? (
-                      <button
-                        onClick={() => handleRemoveTarget(pId, player.name)}
-                        className="px-2.5 py-1 bg-warningGold/20 text-warningGold border border-warningGold/40 rounded-lg text-xs font-bold flex items-center gap-1 hover:bg-urgentRed/20 hover:text-urgentRedText hover:border-urgentRed/40 transition"
-                      >
-                        <Check className="w-3.5 h-3.5 text-warningGold" /> Targeted
-                      </button>
+                      <div className="w-full flex items-center gap-1.5">
+                        <span className="px-2.5 py-1 bg-successGreen/15 text-neonGreen border border-successGreen/40 rounded-lg text-xs font-bold flex items-center justify-center gap-1 flex-shrink-0">
+                          <Check className="w-3.5 h-3.5" /> Targeted
+                        </span>
+                        <button
+                          onClick={() => handleRemoveTarget(pId, player.name)}
+                          className="btn-danger flex-1 px-2.5 py-1 rounded-lg text-xs font-black uppercase tracking-wide flex items-center justify-center gap-1 ui-focus"
+                          title={`Cancel Player ${player.name || ''} from your target list`}
+                          aria-label={`Cancel Player ${player.name || ''}`}
+                        >
+                          <XCircle className="w-3.5 h-3.5" /> Cancel Player
+                        </button>
+                      </div>
                     ) : (
                       <button
                         onClick={() => handleAddTarget(player)}

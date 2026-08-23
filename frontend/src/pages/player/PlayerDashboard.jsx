@@ -5,7 +5,7 @@ import {
   User, CheckCircle2, Edit3, X, Save, Loader2,
   Camera, Shield, Hash, Shirt, List, Star, Mail, GraduationCap, BadgeCheck,
   Lock, Upload, Trash2, MapPin, Award, Calendar, Ruler, Footprints, Globe, Activity,
-  Goal, TrendingUp, Gavel, Trophy, Rocket, ShieldOff
+  Goal, TrendingUp, Gavel, Trophy, Rocket, ShieldOff, XCircle, AlertTriangle, Clock
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useAuction } from "../../context/AuctionContext";
@@ -57,13 +57,16 @@ export default function PlayerDashboard() {
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [editForm, setEditForm] = useState({ name: "", phone: "", jerseyName: "", tShirtSize: "M", tShirtNumber: "", positions: [], primaryPosition: "", session: "", bio: "", address: "", age: "", height: "", preferredFoot: "", nationality: "", matchesPlayed: 0, goals: 0, assists: 0, yellowCards: 0, redCards: 0, cleanSheets: 0 });
+  const [editForm, setEditForm] = useState({ name: "", jerseyName: "", tShirtSize: "M", tShirtNumber: "", positions: [], primaryPosition: "", session: "", bio: "", address: "", age: "", height: "", preferredFoot: "", nationality: "", matchesPlayed: 0, goals: 0, assists: 0, yellowCards: 0, redCards: 0, cleanSheets: 0 });
   const [selectedFile, setSelectedFile] = useState(null);
   const [filePreview, setFilePreview] = useState(null);
   const [removeImage, setRemoveImage] = useState(false);
   const [activeTab, setActiveTab] = useState("personal");
   const fileInputRef = useRef(null);
   const [activePos, setActivePos] = useState(null);
+  // Manager request cancellation
+  const [showCancelRequestModal, setShowCancelRequestModal] = useState(false);
+  const [cancellingRequest, setCancellingRequest] = useState(false);
 
   // Code → { name, fieldX, fieldY } from the live /config/positions list.
   const positionInfo = useMemo(() => {
@@ -127,7 +130,6 @@ export default function PlayerDashboard() {
   const openEdit = () => {
     setEditForm({
       name: myPlayer?.name || "",
-      phone: myPlayer?.phone || "",
       jerseyName: myPlayer?.jerseyName || "",
       tShirtSize: myPlayer?.tShirtSize || "M",
       tShirtNumber: myPlayer?.tShirtNumber || "",
@@ -175,7 +177,6 @@ export default function PlayerDashboard() {
     try {
       const fd = new FormData();
       if (editForm.name) fd.append("name", editForm.name);
-      if (editForm.phone !== undefined) fd.append("phone", editForm.phone);
       if (editForm.jerseyName) fd.append("jerseyName", editForm.jerseyName);
       if (editForm.tShirtSize) fd.append("tShirtSize", editForm.tShirtSize);
       fd.append("tShirtNumber", editForm.tShirtNumber || "");
@@ -227,6 +228,44 @@ export default function PlayerDashboard() {
     } catch (err) {
       triggerToast(err?.response?.data?.message || "Failed to update profile", "error");
     } finally { setSaving(false); }
+  };
+
+  // Withdraw a PENDING Team Manager request. Status returns to NONE so a new
+  // request can be submitted afterwards. AuthContext + localStorage stay in
+  // sync; other open sessions update live via the user:request_cancelled event.
+  const handleCancelManagerRequest = async () => {
+    setCancellingRequest(true);
+    try {
+      await api.post("/players/request-manager/cancel");
+      triggerToast("Team Manager request cancelled.", "success");
+      if (setUser) {
+        setUser(prev => {
+          if (!prev) return prev;
+          const next = { ...prev, managerRequestStatus: "NONE" };
+          localStorage.setItem("user", JSON.stringify(next));
+          return next;
+        });
+      }
+      setShowCancelRequestModal(false);
+    } catch (e) {
+      const msg = e?.response?.data?.message || "";
+      if (msg.includes("No pending") || msg.includes("not found") || msg.includes("already")) {
+        triggerToast("No pending request found. Status refreshed.", "info");
+        if (setUser) {
+          setUser(prev => {
+            if (!prev) return prev;
+            const next = { ...prev, managerRequestStatus: "NONE" };
+            localStorage.setItem("user", JSON.stringify(next));
+            return next;
+          });
+        }
+        setShowCancelRequestModal(false);
+      } else {
+        triggerToast(msg || "Failed to cancel request.", "error");
+      }
+    } finally {
+      setCancellingRequest(false);
+    }
   };
 
   if (loading) return <div className="flex items-center justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-warningGold" /></div>;
@@ -332,16 +371,17 @@ export default function PlayerDashboard() {
           </span>
 
           {isRegistrationFrozen ? (
-            <span className="w-8 h-8 rounded-xl bg-warningGold/10 border border-warningGold/20 flex items-center justify-center" title="Read-only — registration frozen">
-              <Lock className="w-3.5 h-3.5 text-warningGold" />
+            <span className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-warningGold/10 border border-warningGold/25 text-[10px] font-black uppercase tracking-widest text-warningGold" title="Read-only — registration frozen">
+              <Lock className="w-3.5 h-3.5" /> Locked
             </span>
           ) : (
             <button
               onClick={openEdit}
               title="Edit Profile"
-              className="btn-secondary w-9 h-9 p-0 rounded-xl flex items-center justify-center text-[#58D20A] transition"
+              aria-label="Edit Profile"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-neonGreen/15 border border-neonGreen/50 text-[#58D20A] hover:bg-[#58D20A] hover:text-darkBg hover:border-[#58D20A] active:scale-[0.97] font-black text-xs uppercase tracking-wider transition shadow-lg shadow-neonGreen/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#58D20A]/70 ui-focus"
             >
-              <Edit3 className="w-4 h-4" />
+              <Edit3 className="w-3.5 h-3.5" /> Edit Profile
             </button>
           )}
         </div>
@@ -440,15 +480,6 @@ export default function PlayerDashboard() {
               </span>
               <span className="mt-1 block text-sm font-bold text-neonGreenHover font-mono truncate">
                 {myPlayer.email || "—"}
-              </span>
-            </div>
-
-            <div className="rounded-xl border border-white/10 bg-darkBg/50 p-3.5 flex flex-col justify-center">
-              <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-mutedText">
-                <Activity className="w-3.5 h-3.5 text-neonGreen" /> Phone Number
-              </span>
-              <span className="mt-1 block text-sm font-bold text-white font-mono truncate">
-                {myPlayer.phone || "—"}
               </span>
             </div>
 
@@ -606,10 +637,15 @@ export default function PlayerDashboard() {
       <div className="glass-card rounded-2xl p-6 border border-cardBorder space-y-4">
         <div className="flex items-center justify-between">
           <div><h3 className="text-sm font-bold text-white uppercase tracking-wider">Franchise Management</h3></div>
-          {user?.managerRequestStatus === "PENDING" && <span className="px-3 py-1 bg-warningGold/20 text-warningGold border border-warningGold/30 rounded-lg text-xs font-bold animate-pulse">Pending</span>}
+          {user?.managerRequestStatus === "PENDING" && (
+            <span className="px-3 py-1 bg-warningGold/20 text-warningGold border border-warningGold/30 rounded-lg text-xs font-bold animate-pulse flex items-center gap-1.5">
+              <Clock className="w-3.5 h-3.5" /> Pending
+            </span>
+          )}
           {user?.managerRequestStatus === "APPROVED" && <span className="px-3 py-1 bg-neonGreen/20 text-neonGreen border border-neonGreen/30 rounded-lg text-xs font-bold">Approved</span>}
           {user?.managerRequestStatus === "REJECTED" && <span className="px-3 py-1 bg-urgentRed/20 text-urgentRedText border border-urgentRed/30 rounded-lg text-xs font-bold">Declined</span>}
         </div>
+
         {(!user?.managerRequestStatus || user?.managerRequestStatus === "NONE" || user?.managerRequestStatus === "REJECTED") && (
           <button onClick={async () => {
             try {
@@ -631,6 +667,22 @@ export default function PlayerDashboard() {
           }} className="px-4 py-2.5 bg-gradient-to-r from-neonGreen to-successGreen hover:from-neonGreen hover:to-neonGreen text-darkBg font-black text-xs uppercase tracking-wider rounded-xl transition shadow-lg">
             Request Team Manager Role
           </button>
+        )}
+
+        {user?.managerRequestStatus === "PENDING" && (
+          <div className="p-4 rounded-xl bg-warningGold/10 border border-warningGold/25 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <p className="text-xs text-secondaryText leading-relaxed max-w-md">
+              Your Team Manager request has been submitted and is awaiting <span className="text-warningGold font-bold">Super Admin review</span>. You can withdraw it at any time.
+            </p>
+            <button
+              onClick={() => setShowCancelRequestModal(true)}
+              disabled={cancellingRequest}
+              aria-label="Cancel Team Manager request"
+              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-urgentRed/15 border border-urgentRed/50 text-urgentRedText hover:bg-[#B00012] hover:text-white hover:border-[#B00012] active:scale-[0.97] font-black text-xs uppercase tracking-wider transition shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[#B00012]/70 ui-focus whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <XCircle className="w-4 h-4" /> Cancel Request
+            </button>
+          </div>
         )}
       </div>
 
@@ -829,6 +881,30 @@ export default function PlayerDashboard() {
               <button onClick={handleSave} disabled={saving} className="btn-primary flex-1 py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 disabled:opacity-60 shadow-lg">
                 {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
                 {saving ? "Saving..." : "Save All Changes"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Cancel Manager Request Confirmation ─────────────────────── */}
+      {showCancelRequestModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="glass-card w-full max-w-sm rounded-2xl border border-urgentRed/40 bg-cardBg shadow-2xl p-6 space-y-4">
+            <div className="flex items-center gap-3">
+              <span className="w-10 h-10 rounded-xl bg-urgentRed/20 border border-urgentRed/50 flex items-center justify-center flex-shrink-0">
+                <AlertTriangle className="w-5 h-5 text-urgentRedText" />
+              </span>
+              <h3 className="text-base font-extrabold text-white leading-snug">Cancel Manager Request?</h3>
+            </div>
+            <p className="text-xs text-secondaryText leading-relaxed">
+              Your pending Team Manager request will be withdrawn and Super Admin review will stop. You can submit a new request at any time.
+            </p>
+            <div className="flex gap-3 pt-1">
+              <button onClick={() => setShowCancelRequestModal(false)} disabled={cancellingRequest} className="btn-secondary flex-1 py-2.5 rounded-xl text-xs">Keep Request</button>
+              <button onClick={handleCancelManagerRequest} disabled={cancellingRequest} className="btn-danger flex-1 py-2.5 rounded-xl text-xs font-black uppercase tracking-wide flex items-center justify-center gap-2 ui-focus">
+                {cancellingRequest ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <XCircle className="w-3.5 h-3.5" />}
+                {cancellingRequest ? "Cancelling..." : "Yes, Cancel It"}
               </button>
             </div>
           </div>

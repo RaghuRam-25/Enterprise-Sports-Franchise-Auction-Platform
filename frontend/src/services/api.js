@@ -149,6 +149,7 @@ export const playerAPI = {
   }),
   toggleFreeze: () => api.post('/players/toggle-freeze'),
   requestManagerRole: (note) => api.post('/players/request-manager', { note }),
+  cancelManagerRole: () => api.post('/players/request-manager/cancel'),
   requestPlayerRole: (note) => api.post('/players/request-player', { note }),
 };
 

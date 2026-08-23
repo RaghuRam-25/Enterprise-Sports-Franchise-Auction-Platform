@@ -46,9 +46,12 @@ export default function AdminManagerRequests() {
     };
     socket.on('teams:updated', handleUpdate);
     socket.on('user:role_updated', handleUpdate);
+    // A player withdrew their PENDING request → drop it from the list live.
+    socket.on('user:request_cancelled', handleUpdate);
     return () => {
       socket.off('teams:updated', handleUpdate);
       socket.off('user:role_updated', handleUpdate);
+      socket.off('user:request_cancelled', handleUpdate);
     };
   }, [socket, fetchRequests, refetchTeams]);
 

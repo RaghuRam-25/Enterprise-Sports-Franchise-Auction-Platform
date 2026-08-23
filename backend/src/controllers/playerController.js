@@ -549,6 +549,42 @@ export const requestManagerRole = async (req, res, next) => {
   } catch (e) { next(e); }
 };
 
+// ── CANCEL TEAM MANAGER REQUEST (withdraw a PENDING request) ────────────────
+export const cancelManagerRequest = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ success: false, message: 'User account not found' });
+
+    if (user.role === 'TEAM_MANAGER' || user.role === 'SUPER_ADMIN') {
+      return res.status(400).json({ success: false, message: 'You are already a Team Manager or Admin.' });
+    }
+
+    if (user.managerRequestStatus !== 'PENDING') {
+      return res.status(400).json({ success: false, message: 'No pending Team Manager request to cancel.' });
+    }
+
+    user.managerRequestStatus = 'NONE';
+    user.managerRequestNote = '';
+    await user.save();
+
+    // Broadcast so any other open session of this user stays in sync and the
+    // Super Admin requests view can drop the withdrawn request live.
+    const io = req.app?.get('io');
+    if (io) {
+      io.emit('user:request_cancelled', {
+        userId: String(user._id),
+        managerRequestStatus: 'NONE'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Team Manager request cancelled successfully.',
+      data: { managerRequestStatus: user.managerRequestStatus }
+    });
+  } catch (e) { next(e); }
+};
+
 // ── REQUEST PLAYER ROLE (General User -> Player Request) ────────────────────
 export const requestPlayerRole = async (req, res, next) => {
   try {

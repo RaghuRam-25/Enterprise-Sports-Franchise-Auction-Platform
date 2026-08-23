@@ -37,7 +37,6 @@ const GeneralSettings = lazy(() => import('./pages/general/GeneralSettings'));
 
 // ── Player Portal ─────────────────────────────────────────────────────────────
 const PlayerDashboard = lazy(() => import('./pages/player/PlayerDashboard'));
-const PlayerResults = lazy(() => import('./pages/player/PlayerResults'));
 const PlayerSettings = lazy(() => import('./pages/player/PlayerSettings'));
 const PlayerMyTeam = lazy(() => import('./pages/player/PlayerMyTeam'));
 // Full-bleed reveal — rendered INSIDE DashboardLayout so the sidebar stays.
@@ -454,7 +453,7 @@ function App() {
                 path="results"
                 element={
                   <ProtectedRoute allowedRoles={['PLAYER']}>
-                    <PlayerResults />
+                    <Navigate to="/player/dashboard" replace />
                   </ProtectedRoute>
                 }
               />

@@ -95,10 +95,28 @@ export const SocketProvider = ({ children }) => {
       }, 800);
     });
 
+    // ── REAL-TIME MANAGER REQUEST CANCELLED ─────────────────────────────────
+    // Emitted by backend when the requesting player withdraws a PENDING
+    // manager request. Keeps every open session of that user in sync (status
+    // back to NONE) without forcing a redirect.
+    socketInstance.on('user:request_cancelled', (payload) => {
+      const currentUser = JSON.parse(localStorage.getItem('user') || 'null');
+      if (!currentUser || !payload?.userId) return;
+
+      const currentUserId = currentUser._id || currentUser.id;
+      if (String(payload.userId) !== String(currentUserId)) return;
+
+      console.log('[Socket.IO] Manager request cancelled for current user:', payload);
+      if (typeof updateUser === 'function') {
+        updateUser({ managerRequestStatus: payload.managerRequestStatus || 'NONE' });
+      }
+    });
+
     setSocket(socketInstance);
 
     return () => {
       socketInstance.off('user:role_updated');
+      socketInstance.off('user:request_cancelled');
       socketInstance.disconnect();
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps

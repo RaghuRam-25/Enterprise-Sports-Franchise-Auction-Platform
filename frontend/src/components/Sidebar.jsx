@@ -11,7 +11,6 @@ import {
   LogOut,
   ChevronDown,
   ChevronRight,
-  Award,
   ChevronLeft,
   Crown,
   Calendar,
@@ -94,7 +93,6 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, mobileOpen = fals
     { type: 'item', path: '/player/my-team', label: 'My Team', icon: Users },
     { type: 'item', path: '/player/teams', label: 'All Teams', icon: ShieldCheck },
     { type: 'item', path: '/player/matches', label: 'Tournament', icon: Trophy },
-    { type: 'item', path: '/player/results', label: 'Results', icon: Award },
     { type: 'item', path: '/player/settings', label: 'Settings', icon: Settings }
   ];
 

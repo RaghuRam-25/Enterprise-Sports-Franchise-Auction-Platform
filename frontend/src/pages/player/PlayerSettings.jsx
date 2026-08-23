@@ -20,8 +20,15 @@ export default function PlayerSettings() {
   const [changingPassword, setChangingPassword] = useState(false);
 
   // Team Manager Request Status
-  const [managerRequestStatus, setManagerRequestStatus] = useState(user?.managerRequestStatus || 'none');
+  const [managerRequestStatus, setManagerRequestStatus] = useState(user?.managerRequestStatus || 'NONE');
   const [requestingManager, setRequestingManager] = useState(false);
+  const [cancellingManager, setCancellingManager] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+
+  // Keep request status in sync with AuthContext (dashboard/settings consistency)
+  useEffect(() => {
+    setManagerRequestStatus(user?.managerRequestStatus || 'NONE');
+  }, [user?.managerRequestStatus]);
 
   // Notification Preferences State
   const [notifications, setNotifications] = useState({
@@ -87,6 +94,33 @@ export default function PlayerSettings() {
       }
     } finally {
       setRequestingManager(false);
+    }
+  };
+
+  const handleCancelManagerRequest = async () => {
+    setCancellingManager(true);
+    try {
+      await api.post('/players/request-manager/cancel');
+      setManagerRequestStatus('NONE');
+      if (typeof updateUser === 'function') {
+        updateUser({ managerRequestStatus: 'NONE' });
+      }
+      triggerToast('Team Manager request cancelled.', 'success');
+      setShowCancelModal(false);
+    } catch (err) {
+      const msg = err?.response?.data?.message || '';
+      if (msg.includes('No pending') || msg.includes('not found') || msg.includes('already')) {
+        triggerToast('No pending request found. Status refreshed.', 'info');
+        setManagerRequestStatus('NONE');
+        if (typeof updateUser === 'function') {
+          updateUser({ managerRequestStatus: 'NONE' });
+        }
+        setShowCancelModal(false);
+      } else {
+        triggerToast(msg || 'Failed to cancel request.', 'error');
+      }
+    } finally {
+      setCancellingManager(false);
     }
   };
 
@@ -222,6 +256,17 @@ export default function PlayerSettings() {
               {requestingManager && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
               {managerRequestStatus === 'PENDING' ? 'Request Pending Approval' : managerRequestStatus === 'APPROVED' ? 'Access Approved' : 'Submit Team Manager Request'}
             </button>
+
+            {managerRequestStatus === 'PENDING' && (
+              <button
+                onClick={() => setShowCancelModal(true)}
+                disabled={cancellingManager}
+                aria-label="Cancel Team Manager request"
+                className="w-full py-2.5 rounded-xl bg-urgentRed/15 border border-urgentRed/50 text-urgentRedText hover:bg-[#B00012] hover:text-white hover:border-[#B00012] active:scale-[0.98] font-black text-xs uppercase tracking-wider transition flex items-center justify-center gap-2 ui-focus disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <XCircle className="w-4 h-4" /> Cancel Request
+              </button>
+            )}
           </div>
         </div>
 
@@ -317,6 +362,30 @@ export default function PlayerSettings() {
         </div>
 
       </div>
+
+      {/* Cancel Manager Request Confirmation */}
+      {showCancelModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-cardBg/95 w-full max-w-sm rounded-2xl border border-urgentRed/40 shadow-2xl p-6 space-y-4">
+            <div className="flex items-center gap-3">
+              <span className="w-10 h-10 rounded-xl bg-urgentRed/20 border border-urgentRed/50 flex items-center justify-center flex-shrink-0">
+                <AlertTriangle className="w-5 h-5 text-urgentRedText" />
+              </span>
+              <h3 className="text-base font-extrabold text-white leading-snug">Cancel Manager Request?</h3>
+            </div>
+            <p className="text-xs text-secondaryText leading-relaxed">
+              Your pending Team Manager request will be withdrawn. You can submit a new request at any time.
+            </p>
+            <div className="flex gap-3 pt-1">
+              <button onClick={() => setShowCancelModal(false)} disabled={cancellingManager} className="btn-secondary flex-1 py-2.5 rounded-xl text-xs">Keep Request</button>
+              <button onClick={handleCancelManagerRequest} disabled={cancellingManager} className="btn-danger flex-1 py-2.5 rounded-xl text-xs font-black uppercase tracking-wide flex items-center justify-center gap-2 ui-focus">
+                {cancellingManager ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <XCircle className="w-3.5 h-3.5" />}
+                {cancellingManager ? 'Cancelling...' : 'Yes, Cancel It'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
