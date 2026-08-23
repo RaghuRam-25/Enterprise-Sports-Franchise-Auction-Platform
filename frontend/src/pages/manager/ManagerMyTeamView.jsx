@@ -8,6 +8,7 @@ import {
 import { useAuction } from '../../context/AuctionContext';
 import { managerAPI } from '../../services/api';
 import { getImageUrl } from '../../utils/imageUrl';
+import { playerFallback } from '../../utils/playerFallback';
 
 /* ═══════════════════════ FORMATIONS ═══════════════════════ */
 const RAW_FORMATIONS = {
@@ -458,13 +459,12 @@ useEffect(() => {
         <div className={`relative w-12 sm:w-[54px] rounded-lg overflow-hidden border-2 bg-[#101720]/90 transition-all duration-200 ${
           isHover ? 'scale-110 border-red-400' : pickedPlayerId === String(player._id) ? 'border-sky-400 scale-105' : 'border-white/70'
         }`}>
-          {player.imageUrl ? (
-            <img src={getImageUrl(player.imageUrl)} alt="" draggable={false} className="w-full aspect-square object-cover pointer-events-none" />
-          ) : (
-            <div className="w-full aspect-square flex items-center justify-center text-white font-black text-base">
-              {(player.jerseyName || player.name || '?')[0]}
-            </div>
-          )}
+          <img
+            src={getImageUrl(player, playerFallback('emerald'))}
+            alt={player.name || ''}
+            draggable={false}
+            className="w-full aspect-square object-cover pointer-events-none"
+          />
           <span className="absolute top-0 left-0 px-1 bg-black/70 text-[9px] font-black text-emerald-300">{r}</span>
           <button
             onClick={(e) => { e.stopPropagation(); removeFromSlotIfEmpty(slot.id); }}
@@ -497,13 +497,12 @@ useEffect(() => {
           picked ? 'bg-sky-500/10 border-sky-400' : 'bg-[#141C26] border-[#26313D] hover:border-sky-400/60 hover:bg-white/[0.03]'
         }`}
       >
-        {p.imageUrl ? (
-          <img src={getImageUrl(p.imageUrl)} alt="" draggable={false} className="w-10 h-10 rounded-lg object-cover border border-white/10 shrink-0" />
-        ) : (
-          <span className="w-10 h-10 rounded-lg bg-[#0B2B26] border border-white/10 flex items-center justify-center font-black text-white text-xs shrink-0">
-            {(p.jerseyName || p.name || '?')[0]}
-          </span>
-        )}
+        <img
+          src={getImageUrl(p, playerFallback('emerald'))}
+          alt={p.name || ''}
+          draggable={false}
+          className="w-10 h-10 rounded-lg object-cover border border-white/10 shrink-0"
+        />
         <div className="min-w-0 flex-1">
           <p className="text-xs font-bold text-white truncate">{p.name}</p>
           <div className="flex items-center gap-1.5 mt-0.5">
@@ -775,13 +774,7 @@ useEffect(() => {
                         initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -8 }}
                         onClick={() => { if (slotEntry) { setHighlightSlot(slotEntry[0]); setTimeout(() => setHighlightSlot(null), 1400); } }}
                         className="flex items-center gap-2.5 px-2.5 py-2 rounded-xl bg-[#0B1118] border border-[#26313D] hover:border-sky-400/50 cursor-pointer">
-                        {p.imageUrl ? (
-                          <img src={getImageUrl(p.imageUrl)} alt="" className="w-8 h-8 rounded-lg object-cover border border-white/10 shrink-0" />
-                        ) : (
-                          <span className="w-8 h-8 rounded-lg bg-[#0B2B26] border border-white/10 flex items-center justify-center text-[10px] font-black text-white shrink-0">
-                            {(p.jerseyName || p.name || '?')[0]}
-                          </span>
-                        )}
+                        <img src={getImageUrl(p, playerFallback('emerald'))} alt="" className="w-8 h-8 rounded-lg object-cover border border-white/10 shrink-0" />
                         <div className="min-w-0 flex-1">
                           <p className="text-[11px] font-bold text-white truncate">{p.name}</p>
                           <p className="text-[9px] text-secondaryText font-mono uppercase">{normalizePos(p.primaryPosition)} · {slotObj?.label || ''}</p>

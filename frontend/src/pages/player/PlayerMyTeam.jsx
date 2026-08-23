@@ -230,17 +230,11 @@ export default function PlayerMyTeam() {
                   <div className={`relative w-11 sm:w-13 rounded-lg overflow-hidden border-2 bg-[#101720]/90 shadow-xl ${
                     isMe ? 'border-warningGold ring-4 ring-warningGold/30 animate-pulse' : 'border-white/70'
                   }`}>
-                    {player.imageUrl ? (
-                      <img
-                        src={getImageUrl(player.imageUrl)}
-                        alt={player.name}
-                        className="w-full aspect-square object-cover"
-                      />
-                    ) : (
-                      <div className="w-full aspect-square flex items-center justify-center text-white font-black text-xs bg-[#0B2B26]">
-                        {(player.jerseyName || player.name || '?')[0]}
-                      </div>
-                    )}
+                    <img
+                      src={getImageUrl(player, playerFallback('emerald'))}
+                      alt={player.name || ''}
+                      className="w-full aspect-square object-cover"
+                    />
                     {isMe && (
                       <span className="absolute top-0 right-0 px-1 bg-warningGold text-[8px] font-black text-darkBg">
                         YOU

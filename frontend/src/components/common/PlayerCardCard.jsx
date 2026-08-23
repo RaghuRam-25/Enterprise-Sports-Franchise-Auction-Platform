@@ -92,10 +92,10 @@ export default function PlayerCardCard({
           {/* Photo Frame */}
           <div className="flex-shrink-0 flex flex-col items-center gap-1.5">
             <div className={`w-16 h-16 rounded-xl overflow-hidden border border-[#222222] bg-[#050505] shadow-md`}>
-              {player?.imageUrl && !imgError ? (
+              {!imgError ? (
                 <img
-                  src={getImageUrl(player.imageUrl, playerFallback('emerald'))}
-                  alt={player?.name}
+                  src={getImageUrl(player, playerFallback('emerald'))}
+                  alt={player?.name || 'Player'}
                   onError={() => setImgError(true)}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                 />
