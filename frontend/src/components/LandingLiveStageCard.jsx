@@ -165,7 +165,7 @@ export default function LandingLiveStageCard({
 
   const sessionLabel = player?.session || '23-24';
   const batchLabel = player?.batch || getBatchFromSession(player?.session) || '—';
-  const imageUrl = getImageUrl(player?.imageUrl, playerFallback(position));
+  const imageUrl = getImageUrl(player, playerFallback(position));
 
   const timerSec = Number(timerRemaining ?? 0);
   const mm = String(Math.floor(timerSec / 60)).padStart(2, '0');

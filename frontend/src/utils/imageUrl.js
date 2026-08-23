@@ -1,3 +1,5 @@
+import { playerFallback } from './playerFallback.js';
+
 const getBackendBaseUrl = () => {
   const envUrl = import.meta.env.VITE_BACKEND_URL;
   if (envUrl && typeof envUrl === 'string' && envUrl.trim()) {
@@ -20,21 +22,23 @@ const getBackendBaseUrl = () => {
  * (extracting imageUrl, photo, profilePhoto, avatar, photoUrl, logoUrl, logo).
  * 
  * @param {string|object} input - Image path, URL, or data object containing image fields
- * @param {string} fallback - Fallback image path if URL is empty/invalid
+ * @param {string} [fallback] - Optional custom fallback image path/URI
  * @returns {string} Fully resolved, renderable image URL
  */
-export const getImageUrl = (input, fallback = '/placeholder-player.png') => {
-  if (!input) return fallback;
+export const getImageUrl = (input, fallback) => {
+  const defaultFallback = fallback || playerFallback('emerald');
+
+  if (!input) return defaultFallback;
 
   let url = input;
   if (typeof input === 'object') {
     url = input.imageUrl || input.photo || input.profilePhoto || input.avatar || input.photoUrl || input.logoUrl || input.logo || '';
   }
 
-  if (!url || typeof url !== 'string') return fallback;
+  if (!url || typeof url !== 'string') return defaultFallback;
 
   const trimmed = url.trim();
-  if (!trimmed) return fallback;
+  if (!trimmed) return defaultFallback;
 
   // Data URLs (base64) or Blob URLs — return directly
   if (trimmed.startsWith('data:') || trimmed.startsWith('blob:')) {

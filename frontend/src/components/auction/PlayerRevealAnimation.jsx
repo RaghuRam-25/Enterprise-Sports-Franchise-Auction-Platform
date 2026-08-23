@@ -72,10 +72,7 @@ export default function PlayerRevealAnimation({ player, onComplete, isActive = t
 
   // Fallback artwork: a neutral, stylized footballer crest (original SVG, not a
   // copyrighted photo of any real athlete). Player-provided imageUrl still wins.
-  const rawImage = player.imageUrl;
-  const imageSrc = rawImage
-    ? getImageUrl(rawImage)
-    : 'data:image/svg+xml;utf8,' + encodeURIComponent(PLAYER_FALLBACK_SVG);
+  const imageSrc = getImageUrl(player, playerFallback('emerald'));
 
   // Info set mirrors the live stage card exactly: Position • Department • Year,
   // then Category / Session / Base Price (the highlighted broadcast stat).

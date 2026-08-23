@@ -238,7 +238,7 @@ export default function TeamDetailModal({ team, onClose, players = [], formatCur
                       {/* Player Avatar & Name */}
                       <div className="col-span-5 flex items-center gap-3 min-w-0">
                         <img
-                          src={getImageUrl(player.imageUrl, playerFallback(player.primaryPosition))}
+                          src={getImageUrl(player, playerFallback(player.primaryPosition))}
                           alt={player.name}
                           className="w-8 h-8 rounded-full object-cover border border-slate-700 bg-slate-900 shrink-0"
                         />

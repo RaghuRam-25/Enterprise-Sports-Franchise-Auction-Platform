@@ -1,25 +1,22 @@
 /**
  * Shared neutral player-image fallback.
  *
- * Original, generic footballer artwork used whenever a player has no uploaded
- * photo. Deliberately NOT modeled on any real athlete's likeness and uses no
- * copyrighted imagery — it is a plain stylized silhouette rendered as an inline
- * SVG data-URI (no network request, always available offline).
+ * Generic footballer artwork rendered as a clean base64 SVG data-URI.
+ * Deliberately NOT modeled on any real athlete's likeness and uses no
+ * copyrighted imagery — works offline and online in all browsers.
  *
  * Usage:
  *   import { playerFallback } from '../utils/playerFallback';
  *   <img src={player.imageUrl || playerFallback()} />
  *
  * @param {('slate'|'gold'|'emerald')} [theme='slate'] tint to match context
- * @returns {string} a data:image/svg+xml URI
+ * @returns {string} a data:image/svg+xml;base64 URI
  */
 const THEMES = {
   slate: { a: '#0B0B0B', b: '#0B2B26', ring: 'rgba(11,43,38,0.35)', jersey: '#1A1A1A', num: '#F5F5F5' },
   gold: { a: '#1c1000', b: '#2a1a00', ring: 'rgba(244,197,66,0.10)', jersey: '#3a2f10', num: '#F4C542' },
   emerald: { a: '#050505', b: '#0B2B26', ring: 'rgba(11,43,38,0.45)', jersey: '#0B2B26', num: '#FFFFFF' },
 };
-
-import { getImageUrl } from './imageUrl.js';
 
 export function playerFallback(theme = 'slate') {
   const t = THEMES[theme] || THEMES.slate;
@@ -34,15 +31,12 @@ export function playerFallback(theme = 'slate') {
     <path d="M110 330 q90 -66 180 0 l8 70 h-196 z" fill="${t.jersey}"/>
     <text x="200" y="368" text-anchor="middle" font-size="64" font-weight="900" font-family="Arial" fill="${t.num}" opacity="0.9">10</text>
   </svg>`;
-  return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
-}
 
-/**
- * Resolves player image URL using getImageUrl with fallback image
- */
-export function resolvePlayerImage(url, theme = 'slate') {
-  return getImageUrl(url, playerFallback(theme));
+  try {
+    return 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svg)));
+  } catch {
+    return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+  }
 }
 
 export default playerFallback;
-

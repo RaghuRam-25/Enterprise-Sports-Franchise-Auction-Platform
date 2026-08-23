@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { gsap } from 'gsap';
 import { Trophy, ArrowRight } from 'lucide-react';
 import { getImageUrl } from '../../utils/imageUrl';
+import { playerFallback } from '../../utils/playerFallback';
 
 /**
  * RosterAnimation — Stage 8: Animated roster update when a player
@@ -132,8 +133,8 @@ export default function RosterAnimation({
               className="flex items-center gap-4 bg-darkBg/80 rounded-2xl p-4 border border-cardBorder"
             >
               <img
-                src={(player?.imageUrl) ? getImageUrl(player.imageUrl) : 'data:image/svg+xml;utf8,' + encodeURIComponent(PLAYER_FALLBACK_SVG)}
-                alt={player?.name}
+                src={getImageUrl(player, playerFallback('emerald'))}
+                alt={player?.name || ''}
                 className="w-16 h-16 rounded-xl object-cover border-2 border-neonGreen/30"
               />
               <div className="flex-1">

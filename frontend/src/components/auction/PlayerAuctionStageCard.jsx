@@ -37,7 +37,7 @@ export default function PlayerAuctionStageCard({
   const sessionLabel = player?.session || '23-24';
   const batchLabel = player?.batch || getBatchFromSession(player?.session) || '13';
 
-  const imageUrl = getImageUrl(player?.imageUrl, playerFallback(position));
+  const imageUrl = getImageUrl(player, playerFallback(position));
 
   return (
     <div className="bg-[#08080a] border border-red-950/60 rounded-3xl p-5 sm:p-7 shadow-[0_0_50px_rgba(225,29,72,0.12)] relative overflow-hidden text-slate-100 font-sans">

@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Star, ShieldAlert, Zap, X, FileText, Target, AlertCircle } from 'lucide-react';
 import { useAuction } from '../../context/AuctionContext';
 import { playerFallback } from '../../utils/playerFallback';
+import { getImageUrl } from '../../utils/imageUrl';
 
 
 export default function TargetPlayerAlert({ targetItem, onQuickBid, onDismiss }) {
@@ -14,7 +15,7 @@ export default function TargetPlayerAlert({ targetItem, onQuickBid, onDismiss })
   const player = targetItem.playerId;
   const note = targetItem.note;
   const budgetLimit = targetItem.optionalBudgetLimit;
-  const priority = targetItem.priority;
+  const priority = targetItem.priority || 1;
 
   return (
     <AnimatePresence>
@@ -34,7 +35,7 @@ export default function TargetPlayerAlert({ targetItem, onQuickBid, onDismiss })
           <div className="flex items-start sm:items-center gap-2.5 sm:gap-3.5 min-w-0">
             <div className="relative flex-shrink-0">
               <img
-                src={player.imageUrl || playerFallback('amber')}
+                src={getImageUrl(player, playerFallback('gold'))}
                 alt={player.name}
                 className="w-11 h-11 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl object-cover border-2 border-warningGold/80 shadow-lg"
               />

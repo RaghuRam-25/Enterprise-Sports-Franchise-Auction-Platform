@@ -416,8 +416,8 @@ export default function PlayerDashboard() {
             <div className="relative rounded-[1.75rem] bg-white/5 p-[3px] shadow-[0_20px_60px_rgba(0,0,0,0.55)] ring-1 ring-white/10 transition-transform duration-300 group-hover:scale-[1.02]">
               <div className="rounded-[1.6rem] bg-gradient-to-tr from-neonGreen/40 via-neonGreen/20 to-successGreen/30 p-[2px]">
                 <img
-                  src={getImageUrl(myPlayer.imageUrl, myPlayer.imageUrl ? playerFallback('emerald') : `${DEFAULT_AVATAR}${encodeURIComponent(myPlayer.name)}`)}
-                  alt={myPlayer.name}
+                  src={getImageUrl(myPlayer)}
+                  alt={myPlayer.name || 'Player'}
                   className="h-52 w-52 sm:h-64 sm:w-64 rounded-[1.55rem] object-cover"
                 />
               </div>
@@ -570,7 +570,7 @@ export default function PlayerDashboard() {
                           transition={{ duration: 0.45, repeat: Infinity, ease: "easeInOut" }}
                         >
                           <img
-                            src={getImageUrl(myPlayer.imageUrl, myPlayer.imageUrl ? playerFallback('emerald') : `${DEFAULT_AVATAR}${encodeURIComponent(myPlayer.name)}`)}
+                            src={getImageUrl(myPlayer)}
                             alt={mark.name}
                             className="h-8 w-8 rounded-full object-cover transition group-hover/pos:scale-110"
                           />
@@ -586,7 +586,7 @@ export default function PlayerDashboard() {
                         />
                         <span className="relative block h-8 w-8 sm:h-9 sm:w-9 rounded-full border-2 border-white/90 bg-darkBg/70 p-0.5 shadow-[0_0_10px_rgba(11, 43, 38,0.45)] backdrop-blur-sm">
                           <img
-                            src={getImageUrl(myPlayer.imageUrl, myPlayer.imageUrl ? playerFallback('emerald') : `${DEFAULT_AVATAR}${encodeURIComponent(myPlayer.name)}`)}
+                            src={getImageUrl(myPlayer)}
                             alt={mark.name}
                             className="h-full w-full rounded-full object-cover transition group-hover/pos:scale-110"
                           />
@@ -618,7 +618,7 @@ export default function PlayerDashboard() {
                 >
                   <div className="flex w-full max-w-sm items-center gap-3 rounded-2xl border border-white/10 bg-darkBg/90 p-3 shadow-2xl backdrop-blur-md">
                     <img
-                      src={getImageUrl(myPlayer.imageUrl, myPlayer.imageUrl ? playerFallback('emerald') : `${DEFAULT_AVATAR}${encodeURIComponent(myPlayer.name)}`)}
+                      src={getImageUrl(myPlayer)}
                       alt={myPlayer.name}
                       className="h-10 w-10 rounded-xl object-cover border border-borderStrong"
                     />
