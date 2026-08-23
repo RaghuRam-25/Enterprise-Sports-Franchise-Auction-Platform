@@ -11,6 +11,7 @@ import Navbar from '../../components/Navbar';
 import CompetitionHeader from '../../components/common/CompetitionHeader';
 import '../../services/api';
 import { getImageUrl } from '../../utils/imageUrl';
+import { playerFallback } from '../../utils/playerFallback';
 import PlayerCardCard from '../../components/common/PlayerCardCard';
 import PlayerStageModal from '../../components/common/PlayerStageModal';
 
@@ -62,18 +63,11 @@ function PlayerListRow({ player, formatCurrency, teams = [] }) {
   return (
     <div className={`grid grid-cols-12 gap-3 px-4 py-3 items-center text-sm transition-colors ${rowStyle} ${isSold ? 'opacity-60' : ''}`}>
       <div className="col-span-1">
-        {player.imageUrl && !imgErr ? (
-          <img
-            src={getImageUrl(player.imageUrl)}
-            alt={player.name}
-            onError={() => setImgErr(true)}
-            className="w-9 h-9 rounded-lg object-cover border border-borderStrong"
-          />
-        ) : (
-          <div className="w-9 h-9 rounded-lg bg-gradient-to-tr from-neonGreen to-successGreen flex items-center justify-center text-white font-black text-sm border border-borderStrong">
-            {(player.name || 'P')[0].toUpperCase()}
-          </div>
-        )}
+        <img
+          src={getImageUrl(player, playerFallback('emerald'))}
+          alt={player.name || ''}
+          className="w-9 h-9 rounded-lg object-cover border border-borderStrong shrink-0"
+        />
       </div>
 
       <div className="col-span-3">

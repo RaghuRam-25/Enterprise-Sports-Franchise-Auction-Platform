@@ -100,12 +100,11 @@ export default function PlayerCardCard({
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                 />
               ) : (
-                <div
-                  className="w-full h-full flex items-center justify-center font-black text-2xl"
-                  style={{ background: `${theme.stripColor}14`, color: readableAccentText(theme.stripColor) }}
-                >
-                  {(player?.name || 'P')[0].toUpperCase()}
-                </div>
+                <img
+                  src={playerFallback('emerald')}
+                  alt={player?.name || 'Player'}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                />
               )}
             </div>
 
