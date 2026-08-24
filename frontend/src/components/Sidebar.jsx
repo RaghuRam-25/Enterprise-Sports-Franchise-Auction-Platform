@@ -92,7 +92,6 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, mobileOpen = fals
     { type: 'item', path: '/player/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { type: 'item', path: '/player/live', label: 'Live Auction', icon: Radio, highlight: true },
     { type: 'item', path: '/player/teams', label: 'All Teams', icon: ShieldCheck },
-    { type: 'item', path: '/player/matches', label: 'Tournament', icon: Trophy },
     { type: 'item', path: '/player/settings', label: 'Settings', icon: Settings }
   ];
 
