@@ -24,6 +24,7 @@ export const connectDB = async () => {
           // - serverSelectionTimeoutMS & socketTimeoutMS for reliability
           serverSelectionTimeoutMS: 5000,
           socketTimeoutMS: 45000,
+          // strictQuery removed — not supported in Mongoose 8.x+
         })
         .then((conn) => {
           console.log(`[MongoDB Connected] Host: ${conn.connection.host}`);
