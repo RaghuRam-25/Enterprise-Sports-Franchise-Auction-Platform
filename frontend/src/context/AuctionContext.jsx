@@ -762,7 +762,7 @@ export const AuctionProvider = ({ children }) => {
       value={{
         sessions, positions, categories, biddingTiers, isRegistrationFrozen, setIsRegistrationFrozen,
         addSession, deleteSession, addPosition, deletePosition, addCategory, updateCategory, deleteCategory, updateBiddingTier,
-        teams, setTeams, players, setPlayers, managers, setManagers, isDataLoading, loadManagers, refetchPlayers, refetchTeams, loadAllData,
+        teams, setTeams, players, setPlayers, managers, setManagers, isDataLoading, loadManagers, refetchPlayers, refetchTeams, loadCriticalConfig, loadRemainingData,
         podiumPlayer, currentBid, highestBidder, biddingMode, timerDuration, timerRemaining, timerStatus, bidHistory, lastActionToast,
         systemAuctionState, hasStartedAuction,
         broadcastVideoUrl, videoBroadcastState, introLoopState,
