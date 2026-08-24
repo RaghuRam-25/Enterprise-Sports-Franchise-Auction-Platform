@@ -785,7 +785,7 @@ export const approvePlayer = async (req, res, next) => {
     const { Player } = await import('../models/Player.js');
     const player = await Player.findByIdAndUpdate(
       req.params.id,
-      { status: 'APPROVED' },
+      { status: 'UNSOLD' },
       { new: true }
     );
     if (!player) return res.status(404).json({ success: false, message: 'Player not found' });
@@ -795,7 +795,7 @@ export const approvePlayer = async (req, res, next) => {
     const io = req.app?.get('io');
     if (io) io.emit('player:updated', player);
 
-    res.json({ success: true, message: `Player '${player.name}' approved`, data: player });
+    res.json({ success: true, message: `Player '${player.name}' approved and added to auction pool as UNSOLD`, data: player });
   } catch (e) { next(e); }
 };
 

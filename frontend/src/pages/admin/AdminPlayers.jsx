@@ -77,9 +77,9 @@ export default function AdminPlayers() {
   const handleApprove = async (id, playerName) => {
     try {
       await adminAPI.approvePlayer(id);
-      setPlayers(prev => prev.map(p => (p._id || p.id) === id ? { ...p, status: 'APPROVED' } : p));
+      setPlayers(prev => prev.map(p => (p._id || p.id) === id ? { ...p, status: 'UNSOLD' } : p));
       if (typeof refetchPlayers === 'function') refetchPlayers();
-      triggerToast(`Approved player: ${playerName}`, 'success');
+      triggerToast(`Approved player: ${playerName} (now in auction pool as UNSOLD)`, 'success');
     } catch {
       triggerToast(err?.response?.data?.message || 'Failed to approve player', 'error');
     }
