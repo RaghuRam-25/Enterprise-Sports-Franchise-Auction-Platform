@@ -264,9 +264,7 @@ export default function AdminFixtures() {
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div>
-                    <span className="text-xs font-bold uppercase tracking-widest text-white">Tournament Management</span>
                     <h1 className="text-2xl font-black font-heading text-white">Fixtures & Scheduling</h1>
-                    <p className="text-xs text-secondaryText mt-0.5">Decide which team plays which, and when.</p>
                 </div>
                 {teams.length > 0 && (
                     <div className="relative sm:w-56">

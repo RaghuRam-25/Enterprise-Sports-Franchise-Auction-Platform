@@ -55,7 +55,7 @@ export default function Navbar({ onOpenMobileSidebar }) {
               </div>
               <div className="min-w-0">
                 <span className="font-black text-base tracking-wider text-white uppercase whitespace-nowrap block">
-                  FRANCHISE<span className="text-white">AUCTION</span>
+                  FRANCHISE <span className="text-white">AUCTION</span>
                 </span>
                 <span className="block text-[9px] tracking-widest text-slate-400 uppercase font-bold">
                   ENTERPRISE PLATFORM

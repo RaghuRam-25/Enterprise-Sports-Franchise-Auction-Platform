@@ -68,7 +68,7 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, mobileOpen = fals
     { type: 'item', path: '/admin/players', label: 'Players', icon: UserCheck },
     { type: 'item', path: '/admin/fixtures', label: 'Fixtures & Scheduling', icon: Calendar },
     { type: 'item', path: '/admin/match-results', label: 'Match Results', icon: Trophy },
-    { type: 'item', path: '/admin/requests', label: 'Manager Requests', icon: ClipboardList }
+    { type: 'item', path: '/admin/requests', label: 'Role Requests', icon: ClipboardList }
   ];
 
   // ── PODIUM ADMIN NAV CONFIG ─────────────────────────────────────────────
