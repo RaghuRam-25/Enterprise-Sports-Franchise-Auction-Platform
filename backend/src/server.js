@@ -44,7 +44,18 @@ app.set('io', io);
 
 // Security Middlewares
 app.use(helmet({ crossOriginResourcePolicy: false }));
-app.use(cors({ origin: '*', credentials: true }));
+// CORS: use credentials only for same-origin or explicit origins.
+// Since auth uses Bearer tokens in headers (not cookies), we don't need
+// credentials: true with origin '*. In production, set specific origins.
+if (process.env.NODE_ENV === 'development') {
+  app.use(cors({ origin: '*', credentials: true }));
+} else {
+  // Production: allow the Vercel frontend domain; adjust VITE_BACKEND_URL as needed
+  const allowedOrigins = process.env.VERCEL_URL
+    ? [process.env.VERCEL_URL]
+    : [process.env.VITE_BACKEND_URL || 'http://localhost:5173'];
+  app.use(cors({ origin: allowedOrigins, credentials: true }));
+}
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 

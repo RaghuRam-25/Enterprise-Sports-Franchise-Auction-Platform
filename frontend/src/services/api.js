@@ -2,40 +2,56 @@ import axios from 'axios';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
 
-// Fired when the session is fully dead (refresh failed) so AuthContext can
-// drop the user from React state too — keeps UI and storage consistent
-// instead of leaving a half-logged-in zombie state behind.
-export const SESSION_CLEARED_EVENT = 'app:session-cleared';
+// Request timeout: 15 seconds. Adjust via VITE_API_TIMEOUT_MS env var if needed.
+const REQUEST_TIMEOUT = Number(import.meta.env.VITE_API_TIMEOUT_MS) || 15000;
 
 const api = axios.create({
   baseURL: `${BACKEND_URL}/api`,
   headers: { 'Content-Type': 'application/json' },
-  timeout: 10000,
+  timeout: REQUEST_TIMEOUT,
 });
+
+// Track in-flight request count for loading state
+let pendingRequests = 0;
 
 // Request interceptor – attach JWT token
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
+    pendingRequests++;
+    // Optionally show global loading indicator if needed
+    config.headers.Authorization = `Bearer ${localStorage.getItem('token') || ''}`;
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => {
+    pendingRequests--;
+    return Promise.reject(error);
+  }
 );
 
 // Response interceptor – handle 401 token refresh
 api.interceptors.response.use(
-  (response) => response.data,
+  (response) => {
+    pendingRequests--;
+    return response.data;
+  },
   async (error) => {
+    pendingRequests--;
     const originalRequest = error.config;
+    
+    // Handle network errors / timeouts
+    if (!error.response) {
+      console.error('API Network Error / Timeout:', error.message);
+      // Could show a user-friendly offline message here
+      return Promise.reject(error);
+    }
+
+    // Handle 401 - token refresh logic
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
       try {
         const refreshToken = localStorage.getItem('refreshToken');
         if (refreshToken) {
-          const res = await axios.post(`${BACKEND_URL}/api/auth/refresh-token`, { refreshToken });
+          const res = await axios.post(`${BACKEND_URL}/api/auth/refresh-token`, { refreshToken }, { timeout: REQUEST_TIMEOUT });
           if (res.data?.token) {
             localStorage.setItem('token', res.data.token);
             localStorage.setItem('refreshToken', res.data.refreshToken);
@@ -43,13 +59,14 @@ api.interceptors.response.use(
             return axios(originalRequest);
           }
         }
-      } catch {
+      } catch (refreshErr) {
         localStorage.removeItem('token');
         localStorage.removeItem('refreshToken');
         localStorage.removeItem('user');
-        window.dispatchEvent(new Event(SESSION_CLEARED_EVENT));
+        window.dispatchEvent(new Event('app:session-cleared'));
       }
     }
+
     console.error('API Error:', error.response?.data || error.message);
     return Promise.reject(error);
   }

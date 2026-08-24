@@ -35,11 +35,9 @@ export default function GeneralPlayers() {
   const [category, setCategory] = useState('ALL');
   const [status, setStatus] = useState('ALL');
 
-  useEffect(() => {
-    if (typeof refetchPlayers === 'function') refetchPlayers();
-  }, [refetchPlayers]);
-
   const players = useMemo(() => (Array.isArray(ctxPlayers) ? ctxPlayers : []), [ctxPlayers]);
+
+  const categories = useMemo(
 
   const categories = useMemo(
     () => ['ALL', ...new Set(players.map(p => p.category).filter(Boolean))],

@@ -98,17 +98,17 @@ export const AuctionProvider = ({ children }) => {
     }
   }, []);
 
-  const loadAllData = useCallback(async () => {
+  // Load critical config data first on mount, then fetch remaining data
+  // progressively to avoid blocking initial page load with 7 concurrent requests.
+  const loadCriticalConfig = useCallback(async () => {
     try {
       setIsDataLoading(true);
-      const [sessRes, posRes, catRes, tierRes, teamRes, playerRes, regRes] = await Promise.allSettled([
+      // Fetch only critical config needed for initial render
+      const [sessRes, posRes, catRes, teamRes] = await Promise.allSettled([
         api.get('/config/sessions'),
         api.get('/config/positions'),
         api.get('/config/categories'),
-        api.get('/config/bidding-tiers'),
-        api.get('/config/teams'),
-        api.get('/players'),
-        api.get('/players/status')
+        api.get('/config/teams')
       ]);
 
       // axios interceptor returns response.data directly so value = { success, data: [...] }
@@ -130,10 +130,6 @@ export const AuctionProvider = ({ children }) => {
         const raw = extract(catRes);
         if (raw.length) setCategories(raw.map(c => ({ ...c, id: c._id || c.id })));
       }
-      if (tierRes.status === 'fulfilled') {
-        const raw = extract(tierRes);
-        if (raw.length) setBiddingTiers(raw.map(t => ({ ...t, id: t._id || t.id })));
-      }
       if (teamRes.status === 'fulfilled') {
         const raw = extract(teamRes);
         if (raw.length) {
@@ -145,6 +141,29 @@ export const AuctionProvider = ({ children }) => {
           })));
         }
       }
+    } catch (err) {
+      console.warn('[AuctionContext] Critical config fetch warning:', err.message);
+    }
+  }, []);
+
+  const loadRemainingData = useCallback(async () => {
+    try {
+      const [tierRes, playerRes, regRes] = await Promise.allSettled([
+        api.get('/config/bidding-tiers'),
+        api.get('/players'),
+        api.get('/players/status')
+      ]);
+
+      const extract = (result) => {
+        const v = result?.value;
+        return Array.isArray(v?.data) ? v.data : Array.isArray(v) ? v : [];
+      };
+      const extractObj = (result) => result?.value || {};
+
+      if (tierRes.status === 'fulfilled') {
+        const raw = extract(tierRes);
+        if (raw.length) setBiddingTiers(raw.map(t => ({ ...t, id: t._id || t.id })));
+      }
       if (playerRes.status === 'fulfilled') {
         const raw = extract(playerRes);
         setPlayers(raw.map(p => ({ ...p, id: p._id || p.id })));
@@ -154,15 +173,26 @@ export const AuctionProvider = ({ children }) => {
         setIsRegistrationFrozen(obj.isRegistrationFrozen || false);
       }
     } catch (err) {
-      console.warn('[AuctionContext] Initial data fetch warning:', err.message);
+      console.warn('[AuctionContext] Remaining data fetch warning:', err.message);
     } finally {
       setIsDataLoading(false);
     }
   }, []);
 
+  // Load critical config immediately on mount, then remaining data after a short delay
+  // to avoid blocking the initial paint with 7 concurrent API requests.
   useEffect(() => {
-    loadAllData();
-  }, [loadAllData]);
+    let cancelled = false;
+    const criticalTimer = setTimeout(() => {
+      loadCriticalConfig();
+      // Load remaining data after critical config is done
+      loadRemainingData();
+    }, 200);
+    return () => {
+      clearTimeout(criticalTimer);
+      cancelled = true;
+    };
+  }, [loadCriticalConfig, loadRemainingData]);
 
   // Load managers separately (only called when privileged user accesses manager list)
   const loadManagers = useCallback(async () => {
