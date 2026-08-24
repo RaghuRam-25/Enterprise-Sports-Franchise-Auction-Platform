@@ -287,12 +287,9 @@ export default function PlayerDashboard() {
 
   // Pitch marker positions — safe here because both early returns have already fired.
   const pitchMarks = (() => {
+    // Show ONLY the player's PRIMARY (or manager-assigned) position.
     const mainMark = resolvePosition(activePositionCode);
-    const otherMarks = (myPlayer.positions || [])
-      .filter(p => String(p).toUpperCase() !== String(activePositionCode).toUpperCase())
-      .map(resolvePosition)
-      .filter(Boolean);
-    return mainMark ? [mainMark, ...otherMarks] : (myPlayer.positions || []).map(resolvePosition).filter(Boolean);
+    return mainMark ? [mainMark] : [];
   })();
 
   const isSold = myPlayer.status === "SOLD";
@@ -708,7 +705,7 @@ export default function PlayerDashboard() {
               <button onClick={() => setEditing(false)} className="btn-secondary w-8 h-8 flex items-center justify-center rounded-xl"><X className="w-5 h-5" /></button>
             </div>
             <div className="flex border-b border-cardBorder px-6 overflow-x-auto">
-              {[{ id: "stats", label: "Stats", icon: Goal }, { id: "personal", label: "Personal", icon: User }, { id: "photo", label: "Photo", icon: Camera }, { id: "sports", label: "Positions", icon: Shield }, { id: "kit", label: "Kit & Jersey", icon: Shirt }].map(tab => (
+              {[{ id: "personal", label: "Personal", icon: User }, { id: "photo", label: "Photo", icon: Camera }, { id: "sports", label: "Positions", icon: Shield }, { id: "kit", label: "Kit & Jersey", icon: Shirt }].map(tab => (
                 <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex items-center gap-1.5 px-4 py-3 text-xs font-bold border-b-2 whitespace-nowrap transition ${activeTab === tab.id ? "border-[#0B2B26] text-white" : "border-transparent text-[#F5F5F5] bg-transparent hover:text-white"}`}>
                   <tab.icon className="w-3.5 h-3.5" />{tab.label}
                 </button>

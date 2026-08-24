@@ -28,7 +28,6 @@ const GeneralTournaments = lazy(() => import('./pages/general/GeneralTournaments
 const GeneralTeamProfile = lazy(() => import('./pages/general/GeneralTeamProfile'));
 const GeneralPlayerProfile = lazy(() => import('./pages/general/GeneralPlayerProfile'));
 const GeneralResults = lazy(() => import('./pages/general/GeneralResults'));
-const GeneralProfile = lazy(() => import('./pages/general/GeneralProfile'));
 const GeneralNotifications = lazy(() => import('./pages/general/GeneralNotifications'));
 const GeneralSettings = lazy(() => import('./pages/general/GeneralSettings'));
 
@@ -592,14 +591,6 @@ function App() {
                 element={
                   <ProtectedRoute allowedRoles={['GENERAL_USER']}>
                     <LeagueTable />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="profile"
-                element={
-                  <ProtectedRoute allowedRoles={['GENERAL_USER']}>
-                    <GeneralProfile />
                   </ProtectedRoute>
                 }
               />

@@ -103,7 +103,6 @@ export default function AdminManagerRequests() {
     };
     socket.on('teams:updated', handleUpdate);
     socket.on('user:role_updated', handleUpdate);
-    // A player withdrew their PENDING request → drop it from the list live.
     socket.on('user:request_cancelled', handleUpdate);
     return () => {
       socket.off('teams:updated', handleUpdate);
@@ -185,20 +184,11 @@ export default function AdminManagerRequests() {
       <div className="bg-cardBg/90 rounded-2xl p-6 border border-cardBorder">
         <div className="flex items-center justify-between">
           <div>
-            <span className="text-xs font-bold uppercase tracking-widest text-warningGold">Access Control</span>
             <h1 className="text-2xl font-black font-heading text-white flex items-center gap-2 mt-1">
               <ShieldAlert className="w-6 h-6 text-warningGold" />
               Member Role Requests
             </h1>
           </div>
-          <button
-            onClick={fetchRequests}
-            disabled={loading}
-            className="btn-secondary p-2.5 rounded-xl disabled:opacity-50"
-            title="Refresh"
-          >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-          </button>
         </div>
 
         {/* Category Request Tabs */}

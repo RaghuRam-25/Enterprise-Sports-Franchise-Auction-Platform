@@ -313,17 +313,17 @@ export default function LandingPage() {
               {/* Subtitle - Same display system as the hero headline */}
               <p className="flex flex-nowrap items-baseline gap-x-2 sm:gap-x-4 w-full py-1">
                 {/* 1. REAL PLAYERS. */}
-                <span className="whitespace-nowrap font-['Times_New_Roman',serif] font-black uppercase text-[9px] sm:text-xs lg:text-sm text-white tracking-widest drop-shadow-[0_0_28px_rgba(11, 43, 38,0.72)]">
+                <span className="whitespace-nowrap font-['Times_New_Roman',serif] font-black uppercase text-[8px] sm:text-[11px] lg:text-xs text-white tracking-widest drop-shadow-[0_0_20px_rgba(11, 43, 38,0.6)]">
                   . Real Players.
                 </span>
 
                 {/* 2. LIVE BIDDING. */}
-                <span className="whitespace-nowrap font-['Times_New_Roman',serif] font-black uppercase text-[9px] sm:text-xs lg:text-sm text-white tracking-widest drop-shadow-[0_0_28px_rgba(11, 43, 38,0.72)]">
+                <span className="whitespace-nowrap font-['Times_New_Roman',serif] font-black uppercase text-[8px] sm:text-[11px] lg:text-xs text-white tracking-widest drop-shadow-[0_0_20px_rgba(11, 43, 38,0.6)]">
                   . Live Bidding.
                 </span>
 
                 {/* 3. ONE CHAMPION. */}
-                <span className="whitespace-nowrap font-['Times_New_Roman',serif] font-black uppercase text-[9px] sm:text-xs lg:text-sm text-white tracking-widest drop-shadow-[0_0_28px_rgba(11, 43, 38,0.72)]">
+                <span className="whitespace-nowrap font-['Times_New_Roman',serif] font-black uppercase text-[8px] sm:text-[11px] lg:text-xs text-white tracking-widest drop-shadow-[0_0_20px_rgba(11, 43, 38,0.6)]">
                   . One Champion.
                 </span>
               </p>
@@ -332,15 +332,15 @@ export default function LandingPage() {
               <div className="flex flex-nowrap items-center gap-2.5 sm:gap-4 pt-3 sm:pt-4">
                 <Link
                   to="/live"
-                  className="whitespace-nowrap px-5 sm:px-7 py-2.5 sm:py-3 bg-[#0B2B26] hover:bg-[#0B2B26] text-white font-black text-[11px] sm:text-sm uppercase tracking-wider rounded-lg shadow-[0_0_32px_rgba(11, 43, 38,0.52)] transition transform hover:-translate-y-0.5 flex items-center justify-center gap-2"
+                  className="whitespace-nowrap px-4 sm:px-6 py-2 sm:py-2.5 bg-[#0B2B26] hover:bg-[#0B2B26] text-white font-black text-[10px] sm:text-xs uppercase tracking-wider rounded-lg shadow-[0_0_28px_rgba(11, 43, 38,0.5)] transition transform hover:-translate-y-0.5 flex items-center justify-center gap-2"
                 >
-                  <Radio className="w-3.5 h-3.5 sm:w-4 sm:h-4 animate-pulse text-white" />
+                  <Radio className="w-3 h-3 sm:w-3.5 sm:h-3.5 animate-pulse text-white" />
                   <span>ENTER LIVE AUCTION</span>
                 </Link>
 
                 <Link
                   to="/teams"
-                  className="whitespace-nowrap px-5 sm:px-7 py-2.5 sm:py-3 bg-white/10 hover:bg-white/20 text-slate-100 border border-white/20 font-black text-[11px] sm:text-sm uppercase tracking-wider rounded-lg shadow-xl backdrop-blur-md transition transform hover:-translate-y-0.5 flex items-center justify-center gap-2"
+                  className="whitespace-nowrap px-4 sm:px-6 py-2 sm:py-2.5 bg-white/10 hover:bg-white/20 text-slate-100 border border-white/20 font-black text-[10px] sm:text-xs uppercase tracking-wider rounded-lg shadow-xl backdrop-blur-md transition transform hover:-translate-y-0.5 flex items-center justify-center gap-2"
                 >
                   <span>EXPLORE TEAMS</span>
                 </Link>

@@ -24,6 +24,7 @@ const categorySchema = z.object({
   name: z.string().min(2),
   priorityLevel: z.number().min(1),
   basePrice: z.number().min(0),
+  hideBasePrice: z.boolean().optional(),
   color: z.string().regex(/^#[0-9a-fA-F]{6}$/, 'Color must be a valid hex code (e.g. #3b82f6)').optional(),
   icon: z.string().max(30).optional()
 });
@@ -31,6 +32,7 @@ const categoryUpdateSchema = z.object({
   name: z.string().min(2).optional(),
   priorityLevel: z.number().min(1).optional(),
   basePrice: z.number().min(0).optional(),
+  hideBasePrice: z.boolean().optional(),
   color: z.string().regex(/^#[0-9a-fA-F]{6}$/, 'Color must be a valid hex code (e.g. #3b82f6)').optional(),
   icon: z.string().max(30).optional()
 });
@@ -182,6 +184,7 @@ export const updateCategory = async (req, res, next) => {
     if (parsed.name) category.name = parsed.name;
     if (parsed.priorityLevel !== undefined) category.priorityLevel = parsed.priorityLevel;
     if (parsed.basePrice !== undefined) category.basePrice = parsed.basePrice;
+    if (parsed.hideBasePrice !== undefined) category.hideBasePrice = parsed.hideBasePrice;
     if (parsed.color) Object.assign(category, buildCategoryThemeFromColor(parsed.color));
     if (parsed.icon) category.icon = parsed.icon;
 

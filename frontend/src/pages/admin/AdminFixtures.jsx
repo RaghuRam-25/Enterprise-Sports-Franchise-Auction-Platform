@@ -9,8 +9,8 @@ import TeamBadge from '../../components/common/TeamBadge';
 import api from '../../services/api';
 
 const GENERATION_TYPES = [
-    { key: 'round_robin', label: 'Round Robin', description: 'Every team plays every other team once.' },
-    { key: 'knockout', label: 'Knockout', description: 'Single-elimination bracket — teams are paired off in order.' },
+    { key: 'round_robin', label: 'Round Robin' },
+    { key: 'knockout', label: 'Knockout' },
 ];
 
 const formatDate = (dateString) => {
@@ -346,7 +346,7 @@ export default function AdminFixtures() {
                             {generating ? 'Generating...' : fixtures.length > 0 ? 'Regenerate Fixtures' : 'Generate Fixtures'}
                         </button>
                         {fixtures.length > 0 && (
-                            <p className="text-[11px] text-warningGold/80">Regenerating will replace all existing fixtures.</p>
+                            <p className="text-[11px] text-warningGold/80"></p>
                         )}
                     </div>
                 ) : (

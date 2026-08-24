@@ -174,33 +174,7 @@ export default function ManagerLogin() {
             General Register
           </Link>
 
-          {/* Credential hints for development */}
-          <details className="group">
-            <summary className="text-[11px] text-[#A3A3A3] cursor-pointer hover:text-[#F5F5F5] transition select-none font-semibold">
-              🔑 Default test credentials (dev only)
-            </summary>
-            <div className="mt-3 space-y-1.5 text-[11px]">
-              {[
-                { role: 'SUPER_ADMIN',  email: 'superadmin@auction.com', pw: 'Admin@1234',   color: 'text-white' },
-                { role: 'PODIUM_ADMIN', email: 'podium@auction.com',     pw: 'Podium@1234',  color: 'text-[#FF5C5C]' },
-                { role: 'TEAM_MANAGER', email: 'manager@auction.com',    pw: 'Manager@1234', color: 'text-white' },
-                { role: 'PLAYER',       email: 'player@auction.com',     pw: 'Player@1234',  color: 'text-[#F4C542]' },
-              ].map(c => (
-                <button
-                  key={c.role}
-                  type="button"
-                  onClick={() => { setEmail(c.email); setPassword(c.pw); setError(''); }}
-                  className="w-full text-left p-2.5 bg-[#1C1C1C] hover:bg-[#262626] rounded-xl border border-[#3A3A3A] transition flex items-center justify-between group"
-                >
-                  <span className={`font-bold font-mono ${c.color}`}>{c.role}</span>
-                  <span className="text-[#A3A3A3] group-hover:text-[#F5F5F5] transition font-medium">{c.email}</span>
-                </button>
-              ))}
-              <p className="text-[#666666] text-center pt-1">
-                Run <code className="text-[#A3A3A3]">node src/scripts/seedUsers.js</code> in backend first
-              </p>
-            </div>
-          </details>
+
 
         </div>
       </main>

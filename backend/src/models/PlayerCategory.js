@@ -4,6 +4,7 @@ const playerCategorySchema = new mongoose.Schema({
   name: { type: String, required: true, unique: true },
   priorityLevel: { type: Number, required: true, default: 1 },
   basePrice: { type: Number, required: true, default: 1000000 },
+  hideBasePrice: { type: Boolean, default: false },
   isActive: { type: Boolean, default: true },
   // Category icon (lucide name) — distinct set from Team icons
   icon: { type: String, default: 'Medal' },

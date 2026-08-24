@@ -84,7 +84,7 @@ export const PodiumDashboard = () => {
     () =>
       safePlayers.filter((p) => {
         const st = (p.status || '').toLowerCase();
-        return st === 'approved' || st === 'unsold';
+        return st === 'unsold';
       }),
     [safePlayers]
   );

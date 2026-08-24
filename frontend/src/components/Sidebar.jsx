@@ -105,7 +105,6 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, mobileOpen = fals
     { type: 'item', path: '/general/matches', label: 'Tournament', icon: Trophy },
     { type: 'item', path: '/general/teams', label: 'Teams', icon: ShieldCheck },
     { type: 'header', label: 'Account' },
-    { type: 'item', path: '/general/profile', label: 'My Profile', icon: User },
     { type: 'item', path: '/general/notifications', label: 'Notifications', icon: Bell },
     { type: 'item', path: '/general/settings', label: 'Settings', icon: Settings }
   ];

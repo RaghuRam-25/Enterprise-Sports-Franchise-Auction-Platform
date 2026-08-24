@@ -54,6 +54,12 @@ export default function PlayerCardCard({
   // its own subtle tint instead of a single fixed color.
   const accentHex = theme.stripColor || '#0B2B26';
 
+  // Super Admin can mark a category as "No Prize" — the Base Price row is then
+  // omitted entirely from every card of that category.
+  const hideBasePrice = !!(categories || []).find(
+    c => c.name === categoryLabel && c.hideBasePrice
+  );
+
   return (
     <div
       onClick={onCardClick || undefined}
@@ -108,12 +114,6 @@ export default function PlayerCardCard({
                 />
               )}
             </div>
-
-            {/* Jersey Number / Short Name Badge (fixed position below photo) */}
-            <div className="bg-[#050505] text-[#F5F5F5] font-mono font-black text-[10px] px-1.5 py-0.5 rounded-md border border-[#222222] shadow flex items-center gap-0.5 whitespace-nowrap">
-              <span className="text-white shrink-0">#</span>
-              <span>{(String(player?.jerseyNumber ?? player?.jerseyName ?? '').match(/\d+/) || ['—'])[0]}</span>
-            </div>
           </div>
 
           {/* Name & Academic Session */}
@@ -145,14 +145,16 @@ export default function PlayerCardCard({
 
         {/* Financial & Auction Details Strip */}
         <div className="bg-[#050505] rounded-xl p-2.5 border border-[#222222] space-y-1.5 text-xs mt-2">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] text-[#A3A3A3] font-medium flex items-center gap-1">
-              <DollarSign className="w-3 h-3 text-[#666666]" /> Base Price
-            </span>
-            <span className="font-mono font-black text-white text-xs sm:text-sm">
-              {formatCurrency(player?.basePrice || 0)}
-            </span>
-          </div>
+          {!hideBasePrice && (
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] text-[#A3A3A3] font-medium flex items-center gap-1">
+                <DollarSign className="w-3 h-3 text-[#666666]" /> Base Price
+              </span>
+              <span className="font-mono font-black text-white text-xs sm:text-sm">
+                {formatCurrency(player?.basePrice || 0)}
+              </span>
+            </div>
+          )}
 
           <div className="flex items-center justify-between pt-1 border-t border-[#222222]">
             <span className="text-[11px] text-[#A3A3A3] font-medium flex items-center gap-1">

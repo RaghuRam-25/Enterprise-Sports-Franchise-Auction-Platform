@@ -42,6 +42,13 @@ export class ErrorBoundary extends React.Component {
               </div>
             )}
 
+            {this.state.errorInfo?.componentStack && (
+              <div className="bg-secondaryBg/90 border border-cardBorder rounded-xl p-4 text-left font-mono text-[10px] text-secondaryText max-h-32 overflow-y-auto">
+                <p className="font-bold uppercase tracking-wider mb-1">Component Stack</p>
+                <pre className="whitespace-pre-wrap">{this.state.errorInfo.componentStack.trim()}</pre>
+              </div>
+            )}
+
             <button
               onClick={this.handleReload}
               className="btn-danger w-full py-3 font-extrabold text-xs uppercase tracking-wider rounded-xl flex items-center justify-center gap-2"

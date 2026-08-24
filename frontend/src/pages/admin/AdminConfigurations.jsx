@@ -4,6 +4,25 @@ import {  Plus, Trash2, Calculator, PenLine, X, Save, Medal, Diamond, Coins, Spa
 import { useAuction } from '../../context/AuctionContext';
 import { POSITION_ICON_OPTIONS, POSITION_ICON_MAP, getPositionIcon } from '../../utils/positionIcons';
 
+/* Standard football position codes — pick from dropdown instead of typing. */
+const STANDARD_POSITION_CODES = [
+  { code: 'GK', name: 'Goalkeeper' },
+  { code: 'CB', name: 'Centre Back' },
+  { code: 'LB', name: 'Left Back' },
+  { code: 'RB', name: 'Right Back' },
+  { code: 'LWB', name: 'Left Wing Back' },
+  { code: 'RWB', name: 'Right Wing Back' },
+  { code: 'CDM', name: 'Defensive Midfielder' },
+  { code: 'CM', name: 'Central Midfielder' },
+  { code: 'CAM', name: 'Attacking Midfielder' },
+  { code: 'LM', name: 'Left Midfielder' },
+  { code: 'RM', name: 'Right Midfielder' },
+  { code: 'LW', name: 'Left Winger' },
+  { code: 'RW', name: 'Right Winger' },
+  { code: 'CF', name: 'Centre Forward' },
+  { code: 'ST', name: 'Striker' },
+];
+
 /* Tier/rank-flavoured category icons (Diamond/Gold-style) — deliberately a
    different set from the Team icons so the two never collide. */
 const CATEGORY_ICON_OPTIONS = [
@@ -59,6 +78,7 @@ export default function AdminConfigurations() {
   const [newCatBasePrice, setNewCatBasePrice] = useState('');
   const [newCatColor, setNewCatColor] = useState('#0B2B26');
   const [newCatIcon, setNewCatIcon] = useState('Medal');
+  const [newCatHidePrice, setNewCatHidePrice] = useState(false);
   const [catIconMenuOpen, setCatIconMenuOpen] = useState(false);
   const [editCatIconMenuOpen, setEditCatIconMenuOpen] = useState(false);
 
@@ -82,6 +102,10 @@ export default function AdminConfigurations() {
   const handleAddPosition = (e) => {
     e.preventDefault();
     if (!newPosCode.trim() || !newPosName.trim()) return;
+    if (positions.some(p => (p.code || '').toUpperCase() === newPosCode.toUpperCase())) {
+      triggerToast(`Position "${newPosCode.toUpperCase()}" already exists.`, 'warning');
+      return;
+    }
     addPosition({ code: newPosCode.toUpperCase(), name: newPosName, icon: newPosIcon });
     setNewPosCode('');
     setNewPosName('');
@@ -192,13 +216,21 @@ export default function AdminConfigurations() {
             </h3>
 
             <form onSubmit={handleAddPosition} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 max-w-2xl">
-              <input
-                type="text"
-                placeholder="Code (e.g. ST)"
+              <select
                 value={newPosCode}
-                onChange={e => setNewPosCode(e.target.value)}
-                className="glass-input rounded-xl px-4 py-2 text-xs"
-              />
+                onChange={e => {
+                  const code = e.target.value;
+                  setNewPosCode(code);
+                  const match = STANDARD_POSITION_CODES.find(s => s.code === code);
+                  if (match) setNewPosName(match.name);
+                }}
+                className="glass-input rounded-xl px-4 py-2 text-xs font-bold cursor-pointer"
+              >
+                <option value="">Select Code ▾</option>
+                {STANDARD_POSITION_CODES.map(s => (
+                  <option key={s.code} value={s.code}>{s.code}</option>
+                ))}
+              </select>
               <input
                 type="text"
                 placeholder="Name (e.g. Striker)"
@@ -303,7 +335,7 @@ export default function AdminConfigurations() {
               Player Categories, Priority Levels & Base Prices
             </h3>
 
-            <form onSubmit={handleAddCategory} className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-6 gap-3 max-w-4xl">
+            <form onSubmit={handleAddCategory} className="grid grid-cols-1 sm:grid-cols-4 lg:grid-cols-7 gap-2 w-full">
               <input
                 type="text"
                 placeholder="Category Name"
@@ -373,9 +405,21 @@ export default function AdminConfigurations() {
                   </>
                 )}
               </div>
+              <label className="glass-input rounded-xl px-3 py-2 text-xs flex items-center justify-between gap-2 cursor-pointer select-none">
+                <span className={`text-secondaryText font-semibold whitespace-nowrap ${newCatHidePrice ? 'text-warningGold' : ''}`}>
+                  No Prize
+                </span>
+                <input
+                  type="checkbox"
+                  checked={newCatHidePrice}
+                  onChange={e => setNewCatHidePrice(e.target.checked)}
+                  className="w-4 h-4 accent-amber-400"
+                  title="Hide base price on player cards for this category"
+                />
+              </label>
               <button
                 type="submit"
-                className="btn-primary px-5 h-[36px] text-xs shadow-lg flex items-center justify-center gap-1.5"
+                className="btn-primary px-5 h-[36px] text-xs shadow-lg flex items-center justify-center gap-1.5 sm:col-span-2 lg:col-span-1"
               >
                 <Plus className="w-4 h-4" /> Add Category
               </button>
@@ -413,7 +457,11 @@ export default function AdminConfigurations() {
                           <span className="font-mono text-[11px] text-secondaryText uppercase">{(c.color || '#0B2B26').toUpperCase()}</span>
                         </div>
                       </td>
-                      <td className="py-3 px-4 font-mono font-semibold text-white">{formatCurrency(c.basePrice)}</td>
+                      <td className="py-3 px-4 font-mono font-semibold">
+                        {c.hideBasePrice
+                          ? <span className="px-2 py-0.5 rounded-md bg-[#141C26] border border-[#26313D] text-secondaryText text-[10px] font-black uppercase tracking-wider">No Prize</span>
+                          : <span className="text-white">{formatCurrency(c.basePrice)}</span>}
+                      </td>
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-1">
                           <button
@@ -564,6 +612,19 @@ export default function AdminConfigurations() {
                   className="glass-input w-full px-3 py-2 rounded-xl text-xs"
                 />
               </div>
+
+              <label className="flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl bg-[#0B1118] border border-[#26313D] cursor-pointer select-none">
+                <span className="text-[11px] font-bold text-secondaryText">
+                  No Prize
+                  <span className="block text-[9px] font-normal text-mutedText normal-case">Hide base price on player cards</span>
+                </span>
+                <input
+                  type="checkbox"
+                  checked={!!editForm.hideBasePrice}
+                  onChange={e => setEditForm(prev => ({ ...prev, hideBasePrice: e.target.checked }))}
+                  className="w-4 h-4 accent-amber-400"
+                />
+              </label>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
