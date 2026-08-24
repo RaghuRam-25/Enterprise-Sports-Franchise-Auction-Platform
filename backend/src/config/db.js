@@ -24,8 +24,6 @@ export const connectDB = async () => {
           // - serverSelectionTimeoutMS & socketTimeoutMS for reliability
           serverSelectionTimeoutMS: 5000,
           socketTimeoutMS: 45000,
-          // strictQuery: true helps catch unintentional queries
-          strictQuery: true,
         })
         .then((conn) => {
           console.log(`[MongoDB Connected] Host: ${conn.connection.host}`);
